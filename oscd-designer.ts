@@ -2,8 +2,8 @@ import { LitElement, html, css, nothing } from 'lit';
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import { property, state } from 'lit/decorators.js';
 
-import { Edit, newEditEvent } from '@openscd/open-scd-core';
-import { getReference } from '@openscd/oscd-scl';
+import { Edit, newEditEvent, Update } from '@openscd/open-scd-core';
+import { getReference, identity } from '@openscd/oscd-scl';
 
 import '@material/mwc-button';
 import '@material/mwc-icon-button';
@@ -11,12 +11,19 @@ import '@material/mwc-icon';
 
 import './sld-editor.js';
 
-import type { PlaceEvent, ResizeEvent, StartEvent } from './sld-editor.js';
 import { bayIcon, equipmentIcon, voltageLevelIcon } from './icons.js';
-import { attributes } from './util.js';
-
-const sldNs = 'https://transpower.co.nz/SCL/SSD/SLD/v0';
-const xmlnsNS = 'http://www.w3.org/2000/xmlns/';
+import {
+  attributes,
+  ConnectEvent,
+  connectionStartPoints,
+  PlaceEvent,
+  Point,
+  privType,
+  ResizeEvent,
+  sldNs,
+  StartEvent,
+  xmlnsNs,
+} from './util.js';
 
 function uniqueName(element: Element, parent: Element): string {
   const children = Array.from(parent.children);
@@ -39,6 +46,45 @@ function uniqueName(element: Element, parent: Element): string {
   return baseName + index.toString();
 }
 
+function updateTerminals(
+  parent: Element,
+  cNode: Element,
+  substationName: string,
+  voltageLevelName: string,
+  bayName: string,
+  cNodeName: string,
+  connectivityNode: string
+) {
+  const updates = [] as Edit[];
+
+  const [oldSubstationName, oldVoltageLevelName, oldBayName] = [
+    'Substation',
+    'VoltageLevel',
+    'Bay',
+  ].map(tag => cNode.closest(tag)?.getAttribute('name') ?? '');
+
+  const terminals = Array.from(
+    parent
+      .closest('SCL')
+      ?.querySelectorAll(
+        `Terminal[substationName="${oldSubstationName}"][voltageLevelName="${oldVoltageLevelName}"][bayName="${oldBayName}"][cNodeName="${cNodeName}"]`
+      ) ?? []
+  );
+  terminals.forEach(element =>
+    updates.push({
+      element,
+      attributes: {
+        substationName,
+        voltageLevelName,
+        bayName,
+        connectivityNode,
+      },
+    })
+  );
+
+  return updates;
+}
+
 function updateConnectivityNodes(
   element: Element,
   parent: Element,
@@ -47,14 +93,17 @@ function updateConnectivityNodes(
   const updates = [] as Edit[];
 
   const cNodes = Array.from(element.getElementsByTagName('ConnectivityNode'));
+  if (element.tagName === 'ConnectivityNode') cNodes.push(element);
   const substationName = parent.closest('Substation')!.getAttribute('name');
   let voltageLevelName = parent.closest('VoltageLevel')?.getAttribute('name');
   if (element.tagName === 'VoltageLevel') voltageLevelName = name;
 
   cNodes.forEach(cNode => {
-    const cNodeName = cNode.getAttribute('name');
-    let bayName = cNode.parentElement!.getAttribute('name');
+    let cNodeName = cNode.getAttribute('name');
+    if (element === cNode) cNodeName = name;
+    let bayName = cNode.parentElement?.getAttribute('name') ?? '';
     if (element.tagName === 'Bay') bayName = name;
+    if (parent.tagName === 'Bay') bayName = parent.getAttribute('name') ?? '';
 
     if (cNodeName && bayName) {
       const pathName = `${substationName}/${voltageLevelName}/${bayName}/${cNodeName}`;
@@ -64,6 +113,19 @@ function updateConnectivityNodes(
           pathName,
         },
       });
+      // TODO: remove superfluous terminals
+      if (substationName && voltageLevelName && bayName)
+        updates.push(
+          ...updateTerminals(
+            parent,
+            cNode,
+            substationName,
+            voltageLevelName,
+            bayName,
+            cNodeName,
+            pathName
+          )
+        );
     }
   });
   return updates;
@@ -97,10 +159,13 @@ export default class Designer extends LitElement {
   gridSize = 32;
 
   @state()
+  resizing?: Element;
+
+  @state()
   placing?: Element;
 
   @state()
-  resizing?: Element;
+  connecting?: { equipment: Element; path: Point[] };
 
   zoomIn(step = 4) {
     this.gridSize += step;
@@ -111,19 +176,26 @@ export default class Designer extends LitElement {
     if (this.gridSize < 4) this.gridSize = 4;
   }
 
-  startPlacing(element: Element | undefined) {
-    this.reset();
-    this.placing = element;
-  }
-
   startResizing(element: Element | undefined) {
     this.reset();
     this.resizing = element;
   }
 
+  startPlacing(element: Element | undefined) {
+    this.reset();
+    this.placing = element;
+  }
+
+  startConnecting(equipment: Element | undefined) {
+    this.reset();
+    if (equipment)
+      this.connecting = { equipment, path: connectionStartPoints(equipment) };
+  }
+
   reset() {
     this.placing = undefined;
     this.resizing = undefined;
+    this.connecting = undefined;
   }
 
   handleKeydown = ({ key }: KeyboardEvent) => {
@@ -172,29 +244,112 @@ export default class Designer extends LitElement {
     const dx = x - oldX;
     const dy = y - oldY;
 
-    Array.from(element.querySelectorAll('Bay, ConductingEquipment')).forEach(
-      descendant => {
-        const {
-          pos: [descX, descY],
-        } = attributes(descendant);
-        edits.push({
-          element: descendant,
-          attributes: {
-            x: { namespaceURI: sldNs, value: (descX + dx).toString() },
-            y: { namespaceURI: sldNs, value: (descY + dy).toString() },
-          },
-        });
-      }
-    );
+    Array.from(
+      element.querySelectorAll('Bay, ConductingEquipment, Vertex')
+    ).forEach(descendant => {
+      const {
+        pos: [descX, descY],
+      } = attributes(descendant);
+      edits.push({
+        element: descendant,
+        attributes: {
+          x: { namespaceURI: sldNs, value: (descX + dx).toString() },
+          y: { namespaceURI: sldNs, value: (descY + dy).toString() },
+        },
+      });
+    });
 
     this.dispatchEvent(newEditEvent(edits));
     if (
-      ['Bay', 'VoltageLevel'].includes(this.placing!.tagName) &&
-      !this.placing!.hasAttributeNS(sldNs, 'w') &&
-      !this.placing!.hasAttributeNS(sldNs, 'h')
+      ['Bay', 'VoltageLevel'].includes(element.tagName) &&
+      !element.hasAttributeNS(sldNs, 'w') &&
+      !element.hasAttributeNS(sldNs, 'h')
     )
-      this.startResizing(this.placing);
+      this.startResizing(element);
     else this.reset();
+  }
+
+  connectEquipment(equipment: Element, connectTo: Element, path: Point[]) {
+    const edits = [] as Edit[];
+    let cNode = connectTo;
+    let connectivityNode = cNode.getAttribute('pathName') ?? '';
+    let cNodeName = cNode.getAttribute('name') ?? '';
+    let priv = cNode.querySelector(`Private[type="${privType}"]`);
+    if (connectTo.tagName !== 'ConnectivityNode') {
+      cNode = this.doc.createElementNS(
+        this.doc.documentElement.namespaceURI,
+        'ConnectivityNode'
+      );
+      cNode.setAttribute('name', 'L1');
+      const bay = equipment.closest('Bay');
+      if (!bay) return;
+      edits.push(...reparentElement(cNode, bay));
+      connectivityNode =
+        ((
+          edits.find(e => 'attributes' in e && 'pathName' in e.attributes) as
+            | Update
+            | undefined
+        )?.attributes.pathName as string | undefined) ?? '';
+      cNodeName =
+        ((
+          edits.find(e => 'attributes' in e && 'name' in e.attributes) as
+            | Update
+            | undefined
+        )?.attributes.name as string | undefined) ??
+        cNode.getAttribute('name')!;
+      priv = this.doc.createElementNS(
+        this.doc.documentElement.namespaceURI,
+        'Private'
+      );
+      priv.setAttribute('type', privType);
+      priv.setAttribute('origin', sldNs);
+      edits.push({
+        parent: cNode,
+        node: priv,
+        reference: getReference(cNode, 'Private'),
+      });
+    }
+    if (!priv) return;
+    path.forEach(([x, y], i) => {
+      const vertex = this.doc.createElementNS(
+        this.doc.documentElement.namespaceURI,
+        'Vertex'
+      );
+      vertex.setAttributeNS(sldNs, 'esld:x', x.toString());
+      vertex.setAttributeNS(sldNs, 'esld:y', y.toString());
+      vertex.setAttributeNS(sldNs, 'esld:from', identity(equipment).toString());
+      vertex.setAttributeNS(sldNs, 'esld:to', identity(connectTo).toString());
+      vertex.setAttributeNS(sldNs, 'esld:i', i.toString());
+      edits.push({ parent: priv!, node: vertex, reference: null });
+    });
+    const fromTerminal = this.doc.createElementNS(
+      this.doc.documentElement.namespaceURI,
+      'Terminal'
+    );
+    fromTerminal.setAttribute('name', 'T1');
+    fromTerminal.setAttribute('cNodeName', cNodeName);
+    fromTerminal.setAttribute('connectivityNode', connectivityNode);
+    const fromTerminalCount = Array.from(equipment.children).filter(
+      child => child.tagName === 'Terminal'
+    ).length;
+    if (fromTerminalCount > 1) return;
+    edits.push(...reparentElement(fromTerminal, equipment));
+    if (connectTo.tagName === 'ConductingEquipment') {
+      const toTerminal = this.doc.createElementNS(
+        this.doc.documentElement.namespaceURI,
+        'Terminal'
+      );
+      toTerminal.setAttribute('name', 'T1');
+      toTerminal.setAttribute('cNodeName', cNodeName);
+      toTerminal.setAttribute('connectivityNode', connectivityNode);
+      const toTerminalCount = Array.from(connectTo.children).filter(
+        child => child.tagName === 'Terminal'
+      ).length;
+      if (toTerminalCount > 1) return;
+      edits.push(...reparentElement(toTerminal, connectTo));
+    }
+    this.reset();
+    this.dispatchEvent(newEditEvent(edits));
   }
 
   render() {
@@ -207,13 +362,17 @@ export default class Designer extends LitElement {
             .editCount=${this.editCount}
             .substation=${subs}
             .gridSize=${this.gridSize}
-            .placing=${this.placing}
             .resizing=${this.resizing}
+            .placing=${this.placing}
+            .connecting=${this.connecting}
+            @oscd-sld-start-resize=${({ detail }: StartEvent) => {
+              this.startResizing(detail);
+            }}
             @oscd-sld-start-place=${({ detail }: StartEvent) => {
               this.startPlacing(detail);
             }}
-            @oscd-sld-start-resize=${({ detail }: StartEvent) => {
-              this.startResizing(detail);
+            @oscd-sld-start-connect=${({ detail }: StartEvent) => {
+              this.startConnecting(detail);
             }}
             @oscd-sld-resize=${({ detail: { element, w, h } }: ResizeEvent) => {
               this.dispatchEvent(
@@ -230,6 +389,10 @@ export default class Designer extends LitElement {
             @oscd-sld-place=${({
               detail: { element, parent, x, y },
             }: PlaceEvent) => this.placeElement(element, parent, x, y)}
+            @oscd-sld-connect=${({
+              detail: { equipment, connectTo, path },
+            }: ConnectEvent) =>
+              this.connectEquipment(equipment, connectTo, path)}
           ></sld-editor>`
       )}
       <nav>
@@ -251,8 +414,7 @@ export default class Designer extends LitElement {
                 ${equipmentIcon(eqType)}
               </mwc-fab>`
             )
-          : nothing}
-        ${Array.from(this.doc.documentElement.children).find(c =>
+          : nothing}${Array.from(this.doc.documentElement.children).find(c =>
           c.querySelector(':scope > VoltageLevel')
         )
           ? html`<mwc-fab
@@ -266,8 +428,7 @@ export default class Designer extends LitElement {
             >
               ${bayIcon}
             </mwc-fab>`
-          : nothing}
-        ${Array.from(this.doc.documentElement.children).find(
+          : nothing}${Array.from(this.doc.documentElement.children).find(
           c => c.tagName === 'Substation'
         )
           ? html`<mwc-fab
@@ -281,27 +442,26 @@ export default class Designer extends LitElement {
             >
               ${voltageLevelIcon}
             </mwc-fab>`
-          : nothing}
-        <mwc-fab
+          : nothing}<mwc-fab
           mini
           icon="margin"
           @click=${() => this.insertSubstation()}
           label="Add Substation"
         >
-        </mwc-fab>
-        <mwc-icon-button
+        </mwc-fab
+        ><mwc-icon-button
           icon="zoom_in"
           label="Zoom In"
           @click=${() => this.zoomIn()}
         >
-        </mwc-icon-button>
-        <mwc-icon-button
+        </mwc-icon-button
+        ><mwc-icon-button
           icon="zoom_out"
           label="Zoom Out"
           @click=${() => this.zoomOut()}
         >
-        </mwc-icon-button>
-        ${this.placing || this.resizing
+        </mwc-icon-button
+        >${this.placing || this.resizing
           ? html`<mwc-icon-button
               icon="close"
               label="Cancel action"
@@ -324,7 +484,7 @@ export default class Designer extends LitElement {
     while (this.doc.querySelector(`:root > Substation[name="S${index}"]`))
       index += 1;
     node.setAttribute('name', `S${index}`);
-    node.setAttributeNS(xmlnsNS, 'xmlns:esld', sldNs);
+    node.setAttributeNS(xmlnsNs, 'xmlns:esld', sldNs);
     node.setAttributeNS(sldNs, 'esld:w', '50');
     node.setAttributeNS(sldNs, 'esld:h', '25');
     this.dispatchEvent(newEditEvent({ parent, node, reference }));

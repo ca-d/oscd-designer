@@ -17,59 +17,21 @@ import '@material/mwc-textfield';
 
 import { identity } from '@openscd/oscd-scl';
 import { equipmentGraphic, movePath, resizePath, symbols } from './icons.js';
-import { attributes, sldNs } from './util.js';
-
-export type ResizeDetail = {
-  w: number;
-  h: number;
-  element: Element;
-};
-export type ResizeEvent = CustomEvent<ResizeDetail>;
-export function newResizeEvent(detail: ResizeDetail): ResizeEvent {
-  return new CustomEvent('oscd-sld-resize', {
-    bubbles: true,
-    composed: true,
-    detail,
-  });
-}
-
-export type PlaceDetail = {
-  x: number;
-  y: number;
-  element: Element;
-  parent: Element;
-};
-export type PlaceEvent = CustomEvent<PlaceDetail>;
-export function newPlaceEvent(detail: PlaceDetail): PlaceEvent {
-  return new CustomEvent('oscd-sld-place', {
-    bubbles: true,
-    composed: true,
-    detail,
-  });
-}
-export type StartEvent = CustomEvent<Element>;
-function newStartPlaceEvent(detail: Element): StartEvent {
-  return new CustomEvent('oscd-sld-start-place', {
-    bubbles: true,
-    composed: true,
-    detail,
-  });
-}
-function newStartResizeEvent(detail: Element): StartEvent {
-  return new CustomEvent('oscd-sld-start-resize', {
-    bubbles: true,
-    composed: true,
-    detail,
-  });
-}
-declare global {
-  interface ElementEventMap {
-    ['oscd-sld-resize']: ResizeEvent;
-    ['oscd-sld-place']: PlaceEvent;
-    ['oscd-sld-start-resize']: StartEvent;
-    ['oscd-sld-start-place']: StartEvent;
-  }
-}
+import {
+  attributes,
+  connectionStartPoints,
+  newConnectEvent,
+  newPlaceEvent,
+  newResizeEvent,
+  newStartConnectEvent,
+  newStartPlaceEvent,
+  newStartResizeEvent,
+  Point,
+  privType,
+  sldNs,
+  svgNs,
+  xmlnsNs,
+} from './util.js';
 
 type Rect = [number, number, number, number];
 
@@ -111,11 +73,42 @@ function overlapsRect(
   return overlaps([x, y, w, h], [x0, y0, w0, h0]);
 }
 
+function cleanPath(path: Point[]) {
+  let i = path.length - 2;
+  while (i > 0) {
+    const [x, y] = path[i];
+    const [nx, ny] = path[i + 1];
+    const [px, py] = path[i - 1];
+
+    if (
+      (x === nx && y === ny) ||
+      (x === nx && x === px) ||
+      (y === ny && y === py)
+    )
+      path.splice(i, 1);
+    i -= 1;
+  }
+}
+
 const parentTags: Partial<Record<string, string>> = {
   ConductingEquipment: 'Bay',
   Bay: 'VoltageLevel',
   VoltageLevel: 'Substation',
 };
+
+const singleTerminal = new Set([
+  'VTR',
+  'GEN',
+  'MOT',
+  'FAN',
+  'PMP',
+  'EFN',
+  'BAT',
+  'RRC',
+  'SAR',
+  'SMC',
+  'IFL',
+]);
 
 @customElement('sld-editor')
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
@@ -132,11 +125,14 @@ export class SLDEditor extends LitElement {
   @property()
   gridSize = 24;
 
-  @state()
+  @property()
   placing?: Element;
 
-  @state()
+  @property()
   resizing?: Element;
+
+  @property()
+  connecting?: { equipment: Element; path: Point[] };
 
   @query('#resizeSubstationUI')
   resizeSubstationUI!: Dialog;
@@ -211,7 +207,7 @@ export class SLDEditor extends LitElement {
     return true;
   }
 
-  renderedPosition(container: Element): [number, number] {
+  renderedPosition(container: Element): Point {
     let {
       pos: [x, y],
     } = attributes(container);
@@ -241,7 +237,7 @@ export class SLDEditor extends LitElement {
         attributes: {
           'xmlns:esld': {
             value: sldNs,
-            namespaceURI: 'http://www.w3.org/2000/xmlns/',
+            namespaceURI: xmlnsNs,
           },
         },
       })
@@ -275,8 +271,12 @@ export class SLDEditor extends LitElement {
 
     const placingTarget =
       this.placing?.tagName === 'VoltageLevel'
-        ? svg`<rect width="100%" height="100%" fill="url(#grid)"></rect>
-      `
+        ? svg`<rect width="100%" height="100%" fill="url(#grid)"></rect>`
+        : nothing;
+
+    const connectingTarget =
+      this.connecting?.equipment.closest('Substation') === this.substation
+        ? svg`<rect width="100%" height="100%" fill="url(#grid)"></rect>`
         : nothing;
 
     let placingElement = svg``;
@@ -303,7 +303,7 @@ export class SLDEditor extends LitElement {
         h0
       );
       placingIndicator = svg`
-      <foreignObject x="${this.mouseX + 1}" y="${this.mouseY}"
+      <foreignObject x="${this.mouseX + 1}" y="${this.mouseY + 0.5}"
           width="1" height="1" class="preview"
           style="pointer-events: none; overflow: visible;">
         <span class="${classMap({ indicator: true, invalid })}">
@@ -312,6 +312,7 @@ export class SLDEditor extends LitElement {
       </foreignObject>
     `;
     }
+
     let resizingIndicator = svg``;
     if (this.resizing) {
       const {
@@ -321,7 +322,7 @@ export class SLDEditor extends LitElement {
       const newH = Math.max(1, this.mouseY - y + 1);
       const invalid = !this.canResizeTo(this.resizing, newW, newH);
       resizingIndicator = svg`
-      <foreignObject x="${this.mouseX + 1}" y="${this.mouseY}"
+      <foreignObject x="${this.mouseX + 1}" y="${this.mouseY + 0.5}"
         width="1" height="1" class="preview"
         style="pointer-events: none; overflow: visible;">
         <span class="${classMap({ indicator: true, invalid })}">
@@ -329,6 +330,63 @@ export class SLDEditor extends LitElement {
         </span>
       </foreignObject>
     `;
+    }
+
+    const connectionPreview = [];
+    if (this.connecting) {
+      const { equipment, path } = this.connecting;
+      let i = 0;
+      while (i < path.length - 2) {
+        const [x1, y1] = path[i];
+        const [x2, y2] = path[i + 1];
+        connectionPreview.push(
+          svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
+                stroke-linecap="square" stroke="black" stroke-width="0.06" />`
+        );
+        i += 1;
+      }
+
+      const [[x1, y1], [oldX2, oldY2]] = path.slice(-2);
+      const vertical = x1 === oldX2;
+
+      let x3 = this.mouseX + 0.5;
+      let y3 = this.mouseY + 0.5;
+      let [x4, y4] = [x3, y3];
+
+      const targetEq = Array.from(
+        this.substation.querySelectorAll('ConductingEquipment')
+      ).find(eq => {
+        const {
+          pos: [x, y],
+        } = attributes(eq);
+        return x === this.mouseX && y === this.mouseY;
+      });
+
+      if (targetEq) [[x4, y4], [x3, y3]] = connectionStartPoints(targetEq);
+
+      const x2 = vertical ? oldX2 : x3;
+      const y2 = vertical ? y3 : oldY2;
+
+      connectionPreview.push(
+        svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
+                stroke-linecap="square" stroke="black" stroke-width="0.06" />`,
+        svg`<line x1="${x2}" y1="${y2}" x2="${x3}" y2="${y3}"
+                stroke-linecap="square" stroke="black" stroke-width="0.06" />`,
+        svg`<line x1="${x3}" y1="${y3}" x2="${x4}" y2="${y4}"
+                stroke-linecap="square" stroke="black" stroke-width="0.06" />`,
+        svg`<circle cx="${x4}" cy="${y4}" r="1" fill="none" pointer-events="all"
+              @click=${() => {
+                path[path.length - 1] = [x2, y2];
+                path.push([x3, y3]);
+                path.push([x4, y4]);
+                cleanPath(path);
+                this.requestUpdate();
+                if (targetEq)
+                  this.dispatchEvent(
+                    newConnectEvent({ equipment, path, connectTo: targetEq })
+                  );
+              }}/>`
+      );
     }
 
     let menu = html``;
@@ -422,12 +480,7 @@ export class SLDEditor extends LitElement {
           label="Resize Substation"
           @click=${() => this.resizeSubstationUI.show()}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 96 960 960"
-          >
+          <svg xmlns="${svgNs}" width="24" height="24" viewBox="0 96 960 960">
             ${resizePath}
           </svg>
         </mwc-icon-button>
@@ -489,6 +542,7 @@ export class SLDEditor extends LitElement {
           .filter(child => child.tagName === 'VoltageLevel')
           .map(vl => svg`${this.renderContainer(vl)}`)}
         ${placingElement} ${placingIndicator} ${resizingIndicator}
+        ${connectingTarget} ${connectionPreview}
       </svg>
       ${menu}
       <mwc-dialog
@@ -579,11 +633,7 @@ export class SLDEditor extends LitElement {
     const name = bayOrVL.getAttribute('name') ?? '';
     const isVL = bayOrVL.tagName === 'VoltageLevel';
     if (this.placing === bayOrVL && !preview) return svg``;
-    /*
-    const preview =
-      this.placing !== undefined &&
-      bayOrVL.closest(this.placing.tagName) === this.placing;
-     */
+
     const [x, y] = this.renderedPosition(bayOrVL);
     let {
       dim: [w, h],
@@ -639,29 +689,28 @@ export class SLDEditor extends LitElement {
       placingTarget = svg`<rect x="${x}" y="${y}" width="${w}" height="${h}"
         @click=${handleClick || nothing} fill="url(#grid)"></rect>`;
 
-    if (!this.placing && !this.resizing)
+    if (!this.placing && !this.resizing && !this.connecting) {
       moveHandle = svg`
 <a class="handle" href="#0" @click=${() =>
         this.dispatchEvent(newStartPlaceEvent(bayOrVL))}>
-  <svg xmlns="http://www.w3.org/2000/svg" height="1" width="1"
+  <svg xmlns="${svgNs}" height="1" width="1"
     viewBox="0 96 960 960" x="${x}" y="${y}">
     <rect fill="white" x="10%" y="20%" width="80%" height="80%"></rect>
     ${movePath}
   </svg>
 </a>
     `;
-
-    if (!this.placing && !this.resizing)
       resizeHandle = svg`
 <a class="handle" href="#0" @click=${() =>
         this.dispatchEvent(newStartResizeEvent(bayOrVL))}>
-  <svg xmlns="http://www.w3.org/2000/svg" height="1" width="1"
+  <svg xmlns="${svgNs}" height="1" width="1"
     viewBox="0 96 960 960" x="${w + x - 1}" y="${h + y - 1}">
     <rect fill="white" x="10%" y="20%" width="80%" height="80%"></rect>
     ${resizePath}
   </svg>
 </a>
       `;
+    }
 
     return svg`<g class=${classMap({
       voltagelevel: isVL,
@@ -685,6 +734,13 @@ export class SLDEditor extends LitElement {
       ${Array.from(bayOrVL.children)
         .filter(child => child.tagName === 'ConductingEquipment')
         .map(equipment => this.renderEquipment(equipment))}
+      ${Array.from(bayOrVL.children)
+        .filter(
+          child =>
+            child.tagName === 'ConnectivityNode' &&
+            child.getAttribute('name') !== 'grounded'
+        )
+        .map(cNode => this.renderConnectivityNode(cNode))}
       ${placingTarget}
       ${resizeHandle}
     </g>`;
@@ -725,6 +781,46 @@ export class SLDEditor extends LitElement {
         };
     }
 
+    const [inputTerminal, outputTerminal] = Array.from(
+      equipment.children
+    ).filter(child => child.tagName === 'Terminal');
+
+    const termColors = ['#BB1326', '#F5E214'];
+    const termFill = termColors[this.connecting ? 1 : 0];
+    const termStroke = termColors[this.connecting ? 0 : 1];
+
+    const input =
+      inputTerminal ||
+      this.placing ||
+      this.resizing ||
+      this.connecting?.equipment === equipment ||
+      (this.connecting && this.mouseX === x && this.mouseY === y)
+        ? nothing
+        : svg`<circle cx="0.5" cy="0" r="0.2" opacity="0.4"
+      fill="${termFill}" stroke="${termStroke}"
+    @click=${() => this.dispatchEvent(newStartConnectEvent(equipment))}
+    @contextmenu=${(e: MouseEvent) => {
+      e.preventDefault();
+    }}
+      />`;
+
+    const output =
+      outputTerminal ||
+      this.placing ||
+      this.resizing ||
+      this.connecting?.equipment === equipment ||
+      (this.connecting && this.mouseX === x && this.mouseY === y) ||
+      singleTerminal.has(eqType) ||
+      !inputTerminal
+        ? nothing
+        : svg`<circle cx="0.5" cy="1" r="0.2" opacity="0.4"
+      fill="#BB1326" stroke="#F5E214"
+    @click=${() => this.dispatchEvent(newStartConnectEvent(equipment))}
+    @contextmenu=${(e: MouseEvent) => {
+      e.preventDefault();
+    }}
+      />`;
+
     const id = equipment.parentElement ? identity(equipment) : nothing;
 
     return svg`<g class="${classMap({
@@ -759,7 +855,32 @@ export class SLDEditor extends LitElement {
           e.preventDefault();
         }}
         />
+      ${input}
+      ${output}
     </g>`;
+  }
+
+  renderConnectivityNode(cNode: Element) {
+    const priv = cNode.querySelector(`Private[type="${privType}"]`);
+    if (!priv) return nothing;
+    const vertices = Array.from(priv.children)
+      .filter(c => c.tagName === 'Vertex')
+      .map(vertex => this.renderedPosition(vertex));
+    const lines = [];
+    let i = 0;
+    while (i < vertices.length - 1) {
+      const [x1, y1] = vertices[i];
+      const [x2, y2] = vertices[i + 1];
+      lines.push(
+        svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
+                stroke-linecap="square" stroke="black" stroke-width="0.06" />`
+      );
+      i += 1;
+    }
+    return svg`<g class="node">
+        <title>${cNode.getAttribute('pathName')}</title>
+        ${lines}
+      </g>`;
   }
 
   static styles = css`
