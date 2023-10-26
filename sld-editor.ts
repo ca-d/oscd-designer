@@ -532,7 +532,7 @@ export class SLDEditor extends LitElement {
             visibility: hidden;
           }
           .preview {
-            opacity: 0.8;
+            opacity: 0.6;
           }
         </style>
         ${symbols}
@@ -543,6 +543,16 @@ export class SLDEditor extends LitElement {
           .map(vl => svg`${this.renderContainer(vl)}`)}
         ${placingElement} ${placingIndicator} ${resizingIndicator}
         ${connectingTarget} ${connectionPreview}
+        ${Array.from(this.substation.querySelectorAll('ConnectivityNode'))
+          .filter(
+            child =>
+              child.getAttribute('name') !== 'grounded' &&
+              !(
+                this.placing &&
+                child.closest(this.placing.tagName) === this.placing
+              )
+          )
+          .map(cNode => this.renderConnectivityNode(cNode))}
       </svg>
       ${menu}
       <mwc-dialog
@@ -734,13 +744,13 @@ export class SLDEditor extends LitElement {
       ${Array.from(bayOrVL.children)
         .filter(child => child.tagName === 'ConductingEquipment')
         .map(equipment => this.renderEquipment(equipment))}
-      ${Array.from(bayOrVL.children)
-        .filter(
-          child =>
-            child.tagName === 'ConnectivityNode' &&
-            child.getAttribute('name') !== 'grounded'
-        )
-        .map(cNode => this.renderConnectivityNode(cNode))}
+        ${
+          preview
+            ? Array.from(bayOrVL.querySelectorAll('ConnectivityNode'))
+                .filter(child => child.getAttribute('name') !== 'grounded')
+                .map(cNode => this.renderConnectivityNode(cNode))
+            : nothing
+        }
       ${placingTarget}
       ${resizeHandle}
     </g>`;
@@ -814,7 +824,7 @@ export class SLDEditor extends LitElement {
       !inputTerminal
         ? nothing
         : svg`<circle cx="0.5" cy="1" r="0.2" opacity="0.4"
-      fill="#BB1326" stroke="#F5E214"
+      fill="${termFill}" stroke="${termStroke}"
     @click=${() => this.dispatchEvent(newStartConnectEvent(equipment))}
     @contextmenu=${(e: MouseEvent) => {
       e.preventDefault();
@@ -863,23 +873,75 @@ export class SLDEditor extends LitElement {
   renderConnectivityNode(cNode: Element) {
     const priv = cNode.querySelector(`Private[type="${privType}"]`);
     if (!priv) return nothing;
-    const vertices = Array.from(priv.children)
-      .filter(c => c.tagName === 'Vertex')
-      .map(vertex => this.renderedPosition(vertex));
-    const lines = [];
-    let i = 0;
-    while (i < vertices.length - 1) {
-      const [x1, y1] = vertices[i];
-      const [x2, y2] = vertices[i + 1];
-      lines.push(
-        svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
+    const circles = [] as TemplateResult<2>[];
+    const intersections = Object.entries(
+      Array.from(priv.querySelectorAll('Vertex'))
+        .map(v => this.renderedPosition(v))
+        .reduce((obj, pos) => {
+          const ret = obj;
+          const key = JSON.stringify(pos);
+          if (ret[key]) ret[key].count += 1;
+          else ret[key] = { val: pos, count: 1 };
+          return ret;
+        }, {} as Record<string, { val: Point; count: number }>)
+    )
+      .filter(([_, { count }]) => count > 2)
+      .map(([_, { val }]) => val);
+    intersections.forEach(([x, y]) =>
+      circles.push(svg`<circle fill="black" cx="${x}" cy="${y}" r="0.15" />`)
+    );
+    const lines = [] as TemplateResult<2>[];
+    const sections = Array.from(priv.children).filter(
+      c => c.tagName === 'Section'
+    );
+    sections.forEach(section => {
+      const vertices = Array.from(section.children)
+        .filter(c => c.tagName === 'Vertex')
+        .map(vertex => this.renderedPosition(vertex));
+      let i = 0;
+      while (i < vertices.length - 1) {
+        const [x1, y1] = vertices[i];
+        const [x2, y2] = vertices[i + 1];
+        lines.push(
+          svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
                 stroke-linecap="square" stroke="black" stroke-width="0.06" />`
-      );
-      i += 1;
-    }
+        );
+        lines.push(
+          svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
+                pointer-events="all" @click=${() => {
+                  if (!this.connecting) return;
+                  const { equipment, path } = this.connecting;
+                  const [[oldX1, _y], [oldX2, oldY2]] = path.slice(-2);
+                  const vertical = oldX1 === oldX2;
+
+                  const x3 = this.mouseX + 0.5;
+                  const y3 = this.mouseY + 0.5;
+
+                  const newX2 = vertical ? oldX2 : x3;
+                  const newY2 = vertical ? y3 : oldY2;
+
+                  path[path.length - 1] = [newX2, newY2];
+                  path.push([x3, y3]);
+                  cleanPath(path);
+                  this.dispatchEvent(
+                    newConnectEvent({ equipment, path, connectTo: cNode })
+                  );
+                }}
+                stroke-linecap="${
+                  [x1, y1, x2, y2].find(n => Number.isInteger(n)) === undefined
+                    ? 'square'
+                    : nothing
+                }" stroke="none" stroke-width="${
+            this.connecting ? '1' : '0.4'
+          }" />`
+        );
+        i += 1;
+      }
+    });
     return svg`<g class="node">
         <title>${cNode.getAttribute('pathName')}</title>
         ${lines}
+        ${circles}
       </g>`;
   }
 

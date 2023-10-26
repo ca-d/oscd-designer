@@ -46,6 +46,55 @@ function uniqueName(element: Element, parent: Element): string {
   return baseName + index.toString();
 }
 
+function cutSectionAt(section: Element, index: number, [x, y]: Point): Edit[] {
+  const parent = section.parentElement;
+  if (!parent) return [];
+  const edits = [] as Edit[];
+  const vertices = Array.from(section.children).filter(
+    child => child.tagName === 'Vertex'
+  );
+  const v0 = vertices[index];
+  const v1 = vertices[index + 1];
+  const [i0, i1] = [v0, v1].map(v =>
+    parseFloat(v.getAttributeNS(sldNs, 'i') ?? '-1')
+  );
+  const v = v0.cloneNode() as Element;
+  const i = (i0 + i1) / 2;
+  v.setAttributeNS(sldNs, 'esld:x', x.toString());
+  v.setAttributeNS(sldNs, 'esld:y', y.toString());
+  v.setAttributeNS(sldNs, 'esld:i', i.toString());
+  edits.push({
+    element: section,
+    attributes: { to: { namespaceURI: sldNs, value: null } },
+  });
+
+  vertices.slice(index + 1).forEach(vertex => edits.push({ node: vertex }));
+
+  edits.push({ node: v, parent: section, reference: null });
+  const newSection = section.cloneNode(true) as Element;
+  Array.from(newSection.children)
+    .filter(child => child.tagName === 'Vertex')
+    .slice(0, index + 1)
+    .forEach(vertex => vertex.remove());
+  const newV = v.cloneNode() as Element;
+  newSection.prepend(newV);
+  const [_from, to] = ['from', 'to'].map(name =>
+    section.getAttributeNS(sldNs, name)
+  );
+  if (to) {
+    newSection.removeAttributeNS(sldNs, 'to');
+    newSection.setAttributeNS(sldNs, 'esld:from', to);
+  } else {
+    newSection.removeAttributeNS(sldNs, 'from');
+  }
+  edits.push({
+    node: newSection,
+    parent,
+    reference: section.nextElementSibling,
+  });
+  return edits;
+}
+
 function updateTerminals(
   parent: Element,
   cNode: Element,
@@ -302,7 +351,6 @@ export default class Designer extends LitElement {
         'Private'
       );
       priv.setAttribute('type', privType);
-      priv.setAttribute('origin', sldNs);
       edits.push({
         parent: cNode,
         node: priv,
@@ -310,6 +358,14 @@ export default class Designer extends LitElement {
       });
     }
     if (!priv) return;
+    const section = this.doc.createElementNS(
+      this.doc.documentElement.namespaceURI,
+      'Section'
+    );
+    section.setAttributeNS(sldNs, 'esld:from', identity(equipment).toString());
+    if (connectTo.tagName !== 'ConnectivityNode')
+      section.setAttributeNS(sldNs, 'esld:to', identity(connectTo).toString());
+    edits.push({ parent: priv!, node: section, reference: null });
     path.forEach(([x, y], i) => {
       const vertex = this.doc.createElementNS(
         this.doc.documentElement.namespaceURI,
@@ -317,11 +373,36 @@ export default class Designer extends LitElement {
       );
       vertex.setAttributeNS(sldNs, 'esld:x', x.toString());
       vertex.setAttributeNS(sldNs, 'esld:y', y.toString());
-      vertex.setAttributeNS(sldNs, 'esld:from', identity(equipment).toString());
-      vertex.setAttributeNS(sldNs, 'esld:to', identity(connectTo).toString());
       vertex.setAttributeNS(sldNs, 'esld:i', i.toString());
-      edits.push({ parent: priv!, node: vertex, reference: null });
+      edits.push({ parent: section, node: vertex, reference: null });
     });
+    if (connectTo.tagName === 'ConnectivityNode') {
+      const [x, y] = path[path.length - 1];
+      Array.from(priv.children)
+        .filter(child => child.tagName === 'Section')
+        .find(s => {
+          const sectionPath = Array.from(s.children)
+            .filter(child => child.tagName === 'Vertex')
+            .map(v => attributes(v).pos);
+          for (let i = 0; i < sectionPath.length - 1; i += 1) {
+            const [x0, y0] = sectionPath[i];
+            const [x1, y1] = sectionPath[i + 1];
+            if (
+              (y0 === y &&
+                y === y1 &&
+                ((x0 < x && x < x1) || (x1 < x && x < x0))) ||
+              (x0 === x &&
+                x === x1 &&
+                ((y0 < y && y < y1) || (y1 < y && y < y0))) ||
+              (y0 === y && x0 === x)
+            ) {
+              edits.push(cutSectionAt(s, i, [x, y]));
+              return true;
+            }
+          }
+          return false;
+        });
+    }
     const fromTerminal = this.doc.createElementNS(
       this.doc.documentElement.namespaceURI,
       'Terminal'
