@@ -895,6 +895,7 @@ export class SLDEditor extends LitElement {
       c => c.tagName === 'Section'
     );
     sections.forEach(section => {
+      const hue = Math.random() * 360;
       const vertices = Array.from(section.children)
         .filter(c => c.tagName === 'Vertex')
         .map(vertex => this.renderedPosition(vertex));
@@ -904,7 +905,7 @@ export class SLDEditor extends LitElement {
         const [x2, y2] = vertices[i + 1];
         lines.push(
           svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
-                stroke-linecap="square" stroke="black" stroke-width="0.06" />`
+                stroke-linecap="square" stroke="hsl(${hue}, 100%, 50%)" stroke-width="0.06" />`
         );
         lines.push(
           svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"

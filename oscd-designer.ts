@@ -53,45 +53,136 @@ function cutSectionAt(section: Element, index: number, [x, y]: Point): Edit[] {
   const vertices = Array.from(section.children).filter(
     child => child.tagName === 'Vertex'
   );
-  const v0 = vertices[index];
-  const v1 = vertices[index + 1];
-  const [i0, i1] = [v0, v1].map(v =>
-    parseFloat(v.getAttributeNS(sldNs, 'i') ?? '-1')
-  );
-  const v = v0.cloneNode() as Element;
-  const i = (i0 + i1) / 2;
-  v.setAttributeNS(sldNs, 'esld:x', x.toString());
-  v.setAttributeNS(sldNs, 'esld:y', y.toString());
-  v.setAttributeNS(sldNs, 'esld:i', i.toString());
-  edits.push({
-    element: section,
-    attributes: { to: { namespaceURI: sldNs, value: null } },
-  });
 
-  vertices.slice(index + 1).forEach(vertex => edits.push({ node: vertex }));
-
-  edits.push({ node: v, parent: section, reference: null });
   const newSection = section.cloneNode(true) as Element;
   Array.from(newSection.children)
     .filter(child => child.tagName === 'Vertex')
     .slice(0, index + 1)
     .forEach(vertex => vertex.remove());
-  const newV = v.cloneNode() as Element;
-  newSection.prepend(newV);
-  const [_from, to] = ['from', 'to'].map(name =>
-    section.getAttributeNS(sldNs, name)
-  );
-  if (to) {
-    newSection.removeAttributeNS(sldNs, 'to');
-    newSection.setAttributeNS(sldNs, 'esld:from', to);
-  } else {
-    newSection.removeAttributeNS(sldNs, 'from');
-  }
+  const v = vertices[index].cloneNode() as Element;
+  v.setAttributeNS(sldNs, 'esld:x', x.toString());
+  v.setAttributeNS(sldNs, 'esld:y', y.toString());
+  newSection.prepend(v);
   edits.push({
     node: newSection,
     parent,
     reference: section.nextElementSibling,
   });
+
+  vertices.slice(index + 1).forEach(vertex => edits.push({ node: vertex }));
+
+  const vertexAtXY = vertices.find(
+    ve =>
+      ve.getAttributeNS(sldNs, 'x') === x.toString() &&
+      ve.getAttributeNS(sldNs, 'y') === y.toString()
+  );
+  if (!vertexAtXY) {
+    const v2 = v.cloneNode();
+    edits.push({ node: v2, parent: section, reference: null });
+  }
+
+  return edits;
+}
+
+function collinear(v0: Element, v1: Element, v2: Element) {
+  const [[x0, y0], [x1, y1], [x2, y2]] = [v0, v1, v2].map(vertex =>
+    ['x', 'y'].map(name => vertex.getAttributeNS(sldNs, name))
+  );
+  return (x0 === x1 && x1 === x2) || (y0 === y1 && y1 === y2);
+}
+
+function removeNode(node: Element): Edit[] {
+  const edits = [{ node }] as Edit[];
+
+  Array.from(
+    node
+      .closest('SCL')
+      ?.querySelectorAll(
+        `Terminal[connectivityNode="${node.getAttribute('pathName')}"]`
+      ) ?? []
+  ).forEach(terminal => edits.push({ node: terminal }));
+
+  return edits;
+}
+
+function reverseSection(section: Element): Edit[] {
+  const edits = [] as Edit[];
+
+  Array.from(section.children)
+    .reverse()
+    .forEach(vertex =>
+      edits.push({ parent: section, node: vertex, reference: null })
+    );
+
+  return edits;
+}
+
+function healNodeCut(cut: Element): Edit[] {
+  const [x, y] = ['x', 'y'].map(name => cut.getAttributeNS(sldNs, name));
+
+  const isCut = (vertex: Element) =>
+    vertex !== cut &&
+    vertex.getAttributeNS(sldNs, 'x') === x &&
+    vertex.getAttributeNS(sldNs, 'y') === y;
+
+  const cutVertices = Array.from(cut.closest('Private')?.children ?? [])
+    .filter(child => child.tagName === 'Section')
+    .flatMap(section => Array.from(section.children).filter(isCut));
+  const cutSections = cutVertices.map(v => v.parentElement) as Element[];
+
+  if (cutSections.length > 2) return [];
+  if (cutSections.length < 2)
+    return removeNode(cut.closest('ConnectivityNode')!);
+
+  const edits = [] as Edit[];
+  const [sectionA, sectionB] = cutSections as [Element, Element];
+  if (isCut(sectionA.firstElementChild!)) edits.push(reverseSection(sectionA));
+  const sectionBChildren = Array.from(sectionB.children);
+  if (isCut(sectionB.lastElementChild!)) sectionBChildren.reverse();
+
+  sectionBChildren
+    .slice(1)
+    .forEach(node => edits.push({ parent: sectionA, node, reference: null }));
+
+  const cutA = Array.from(sectionA.children).find(isCut);
+  const neighbourA = isCut(sectionA.firstElementChild!)
+    ? sectionA.children[1]
+    : sectionA.children[sectionA.childElementCount - 2];
+  const neighbourB = sectionBChildren[1];
+  if (
+    neighbourA &&
+    cutA &&
+    neighbourB &&
+    collinear(neighbourA, cutA, neighbourB)
+  )
+    edits.push({ node: cutA });
+  edits.push({ node: sectionB });
+
+  return edits;
+}
+
+function removeTerminal(terminal: Element): Edit[] {
+  const edits = [] as Edit[];
+
+  const equipment = terminal.parentElement;
+  edits.push({ node: terminal });
+  const pathName = terminal.getAttribute('connectivityNode');
+  const cNode = terminal
+    .closest('SCL')
+    ?.querySelector(`ConnectivityNode[pathName="${pathName}"]`);
+  const priv = cNode?.querySelector(`Private[type="${privType}"]`);
+  const vertexAt = `${identity(equipment)}>${terminal.getAttribute('name')}`;
+  const vertex = priv?.querySelector(`Vertex[*|at="${vertexAt}"]`);
+  const section = vertex?.parentElement;
+  if (!section) return edits;
+  edits.push({ node: section });
+  const cut =
+    vertex === section.lastElementChild
+      ? section.firstElementChild
+      : section.lastElementChild;
+
+  if (cut) edits.push(...healNodeCut(cut));
+
   return edits;
 }
 
@@ -111,12 +202,13 @@ function updateTerminals(
     'VoltageLevel',
     'Bay',
   ].map(tag => cNode.closest(tag)?.getAttribute('name') ?? '');
+  const oldConnectivityNode = `${oldSubstationName}/${oldVoltageLevelName}/${oldBayName}/${cNodeName}`;
 
   const terminals = Array.from(
     parent
       .closest('SCL')
       ?.querySelectorAll(
-        `Terminal[substationName="${oldSubstationName}"][voltageLevelName="${oldVoltageLevelName}"][bayName="${oldBayName}"][cNodeName="${cNodeName}"]`
+        `Terminal[substationName="${oldSubstationName}"][voltageLevelName="${oldVoltageLevelName}"][bayName="${oldBayName}"][cNodeName="${cNodeName}"], Terminal[connectivityNode="${oldConnectivityNode}"]`
       ) ?? []
   );
   terminals.forEach(element =>
@@ -308,6 +400,12 @@ export default class Designer extends LitElement {
       });
     });
 
+    if (element.tagName === 'ConductingEquipment') {
+      Array.from(element.getElementsByTagName('Terminal')).forEach(terminal =>
+        edits.push(...removeTerminal(terminal))
+      );
+    }
+
     this.dispatchEvent(newEditEvent(edits));
     if (
       ['Bay', 'VoltageLevel'].includes(element.tagName) &&
@@ -362,10 +460,13 @@ export default class Designer extends LitElement {
       this.doc.documentElement.namespaceURI,
       'Section'
     );
-    section.setAttributeNS(sldNs, 'esld:from', identity(equipment).toString());
-    if (connectTo.tagName !== 'ConnectivityNode')
-      section.setAttributeNS(sldNs, 'esld:to', identity(connectTo).toString());
     edits.push({ parent: priv!, node: section, reference: null });
+    const [fromTermName, toTermName] = [equipment, connectTo].map(eqOrNode => {
+      const termCount = Array.from(eqOrNode.children).filter(
+        child => child.tagName === 'Terminal'
+      ).length;
+      return `T${termCount + 1}`;
+    });
     path.forEach(([x, y], i) => {
       const vertex = this.doc.createElementNS(
         this.doc.documentElement.namespaceURI,
@@ -373,7 +474,21 @@ export default class Designer extends LitElement {
       );
       vertex.setAttributeNS(sldNs, 'esld:x', x.toString());
       vertex.setAttributeNS(sldNs, 'esld:y', y.toString());
-      vertex.setAttributeNS(sldNs, 'esld:i', i.toString());
+      if (i === 0)
+        vertex.setAttributeNS(
+          sldNs,
+          'esld:at',
+          `${identity(equipment)}>${fromTermName}`
+        );
+      else if (
+        i === path.length - 1 &&
+        connectTo.tagName !== 'ConnectivityNode'
+      )
+        vertex.setAttributeNS(
+          sldNs,
+          'esld:at',
+          `${identity(connectTo)}>${toTermName}`
+        );
       edits.push({ parent: section, node: vertex, reference: null });
     });
     if (connectTo.tagName === 'ConnectivityNode') {
@@ -403,31 +518,48 @@ export default class Designer extends LitElement {
           return false;
         });
     }
+    const [substationName, voltageLevelName, bayName, cNodeNameFromPath] =
+      connectivityNode.split('/', 4);
+    if (cNodeNameFromPath !== cNodeName) return;
     const fromTerminal = this.doc.createElementNS(
       this.doc.documentElement.namespaceURI,
       'Terminal'
     );
-    fromTerminal.setAttribute('name', 'T1');
-    fromTerminal.setAttribute('cNodeName', cNodeName);
+    fromTerminal.setAttribute('name', fromTermName);
     fromTerminal.setAttribute('connectivityNode', connectivityNode);
+    fromTerminal.setAttribute('substationName', substationName);
+    fromTerminal.setAttribute('voltageLevelName', voltageLevelName);
+    fromTerminal.setAttribute('bayName', bayName);
+    fromTerminal.setAttribute('cNodeName', cNodeName);
     const fromTerminalCount = Array.from(equipment.children).filter(
       child => child.tagName === 'Terminal'
     ).length;
     if (fromTerminalCount > 1) return;
-    edits.push(...reparentElement(fromTerminal, equipment));
+    edits.push({
+      node: fromTerminal,
+      parent: equipment,
+      reference: getReference(equipment, 'Terminal'),
+    });
     if (connectTo.tagName === 'ConductingEquipment') {
       const toTerminal = this.doc.createElementNS(
         this.doc.documentElement.namespaceURI,
         'Terminal'
       );
-      toTerminal.setAttribute('name', 'T1');
-      toTerminal.setAttribute('cNodeName', cNodeName);
+      toTerminal.setAttribute('name', toTermName);
       toTerminal.setAttribute('connectivityNode', connectivityNode);
+      toTerminal.setAttribute('substationName', substationName);
+      toTerminal.setAttribute('voltageLevelName', voltageLevelName);
+      toTerminal.setAttribute('bayName', bayName);
+      toTerminal.setAttribute('cNodeName', cNodeName);
       const toTerminalCount = Array.from(connectTo.children).filter(
         child => child.tagName === 'Terminal'
       ).length;
       if (toTerminalCount > 1) return;
-      edits.push(...reparentElement(toTerminal, connectTo));
+      edits.push({
+        node: toTerminal,
+        parent: connectTo,
+        reference: getReference(connectTo, 'Terminal'),
+      });
     }
     this.reset();
     this.dispatchEvent(newEditEvent(edits));
