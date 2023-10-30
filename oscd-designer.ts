@@ -53,6 +53,17 @@ function cutSectionAt(section: Element, index: number, [x, y]: Point): Edit[] {
   const vertices = Array.from(section.children).filter(
     child => child.tagName === 'Vertex'
   );
+  const vertexAtXY = vertices.find(
+    ve =>
+      ve.getAttributeNS(sldNs, 'x') === x.toString() &&
+      ve.getAttributeNS(sldNs, 'y') === y.toString()
+  );
+
+  if (
+    vertexAtXY === vertices[0] ||
+    vertexAtXY === vertices[vertices.length - 1]
+  )
+    return [];
 
   const newSection = section.cloneNode(true) as Element;
   Array.from(newSection.children)
@@ -71,11 +82,6 @@ function cutSectionAt(section: Element, index: number, [x, y]: Point): Edit[] {
 
   vertices.slice(index + 1).forEach(vertex => edits.push({ node: vertex }));
 
-  const vertexAtXY = vertices.find(
-    ve =>
-      ve.getAttributeNS(sldNs, 'x') === x.toString() &&
-      ve.getAttributeNS(sldNs, 'y') === y.toString()
-  );
   if (!vertexAtXY) {
     const v2 = v.cloneNode();
     edits.push({ node: v2, parent: section, reference: null });
@@ -100,7 +106,24 @@ function removeNode(node: Element): Edit[] {
       ?.querySelectorAll(
         `Terminal[connectivityNode="${node.getAttribute('pathName')}"]`
       ) ?? []
-  ).forEach(terminal => edits.push({ node: terminal }));
+  ).forEach(terminal => {
+    edits.push({ node: terminal });
+    const eq = terminal.parentElement!;
+    const siblings = Array.from(eq.children).filter(
+      c => c.tagName === 'Terminal'
+    );
+    if (terminal === siblings[0]) return;
+    const { rot } = attributes(eq);
+    edits.push({
+      element: eq,
+      attributes: {
+        'esld:rot': {
+          namespaceURI: sldNs,
+          value: ((rot + 2) % 4).toString(),
+        },
+      },
+    });
+  });
 
   return edits;
 }
@@ -422,6 +445,14 @@ export default class Designer extends LitElement {
     let connectivityNode = cNode.getAttribute('pathName') ?? '';
     let cNodeName = cNode.getAttribute('name') ?? '';
     let priv = cNode.querySelector(`Private[type="${privType}"]`);
+    if (equipment === connectTo) return;
+    if (
+      connectivityNode &&
+      equipment.querySelector(
+        `Terminal[connectivityNode="${connectivityNode}"]`
+      )
+    )
+      return;
     if (connectTo.tagName !== 'ConnectivityNode') {
       cNode = this.doc.createElementNS(
         this.doc.documentElement.namespaceURI,

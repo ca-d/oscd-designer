@@ -355,12 +355,14 @@ export class SLDEditor extends LitElement {
 
       const targetEq = Array.from(
         this.substation.querySelectorAll('ConductingEquipment')
-      ).find(eq => {
-        const {
-          pos: [x, y],
-        } = attributes(eq);
-        return x === this.mouseX && y === this.mouseY;
-      });
+      )
+        .filter(eq => eq !== equipment)
+        .find(eq => {
+          const {
+            pos: [x, y],
+          } = attributes(eq);
+          return x === this.mouseX && y === this.mouseY;
+        });
 
       if (targetEq) [[x4, y4], [x3, y3]] = connectionStartPoints(targetEq);
 
@@ -912,6 +914,14 @@ export class SLDEditor extends LitElement {
                 pointer-events="all" @click=${() => {
                   if (!this.connecting) return;
                   const { equipment, path } = this.connecting;
+                  if (
+                    equipment.querySelector(
+                      `Terminal[connectivityNode="${cNode.getAttribute(
+                        'pathName'
+                      )}"]`
+                    )
+                  )
+                    return;
                   const [[oldX1, _y], [oldX2, oldY2]] = path.slice(-2);
                   const vertical = oldX1 === oldX2;
 
@@ -941,8 +951,8 @@ export class SLDEditor extends LitElement {
     });
     return svg`<g class="node">
         <title>${cNode.getAttribute('pathName')}</title>
-        ${lines}
         ${circles}
+        ${lines}
       </g>`;
   }
 
