@@ -23,6 +23,7 @@ import {
   newConnectEvent,
   newPlaceEvent,
   newResizeEvent,
+  newRotateEvent,
   newStartConnectEvent,
   newStartPlaceEvent,
   newStartResizeEvent,
@@ -132,7 +133,11 @@ export class SLDEditor extends LitElement {
   resizing?: Element;
 
   @property()
-  connecting?: { equipment: Element; path: Point[] };
+  connecting?: {
+    equipment: Element;
+    path: Point[];
+    terminal: 'top' | 'bottom';
+  };
 
   @query('#resizeSubstationUI')
   resizeSubstationUI!: Dialog;
@@ -153,12 +158,18 @@ export class SLDEditor extends LitElement {
   mouseY = 0;
 
   @state()
+  mouseX2 = 0;
+
+  @state()
+  mouseY2 = 0;
+
+  @state()
   menu?: { element: Element; top: number; left: number };
 
   svgCoordinates(clientX: number, clientY: number) {
     const p = new DOMPoint(clientX, clientY);
     const { x, y } = p.matrixTransform(this.sld.getScreenCTM()!.inverse());
-    return [x, y].map(coord => Math.max(0, Math.floor(coord)));
+    return [x, y].map(coord => Math.max(0, coord));
   }
 
   canPlaceAt(element: Element, x: number, y: number, w: number, h: number) {
@@ -264,6 +275,28 @@ export class SLDEditor extends LitElement {
     window.removeEventListener('click', this.handleClick);
   }
 
+  nearestOpenTerminal(equipment?: Element): 'top' | 'bottom' | undefined {
+    if (!equipment) return undefined;
+    const topTerminal = equipment.querySelector('Terminal[name="T1"]');
+    const bottomTerminal = equipment.querySelector('Terminal:not([name="T1"])');
+    if (topTerminal && bottomTerminal) return undefined;
+    if (
+      singleTerminal.has(equipment.getAttribute('type') ?? '') &&
+      (topTerminal || bottomTerminal)
+    )
+      return undefined;
+    if (topTerminal) return 'bottom';
+    if (bottomTerminal) return 'top';
+
+    const [mX2, mY2] = [this.mouseX2, this.mouseY2].map(n => n % 1);
+    const { rot } = attributes(equipment);
+    if (rot === 0 && mY2 === 0.5) return 'bottom';
+    if (rot === 1 && mX2 === 0) return 'bottom';
+    if (rot === 2 && mY2 === 0) return 'bottom';
+    if (rot === 3 && mX2 === 0.5) return 'bottom';
+    return 'top';
+  }
+
   render() {
     const {
       dim: [w, h],
@@ -271,11 +304,6 @@ export class SLDEditor extends LitElement {
 
     const placingTarget =
       this.placing?.tagName === 'VoltageLevel'
-        ? svg`<rect width="100%" height="100%" fill="url(#grid)"></rect>`
-        : nothing;
-
-    const connectingTarget =
-      this.connecting?.equipment.closest('Substation') === this.substation
         ? svg`<rect width="100%" height="100%" fill="url(#grid)"></rect>`
         : nothing;
 
@@ -287,7 +315,7 @@ export class SLDEditor extends LitElement {
       )
         placingElement = svg`${this.renderContainer(this.placing, true)}`;
       else if (this.placing.tagName === 'ConductingEquipment')
-        placingElement = this.renderEquipment(this.placing, true);
+        placingElement = this.renderEquipment(this.placing, { preview: true });
     }
 
     let placingIndicator = svg``;
@@ -334,7 +362,7 @@ export class SLDEditor extends LitElement {
 
     const connectionPreview = [];
     if (this.connecting) {
-      const { equipment, path } = this.connecting;
+      const { equipment, path, terminal } = this.connecting;
       let i = 0;
       while (i < path.length - 2) {
         const [x1, y1] = path[i];
@@ -364,7 +392,13 @@ export class SLDEditor extends LitElement {
           return x === this.mouseX && y === this.mouseY;
         });
 
-      if (targetEq) [[x4, y4], [x3, y3]] = connectionStartPoints(targetEq);
+      const toTerminal = this.nearestOpenTerminal(targetEq);
+
+      if (targetEq && toTerminal) {
+        const { far, close } = connectionStartPoints(targetEq)[toTerminal];
+        [x3, y3] = far;
+        [x4, y4] = close;
+      }
 
       const x2 = vertical ? oldX2 : x3;
       const y2 = vertical ? y3 : oldY2;
@@ -375,19 +409,27 @@ export class SLDEditor extends LitElement {
         svg`<line x1="${x2}" y1="${y2}" x2="${x3}" y2="${y3}"
                 stroke-linecap="square" stroke="black" stroke-width="0.06" />`,
         svg`<line x1="${x3}" y1="${y3}" x2="${x4}" y2="${y4}"
-                stroke-linecap="square" stroke="black" stroke-width="0.06" />`,
-        svg`<circle cx="${x4}" cy="${y4}" r="1" fill="none" pointer-events="all"
-              @click=${() => {
-                path[path.length - 1] = [x2, y2];
-                path.push([x3, y3]);
-                path.push([x4, y4]);
-                cleanPath(path);
-                this.requestUpdate();
-                if (targetEq)
-                  this.dispatchEvent(
-                    newConnectEvent({ equipment, path, connectTo: targetEq })
-                  );
-              }}/>`
+                stroke-linecap="square" stroke="black" stroke-width="0.06" />`
+      );
+      connectionPreview.push(
+        svg`<rect width="100%" height="100%" fill="url(#grid)"
+      @click=${() => {
+        path[path.length - 1] = [x2, y2];
+        path.push([x3, y3]);
+        path.push([x4, y4]);
+        cleanPath(path);
+        this.requestUpdate();
+        if (targetEq)
+          this.dispatchEvent(
+            newConnectEvent({
+              equipment,
+              terminal,
+              path,
+              connectTo: targetEq,
+              toTerminal,
+            })
+          );
+      }}></rect>`
       );
     }
 
@@ -419,7 +461,7 @@ export class SLDEditor extends LitElement {
         >
           <mwc-list
             @selected=${({ detail: { index } }: SingleSelectedEvent) => {
-              const { flip, rot } = attributes(element);
+              const { flip } = attributes(element);
               [
                 () => {
                   this.dispatchEvent(
@@ -435,17 +477,7 @@ export class SLDEditor extends LitElement {
                   );
                 },
                 () => {
-                  this.dispatchEvent(
-                    newEditEvent({
-                      element,
-                      attributes: {
-                        'esld:rot': {
-                          namespaceURI: sldNs,
-                          value: ((rot + 1) % 4).toString(),
-                        },
-                      },
-                    })
-                  );
+                  this.dispatchEvent(newRotateEvent(element));
                 },
                 () => this.dispatchEvent(newStartPlaceEvent(element)),
               ][index]();
@@ -496,8 +528,10 @@ export class SLDEditor extends LitElement {
         fill="none"
         @mousemove=${(e: MouseEvent) => {
           const [x, y] = this.svgCoordinates(e.clientX, e.clientY);
-          this.mouseX = x;
-          this.mouseY = y;
+          this.mouseX = Math.floor(x);
+          this.mouseY = Math.floor(y);
+          this.mouseX2 = Math.floor(x * 2) / 2;
+          this.mouseY2 = Math.floor(y * 2) / 2;
         }}
       >
         <style>
@@ -544,14 +578,19 @@ export class SLDEditor extends LitElement {
           .filter(child => child.tagName === 'VoltageLevel')
           .map(vl => svg`${this.renderContainer(vl)}`)}
         ${placingElement} ${placingIndicator} ${resizingIndicator}
-        ${connectingTarget} ${connectionPreview}
+        ${connectionPreview}
+        ${this.connecting?.equipment.closest('Substation') === this.substation
+          ? Array.from(
+              this.substation.querySelectorAll('ConductingEquipment')
+            ).map(eq => this.renderEquipment(eq, { connect: true }))
+          : nothing}
         ${Array.from(this.substation.querySelectorAll('ConnectivityNode'))
           .filter(
-            child =>
-              child.getAttribute('name') !== 'grounded' &&
+            node =>
+              node.getAttribute('name') !== 'grounded' &&
               !(
                 this.placing &&
-                child.closest(this.placing.tagName) === this.placing
+                node.closest(this.placing.tagName) === this.placing
               )
           )
           .map(cNode => this.renderConnectivityNode(cNode))}
@@ -758,8 +797,16 @@ export class SLDEditor extends LitElement {
     </g>`;
   }
 
-  renderEquipment(equipment: Element, preview = false) {
+  renderEquipment(
+    equipment: Element,
+    { preview = false, connect = false } = {}
+  ) {
     if (this.placing === equipment && !preview) return svg``;
+    if (
+      this.connecting?.equipment.closest('Substation') === this.substation &&
+      !connect
+    )
+      return svg``;
 
     const [x, y] = this.renderedPosition(equipment);
     const { flip, rot } = attributes(equipment);
@@ -793,24 +840,30 @@ export class SLDEditor extends LitElement {
         };
     }
 
-    const [inputTerminal, outputTerminal] = Array.from(
-      equipment.children
-    ).filter(child => child.tagName === 'Terminal');
+    const terminals = Array.from(equipment.children).filter(
+      c => c.tagName === 'Terminal'
+    );
+    const inputTerminal = terminals.find(t => t.getAttribute('name') === 'T1');
+    const outputTerminal = terminals.find(t => t.getAttribute('name') !== 'T1');
 
     const termColors = ['#BB1326', '#F5E214'];
-    const termFill = termColors[this.connecting ? 1 : 0];
-    const termStroke = termColors[this.connecting ? 0 : 1];
+    const termFill = termColors[connect ? 1 : 0];
+    const termStroke = termColors[connect ? 0 : 1];
 
     const input =
       inputTerminal ||
       this.placing ||
       this.resizing ||
       this.connecting?.equipment === equipment ||
-      (this.connecting && this.mouseX === x && this.mouseY === y)
+      (this.connecting &&
+        this.mouseX === x &&
+        this.mouseY === y &&
+        this.nearestOpenTerminal(equipment) === 'top')
         ? nothing
         : svg`<circle cx="0.5" cy="0" r="0.2" opacity="0.4"
       fill="${termFill}" stroke="${termStroke}"
-    @click=${() => this.dispatchEvent(newStartConnectEvent(equipment))}
+    @click=${() =>
+      this.dispatchEvent(newStartConnectEvent({ equipment, terminal: 'top' }))}
     @contextmenu=${(e: MouseEvent) => {
       e.preventDefault();
     }}
@@ -821,13 +874,18 @@ export class SLDEditor extends LitElement {
       this.placing ||
       this.resizing ||
       this.connecting?.equipment === equipment ||
-      (this.connecting && this.mouseX === x && this.mouseY === y) ||
-      singleTerminal.has(eqType) ||
-      !inputTerminal
+      (this.connecting &&
+        this.mouseX === x &&
+        this.mouseY === y &&
+        this.nearestOpenTerminal(equipment) === 'bottom') ||
+      singleTerminal.has(eqType)
         ? nothing
         : svg`<circle cx="0.5" cy="1" r="0.2" opacity="0.4"
       fill="${termFill}" stroke="${termStroke}"
-    @click=${() => this.dispatchEvent(newStartConnectEvent(equipment))}
+    @click=${() =>
+      this.dispatchEvent(
+        newStartConnectEvent({ equipment, terminal: 'bottom' })
+      )}
     @contextmenu=${(e: MouseEvent) => {
       e.preventDefault();
     }}
@@ -844,23 +902,15 @@ export class SLDEditor extends LitElement {
       flip ? ' scale(-1,1)' : ''
     }" transform-origin="0.5 0.5">
       <title>${equipment.getAttribute('name')}</title>
-      <use href="#${symbol}" />
-      <rect width="1" height="1" fill="none" pointer-events="all"
+      <use href="#${symbol}" pointer-events="none" />
+      <rect width="1" height="1" fill="none" pointer-events="${
+        connect ? 'none' : 'all'
+      }"
         @click=${handleClick}
         @auxclick=${({ button }: MouseEvent) => {
           if (button === 1)
             // middle mouse button
-            this.dispatchEvent(
-              newEditEvent({
-                element: equipment,
-                attributes: {
-                  'esld:rot': {
-                    namespaceURI: sldNs,
-                    value: ((rot + 1) % 4).toString(),
-                  },
-                },
-              })
-            );
+            this.dispatchEvent(newRotateEvent(equipment));
         }}
         @contextmenu=${(e: MouseEvent) => {
           this.menu = { element: equipment, left: e.clientX, top: e.clientY };
@@ -897,7 +947,6 @@ export class SLDEditor extends LitElement {
       c => c.tagName === 'Section'
     );
     sections.forEach(section => {
-      const hue = Math.random() * 360;
       const vertices = Array.from(section.children)
         .filter(c => c.tagName === 'Vertex')
         .map(vertex => this.renderedPosition(vertex));
@@ -907,13 +956,13 @@ export class SLDEditor extends LitElement {
         const [x2, y2] = vertices[i + 1];
         lines.push(
           svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
-                stroke-linecap="square" stroke="hsl(${hue}, 100%, 50%)" stroke-width="0.06" />`
+                stroke-linecap="square" stroke="black" stroke-width="0.06" />`
         );
         lines.push(
           svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
                 pointer-events="all" @click=${() => {
                   if (!this.connecting) return;
-                  const { equipment, path } = this.connecting;
+                  const { equipment, path, terminal } = this.connecting;
                   if (
                     equipment.querySelector(
                       `Terminal[connectivityNode="${cNode.getAttribute(
@@ -935,7 +984,12 @@ export class SLDEditor extends LitElement {
                   path.push([x3, y3]);
                   cleanPath(path);
                   this.dispatchEvent(
-                    newConnectEvent({ equipment, path, connectTo: cNode })
+                    newConnectEvent({
+                      equipment,
+                      terminal,
+                      path,
+                      connectTo: cNode,
+                    })
                   );
                 }}
                 stroke-linecap="${

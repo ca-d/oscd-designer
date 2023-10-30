@@ -27,28 +27,45 @@ export function attributes(element: Element): Attrs {
   return { pos, dim, flip, rot };
 }
 
-export function connectionStartPoints(equipment: Element): [Point, Point] {
+export function connectionStartPoints(equipment: Element): {
+  top: { close: Point; far: Point };
+  bottom: { close: Point; far: Point };
+} {
   const {
     pos: [x, y],
     rot,
   } = attributes(equipment);
-  const input = !Array.from(equipment.children).find(
-    c => c.tagName === 'Terminal'
-  );
-  const terminalPoints: Point[] = [
-    [x + 0.5, input ? y : y + 1],
-    [input ? x + 1 : x, y + 0.5],
-    [x + 0.5, input ? y + 1 : y],
-    [input ? x : x + 1, y + 0.5],
-  ];
-  const connectionPoints: Point[] = [
-    [x + 0.5, input ? y - 0.5 : y + 1.5],
-    [input ? x + 1.5 : x - 0.5, y + 0.5],
-    [x + 0.5, input ? y + 1.5 : y - 0.5],
-    [input ? x - 0.5 : x + 1.5, y + 0.5],
-  ];
 
-  return [terminalPoints[rot], connectionPoints[rot]];
+  const top = {
+    close: [
+      [x + 0.5, y],
+      [x + 1, y + 0.5],
+      [x + 0.5, y + 1],
+      [x, y + 0.5],
+    ][rot] as Point,
+    far: [
+      [x + 0.5, y - 0.5],
+      [x + 1.5, y + 0.5],
+      [x + 0.5, y + 1.5],
+      [x - 0.5, y + 0.5],
+    ][rot] as Point,
+  };
+  const bottom = {
+    close: [
+      [x + 0.5, y + 1],
+      [x, y + 0.5],
+      [x + 0.5, y],
+      [x + 1, y + 0.5],
+    ][rot] as Point,
+    far: [
+      [x + 0.5, y + 1.5],
+      [x - 0.5, y + 0.5],
+      [x + 0.5, y - 0.5],
+      [x + 1.5, y + 0.5],
+    ][rot] as Point,
+  };
+
+  return { top, bottom };
 }
 
 export type ResizeDetail = {
@@ -83,7 +100,9 @@ export function newPlaceEvent(detail: PlaceDetail): PlaceEvent {
 export type ConnectDetail = {
   equipment: Element;
   path: Point[];
+  terminal: 'top' | 'bottom';
   connectTo: Element;
+  toTerminal?: 'top' | 'bottom';
 };
 export type ConnectEvent = CustomEvent<ConnectDetail>;
 export function newConnectEvent(detail: ConnectDetail): ConnectEvent {
@@ -93,8 +112,14 @@ export function newConnectEvent(detail: ConnectDetail): ConnectEvent {
     detail,
   });
 }
-
 export type StartEvent = CustomEvent<Element>;
+export function newRotateEvent(detail: Element): StartEvent {
+  return new CustomEvent('oscd-sld-rotate', {
+    bubbles: true,
+    composed: true,
+    detail,
+  });
+}
 export function newStartResizeEvent(detail: Element): StartEvent {
   return new CustomEvent('oscd-sld-start-resize', {
     bubbles: true,
@@ -109,7 +134,14 @@ export function newStartPlaceEvent(detail: Element): StartEvent {
     detail,
   });
 }
-export function newStartConnectEvent(detail: Element): StartEvent {
+export type StartConnectDetail = {
+  equipment: Element;
+  terminal: 'top' | 'bottom';
+};
+export type StartConnectEvent = CustomEvent<StartConnectDetail>;
+export function newStartConnectEvent(
+  detail: StartConnectDetail
+): StartConnectEvent {
   return new CustomEvent('oscd-sld-start-connect', {
     bubbles: true,
     composed: true,
@@ -122,8 +154,9 @@ declare global {
     ['oscd-sld-resize']: ResizeEvent;
     ['oscd-sld-place']: PlaceEvent;
     ['oscd-sld-connect']: ConnectEvent;
+    ['oscd-sld-rotate']: StartEvent;
     ['oscd-sld-start-resize']: StartEvent;
     ['oscd-sld-start-place']: StartEvent;
-    ['oscd-sld-start-connect']: StartEvent;
+    ['oscd-sld-start-connect']: StartConnectEvent;
   }
 }

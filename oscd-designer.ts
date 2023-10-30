@@ -14,6 +14,7 @@ import './sld-editor.js';
 import { bayIcon, equipmentIcon, voltageLevelIcon } from './icons.js';
 import {
   attributes,
+  ConnectDetail,
   ConnectEvent,
   connectionStartPoints,
   PlaceEvent,
@@ -21,6 +22,8 @@ import {
   privType,
   ResizeEvent,
   sldNs,
+  StartConnectDetail,
+  StartConnectEvent,
   StartEvent,
   xmlnsNs,
 } from './util.js';
@@ -106,24 +109,7 @@ function removeNode(node: Element): Edit[] {
       ?.querySelectorAll(
         `Terminal[connectivityNode="${node.getAttribute('pathName')}"]`
       ) ?? []
-  ).forEach(terminal => {
-    edits.push({ node: terminal });
-    const eq = terminal.parentElement!;
-    const siblings = Array.from(eq.children).filter(
-      c => c.tagName === 'Terminal'
-    );
-    if (terminal === siblings[0]) return;
-    const { rot } = attributes(eq);
-    edits.push({
-      element: eq,
-      attributes: {
-        'esld:rot': {
-          namespaceURI: sldNs,
-          value: ((rot + 2) % 4).toString(),
-        },
-      },
-    });
-  });
+  ).forEach(terminal => edits.push({ node: terminal }));
 
   return edits;
 }
@@ -329,7 +315,11 @@ export default class Designer extends LitElement {
   placing?: Element;
 
   @state()
-  connecting?: { equipment: Element; path: Point[] };
+  connecting?: {
+    equipment: Element;
+    path: Point[];
+    terminal: 'top' | 'bottom';
+  };
 
   zoomIn(step = 4) {
     this.gridSize += step;
@@ -350,10 +340,15 @@ export default class Designer extends LitElement {
     this.placing = element;
   }
 
-  startConnecting(equipment: Element | undefined) {
+  startConnecting({ equipment, terminal }: StartConnectDetail) {
     this.reset();
+    const { close, far } = connectionStartPoints(equipment)[terminal];
     if (equipment)
-      this.connecting = { equipment, path: connectionStartPoints(equipment) };
+      this.connecting = {
+        equipment,
+        path: [close, far],
+        terminal,
+      };
   }
 
   reset() {
@@ -386,6 +381,27 @@ export default class Designer extends LitElement {
         );
       }
     );
+  }
+
+  rotateElement(element: Element) {
+    const { rot } = attributes(element);
+    const edits = [
+      {
+        element,
+        attributes: {
+          'esld:rot': {
+            namespaceURI: sldNs,
+            value: ((rot + 1) % 4).toString(),
+          },
+        },
+      },
+    ] as Edit[];
+    if (element.tagName === 'ConductingEquipment') {
+      Array.from(element.getElementsByTagName('Terminal')).forEach(terminal =>
+        edits.push(...removeTerminal(terminal))
+      );
+    }
+    this.dispatchEvent(newEditEvent(edits));
   }
 
   placeElement(element: Element, parent: Element, x: number, y: number) {
@@ -423,11 +439,26 @@ export default class Designer extends LitElement {
       });
     });
 
-    if (element.tagName === 'ConductingEquipment') {
-      Array.from(element.getElementsByTagName('Terminal')).forEach(terminal =>
-        edits.push(...removeTerminal(terminal))
+    Array.from(element.getElementsByTagName('ConnectivityNode')).forEach(
+      cNode => {
+        Array.from(
+          this.doc.querySelectorAll(
+            `Terminal[connectivityNode="${cNode.getAttribute('pathName')}"]`
+          )
+        )
+          .filter(terminal => terminal.closest(element.tagName) !== element)
+          .forEach(terminal => edits.push(...removeTerminal(terminal)));
+      }
+    );
+    Array.from(element.getElementsByTagName('Terminal')).forEach(terminal => {
+      const cNode = this.doc.querySelector(
+        `ConnectivityNode[pathName="${terminal.getAttribute(
+          'connectivityNode'
+        )}"]`
       );
-    }
+      if (cNode?.closest(element.tagName) !== element)
+        edits.push(...removeTerminal(terminal));
+    });
 
     this.dispatchEvent(newEditEvent(edits));
     if (
@@ -439,7 +470,13 @@ export default class Designer extends LitElement {
     else this.reset();
   }
 
-  connectEquipment(equipment: Element, connectTo: Element, path: Point[]) {
+  connectEquipment({
+    equipment,
+    terminal,
+    connectTo,
+    toTerminal,
+    path,
+  }: ConnectDetail) {
     const edits = [] as Edit[];
     let cNode = connectTo;
     let connectivityNode = cNode.getAttribute('pathName') ?? '';
@@ -492,12 +529,8 @@ export default class Designer extends LitElement {
       'Section'
     );
     edits.push({ parent: priv!, node: section, reference: null });
-    const [fromTermName, toTermName] = [equipment, connectTo].map(eqOrNode => {
-      const termCount = Array.from(eqOrNode.children).filter(
-        child => child.tagName === 'Terminal'
-      ).length;
-      return `T${termCount + 1}`;
-    });
+    const fromTermName = terminal === 'top' ? 'T1' : 'T2';
+    const toTermName = toTerminal === 'top' ? 'T1' : 'T2';
     path.forEach(([x, y], i) => {
       const vertex = this.doc.createElementNS(
         this.doc.documentElement.namespaceURI,
@@ -552,42 +585,42 @@ export default class Designer extends LitElement {
     const [substationName, voltageLevelName, bayName, cNodeNameFromPath] =
       connectivityNode.split('/', 4);
     if (cNodeNameFromPath !== cNodeName) return;
-    const fromTerminal = this.doc.createElementNS(
+    const fromTermElement = this.doc.createElementNS(
       this.doc.documentElement.namespaceURI,
       'Terminal'
     );
-    fromTerminal.setAttribute('name', fromTermName);
-    fromTerminal.setAttribute('connectivityNode', connectivityNode);
-    fromTerminal.setAttribute('substationName', substationName);
-    fromTerminal.setAttribute('voltageLevelName', voltageLevelName);
-    fromTerminal.setAttribute('bayName', bayName);
-    fromTerminal.setAttribute('cNodeName', cNodeName);
+    fromTermElement.setAttribute('name', fromTermName);
+    fromTermElement.setAttribute('connectivityNode', connectivityNode);
+    fromTermElement.setAttribute('substationName', substationName);
+    fromTermElement.setAttribute('voltageLevelName', voltageLevelName);
+    fromTermElement.setAttribute('bayName', bayName);
+    fromTermElement.setAttribute('cNodeName', cNodeName);
     const fromTerminalCount = Array.from(equipment.children).filter(
       child => child.tagName === 'Terminal'
     ).length;
     if (fromTerminalCount > 1) return;
     edits.push({
-      node: fromTerminal,
+      node: fromTermElement,
       parent: equipment,
       reference: getReference(equipment, 'Terminal'),
     });
     if (connectTo.tagName === 'ConductingEquipment') {
-      const toTerminal = this.doc.createElementNS(
+      const toTermElement = this.doc.createElementNS(
         this.doc.documentElement.namespaceURI,
         'Terminal'
       );
-      toTerminal.setAttribute('name', toTermName);
-      toTerminal.setAttribute('connectivityNode', connectivityNode);
-      toTerminal.setAttribute('substationName', substationName);
-      toTerminal.setAttribute('voltageLevelName', voltageLevelName);
-      toTerminal.setAttribute('bayName', bayName);
-      toTerminal.setAttribute('cNodeName', cNodeName);
+      toTermElement.setAttribute('name', toTermName);
+      toTermElement.setAttribute('connectivityNode', connectivityNode);
+      toTermElement.setAttribute('substationName', substationName);
+      toTermElement.setAttribute('voltageLevelName', voltageLevelName);
+      toTermElement.setAttribute('bayName', bayName);
+      toTermElement.setAttribute('cNodeName', cNodeName);
       const toTerminalCount = Array.from(connectTo.children).filter(
         child => child.tagName === 'Terminal'
       ).length;
       if (toTerminalCount > 1) return;
       edits.push({
-        node: toTerminal,
+        node: toTermElement,
         parent: connectTo,
         reference: getReference(connectTo, 'Terminal'),
       });
@@ -615,7 +648,7 @@ export default class Designer extends LitElement {
             @oscd-sld-start-place=${({ detail }: StartEvent) => {
               this.startPlacing(detail);
             }}
-            @oscd-sld-start-connect=${({ detail }: StartEvent) => {
+            @oscd-sld-start-connect=${({ detail }: StartConnectEvent) => {
               this.startConnecting(detail);
             }}
             @oscd-sld-resize=${({ detail: { element, w, h } }: ResizeEvent) => {
@@ -633,10 +666,10 @@ export default class Designer extends LitElement {
             @oscd-sld-place=${({
               detail: { element, parent, x, y },
             }: PlaceEvent) => this.placeElement(element, parent, x, y)}
-            @oscd-sld-connect=${({
-              detail: { equipment, connectTo, path },
-            }: ConnectEvent) =>
-              this.connectEquipment(equipment, connectTo, path)}
+            @oscd-sld-connect=${({ detail }: ConnectEvent) =>
+              this.connectEquipment(detail)}
+            @oscd-sld-rotate=${({ detail }: StartEvent) =>
+              this.rotateElement(detail)}
           ></sld-editor>`
       )}
       <nav>
