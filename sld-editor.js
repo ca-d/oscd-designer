@@ -153,11 +153,13 @@ let SLDEditor = class SLDEditor extends LitElement {
             return undefined;
         const topTerminal = equipment.querySelector('Terminal[name="T1"]');
         const bottomTerminal = equipment.querySelector('Terminal:not([name="T1"])');
+        const oneSided = singleTerminal.has((_a = equipment.getAttribute('type')) !== null && _a !== void 0 ? _a : '');
         if (topTerminal && bottomTerminal)
             return undefined;
-        if (singleTerminal.has((_a = equipment.getAttribute('type')) !== null && _a !== void 0 ? _a : '') &&
-            (topTerminal || bottomTerminal))
+        if (oneSided && (topTerminal || bottomTerminal))
             return undefined;
+        if (oneSided)
+            return 'top';
         if (topTerminal)
             return 'bottom';
         if (bottomTerminal)
