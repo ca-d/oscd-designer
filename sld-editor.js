@@ -374,7 +374,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             overflow: visible;
             font-family: 'Roboto', sans-serif;
             background: white;
-            color: #2b2b2b;
+            color: rgb(0, 0, 0 / 0.83);
           }
           .indicator.invalid {
             color: #bb1326;
@@ -402,7 +402,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             visibility: hidden;
           }
           .preview {
-            opacity: 0.6;
+            opacity: 0.83;
           }
         </style>
         ${symbols}
@@ -574,8 +574,8 @@ let SLDEditor = class SLDEditor extends LitElement {
       fill="white" stroke-dasharray="${isVL ? nothing : '0.18'}" stroke="${
         // eslint-disable-next-line no-nested-ternary
         invalid ? '#BB1326' : isVL ? '#F5E214' : '#12579B'}" stroke-width="0.06"></rect>
-      <text x="${x + 0.1}" y="${y - 0.2}" fill="#2b2b2b" pointer-events="none"
-      style="font: 0.6px sans-serif;">${name}</text>
+      <text x="${x + 0.1}" y="${y - 0.2}" fill="#000000" fill-opacity="0.83"
+      pointer-events="none" style="font: 0.6px sans-serif;">${name}</text>
       ${moveHandle}
       ${Array.from(bayOrVL.children)
             .filter(child => child.tagName === 'Bay')

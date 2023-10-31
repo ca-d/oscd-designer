@@ -1079,7 +1079,7 @@ ${mo(c)}
             overflow: visible;
             font-family: 'Roboto', sans-serif;
             background: white;
-            color: #2b2b2b;
+            color: rgb(0, 0, 0 / 0.83);
           }
           .indicator.invalid {
             color: #bb1326;
@@ -1107,7 +1107,7 @@ ${mo(c)}
             visibility: hidden;
           }
           .preview {
-            opacity: 0.6;
+            opacity: 0.83;
           }
         </style>
         ${fo}
@@ -1177,8 +1177,8 @@ ${mo(c)}
       <rect
     @click=${l||j} x="${d}" y="${s}" width="${c}" height="${p}"
       fill="white" stroke-dasharray="${a?j:"0.18"}" stroke="${m?"#BB1326":a?"#F5E214":"#12579B"}" stroke-width="0.06"></rect>
-      <text x="${d+.1}" y="${s-.2}" fill="#2b2b2b" pointer-events="none"
-      style="font: 0.6px sans-serif;">${r}</text>
+      <text x="${d+.1}" y="${s-.2}" fill="#000000" fill-opacity="0.83"
+      pointer-events="none" style="font: 0.6px sans-serif;">${r}</text>
       ${h}
       ${Array.from(t.children).filter((t=>"Bay"===t.tagName)).map((t=>this.renderContainer(t)))}
       ${Array.from(t.children).filter((t=>"ConductingEquipment"===t.tagName)).map((t=>this.renderEquipment(t)))}
@@ -1245,6 +1245,7 @@ ${mo(c)}
                 mini
                 label="Add ${t}"
                 @click=${()=>{const e=this.templateElements.ConductingEquipment.cloneNode();e.setAttribute("type",t),e.setAttribute("name",`${t}1`),this.startPlacing(e)}}
+                style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
               >
                 ${e=t,G`<svg
   id="${e}"
@@ -1258,19 +1259,23 @@ ${mo(e)}
               mini
               label="Add Bay"
               @click=${()=>{const t=this.templateElements.Bay.cloneNode();this.startPlacing(t)}}
+              style="--mdc-theme-secondary: #12579B;"
             >
               ${lo}
             </mwc-fab>`:j}${Array.from(this.doc.documentElement.children).find((t=>"Substation"===t.tagName))?U`<mwc-fab
               mini
               label="Add VoltageLevel"
               @click=${()=>{const t=this.templateElements.VoltageLevel.cloneNode();this.startPlacing(t)}}
+              style="--mdc-theme-secondary: #F5E214; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83);"
             >
               ${so}
-            </mwc-fab>`:j}<mwc-fab
+            </mwc-fab>`:j}
+        <mwc-fab
           mini
           icon="margin"
           @click=${()=>this.insertSubstation()}
           label="Add Substation"
+          style="--mdc-theme-secondary: #BB1326;"
         >
         </mwc-fab
         ><mwc-icon-button
