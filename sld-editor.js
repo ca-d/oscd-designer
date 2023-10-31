@@ -714,10 +714,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             while (i < vertices.length - 1) {
                 const [x1, y1] = vertices[i];
                 const [x2, y2] = vertices[i + 1];
-                lines.push(svg `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
-                stroke-linecap="square" stroke="black" stroke-width="0.06" />`);
-                lines.push(svg `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
-                pointer-events="all" @click=${() => {
+                const handleClick = () => {
                     if (!this.connecting)
                         return;
                     const { equipment, path, terminal } = this.connecting;
@@ -738,10 +735,16 @@ let SLDEditor = class SLDEditor extends LitElement {
                         path,
                         connectTo: cNode,
                     }));
-                }}
-                stroke-linecap="${[x1, y1, x2, y2].find(n => Number.isInteger(n)) === undefined
-                    ? 'square'
-                    : nothing}" stroke="none" stroke-width="${this.connecting ? '1' : '0.4'}" />`);
+                };
+                lines.push(svg `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
+                stroke-linecap="square" stroke="black" stroke-width="0.06" />`);
+                lines.push(svg `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
+                pointer-events="all" @click=${handleClick}
+                stroke="none" stroke-width="${this.connecting ? '1' : '0.4'}" />`);
+                if (this.connecting && ![x2, y2].find(n => Number.isInteger(n)))
+                    lines.push(svg `<rect x="${x2 - 0.5}" y="${y2 - 0.5}" width="1" height="1"
+                pointer-events="all" @click=${handleClick}
+                fill="none" />`);
                 i += 1;
             }
         });
