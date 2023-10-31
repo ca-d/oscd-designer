@@ -259,7 +259,7 @@ let SLDEditor = class SLDEditor extends LitElement {
                 path.push([x4, y4]);
                 cleanPath(path);
                 this.requestUpdate();
-                if (targetEq)
+                if (targetEq && toTerminal)
                     this.dispatchEvent(newConnectEvent({
                         equipment,
                         terminal,

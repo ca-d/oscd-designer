@@ -1017,7 +1017,7 @@ ${uo}
                 stroke-linecap="square" stroke="black" stroke-width="0.06" />`,G`<line x1="${g}" y1="${b}" x2="${c}" y2="${p}"
                 stroke-linecap="square" stroke="black" stroke-width="0.06" />`,G`<line x1="${c}" y1="${p}" x2="${m}" y2="${h}"
                 stroke-linecap="square" stroke="black" stroke-width="0.06" />`),s.push(G`<rect width="100%" height="100%" fill="url(#grid)"
-      @click=${()=>{e[e.length-1]=[g,b],e.push([c,p]),e.push([m,h]),ko(e),this.requestUpdate(),u&&this.dispatchEvent(Eo({equipment:t,terminal:i,path:e,connectTo:u,toTerminal:f}))}}></rect>`)}let l=U``;if(this.menu){const{element:t}=this.menu,[e,i,n]=["name","type","desc"].map((e=>{var i;return null!==(i=t.getAttribute(e))&&void 0!==i?i:""}));l=U`
+      @click=${()=>{e[e.length-1]=[g,b],e.push([c,p]),e.push([m,h]),ko(e),this.requestUpdate(),u&&f&&this.dispatchEvent(Eo({equipment:t,terminal:i,path:e,connectTo:u,toTerminal:f}))}}></rect>`)}let l=U``;if(this.menu){const{element:t}=this.menu,[e,i,n]=["name","type","desc"].map((e=>{var i;return null!==(i=t.getAttribute(e))&&void 0!==i?i:""}));l=U`
         <menu
           style="position: fixed; top: ${this.menu.top}px; left: ${this.menu.left}px; background: var(--oscd-base3, white); margin: 0px; padding: 0px; box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23); --mdc-list-vertical-padding: 0px;"
           ${di((async t=>{if(!(t instanceof HTMLElement))return;await this.updateComplete;const{bottom:e,right:i}=t.getBoundingClientRect();e>window.innerHeight&&(t.style.removeProperty("top"),t.style.bottom="0px"),i>window.innerWidth&&(t.style.removeProperty("left"),t.style.right="0px")}))}
