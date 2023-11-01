@@ -9,9 +9,8 @@ import '@material/mwc-dialog';
 import '@material/mwc-list';
 import '@material/mwc-list/mwc-list-item.js';
 import '@material/mwc-textfield';
-import { identity } from '@openscd/oscd-scl';
 import { equipmentGraphic, movePath, resizePath, symbols } from './icons.js';
-import { attributes, connectionStartPoints, newConnectEvent, newPlaceEvent, newResizeEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartResizeEvent, privType, sldNs, svgNs, xmlnsNs, } from './util.js';
+import { attributes, connectionStartPoints, elementPath, newConnectEvent, newPlaceEvent, newResizeEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartResizeEvent, privType, sldNs, svgNs, xmlnsNs, } from './util.js';
 function contains([x1, y1, w1, h1], [x2, y2, w2, h2]) {
     return x1 <= x2 && y1 <= y2 && x1 + w1 >= x2 + w2 && y1 + h1 >= y2 + h2;
 }
@@ -564,7 +563,7 @@ let SLDEditor = class SLDEditor extends LitElement {
 </a>
       `;
         }
-        return svg `<g class=${classMap({
+        return svg `<g id="${elementPath(bayOrVL)}" class=${classMap({
             voltagelevel: isVL,
             bay: !isVL,
             preview,
@@ -593,7 +592,7 @@ let SLDEditor = class SLDEditor extends LitElement {
     </g>`;
     }
     renderEquipment(equipment, { preview = false, connect = false } = {}) {
-        var _a, _b, _c;
+        var _a;
         if (this.placing === equipment && !preview)
             return svg ``;
         if (((_a = this.connecting) === null || _a === void 0 ? void 0 : _a.equipment.closest('Substation')) === this.substation &&
@@ -622,50 +621,56 @@ let SLDEditor = class SLDEditor extends LitElement {
                 };
         }
         const terminals = Array.from(equipment.children).filter(c => c.tagName === 'Terminal');
-        const inputTerminal = terminals.find(t => t.getAttribute('name') === 'T1');
-        const outputTerminal = terminals.find(t => t.getAttribute('name') !== 'T1');
-        const termColors = ['#BB1326', '#F5E214'];
-        const termFill = termColors[connect ? 1 : 0];
-        const termStroke = termColors[connect ? 0 : 1];
-        const input = inputTerminal ||
-            this.placing ||
-            this.resizing ||
-            ((_b = this.connecting) === null || _b === void 0 ? void 0 : _b.equipment) === equipment ||
-            (this.connecting &&
-                this.mouseX === x &&
-                this.mouseY === y &&
-                this.nearestOpenTerminal(equipment) === 'top')
+        const topTerminal = terminals.find(t => t.getAttribute('name') === 'T1');
+        const bottomTerminal = terminals.find(t => t.getAttribute('name') !== 'T1');
+        const topConnector = topTerminal || this.placing || this.resizing || this.connecting
             ? nothing
             : svg `<circle cx="0.5" cy="0" r="0.2" opacity="0.4"
-      fill="${termFill}" stroke="${termStroke}"
+      fill="#BB1326" stroke="#F5E214"
     @click=${() => this.dispatchEvent(newStartConnectEvent({ equipment, terminal: 'top' }))}
     @contextmenu=${(e) => {
                 e.preventDefault();
             }}
       />`;
-        const output = outputTerminal ||
-            this.placing ||
-            this.resizing ||
-            ((_c = this.connecting) === null || _c === void 0 ? void 0 : _c.equipment) === equipment ||
+        const topIndicator = !this.connecting ||
+            this.connecting.equipment === equipment ||
             (this.connecting &&
                 this.mouseX === x &&
                 this.mouseY === y &&
-                this.nearestOpenTerminal(equipment) === 'bottom') ||
+                this.nearestOpenTerminal(equipment) === 'top') ||
+            topTerminal
+            ? nothing
+            : svg `<polygon points="0.3,0 0.7,0 0.5,0.4" 
+                fill="#12579B" opacity="0.4" />`;
+        const bottomConnector = bottomTerminal ||
+            this.placing ||
+            this.resizing ||
+            this.connecting ||
             singleTerminal.has(eqType)
             ? nothing
             : svg `<circle cx="0.5" cy="1" r="0.2" opacity="0.4"
-      fill="${termFill}" stroke="${termStroke}"
+      fill="#BB1326" stroke="#F5E214"
     @click=${() => this.dispatchEvent(newStartConnectEvent({ equipment, terminal: 'bottom' }))}
     @contextmenu=${(e) => {
                 e.preventDefault();
             }}
       />`;
-        const id = equipment.parentElement ? identity(equipment) : nothing;
+        const bottomIndicator = !this.connecting ||
+            this.connecting.equipment === equipment ||
+            (this.connecting &&
+                this.mouseX === x &&
+                this.mouseY === y &&
+                this.nearestOpenTerminal(equipment) === 'bottom') ||
+            bottomTerminal ||
+            singleTerminal.has(eqType)
+            ? nothing
+            : svg `<polygon points="0.3,1 0.7,1 0.5,0.6" 
+                fill="#12579B" opacity="0.4" />`;
         return svg `<g class="${classMap({
             equipment: true,
             preview: this.placing === equipment,
         })}"
-    id="${id}"
+    id="${elementPath(equipment)}"
     transform="translate(${x} ${y}) rotate(${deg})${flip ? ' scale(-1,1)' : ''}" transform-origin="0.5 0.5">
       <title>${equipment.getAttribute('name')}</title>
       <use href="#${symbol}" pointer-events="none" />
@@ -680,9 +685,11 @@ let SLDEditor = class SLDEditor extends LitElement {
             this.menu = { element: equipment, left: e.clientX, top: e.clientY };
             e.preventDefault();
         }}
-        />
-      ${input}
-      ${output}
+      />
+      ${topConnector}
+      ${topIndicator}
+      ${bottomConnector}
+      ${bottomIndicator}
     </g>`;
     }
     renderConnectivityNode(cNode) {
@@ -748,7 +755,7 @@ let SLDEditor = class SLDEditor extends LitElement {
                 i += 1;
             }
         });
-        return svg `<g class="node">
+        return svg `<g class="node" id="${elementPath(cNode)}" >
         <title>${cNode.getAttribute('pathName')}</title>
         ${circles}
         ${lines}

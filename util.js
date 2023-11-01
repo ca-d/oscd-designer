@@ -2,6 +2,18 @@ export const privType = 'Transpower-SLD-Vertices';
 export const sldNs = 'https://transpower.co.nz/SCL/SSD/SLD/v0';
 export const xmlnsNs = 'http://www.w3.org/2000/xmlns/';
 export const svgNs = 'http://www.w3.org/2000/svg';
+function pathString(...args) {
+    return args.join('/');
+}
+export function elementPath(element, ...rest) {
+    const pedigree = [];
+    let child = element;
+    while ((child === null || child === void 0 ? void 0 : child.parentElement) && child.hasAttribute('name')) {
+        pedigree.unshift(child.getAttribute('name'));
+        child = child.parentElement;
+    }
+    return pathString(...pedigree, ...rest);
+}
 export function attributes(element) {
     var _a, _b;
     const [x, y, w, h, rotVal] = ['x', 'y', 'w', 'h', 'rot'].map(name => { var _a; return parseFloat((_a = element.getAttributeNS(sldNs, name)) !== null && _a !== void 0 ? _a : '0'); });
