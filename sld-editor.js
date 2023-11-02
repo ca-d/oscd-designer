@@ -9,8 +9,9 @@ import '@material/mwc-dialog';
 import '@material/mwc-list';
 import '@material/mwc-list/mwc-list-item.js';
 import '@material/mwc-textfield';
+import { identity } from '@openscd/oscd-scl';
 import { equipmentGraphic, movePath, resizePath, symbols } from './icons.js';
-import { attributes, connectionStartPoints, elementPath, newConnectEvent, newPlaceEvent, newResizeEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartResizeEvent, privType, sldNs, svgNs, } from './util.js';
+import { attributes, connectionStartPoints, newConnectEvent, newPlaceEvent, newResizeEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartResizeEvent, privType, sldNs, svgNs, } from './util.js';
 function contains([x1, y1, w1, h1], [x2, y2, w2, h2]) {
     return x1 <= x2 && y1 <= y2 && x1 + w1 >= x2 + w2 && y1 + h1 >= y2 + h2;
 }
@@ -549,7 +550,7 @@ let SLDEditor = class SLDEditor extends LitElement {
 </a>
       `;
         }
-        return svg `<g id="${elementPath(bayOrVL)}" class=${classMap({
+        return svg `<g id="${bayOrVL.parentElement ? identity(bayOrVL) : nothing}" class=${classMap({
             voltagelevel: isVL,
             bay: !isVL,
             preview,
@@ -656,7 +657,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             equipment: true,
             preview: this.placing === equipment,
         })}"
-    id="${elementPath(equipment)}"
+    id="${equipment.parentElement ? identity(equipment) : nothing}"
     transform="translate(${x} ${y}) rotate(${deg})${flip ? ' scale(-1,1)' : ''}" transform-origin="0.5 0.5">
       <title>${equipment.getAttribute('name')}</title>
       <use href="#${symbol}" pointer-events="none" />
@@ -739,7 +740,7 @@ let SLDEditor = class SLDEditor extends LitElement {
                 i += 1;
             }
         });
-        return svg `<g class="node" id="${elementPath(cNode)}" >
+        return svg `<g class="node" id="${cNode.parentElement ? identity(cNode) : nothing}" >
         <title>${cNode.getAttribute('pathName')}</title>
         ${circles}
         ${lines}

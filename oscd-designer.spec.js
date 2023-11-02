@@ -75,17 +75,8 @@ describe('Designer', () => {
         element = await fixture(html `<oscd-designer></oscd-designer>`);
         expect((_a = element.shadowRoot) === null || _a === void 0 ? void 0 : _a.querySelector('p')).to.contain.text('SCL');
     });
-    it('adds the SLD XML namespace to any substations lacking it', async () => {
-        const doc = new DOMParser().parseFromString(substationDocString, 'application/xml');
-        element = await fixture(html `<oscd-designer
-        docName="testDoc"
-        .doc=${doc}
-        @oscd-edit=${({ detail }) => {
-            handleEdit(detail);
-            element.editCount += 1;
-        }}
-      ></oscd-designer>`);
-        expect(doc.querySelector('Substation')).to.have.attribute('xmlns:esld');
+    it('adds the SLD XML namespace if doc lacks it', async () => {
+        expect(element.doc.documentElement).to.have.attribute('xmlns:esld');
     });
     it('adds a substation on add button click', async () => {
         var _a;
