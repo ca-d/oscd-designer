@@ -14,14 +14,22 @@ export function elementPath(element, ...rest) {
     }
     return pathString(...pedigree, ...rest);
 }
+export function xmlBoolean(value) {
+    var _a;
+    return ['true', '1'].includes((_a = value === null || value === void 0 ? void 0 : value.trim()) !== null && _a !== void 0 ? _a : 'false');
+}
+export function isBusBar(element) {
+    var _a;
+    return (element.tagName === 'Bay' &&
+        xmlBoolean((_a = element.querySelector('Section[*|bus]')) === null || _a === void 0 ? void 0 : _a.getAttributeNS(sldNs, 'bus')));
+}
 export function attributes(element) {
-    var _a, _b;
     const [x, y, w, h, rotVal] = ['x', 'y', 'w', 'h', 'rot'].map(name => { var _a; return parseFloat((_a = element.getAttributeNS(sldNs, name)) !== null && _a !== void 0 ? _a : '0'); });
     const pos = [x, y].map(d => Math.max(0, d));
     const dim = [w, h].map(d => Math.max(1, d));
-    const flip = ['true', '1'].includes((_b = (_a = element.getAttributeNS(sldNs, 'flip')) === null || _a === void 0 ? void 0 : _a.trim()) !== null && _b !== void 0 ? _b : 'false');
+    const [flip, bus] = ['flip', 'bus'].map(name => xmlBoolean(element.getAttributeNS(sldNs, name)));
     const rot = (((rotVal % 4) + 4) % 4);
-    return { pos, dim, flip, rot };
+    return { pos, dim, flip, rot, bus };
 }
 export function connectionStartPoints(equipment) {
     const { pos: [x, y], rot, } = attributes(equipment);

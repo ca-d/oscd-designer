@@ -11,7 +11,7 @@ import '@material/mwc-list/mwc-list-item.js';
 import '@material/mwc-textfield';
 import { identity } from '@openscd/oscd-scl';
 import { equipmentGraphic, movePath, resizePath, symbols } from './icons.js';
-import { attributes, connectionStartPoints, newConnectEvent, newPlaceEvent, newResizeEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartResizeEvent, privType, sldNs, svgNs, } from './util.js';
+import { attributes, connectionStartPoints, isBusBar, newConnectEvent, newPlaceEvent, newResizeEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartResizeEvent, privType, sldNs, svgNs, xmlBoolean, } from './util.js';
 function contains([x1, y1, w1, h1], [x2, y2, w2, h2]) {
     return x1 <= x2 && y1 <= y2 && x1 + w1 >= x2 + w2 && y1 + h1 >= y2 + h2;
 }
@@ -42,6 +42,9 @@ function cleanPath(path) {
             path.splice(i, 1);
         i -= 1;
     }
+}
+function isBay(element) {
+    return element.tagName === 'Bay' && !isBusBar(element);
 }
 const parentTags = {
     ConductingEquipment: 'Bay',
@@ -87,7 +90,9 @@ let SLDEditor = class SLDEditor extends LitElement {
     canPlaceAt(element, x, y, w, h) {
         if (element.tagName === 'Substation')
             return true;
-        const overlappingSibling = Array.from(this.substation.querySelectorAll(element.tagName)).find(sibling => sibling !== element && overlapsRect(sibling, x, y, w, h));
+        const overlappingSibling = Array.from(this.substation.querySelectorAll(element.tagName)).find(sibling => sibling !== element &&
+            overlapsRect(sibling, x, y, w, h) &&
+            !(isBay(element) && isBusBar(sibling)));
         if (overlappingSibling) {
             return false;
         }
@@ -113,10 +118,10 @@ let SLDEditor = class SLDEditor extends LitElement {
             return false;
         return true;
     }
-    renderedPosition(container) {
-        let { pos: [x, y], } = attributes(container);
+    renderedPosition(element) {
+        let { pos: [x, y], } = attributes(element);
         if (this.placing &&
-            container.closest(this.placing.tagName) === this.placing) {
+            element.closest(this.placing.tagName) === this.placing) {
             const { pos: [parentX, parentY], } = attributes(this.placing);
             x += this.mouseX - parentX;
             y += this.mouseY - parentY;
@@ -168,13 +173,17 @@ let SLDEditor = class SLDEditor extends LitElement {
         const placingTarget = ((_a = this.placing) === null || _a === void 0 ? void 0 : _a.tagName) === 'VoltageLevel'
             ? svg `<rect width="100%" height="100%" fill="url(#grid)"></rect>`
             : nothing;
+        const resizingTarget = this.resizing && isBusBar(this.resizing)
+            ? svg `<rect width="100%" height="100%" fill="url(#grid)"></rect>`
+            : nothing;
         let placingElement = svg ``;
         if (this.placing) {
-            if (this.placing.tagName === 'VoltageLevel' ||
-                this.placing.tagName === 'Bay')
+            if (this.placing.tagName === 'VoltageLevel' || isBay(this.placing))
                 placingElement = svg `${this.renderContainer(this.placing, true)}`;
             else if (this.placing.tagName === 'ConductingEquipment')
                 placingElement = this.renderEquipment(this.placing, { preview: true });
+            else if (isBusBar(this.placing))
+                placingElement = this.renderBusBar(this.placing);
         }
         let placingIndicator = svg ``;
         if (this.placing) {
@@ -191,7 +200,7 @@ let SLDEditor = class SLDEditor extends LitElement {
     `;
         }
         let resizingIndicator = svg ``;
-        if (this.resizing) {
+        if (this.resizing && !isBusBar(this.resizing)) {
             const { pos: [x, y], } = attributes(this.resizing);
             const newW = Math.max(1, this.mouseX - x + 1);
             const newH = Math.max(1, this.mouseY - y + 1);
@@ -214,7 +223,7 @@ let SLDEditor = class SLDEditor extends LitElement {
                 const [x1, y1] = path[i];
                 const [x2, y2] = path[i + 1];
                 connectionPreview.push(svg `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
-                stroke-linecap="square" stroke="black" stroke-width="0.06" />`);
+                stroke-linecap="square" stroke="black" />`);
                 i += 1;
             }
             const [[x1, y1], [oldX2, oldY2]] = path.slice(-2);
@@ -237,9 +246,9 @@ let SLDEditor = class SLDEditor extends LitElement {
             const x2 = vertical ? oldX2 : x3;
             const y2 = vertical ? y3 : oldY2;
             connectionPreview.push(svg `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
-                stroke-linecap="square" stroke="black" stroke-width="0.06" />`, svg `<line x1="${x2}" y1="${y2}" x2="${x3}" y2="${y3}"
-                stroke-linecap="square" stroke="black" stroke-width="0.06" />`, svg `<line x1="${x3}" y1="${y3}" x2="${x4}" y2="${y4}"
-                stroke-linecap="square" stroke="black" stroke-width="0.06" />`);
+                stroke-linecap="square" stroke="black" />`, svg `<line x1="${x2}" y1="${y2}" x2="${x3}" y2="${y3}"
+                stroke-linecap="square" stroke="black" />`, svg `<line x1="${x3}" y1="${y3}" x2="${x4}" y2="${y4}"
+                stroke-linecap="square" stroke="black" />`);
             connectionPreview.push(svg `<rect width="100%" height="100%" fill="url(#grid)"
       @click=${() => {
                 path[path.length - 1] = [x2, y2];
@@ -315,7 +324,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             </mwc-list-item>
             <mwc-list-item graphic="icon">
               <span>Move</span>
-              <mwc-icon slot="graphic">drag_pan</mwc-icon>
+              <mwc-icon slot="graphic">open_with</mwc-icon>
             </mwc-list-item>
             <li divider role="separator"></li>
             <mwc-list-item twoline graphic="avatar" noninteractive>
@@ -344,7 +353,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         viewBox="0 0 ${w} ${h}"
         width="${w * this.gridSize}"
         height="${h * this.gridSize}"
-        stroke-width="0.1"
+        stroke-width="0.06"
         fill="none"
         @mousemove=${(e) => {
             const [x, y] = this.svgCoordinates(e.clientX, e.clientY);
@@ -397,16 +406,17 @@ let SLDEditor = class SLDEditor extends LitElement {
         ${Array.from(this.substation.children)
             .filter(child => child.tagName === 'VoltageLevel')
             .map(vl => svg `${this.renderContainer(vl)}`)}
-        ${placingElement} ${placingIndicator} ${resizingIndicator}
         ${connectionPreview}
         ${((_b = this.connecting) === null || _b === void 0 ? void 0 : _b.equipment.closest('Substation')) === this.substation
             ? Array.from(this.substation.querySelectorAll('ConductingEquipment')).map(eq => this.renderEquipment(eq, { connect: true }))
             : nothing}
+        ${resizingTarget}
         ${Array.from(this.substation.querySelectorAll('ConnectivityNode'))
             .filter(node => node.getAttribute('name') !== 'grounded' &&
             !(this.placing &&
                 node.closest(this.placing.tagName) === this.placing))
             .map(cNode => this.renderConnectivityNode(cNode))}
+        ${placingElement} ${placingIndicator} ${resizingIndicator}
       </svg>
       ${menu}
       <mwc-dialog
@@ -559,12 +569,12 @@ let SLDEditor = class SLDEditor extends LitElement {
     @click=${handleClick || nothing} x="${x}" y="${y}" width="${w}" height="${h}"
       fill="white" stroke-dasharray="${isVL ? nothing : '0.18'}" stroke="${
         // eslint-disable-next-line no-nested-ternary
-        invalid ? '#BB1326' : isVL ? '#F5E214' : '#12579B'}" stroke-width="0.06"></rect>
+        invalid ? '#BB1326' : isVL ? '#F5E214' : '#12579B'}"></rect>
       <text x="${x + 0.1}" y="${y - 0.2}" fill="#000000" fill-opacity="0.83"
       pointer-events="none" style="font: 0.6px sans-serif;">${name}</text>
       ${moveHandle}
       ${Array.from(bayOrVL.children)
-            .filter(child => child.tagName === 'Bay')
+            .filter(isBay)
             .map(bay => this.renderContainer(bay))}
       ${Array.from(bayOrVL.children)
             .filter(child => child.tagName === 'ConductingEquipment')
@@ -679,7 +689,31 @@ let SLDEditor = class SLDEditor extends LitElement {
       ${bottomIndicator}
     </g>`;
     }
+    renderBusBar(busBar) {
+        const [x, y] = this.renderedPosition(busBar);
+        let placingTarget = svg ``;
+        if (this.placing === busBar)
+            placingTarget = svg `<rect x="${x}" y="${y}" width="1" height="1"
+          pointer-events="all" fill="none" 
+          @click=${() => {
+                const parent = Array.from(this.substation.querySelectorAll(':root > Substation > VoltageLevel')).find(vl => containsRect(vl, x, y, 1, 1));
+                if (parent)
+                    this.dispatchEvent(newPlaceEvent({
+                        x,
+                        y,
+                        element: busBar,
+                        parent: parent,
+                    }));
+            }}
+        />`;
+        return svg `<g class="bus" id="${busBar.parentElement ? identity(busBar) : nothing}">
+      <title>${busBar.getAttribute('name')}</title>
+      ${this.renderConnectivityNode(busBar.querySelector('ConnectivityNode'))}
+      ${placingTarget}
+    </g>`;
+    }
     renderConnectivityNode(cNode) {
+        var _a;
         const priv = cNode.querySelector(`Private[type="${privType}"]`);
         if (!priv)
             return nothing;
@@ -700,36 +734,71 @@ let SLDEditor = class SLDEditor extends LitElement {
         intersections.forEach(([x, y]) => circles.push(svg `<circle fill="black" cx="${x}" cy="${y}" r="0.15" />`));
         const lines = [];
         const sections = Array.from(priv.getElementsByTagNameNS(sldNs, 'Section'));
+        const bay = cNode.closest('Bay');
         sections.forEach(section => {
+            const busBar = xmlBoolean(section.getAttributeNS(sldNs, 'bus'));
             const vertices = Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex')).map(vertex => this.renderedPosition(vertex));
             let i = 0;
             while (i < vertices.length - 1) {
                 const [x1, y1] = vertices[i];
-                const [x2, y2] = vertices[i + 1];
-                const handleClick = () => {
-                    if (!this.connecting)
-                        return;
-                    const { equipment, path, terminal } = this.connecting;
-                    if (equipment.querySelector(`Terminal[connectivityNode="${cNode.getAttribute('pathName')}"]`))
-                        return;
-                    const [[oldX1, _y], [oldX2, oldY2]] = path.slice(-2);
-                    const vertical = oldX1 === oldX2;
-                    const x3 = this.mouseX + 0.5;
-                    const y3 = this.mouseY + 0.5;
-                    const newX2 = vertical ? oldX2 : x3;
-                    const newY2 = vertical ? y3 : oldY2;
-                    path[path.length - 1] = [newX2, newY2];
-                    path.push([x3, y3]);
-                    cleanPath(path);
-                    this.dispatchEvent(newConnectEvent({
-                        equipment,
-                        terminal,
-                        path,
-                        connectTo: cNode,
-                    }));
-                };
+                let [x2, y2] = vertices[i + 1];
+                let handleClick = nothing;
+                if (busBar && bay) {
+                    handleClick = () => this.dispatchEvent(newStartPlaceEvent(bay));
+                }
+                if (busBar && this.resizing === bay) {
+                    if (i === 0) {
+                        const dx = Math.abs(x1 - this.mouseX);
+                        const dy = Math.abs(y1 - this.mouseY);
+                        if (dx > dy) {
+                            x2 = this.mouseX + 0.5;
+                            y2 = y1;
+                        }
+                        else {
+                            y2 = this.mouseY + 0.5;
+                            x2 = x1;
+                        }
+                        if (x1 === x2 && y1 === y2)
+                            x2 += 1;
+                    }
+                    handleClick = () => {
+                        this.dispatchEvent(newPlaceEvent({
+                            parent: section,
+                            element: section.getElementsByTagNameNS(sldNs, 'Vertex')[vertices.length - 1],
+                            x: x2,
+                            y: y2,
+                        }));
+                    };
+                    lines.push(svg `<rect x="${this.mouseX}" y="${this.mouseY}"
+              width="1" height="1" fill="none" pointer-events="all"
+              @click=${handleClick} />`);
+                }
+                if (this.connecting)
+                    handleClick = () => {
+                        if (!this.connecting)
+                            return;
+                        const { equipment, path, terminal } = this.connecting;
+                        if (equipment.querySelector(`Terminal[connectivityNode="${cNode.getAttribute('pathName')}"]`))
+                            return;
+                        const [[oldX1, _y], [oldX2, oldY2]] = path.slice(-2);
+                        const vertical = oldX1 === oldX2;
+                        const x3 = this.mouseX + 0.5;
+                        const y3 = this.mouseY + 0.5;
+                        const newX2 = vertical ? oldX2 : x3;
+                        const newY2 = vertical ? y3 : oldY2;
+                        path[path.length - 1] = [newX2, newY2];
+                        path.push([x3, y3]);
+                        cleanPath(path);
+                        this.dispatchEvent(newConnectEvent({
+                            equipment,
+                            terminal,
+                            path,
+                            connectTo: cNode,
+                        }));
+                    };
                 lines.push(svg `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
-                stroke-linecap="square" stroke="black" stroke-width="0.06" />`);
+                stroke-width="${busBar ? 0.12 : nothing}"
+                stroke-linecap="square" stroke="black" />`);
                 lines.push(svg `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
                 pointer-events="all" @click=${handleClick}
                 stroke="none" stroke-width="${this.connecting ? '1' : '0.4'}" />`);
@@ -740,7 +809,7 @@ let SLDEditor = class SLDEditor extends LitElement {
                 i += 1;
             }
         });
-        return svg `<g class="node" id="${cNode.parentElement ? identity(cNode) : nothing}" >
+        return svg `<g class="node" id="${((_a = cNode.parentElement) === null || _a === void 0 ? void 0 : _a.parentElement) ? identity(cNode) : nothing}" >
         <title>${cNode.getAttribute('pathName')}</title>
         ${circles}
         ${lines}
