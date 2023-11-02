@@ -10,7 +10,7 @@ import '@material/mwc-list';
 import '@material/mwc-list/mwc-list-item.js';
 import '@material/mwc-textfield';
 import { equipmentGraphic, movePath, resizePath, symbols } from './icons.js';
-import { attributes, connectionStartPoints, elementPath, newConnectEvent, newPlaceEvent, newResizeEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartResizeEvent, privType, sldNs, svgNs, xmlnsNs, } from './util.js';
+import { attributes, connectionStartPoints, elementPath, newConnectEvent, newPlaceEvent, newResizeEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartResizeEvent, privType, sldNs, svgNs, } from './util.js';
 function contains([x1, y1, w1, h1], [x2, y2, w2, h2]) {
     return x1 <= x2 && y1 <= y2 && x1 + w1 >= x2 + w2 && y1 + h1 >= y2 + h2;
 }
@@ -64,7 +64,8 @@ let SLDEditor = class SLDEditor extends LitElement {
     constructor() {
         super(...arguments);
         this.editCount = -1;
-        this.gridSize = 24;
+        this.gridSize = 32;
+        this.nsp = 'esld';
         this.mouseX = 0;
         this.mouseY = 0;
         this.mouseX2 = 0;
@@ -120,21 +121,6 @@ let SLDEditor = class SLDEditor extends LitElement {
             y += this.mouseY - parentY;
         }
         return [x, y];
-    }
-    firstUpdated() {
-        if (Array.from(this.substation.attributes)
-            .concat(Array.from(this.doc.documentElement.attributes))
-            .find(a => a.value === sldNs && a.name === 'xmlns:esld'))
-            return;
-        this.dispatchEvent(newEditEvent({
-            element: this.substation,
-            attributes: {
-                'xmlns:esld': {
-                    value: sldNs,
-                    namespaceURI: xmlnsNs,
-                },
-            },
-        }));
     }
     connectedCallback() {
         super.connectedCallback();
@@ -303,7 +289,7 @@ let SLDEditor = class SLDEditor extends LitElement {
                         this.dispatchEvent(newEditEvent({
                             element,
                             attributes: {
-                                'esld:flip': {
+                                [`${this.nsp}:flip`]: {
                                     namespaceURI: sldNs,
                                     value: flip ? null : 'true',
                                 },
@@ -480,8 +466,8 @@ let SLDEditor = class SLDEditor extends LitElement {
             this.dispatchEvent(newEditEvent({
                 element: this.substation,
                 attributes: {
-                    'esld:w': { namespaceURI: sldNs, value: newW },
-                    'esld:h': { namespaceURI: sldNs, value: newH },
+                    [`${this.nsp}:w`]: { namespaceURI: sldNs, value: newW },
+                    [`${this.nsp}:h`]: { namespaceURI: sldNs, value: newH },
                 },
             }));
         }}
@@ -712,11 +698,9 @@ let SLDEditor = class SLDEditor extends LitElement {
             .map(([_, { val }]) => val);
         intersections.forEach(([x, y]) => circles.push(svg `<circle fill="black" cx="${x}" cy="${y}" r="0.15" />`));
         const lines = [];
-        const sections = Array.from(priv.children).filter(c => c.tagName === 'Section');
+        const sections = Array.from(priv.getElementsByTagNameNS(sldNs, 'Section'));
         sections.forEach(section => {
-            const vertices = Array.from(section.children)
-                .filter(c => c.tagName === 'Vertex')
-                .map(vertex => this.renderedPosition(vertex));
+            const vertices = Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex')).map(vertex => this.renderedPosition(vertex));
             let i = 0;
             while (i < vertices.length - 1) {
                 const [x1, y1] = vertices[i];
@@ -784,6 +768,9 @@ __decorate([
 __decorate([
     property()
 ], SLDEditor.prototype, "gridSize", void 0);
+__decorate([
+    property()
+], SLDEditor.prototype, "nsp", void 0);
 __decorate([
     property()
 ], SLDEditor.prototype, "placing", void 0);
