@@ -9,9 +9,9 @@ import '@material/mwc-dialog';
 import '@material/mwc-list';
 import '@material/mwc-list/mwc-list-item.js';
 import '@material/mwc-textfield';
-import { identity } from '@openscd/oscd-scl';
+import { getReference, identity } from '@openscd/oscd-scl';
 import { equipmentGraphic, movePath, resizePath, symbols } from './icons.js';
-import { attributes, connectionStartPoints, isBusBar, newConnectEvent, newPlaceEvent, newResizeEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartResizeEvent, privType, sldNs, svgNs, xmlBoolean, } from './util.js';
+import { attributes, connectionStartPoints, elementPath, isBusBar, newConnectEvent, newPlaceEvent, newResizeEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartResizeEvent, privType, sldNs, svgNs, xmlBoolean, } from './util.js';
 function contains([x1, y1, w1, h1], [x2, y2, w2, h2]) {
     return x1 <= x2 && y1 <= y2 && x1 + w1 >= x2 + w2 && y1 + h1 >= y2 + h2;
 }
@@ -166,6 +166,45 @@ let SLDEditor = class SLDEditor extends LitElement {
         if (rot === 3 && mX2 === 0.5)
             return 'bottom';
         return 'top';
+    }
+    groundTerminal(equipment, name) {
+        var _a, _b, _c;
+        const bay = equipment.closest('Bay');
+        if (!bay)
+            return;
+        const edits = [];
+        let grounded = bay.querySelector(':scope > ConnectivityNode[name="grounded"]');
+        let pathName = grounded === null || grounded === void 0 ? void 0 : grounded.getAttribute('pathName');
+        if (!pathName) {
+            pathName = elementPath(equipment.closest('Bay'), 'grounded');
+            grounded = this.doc.createElementNS(this.doc.documentElement.namespaceURI, 'ConnectivityNode');
+            grounded.setAttribute('name', 'grounded');
+            grounded.setAttribute('pathName', pathName);
+            edits.push({
+                parent: bay,
+                node: grounded,
+                reference: getReference(bay, 'ConnectivityNode'),
+            });
+        }
+        const terminal = this.doc.createElementNS(this.doc.documentElement.namespaceURI, 'Terminal');
+        terminal.setAttribute('name', name);
+        terminal.setAttribute('cNodeName', 'grounded');
+        const sName = (_a = equipment.closest('Substation')) === null || _a === void 0 ? void 0 : _a.getAttribute('name');
+        if (sName)
+            terminal.setAttribute('substationName', sName);
+        const vlName = (_b = equipment.closest('VoltageLevel')) === null || _b === void 0 ? void 0 : _b.getAttribute('name');
+        if (vlName)
+            terminal.setAttribute('voltageLevelName', vlName);
+        const bName = (_c = equipment.closest('Bay')) === null || _c === void 0 ? void 0 : _c.getAttribute('name');
+        if (bName)
+            terminal.setAttribute('bayName', bName);
+        terminal.setAttribute('connectivityNode', pathName);
+        edits.push({
+            parent: equipment,
+            node: terminal,
+            reference: getReference(equipment, 'Terminal'),
+        });
+        this.dispatchEvent(newEditEvent(edits));
     }
     render() {
         var _a, _b;
@@ -627,6 +666,7 @@ let SLDEditor = class SLDEditor extends LitElement {
     @click=${() => this.dispatchEvent(newStartConnectEvent({ equipment, terminal: 'top' }))}
     @contextmenu=${(e) => {
                 e.preventDefault();
+                this.groundTerminal(equipment, 'T1');
             }}
       />`;
         const topIndicator = !this.connecting ||
@@ -639,6 +679,9 @@ let SLDEditor = class SLDEditor extends LitElement {
             ? nothing
             : svg `<polygon points="0.3,0 0.7,0 0.5,0.4" 
                 fill="#12579B" opacity="0.4" />`;
+        const topGrounded = (topTerminal === null || topTerminal === void 0 ? void 0 : topTerminal.getAttribute('cNodeName')) === 'grounded'
+            ? svg `<line x1="0.5" y1="-0.1" x2="0.5" y2="0" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`
+            : nothing;
         const bottomConnector = bottomTerminal ||
             this.placing ||
             this.resizing ||
@@ -650,6 +693,7 @@ let SLDEditor = class SLDEditor extends LitElement {
     @click=${() => this.dispatchEvent(newStartConnectEvent({ equipment, terminal: 'bottom' }))}
     @contextmenu=${(e) => {
                 e.preventDefault();
+                this.groundTerminal(equipment, 'T2');
             }}
       />`;
         const bottomIndicator = !this.connecting ||
@@ -663,6 +707,9 @@ let SLDEditor = class SLDEditor extends LitElement {
             ? nothing
             : svg `<polygon points="0.3,1 0.7,1 0.5,0.6" 
                 fill="#12579B" opacity="0.4" />`;
+        const bottomGrounded = (bottomTerminal === null || bottomTerminal === void 0 ? void 0 : bottomTerminal.getAttribute('cNodeName')) === 'grounded'
+            ? svg `<line x1="0.5" y1="1.1" x2="0.5" y2="1" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`
+            : nothing;
         return svg `<g class="${classMap({
             equipment: true,
             preview: this.placing === equipment,
@@ -685,8 +732,10 @@ let SLDEditor = class SLDEditor extends LitElement {
       />
       ${topConnector}
       ${topIndicator}
+      ${topGrounded}
       ${bottomConnector}
       ${bottomIndicator}
+      ${bottomGrounded}
     </g>`;
     }
     renderBusBar(busBar) {
