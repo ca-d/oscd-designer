@@ -11,7 +11,7 @@ import '@material/mwc-list/mwc-list-item.js';
 import '@material/mwc-textfield';
 import { getReference, identity } from '@openscd/oscd-scl';
 import { equipmentGraphic, movePath, resizePath, symbols } from './icons.js';
-import { attributes, connectionStartPoints, elementPath, isBusBar, newConnectEvent, newPlaceEvent, newResizeEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartResizeEvent, privType, sldNs, svgNs, xmlBoolean, } from './util.js';
+import { attributes, connectionStartPoints, elementPath, isBusBar, newConnectEvent, newPlaceEvent, newResizeEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartResizeEvent, privType, removeTerminal, sldNs, svgNs, xmlBoolean, } from './util.js';
 function contains([x1, y1, w1, h1], [x2, y2, w2, h2]) {
     return x1 <= x2 && y1 <= y2 && x1 + w1 >= x2 + w2 && y1 + h1 >= y2 + h2;
 }
@@ -64,6 +64,14 @@ const singleTerminal = new Set([
     'SMC',
     'IFL',
 ]);
+function renderMenuFooter(element) {
+    const [name, type] = ['name', 'type'].map(attr => { var _a; return (_a = element.getAttribute(attr)) !== null && _a !== void 0 ? _a : ''; });
+    return html `<mwc-list-item twoline graphic="avatar" noninteractive>
+    <span>${name}</span>
+    <span slot="secondary">${type}</span>
+    ${equipmentGraphic(type)}
+  </mwc-list-item>`;
+}
 let SLDEditor = class SLDEditor extends LitElement {
     constructor() {
         super(...arguments);
@@ -139,12 +147,11 @@ let SLDEditor = class SLDEditor extends LitElement {
         window.removeEventListener('click', this.handleClick);
     }
     nearestOpenTerminal(equipment) {
-        var _a;
         if (!equipment)
             return undefined;
         const topTerminal = equipment.querySelector('Terminal[name="T1"]');
         const bottomTerminal = equipment.querySelector('Terminal:not([name="T1"])');
-        const oneSided = singleTerminal.has((_a = equipment.getAttribute('type')) !== null && _a !== void 0 ? _a : '');
+        const oneSided = singleTerminal.has(equipment.getAttribute('type'));
         if (topTerminal && bottomTerminal)
             return undefined;
         if (oneSided && (topTerminal || bottomTerminal))
@@ -168,10 +175,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         return 'top';
     }
     groundTerminal(equipment, name) {
-        var _a, _b, _c;
         const bay = equipment.closest('Bay');
-        if (!bay)
-            return;
         const edits = [];
         let grounded = bay.querySelector(':scope > ConnectivityNode[name="grounded"]');
         let pathName = grounded === null || grounded === void 0 ? void 0 : grounded.getAttribute('pathName');
@@ -189,13 +193,13 @@ let SLDEditor = class SLDEditor extends LitElement {
         const terminal = this.doc.createElementNS(this.doc.documentElement.namespaceURI, 'Terminal');
         terminal.setAttribute('name', name);
         terminal.setAttribute('cNodeName', 'grounded');
-        const sName = (_a = equipment.closest('Substation')) === null || _a === void 0 ? void 0 : _a.getAttribute('name');
+        const sName = equipment.closest('Substation').getAttribute('name');
         if (sName)
             terminal.setAttribute('substationName', sName);
-        const vlName = (_b = equipment.closest('VoltageLevel')) === null || _b === void 0 ? void 0 : _b.getAttribute('name');
+        const vlName = equipment.closest('VoltageLevel').getAttribute('name');
         if (vlName)
             terminal.setAttribute('voltageLevelName', vlName);
-        const bName = (_c = equipment.closest('Bay')) === null || _c === void 0 ? void 0 : _c.getAttribute('name');
+        const bName = equipment.closest('Bay').getAttribute('name');
         if (bName)
             terminal.setAttribute('bayName', bName);
         terminal.setAttribute('connectivityNode', pathName);
@@ -205,6 +209,144 @@ let SLDEditor = class SLDEditor extends LitElement {
             reference: getReference(equipment, 'Terminal'),
         });
         this.dispatchEvent(newEditEvent(edits));
+    }
+    flipElement(element) {
+        const { flip } = attributes(element);
+        this.dispatchEvent(newEditEvent({
+            element,
+            attributes: {
+                [`${this.nsp}:flip`]: {
+                    namespaceURI: sldNs,
+                    value: flip ? null : 'true',
+                },
+            },
+        }));
+    }
+    renderMenu() {
+        if (!this.menu)
+            return html ``;
+        const { element } = this.menu;
+        const items = [
+            {
+                content: html `<mwc-list-item graphic="icon">
+          <span>Mirror</span>
+          <mwc-icon slot="graphic">flip</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.flipElement(element),
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
+          <span>Rotate</span>
+          <mwc-icon slot="graphic">rotate_90_degrees_cw</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => {
+                    this.dispatchEvent(newRotateEvent(element));
+                },
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
+          <span>Move</span>
+          <mwc-icon slot="graphic">drag_pan</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.dispatchEvent(newStartPlaceEvent(element)),
+            },
+        ];
+        const { rot } = attributes(element);
+        const icons = {
+            connect: ['north', 'east', 'south', 'west'],
+            ground: ['expand_less', 'chevron_right', 'expand_more', 'chevron_left'],
+            disconnect: [
+                'arrow_drop_up',
+                'arrow_right',
+                'arrow_drop_down',
+                'arrow_left',
+            ],
+        };
+        const texts = {
+            connect: [
+                'Connect top',
+                'Connect right',
+                'Connect bottom',
+                'Connect left',
+            ],
+            ground: ['Ground top', 'Ground right', 'Ground bottom', 'Ground left'],
+            disconnect: [
+                'Detach top',
+                'Detach right',
+                'Detach bottom',
+                'Detach left',
+            ],
+        };
+        const icon = (kind, top) => icons[kind][top ? rot % 4 : (rot + 2) % 4];
+        const text = (kind, top) => texts[kind][top ? rot % 4 : (rot + 2) % 4];
+        const item = (kind, top) => html `<mwc-list-item graphic="icon">
+        <span>${text(kind, top)}</span>
+        <mwc-icon slot="graphic">${icon(kind, top)}</mwc-icon>
+      </mwc-list-item>`;
+        const topTerminal = element.querySelector('Terminal[name="T1"]');
+        const bottomTerminal = element.querySelector('Terminal:not([name="T1"])');
+        if (!singleTerminal.has(element.getAttribute('type'))) {
+            if (bottomTerminal)
+                items.unshift({
+                    handler: () => this.dispatchEvent(newEditEvent(removeTerminal(bottomTerminal))),
+                    content: item('disconnect', false),
+                });
+            else
+                items.unshift({
+                    handler: () => this.dispatchEvent(newStartConnectEvent({ equipment: element, terminal: 'bottom' })),
+                    content: item('connect', false),
+                }, {
+                    handler: () => this.groundTerminal(element, 'T2'),
+                    content: item('ground', false),
+                });
+        }
+        if (topTerminal)
+            items.unshift({
+                handler: () => this.dispatchEvent(newEditEvent(removeTerminal(topTerminal))),
+                content: item('disconnect', true),
+            });
+        else
+            items.unshift({
+                handler: () => this.dispatchEvent(newStartConnectEvent({ equipment: element, terminal: 'top' })),
+                content: item('connect', true),
+            }, {
+                handler: () => this.groundTerminal(element, 'T1'),
+                content: item('ground', true),
+            });
+        return html `
+      <menu
+        style="position: fixed; top: ${this.menu.top}px; left: ${this.menu
+            .left}px; background: var(--oscd-base3, white); margin: 0px; padding: 0px; box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23); --mdc-list-vertical-padding: 0px;"
+        ${ref(async (m) => {
+            if (!(m instanceof HTMLElement))
+                return;
+            await this.updateComplete;
+            const { bottom, right } = m.getBoundingClientRect();
+            if (bottom > window.innerHeight) {
+                m.style.removeProperty('top');
+                // eslint-disable-next-line no-param-reassign
+                m.style.bottom = '0px';
+            }
+            if (right > window.innerWidth) {
+                m.style.removeProperty('left');
+                // eslint-disable-next-line no-param-reassign
+                m.style.right = '0px';
+            }
+        })}
+      >
+        <mwc-list
+          @selected=${({ detail: { index } }) => {
+            var _a;
+            (_a = items[index]) === null || _a === void 0 ? void 0 : _a.handler();
+            this.menu = undefined;
+        }}
+        >
+          ${items.map(i => i.content)}
+          <li divider role="separator"></li>
+          ${renderMenuFooter(element)}
+        </mwc-list>
+      </menu>
+    `;
     }
     render() {
         var _a, _b;
@@ -229,7 +371,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             const { dim: [w0, h0], } = attributes(this.placing);
             const invalid = !this.canPlaceAt(this.placing, this.mouseX, this.mouseY, w0, h0);
             placingIndicator = svg `
-      <foreignObject x="${this.mouseX + 1}" y="${this.mouseY + 0.5}"
+      <foreignObject x="${this.mouseX + 1}" y="${this.mouseY}"
           width="1" height="1" class="preview"
           style="pointer-events: none; overflow: visible;">
         <span class="${classMap({ indicator: true, invalid })}">
@@ -245,7 +387,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             const newH = Math.max(1, this.mouseY - y + 1);
             const invalid = !this.canResizeTo(this.resizing, newW, newH);
             resizingIndicator = svg `
-      <foreignObject x="${this.mouseX + 1}" y="${this.mouseY + 0.5}"
+      <foreignObject x="${this.mouseX + 1}" y="${this.mouseY}"
         width="1" height="1" class="preview"
         style="pointer-events: none; overflow: visible;">
         <span class="${classMap({ indicator: true, invalid })}">
@@ -305,76 +447,7 @@ let SLDEditor = class SLDEditor extends LitElement {
                     }));
             }}></rect>`);
         }
-        let menu = html ``;
-        if (this.menu) {
-            const { element } = this.menu;
-            const [name, type, desc] = ['name', 'type', 'desc'].map(attr => { var _a; return (_a = element.getAttribute(attr)) !== null && _a !== void 0 ? _a : ''; });
-            menu = html `
-        <menu
-          style="position: fixed; top: ${this.menu.top}px; left: ${this.menu
-                .left}px; background: var(--oscd-base3, white); margin: 0px; padding: 0px; box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23); --mdc-list-vertical-padding: 0px;"
-          ${ref(async (m) => {
-                if (!(m instanceof HTMLElement))
-                    return;
-                await this.updateComplete;
-                const { bottom, right } = m.getBoundingClientRect();
-                if (bottom > window.innerHeight) {
-                    m.style.removeProperty('top');
-                    // eslint-disable-next-line no-param-reassign
-                    m.style.bottom = '0px';
-                }
-                if (right > window.innerWidth) {
-                    m.style.removeProperty('left');
-                    // eslint-disable-next-line no-param-reassign
-                    m.style.right = '0px';
-                }
-            })}
-        >
-          <mwc-list
-            @selected=${({ detail: { index } }) => {
-                const { flip } = attributes(element);
-                [
-                    () => {
-                        this.dispatchEvent(newEditEvent({
-                            element,
-                            attributes: {
-                                [`${this.nsp}:flip`]: {
-                                    namespaceURI: sldNs,
-                                    value: flip ? null : 'true',
-                                },
-                            },
-                        }));
-                    },
-                    () => {
-                        this.dispatchEvent(newRotateEvent(element));
-                    },
-                    () => this.dispatchEvent(newStartPlaceEvent(element)),
-                ][index]();
-                this.menu = undefined;
-            }}
-          >
-            <mwc-list-item graphic="icon">
-              <span>Mirror</span>
-              <mwc-icon slot="graphic">flip</mwc-icon>
-            </mwc-list-item>
-            <mwc-list-item graphic="icon">
-              <span>Rotate</span>
-              <mwc-icon slot="graphic">rotate_90_degrees_cw</mwc-icon>
-            </mwc-list-item>
-            <mwc-list-item graphic="icon">
-              <span>Move</span>
-              <mwc-icon slot="graphic">open_with</mwc-icon>
-            </mwc-list-item>
-            <li divider role="separator"></li>
-            <mwc-list-item twoline graphic="avatar" noninteractive>
-              <span>${name}</span>
-              <span slot="secondary">${type}${desc}</span>
-              ${equipmentGraphic(type)}
-            </mwc-list-item>
-          </mwc-list>
-        </menu>
-      `;
-        }
+        const menu = this.renderMenu();
         return html `<section>
       <h2>
         ${this.substation.getAttribute('name')}
@@ -785,7 +858,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         const sections = Array.from(priv.getElementsByTagNameNS(sldNs, 'Section'));
         const bay = cNode.closest('Bay');
         sections.forEach(section => {
-            const busBar = xmlBoolean(section.getAttributeNS(sldNs, 'bus'));
+            const busBar = xmlBoolean(section.getAttribute('bus'));
             const vertices = Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex')).map(vertex => this.renderedPosition(vertex));
             let i = 0;
             while (i < vertices.length - 1) {
@@ -846,8 +919,8 @@ let SLDEditor = class SLDEditor extends LitElement {
                         }));
                     };
                 lines.push(svg `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
-                stroke-width="${busBar ? 0.12 : nothing}"
-                stroke-linecap="square" stroke="black" />`);
+                stroke-width="${busBar ? 0.12 : nothing}" stroke="black" 
+                stroke-linecap="${busBar ? 'round' : 'square'}" />`);
                 lines.push(svg `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
                 pointer-events="all" @click=${handleClick}
                 stroke="none" stroke-width="${this.connecting ? '1' : '0.4'}" />`);
@@ -858,7 +931,8 @@ let SLDEditor = class SLDEditor extends LitElement {
                 i += 1;
             }
         });
-        return svg `<g class="node" id="${((_a = cNode.parentElement) === null || _a === void 0 ? void 0 : _a.parentElement) ? identity(cNode) : nothing}" >
+        const id = ((_a = cNode.parentElement) === null || _a === void 0 ? void 0 : _a.parentElement) ? identity(cNode) : nothing;
+        return svg `<g class="node" id="${id}" >
         <title>${cNode.getAttribute('pathName')}</title>
         ${circles}
         ${lines}

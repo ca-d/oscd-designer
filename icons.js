@@ -444,8 +444,9 @@ export const symbols = svg `
   <line x1="0" y1="1" x2="1" y2="1" stroke="#888" stroke-opacity="0.3" stroke-width="0.06" />
   </pattern>
   ${Object.keys(equipmentPaths).map(eqType => equipmentSymbol(eqType))}
-${connectivityNodeMarker}
-${groundedMarker}
+  ${equipmentSymbol('ConductingEquipment')}
+  ${connectivityNodeMarker}
+  ${groundedMarker}
   </defs>
 `;
 //# sourceMappingURL=icons.js.map
