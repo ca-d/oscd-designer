@@ -352,10 +352,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         var _a, _b;
         const { dim: [w, h], } = attributes(this.substation);
         const placingTarget = ((_a = this.placing) === null || _a === void 0 ? void 0 : _a.tagName) === 'VoltageLevel'
-            ? svg `<rect width="100%" height="100%" fill="url(#grid)"></rect>`
-            : nothing;
-        const resizingTarget = this.resizing && isBusBar(this.resizing)
-            ? svg `<rect width="100%" height="100%" fill="url(#grid)"></rect>`
+            ? svg `<rect width="100%" height="100%" fill="url(#grid)" />`
             : nothing;
         let placingElement = svg ``;
         if (this.placing) {
@@ -445,7 +442,7 @@ let SLDEditor = class SLDEditor extends LitElement {
                         connectTo: targetEq,
                         toTerminal,
                     }));
-            }}></rect>`);
+            }} />`);
         }
         const menu = this.renderMenu();
         return html `<section>
@@ -513,7 +510,7 @@ let SLDEditor = class SLDEditor extends LitElement {
           }
         </style>
         ${symbols}
-        <rect width="100%" height="100%" fill="white"></rect>
+        <rect width="100%" height="100%" fill="white" />
         ${placingTarget}
         ${Array.from(this.substation.children)
             .filter(child => child.tagName === 'VoltageLevel')
@@ -522,7 +519,6 @@ let SLDEditor = class SLDEditor extends LitElement {
         ${((_b = this.connecting) === null || _b === void 0 ? void 0 : _b.equipment.closest('Substation')) === this.substation
             ? Array.from(this.substation.querySelectorAll('ConductingEquipment')).map(eq => this.renderEquipment(eq, { connect: true }))
             : nothing}
-        ${resizingTarget}
         ${Array.from(this.substation.querySelectorAll('ConnectivityNode'))
             .filter(node => node.getAttribute('name') !== 'grounded' &&
             !(this.placing &&
@@ -647,17 +643,23 @@ let SLDEditor = class SLDEditor extends LitElement {
         let moveHandle = svg ``;
         let resizeHandle = svg ``;
         let placingTarget = svg ``;
+        let resizingTarget = svg ``;
         if (this.resizing === bayOrVL ||
             (isVL && ((_b = this.placing) === null || _b === void 0 ? void 0 : _b.tagName) === 'Bay') ||
             (!isVL && ((_c = this.placing) === null || _c === void 0 ? void 0 : _c.tagName) === 'ConductingEquipment'))
             placingTarget = svg `<rect x="${x}" y="${y}" width="${w}" height="${h}"
-        @click=${handleClick || nothing} fill="url(#grid)"></rect>`;
+        @click=${handleClick || nothing} fill="url(#grid)" />`;
+        if (this.resizing &&
+            isBusBar(this.resizing) &&
+            this.resizing.parentElement === bayOrVL)
+            resizingTarget = svg `<rect x="${x}" y="${y}" width="${w}" height="${h}"
+        fill="url(#grid)" />`;
         if (!this.placing && !this.resizing && !this.connecting) {
             moveHandle = svg `
 <a class="handle" href="#0" @click=${() => this.dispatchEvent(newStartPlaceEvent(bayOrVL))}>
   <svg xmlns="${svgNs}" height="1" width="1"
     viewBox="0 96 960 960" x="${x}" y="${y}">
-    <rect fill="white" x="10%" y="20%" width="80%" height="80%"></rect>
+    <rect fill="white" x="10%" y="20%" width="80%" height="80%" />
     ${movePath}
   </svg>
 </a>
@@ -666,7 +668,7 @@ let SLDEditor = class SLDEditor extends LitElement {
 <a class="handle" href="#0" @click=${() => this.dispatchEvent(newStartResizeEvent(bayOrVL))}>
   <svg xmlns="${svgNs}" height="1" width="1"
     viewBox="0 96 960 960" x="${w + x - 1}" y="${h + y - 1}">
-    <rect fill="white" x="10%" y="20%" width="80%" height="80%"></rect>
+    <rect fill="white" x="10%" y="20%" width="80%" height="80%" />
     ${resizePath}
   </svg>
 </a>
@@ -681,7 +683,7 @@ let SLDEditor = class SLDEditor extends LitElement {
     @click=${handleClick || nothing} x="${x}" y="${y}" width="${w}" height="${h}"
       fill="white" stroke-dasharray="${isVL ? nothing : '0.18'}" stroke="${
         // eslint-disable-next-line no-nested-ternary
-        invalid ? '#BB1326' : isVL ? '#F5E214' : '#12579B'}"></rect>
+        invalid ? '#BB1326' : isVL ? '#F5E214' : '#12579B'}" />
       <text x="${x + 0.1}" y="${y - 0.2}" fill="#000000" fill-opacity="0.83"
       pointer-events="none" style="font: 0.6px sans-serif;">${name}</text>
       ${moveHandle}
@@ -698,6 +700,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             : nothing}
       ${placingTarget}
       ${resizeHandle}
+      ${resizingTarget}
     </g>`;
     }
     renderEquipment(equipment, { preview = false, connect = false } = {}) {
@@ -813,12 +816,13 @@ let SLDEditor = class SLDEditor extends LitElement {
     }
     renderBusBar(busBar) {
         const [x, y] = this.renderedPosition(busBar);
+        const { dim: [w, h], } = attributes(busBar);
         let placingTarget = svg ``;
         if (this.placing === busBar)
             placingTarget = svg `<rect x="${x}" y="${y}" width="1" height="1"
           pointer-events="all" fill="none" 
           @click=${() => {
-                const parent = Array.from(this.substation.querySelectorAll(':root > Substation > VoltageLevel')).find(vl => containsRect(vl, x, y, 1, 1));
+                const parent = Array.from(this.substation.querySelectorAll(':root > Substation > VoltageLevel')).find(vl => containsRect(vl, x, y, w, h));
                 if (parent)
                     this.dispatchEvent(newPlaceEvent({
                         x,
@@ -865,23 +869,34 @@ let SLDEditor = class SLDEditor extends LitElement {
                 const [x1, y1] = vertices[i];
                 let [x2, y2] = vertices[i + 1];
                 let handleClick = nothing;
+                let handleAuxClick = nothing;
                 if (busBar && bay) {
                     handleClick = () => this.dispatchEvent(newStartPlaceEvent(bay));
+                    handleAuxClick = ({ button }) => {
+                        if (button === 1)
+                            this.dispatchEvent(newStartResizeEvent(bay));
+                    };
                 }
                 if (busBar && this.resizing === bay) {
+                    const { pos: [vX, vY], dim: [vW, vH], } = attributes(bay.parentElement);
+                    const maxX = vX + vW - 0.5;
+                    const maxY = vY + vH - 0.5;
                     if (i === 0) {
-                        const dx = Math.abs(x1 - this.mouseX);
-                        const dy = Math.abs(y1 - this.mouseY);
+                        const dx = Math.max(this.mouseX - x1, 0);
+                        const dy = Math.max(this.mouseY - y1, 0);
                         if (dx > dy) {
-                            x2 = this.mouseX + 0.5;
+                            x2 = Math.max(x1, Math.min(maxX, this.mouseX + 0.5));
                             y2 = y1;
                         }
                         else {
-                            y2 = this.mouseY + 0.5;
+                            y2 = Math.max(y1, Math.min(maxY, this.mouseY + 0.5));
                             x2 = x1;
                         }
                         if (x1 === x2 && y1 === y2)
-                            x2 += 1;
+                            if (x2 >= maxX)
+                                y2 += 1;
+                            else
+                                x2 += 1;
                     }
                     handleClick = () => {
                         this.dispatchEvent(newPlaceEvent({
@@ -922,12 +937,13 @@ let SLDEditor = class SLDEditor extends LitElement {
                 stroke-width="${busBar ? 0.12 : nothing}" stroke="black" 
                 stroke-linecap="${busBar ? 'round' : 'square'}" />`);
                 lines.push(svg `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
-                pointer-events="all" @click=${handleClick}
-                stroke="none" stroke-width="${this.connecting ? '1' : '0.4'}" />`);
+                @click=${handleClick} @auxclick=${handleAuxClick}
+                pointer-events="all" stroke="none"
+                stroke-width="${this.connecting ? '1' : '0.4'}" />`);
                 if (this.connecting && ![x2, y2].find(n => Number.isInteger(n)))
                     lines.push(svg `<rect x="${x2 - 0.5}" y="${y2 - 0.5}" width="1" height="1"
-                pointer-events="all" @click=${handleClick}
-                fill="none" />`);
+                @click=${handleClick} @auxclick=${handleAuxClick}
+                pointer-events="all" fill="none" />`);
                 i += 1;
             }
         });
