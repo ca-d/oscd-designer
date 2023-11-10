@@ -1263,12 +1263,12 @@ ${mo(n)}
             @oscd-sld-rotate=${({detail:t})=>this.rotateElement(t)}
           ></sld-editor>`))}
       <nav>
-        ${Array.from(this.doc.documentElement.children).find((t=>"Substation"===t.tagName))?U``:j}${this.doc.querySelector(":root > Substation > VoltageLevel > Bay")?["CTR","VTR","DIS","CBR","IFL"].map((t=>{return U`<mwc-fab
-                mini
-                label="Add ${t}"
-                @click=${()=>{const e=this.templateElements.ConductingEquipment.cloneNode();e.setAttribute("type",t),e.setAttribute("name",`${t}1`),this.startPlacing(e)}}
-                style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
-                >${e=t,q`<svg
+        ${Array.from(this.doc.documentElement.children).find((t=>"Substation"===t.tagName))?U``:j}${Array.from(this.doc.querySelectorAll(":root > Substation > VoltageLevel > Bay")).find((t=>!_o(t)))?["CTR","VTR","DIS","CBR","IFL"].map((t=>{return U`<mwc-fab
+                  mini
+                  label="Add ${t}"
+                  @click=${()=>{const e=this.templateElements.ConductingEquipment.cloneNode();e.setAttribute("type",t),e.setAttribute("name",`${t}1`),this.startPlacing(e)}}
+                  style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
+                  >${e=t,q`<svg
   id="${e}"
   viewBox="0 0 25 25"
   width="24" height="24"
@@ -1276,21 +1276,22 @@ ${mo(n)}
 >
 ${mo(e)}
 </svg>`}</mwc-fab
-              >`;var e})).concat(U`<mwc-fab
-              mini
-              icon="horizontal_rule"
-              @click=${()=>{const t=this.templateElements.BusBar.cloneNode(!0);this.startPlacing(t)}}
-              label="Add Bus Bar"
-              style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
-            >
-            </mwc-fab>`):j}${this.doc.querySelector(":root > Substation > VoltageLevel")?U`<mwc-fab
-              mini
-              label="Add Bay"
-              @click=${()=>{const t=this.templateElements.Bay.cloneNode();this.startPlacing(t)}}
-              style="--mdc-theme-secondary: #12579B;"
-            >
-              ${lo}
-            </mwc-fab>`:j}${Array.from(this.doc.documentElement.children).find((t=>"Substation"===t.tagName))?U`<mwc-fab
+                >`;var e})).concat():j}${this.doc.querySelector(":root > Substation > VoltageLevel")?U`<mwc-fab
+                mini
+                icon="horizontal_rule"
+                @click=${()=>{const t=this.templateElements.BusBar.cloneNode(!0);this.startPlacing(t)}}
+                label="Add Bus Bar"
+                style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
+              >
+              </mwc-fab
+              ><mwc-fab
+                mini
+                label="Add Bay"
+                @click=${()=>{const t=this.templateElements.Bay.cloneNode();this.startPlacing(t)}}
+                style="--mdc-theme-secondary: #12579B;"
+              >
+                ${lo}
+              </mwc-fab>`:j}${Array.from(this.doc.documentElement.children).find((t=>"Substation"===t.tagName))?U`<mwc-fab
               mini
               label="Add VoltageLevel"
               @click=${()=>{const t=this.templateElements.VoltageLevel.cloneNode();this.startPlacing(t)}}
