@@ -64,6 +64,9 @@ const singleTerminal = new Set([
     'SMC',
     'IFL',
 ]);
+function preventDefault(e) {
+    e.preventDefault();
+}
 function renderMenuFooter(element) {
     const [name, type] = ['name', 'type'].map(attr => { var _a; return (_a = element.getAttribute(attr)) !== null && _a !== void 0 ? _a : ''; });
     return html `<mwc-list-item twoline graphic="avatar" noninteractive>
@@ -795,11 +798,14 @@ let SLDEditor = class SLDEditor extends LitElement {
       <title>${equipment.getAttribute('name')}</title>
       <use href="#${symbol}" pointer-events="none" />
       <rect width="1" height="1" fill="none" pointer-events="${connect ? 'none' : 'all'}"
+        @mousedown=${preventDefault}
         @click=${handleClick}
-        @auxclick=${({ button }) => {
-            if (button === 1)
-                // middle mouse button
-                this.dispatchEvent(newRotateEvent(equipment));
+        @auxclick=${(e) => {
+            if (e.button !== 1)
+                return;
+            // middle mouse button
+            this.dispatchEvent(newRotateEvent(equipment));
+            e.preventDefault();
         }}
         @contextmenu=${(e) => {
             this.menu = { element: equipment, left: e.clientX, top: e.clientY };
@@ -878,6 +884,9 @@ let SLDEditor = class SLDEditor extends LitElement {
                     };
                 }
                 if (busBar && this.resizing === bay) {
+                    if (section !== sections.find(s => xmlBoolean(s.getAttribute('bus'))))
+                        return;
+                    circles.length = 0;
                     const { pos: [vX, vY], dim: [vW, vH], } = attributes(bay.parentElement);
                     const maxX = vX + vW - 0.5;
                     const maxY = vY + vH - 0.5;
@@ -938,11 +947,13 @@ let SLDEditor = class SLDEditor extends LitElement {
                 stroke-linecap="${busBar ? 'round' : 'square'}" />`);
                 lines.push(svg `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
                 @click=${handleClick} @auxclick=${handleAuxClick}
+                @mousedown=${preventDefault}
                 pointer-events="all" stroke="none"
                 stroke-width="${this.connecting ? '1' : '0.4'}" />`);
                 if (this.connecting && ![x2, y2].find(n => Number.isInteger(n)))
                     lines.push(svg `<rect x="${x2 - 0.5}" y="${y2 - 0.5}" width="1" height="1"
                 @click=${handleClick} @auxclick=${handleAuxClick}
+                @mousedown=${preventDefault}
                 pointer-events="all" fill="none" />`);
                 i += 1;
             }
