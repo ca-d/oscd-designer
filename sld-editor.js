@@ -1001,8 +1001,6 @@ let SLDEditor = class SLDEditor extends LitElement {
                 }
                 if (this.connecting)
                     handleClick = () => {
-                        if (!this.connecting)
-                            return;
                         const { equipment, path, terminal } = this.connecting;
                         if (equipment.querySelector(`Terminal[connectivityNode="${cNode.getAttribute('pathName')}"]`))
                             return;

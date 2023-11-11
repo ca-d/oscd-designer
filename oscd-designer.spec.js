@@ -881,13 +881,32 @@ describe('Designer', () => {
                         var _a;
                         (_a = element
                             .shadowRoot.querySelector('[label="Add Bus Bar"]')) === null || _a === void 0 ? void 0 : _a.click();
-                        await sendMouse({ type: 'click', position: [100, 200] });
-                        await sendMouse({ type: 'click', position: [100, 400] });
+                        await sendMouse({ type: 'click', position: [430, 150] });
+                        await sendMouse({ type: 'click', position: [430, 230] });
+                        await sendMouse({
+                            type: 'click',
+                            position: middleOf(querySvg({ scl: '[name="L"]' })),
+                        });
+                        await sendMouse({ type: 'click', position: [450, 150] });
                         querySvg({ scl: '[type="VTR"]', svg: 'circle' }).dispatchEvent(new PointerEvent('click'));
                         await sendMouse({
                             type: 'click',
                             position: middleOf(querySvg({ scl: '[name="L"]' })),
                         });
+                    });
+                    it('keeps the bus bar when moving containers', async () => {
+                        var _a, _b;
+                        const position = middleOf(querySvg({
+                            scl: '[name="V2"] > [name="B1"]',
+                            svg: '.handle',
+                        }));
+                        expect((_a = element.doc
+                            .querySelector('[name="L"]')) === null || _a === void 0 ? void 0 : _a.querySelectorAll('Section')).to.have.lengthOf(3);
+                        await sendMouse({ position, type: 'click' });
+                        position[1] -= 40;
+                        await sendMouse({ position, type: 'click' });
+                        expect((_b = element.doc
+                            .querySelector('[name="L"]')) === null || _b === void 0 ? void 0 : _b.querySelectorAll('Section')).to.have.lengthOf(1);
                     });
                     it('opens a menu on right click', async () => {
                         querySvg({
@@ -896,6 +915,44 @@ describe('Designer', () => {
                         }).dispatchEvent(new PointerEvent('contextmenu'));
                         await element.updateComplete;
                         expect(querySvg({ svg: 'menu' })).to.exist;
+                    });
+                    it('resizes the bus bar on first menu item select', async () => {
+                        querySvg({
+                            scl: '[name="L"]',
+                            svg: 'line[stroke="none"]',
+                        }).dispatchEvent(new PointerEvent('contextmenu'));
+                        await element.updateComplete;
+                        const sldEditor = element.shadowRoot.querySelector('sld-editor');
+                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(1)').selected = true;
+                        const bus = element.doc.querySelector('[name="BB1"]');
+                        expect(bus).to.have.attribute('h', '3');
+                        await sendMouse({ type: 'click', position: [450, 150] });
+                        expect(bus).to.have.attribute('h', '2');
+                    });
+                    it('moves the bus bar on first menu item select', async () => {
+                        querySvg({
+                            scl: '[name="L"]',
+                            svg: 'line[stroke="none"]',
+                        }).dispatchEvent(new PointerEvent('contextmenu'));
+                        await element.updateComplete;
+                        const sldEditor = element.shadowRoot.querySelector('sld-editor');
+                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(2)').selected = true;
+                        const bus = element.doc.querySelector('[name="BB1"]');
+                        expect(bus).to.have.attribute('y', '2');
+                        await sendMouse({ type: 'click', position: [430, 400] });
+                        expect(bus).to.have.attribute('y', '10');
+                    });
+                    it('removes the bus bar on third menu item select', async () => {
+                        querySvg({
+                            scl: '[name="L"]',
+                            svg: 'line[stroke="none"]',
+                        }).dispatchEvent(new PointerEvent('contextmenu'));
+                        await element.updateComplete;
+                        expect(element.doc.querySelector('[name="BB1"]')).to.exist;
+                        const sldEditor = element.shadowRoot.querySelector('sld-editor');
+                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(3)').selected = true;
+                        await sldEditor.updateComplete;
+                        expect(element.doc.querySelector('[name="BB1"]')).to.not.exist;
                     });
                 });
             });
