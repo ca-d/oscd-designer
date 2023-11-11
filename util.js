@@ -38,7 +38,7 @@ function collinear(v0, v1, v2) {
     return (x0 === x1 && x1 === x2) || (y0 === y1 && y1 === y2);
 }
 export function removeNode(node) {
-    var _a, _b, _c;
+    var _a;
     const edits = [];
     if (xmlBoolean((_a = node.querySelector(`Section[bus]`)) === null || _a === void 0 ? void 0 : _a.getAttribute('bus'))) {
         Array.from(node.querySelectorAll('Section:not([bus])')).forEach(section => edits.push({ node: section }));
@@ -54,8 +54,7 @@ export function removeNode(node) {
     }
     else
         edits.push({ node });
-    Array.from((_c = (_b = node
-        .closest('SCL')) === null || _b === void 0 ? void 0 : _b.querySelectorAll(`Terminal[connectivityNode="${node.getAttribute('pathName')}"]`)) !== null && _c !== void 0 ? _c : []).forEach(terminal => edits.push({ node: terminal }));
+    Array.from(node.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${node.getAttribute('pathName')}"]`)).forEach(terminal => edits.push({ node: terminal }));
     return edits;
 }
 function reverseSection(section) {
@@ -226,26 +225,24 @@ export function reparentElement(element, parent) {
     return edits;
 }
 export function removeTerminal(terminal) {
-    var _a, _b, _c, _d;
     const edits = [];
     edits.push({ node: terminal });
     const pathName = terminal.getAttribute('connectivityNode');
-    const cNode = (_a = terminal
-        .closest('SCL')) === null || _a === void 0 ? void 0 : _a.querySelector(`ConnectivityNode[pathName="${pathName}"]`);
-    const otherTerminals = Array.from((_c = (_b = terminal
-        .closest('SCL')) === null || _b === void 0 ? void 0 : _b.querySelectorAll(`Terminal[connectivityNode="${pathName}"]`)) !== null && _c !== void 0 ? _c : []).filter(t => t !== terminal);
+    const cNode = terminal.ownerDocument.querySelector(`ConnectivityNode[pathName="${pathName}"]`);
+    const otherTerminals = Array.from(terminal.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${pathName}"]`)).filter(t => t !== terminal);
     if (cNode &&
         otherTerminals.length &&
         otherTerminals.every(t => t.closest('Bay') !== cNode.closest('Bay')) &&
         !isBusBar(cNode.closest('Bay'))) {
-        const newParent = (_d = otherTerminals
-            .find(t => t.closest('Bay'))) === null || _d === void 0 ? void 0 : _d.closest('Bay');
+        const newParent = otherTerminals
+            .find(t => t.closest('Bay'))
+            .closest('Bay');
         if (newParent)
             edits.push(...reparentElement(cNode, newParent));
     }
     const priv = cNode === null || cNode === void 0 ? void 0 : cNode.querySelector(`Private[type="${privType}"]`);
     const vertexAt = elementPath(terminal);
-    const vertex = priv === null || priv === void 0 ? void 0 : priv.querySelector(`Vertex[*|at="${vertexAt}"]`);
+    const vertex = priv === null || priv === void 0 ? void 0 : priv.querySelector(`Vertex[at="${vertexAt}"]`);
     const section = vertex === null || vertex === void 0 ? void 0 : vertex.parentElement;
     if (!section)
         return edits;
