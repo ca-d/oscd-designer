@@ -238,13 +238,11 @@ snapshots["Designer given conducting equipment connects equipment on connection 
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V1/B1/CBR1/T2"
                 esld:x="4"
                 esld:y="4.5"
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/DIS1/T2"
                 esld:x="18"
                 esld:y="4.5"
               >
@@ -394,7 +392,6 @@ snapshots["Designer given conducting equipment connects equipment on connect men
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V1/B1/CBR1/T2"
                 esld:x="4"
                 esld:y="4.5"
               >
@@ -405,7 +402,6 @@ snapshots["Designer given conducting equipment connects equipment on connect men
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/NEW1/T2"
                 esld:x="19.5"
                 esld:y="3"
               >
@@ -420,7 +416,6 @@ snapshots["Designer given conducting equipment connects equipment on connect men
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V1/B1/CBR1/T1"
                 esld:x="5"
                 esld:y="4.5"
               >
@@ -436,7 +431,6 @@ snapshots["Designer given conducting equipment connects equipment on connect men
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/VTR1/T1"
                 esld:x="17"
                 esld:y="3.5"
               >
@@ -571,7 +565,6 @@ snapshots["Designer given conducting equipment connects equipment on connect men
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V2/B1/DIS1/T2"
                 esld:x="18"
                 esld:y="4.5"
               >
@@ -582,7 +575,6 @@ snapshots["Designer given conducting equipment connects equipment on connect men
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/DIS2/T2"
                 esld:x="20.5"
                 esld:y="5"
               >
@@ -597,7 +589,6 @@ snapshots["Designer given conducting equipment connects equipment on connect men
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V2/B1/DIS1/T1"
                 esld:x="19"
                 esld:y="4.5"
               >
@@ -613,7 +604,6 @@ snapshots["Designer given conducting equipment connects equipment on connect men
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/CTR1/T2"
                 esld:x="18"
                 esld:y="5.5"
               >
@@ -688,7 +678,6 @@ snapshots["Designer given conducting equipment with established connectivity uni
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V1/B1/CBR1/T2"
                 esld:x="4"
                 esld:y="4.5"
               >
@@ -704,7 +693,6 @@ snapshots["Designer given conducting equipment with established connectivity uni
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/CTR1/T1"
                 esld:x="17"
                 esld:y="5.5"
               >
@@ -719,13 +707,11 @@ snapshots["Designer given conducting equipment with established connectivity uni
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V1/B1/CBR1/T1"
                 esld:x="5"
                 esld:y="4.5"
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/DIS1/T2"
                 esld:x="18"
                 esld:y="4.5"
               >
@@ -875,7 +861,6 @@ snapshots["Designer given conducting equipment with established connectivity con
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V1/B1/CBR1/T1"
                 esld:x="5"
                 esld:y="4.5"
               >
@@ -888,7 +873,6 @@ snapshots["Designer given conducting equipment with established connectivity con
             </Section>
             <Section>
               <Vertex
-                at="S1/V2/B1/CTR1/T1"
                 esld:x="17"
                 esld:y="5.5"
               >
@@ -911,7 +895,6 @@ snapshots["Designer given conducting equipment with established connectivity con
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/DIS1/T2"
                 esld:x="18"
                 esld:y="4.5"
               >
@@ -1061,13 +1044,11 @@ snapshots["Designer given conducting equipment with established connectivity avo
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V1/B1/CBR1/T1"
                 esld:x="5"
                 esld:y="4.5"
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/DIS1/T2"
                 esld:x="18"
                 esld:y="4.5"
               >
@@ -1208,7 +1189,6 @@ snapshots["Designer given conducting equipment with established connectivity kee
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V1/B1/CBR1/T1"
                 esld:x="5"
                 esld:y="4.5"
               >
@@ -1221,7 +1201,6 @@ snapshots["Designer given conducting equipment with established connectivity kee
             </Section>
             <Section>
               <Vertex
-                at="S1/V2/B1/CTR1/T1"
                 esld:x="17"
                 esld:y="5.5"
               >
@@ -1261,7 +1240,6 @@ snapshots["Designer given conducting equipment with established connectivity kee
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/DIS1/T2"
                 esld:x="18"
                 esld:y="4.5"
               >
@@ -1269,7 +1247,6 @@ snapshots["Designer given conducting equipment with established connectivity kee
             </Section>
             <Section>
               <Vertex
-                at="S1/V2/B1/NEW1/T1"
                 esld:x="19.5"
                 esld:y="4"
               >
@@ -1287,7 +1264,6 @@ snapshots["Designer given conducting equipment with established connectivity kee
             </Section>
             <Section>
               <Vertex
-                at="S1/V2/B1/VTR1/T1"
                 esld:x="17"
                 esld:y="3.5"
               >
@@ -1465,13 +1441,11 @@ snapshots["Designer given conducting equipment with established connectivity bet
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V1/B1/CBR1/T1"
                 esld:x="5"
                 esld:y="4.5"
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/DIS1/T2"
                 esld:x="18"
                 esld:y="4.5"
               >
@@ -1727,7 +1701,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/VTR1/T1"
                 esld:x="17"
                 esld:y="3.5"
               >
@@ -1735,7 +1708,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
             </Section>
             <Section>
               <Vertex
-                at="S1/V2/B1/CTR1/T1"
                 esld:x="17"
                 esld:y="5.5"
               >
@@ -1758,7 +1730,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/DIS1/T2"
                 esld:x="18"
                 esld:y="4.5"
               >
@@ -1773,7 +1744,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V2/B1/BAT1/T1"
                 esld:x="19"
                 esld:y="7.5"
               >
@@ -1789,7 +1759,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/CTR1/T2"
                 esld:x="18"
                 esld:y="5.5"
               >
@@ -1855,7 +1824,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V1/B1/CBR1/T1"
                 esld:x="5"
                 esld:y="4.5"
               >
@@ -1868,7 +1836,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
             </Section>
             <Section>
               <Vertex
-                at="S1/V2/B1/CTR1/T1"
                 esld:x="17"
                 esld:y="5.5"
               >
@@ -1891,7 +1858,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/DIS1/T2"
                 esld:x="18"
                 esld:y="4.5"
               >
@@ -2008,7 +1974,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V2/B1/BAT1/T1"
                 esld:x="19"
                 esld:y="7.5"
               >
@@ -2024,7 +1989,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/CTR1/T2"
                 esld:x="18"
                 esld:y="5.5"
               >
@@ -2090,7 +2054,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V1/B1/CBR1/T1"
                 esld:x="5"
                 esld:y="4.5"
               >
@@ -2115,7 +2078,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
             </Section>
             <Section>
               <Vertex
-                at="S1/V2/B1/CTR1/T1"
                 esld:x="17"
                 esld:y="5.5"
               >
@@ -2138,7 +2100,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/DIS1/T2"
                 esld:x="18"
                 esld:y="4.5"
               >
@@ -2146,7 +2107,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
             </Section>
             <Section>
               <Vertex
-                at="S1/V2/B1/VTR1/T1"
                 esld:x="17"
                 esld:y="3.5"
               >
@@ -2282,7 +2242,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V2/B1/BAT1/T1"
                 esld:x="19"
                 esld:y="7.5"
               >
@@ -2298,7 +2257,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/CTR1/T2"
                 esld:x="18"
                 esld:y="5.5"
               >
@@ -2372,7 +2330,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V1/B1/CBR1/T1"
                 esld:x="5"
                 esld:y="4.5"
               >
@@ -2388,7 +2345,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/CTR1/T1"
                 esld:x="17"
                 esld:y="5.5"
               >
@@ -2488,7 +2444,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V2/B1/BAT1/T1"
                 esld:x="19"
                 esld:y="7.5"
               >
@@ -2504,7 +2459,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/CTR1/T2"
                 esld:x="18"
                 esld:y="5.5"
               >
@@ -2759,7 +2713,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S2/V2/B1/BAT1/T1"
                 esld:x="19"
                 esld:y="7.5"
               >
@@ -2775,7 +2728,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                at="S2/V2/B1/CTR1/T2"
                 esld:x="18"
                 esld:y="5.5"
               >
@@ -2974,7 +2926,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V2/B1/BAT1/T1"
                 esld:x="19"
                 esld:y="6.5"
               >
@@ -2990,7 +2941,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/CTR1/T2"
                 esld:x="18"
                 esld:y="4.5"
               >
@@ -3083,7 +3033,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V1/B1/CBR1/T1"
                 esld:x="5"
                 esld:y="4.5"
               >
@@ -3096,7 +3045,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
             </Section>
             <Section>
               <Vertex
-                at="S1/V2/B1/CTR1/T1"
                 esld:x="17"
                 esld:y="5.5"
               >
@@ -3119,7 +3067,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/DIS1/T2"
                 esld:x="18"
                 esld:y="4.5"
               >
@@ -3236,7 +3183,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V2/B1/BAT1/T1"
                 esld:x="19"
                 esld:y="7.5"
               >
@@ -3252,7 +3198,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/CTR1/T2"
                 esld:x="18"
                 esld:y="5.5"
               >
@@ -3345,7 +3290,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V1/B1/CBR1/T1"
                 esld:x="5"
                 esld:y="4.5"
               >
@@ -3358,7 +3302,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
             </Section>
             <Section>
               <Vertex
-                at="S1/V2/B1/CTR1/T1"
                 esld:x="17"
                 esld:y="5.5"
               >
@@ -3381,7 +3324,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/DIS1/T2"
                 esld:x="18"
                 esld:y="4.5"
               >
@@ -3498,7 +3440,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V2/B1/BAT1/T1"
                 esld:x="19"
                 esld:y="7.5"
               >
@@ -3514,7 +3455,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/CTR1/T2"
                 esld:x="18"
                 esld:y="5.5"
               >
@@ -3580,7 +3520,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V1/B1/CBR1/T1"
                 esld:x="5"
                 esld:y="4.5"
               >
@@ -3593,7 +3532,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
             </Section>
             <Section>
               <Vertex
-                at="S1/V2/B1/CTR1/T1"
                 esld:x="17"
                 esld:y="5.5"
               >
@@ -3616,7 +3554,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/DIS1/T2"
                 esld:x="18"
                 esld:y="4.5"
               >
@@ -3733,7 +3670,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                at="S1/V2/B1/BAT1/T1"
                 esld:x="19"
                 esld:y="7.5"
               >
@@ -3749,7 +3685,6 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                at="S1/V2/B1/CTR1/T2"
                 esld:x="18"
                 esld:y="5.5"
               >
@@ -3763,4 +3698,322 @@ snapshots["Designer given conducting equipment with established connectivity bet
 </SCL>
 `;
 /* end snapshot Designer given conducting equipment with established connectivity between more than two pieces of equipment and a bus bar removes the bus bar on third menu item select */
+
+snapshots["Designer given conducting equipment with established connectivity between more than two pieces of equipment deletes conducting equipment on delete menu item select"] = 
+`<SCL
+  revision="B"
+  version="2007"
+  xmlns="http://www.iec.ch/61850/2003/SCL"
+  xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
+>
+  <Substation
+    esld:h="25"
+    esld:w="50"
+    name="S1"
+    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
+  >
+    <VoltageLevel
+      esld:h="13"
+      esld:w="13"
+      esld:x="1"
+      esld:y="1"
+      name="V1"
+    >
+      <Bay
+        esld:h="6"
+        esld:w="6"
+        esld:x="2"
+        esld:y="2"
+        name="B1"
+      >
+        <ConductingEquipment
+          esld:rot="1"
+          esld:x="4"
+          esld:y="4"
+          name="CBR1"
+          type="CBR"
+        >
+          <Terminal
+            bayName="B1"
+            cNodeName="L1"
+            connectivityNode="S1/V1/B1/L1"
+            name="T1"
+            substationName="S1"
+            voltageLevelName="V1"
+          >
+          </Terminal>
+        </ConductingEquipment>
+        <ConnectivityNode
+          name="L1"
+          pathName="S1/V1/B1/L1"
+        >
+          <Private type="Transpower-SLD-Vertices">
+            <Section>
+              <Vertex
+                esld:x="5"
+                esld:y="4.5"
+              >
+              </Vertex>
+              <Vertex
+                esld:x="18"
+                esld:y="4.5"
+              >
+              </Vertex>
+            </Section>
+          </Private>
+        </ConnectivityNode>
+      </Bay>
+    </VoltageLevel>
+    <VoltageLevel
+      esld:h="23"
+      esld:w="23"
+      esld:x="15"
+      esld:y="1"
+      name="V2"
+    >
+      <Bay
+        esld:h="6"
+        esld:w="6"
+        esld:x="16"
+        esld:y="2"
+        name="B1"
+      >
+        <ConductingEquipment
+          esld:rot="1"
+          esld:x="18"
+          esld:y="4"
+          name="DIS1"
+          type="DIS"
+        >
+          <Terminal
+            bayName="B1"
+            cNodeName="L1"
+            connectivityNode="S1/V1/B1/L1"
+            name="T2"
+            substationName="S1"
+            voltageLevelName="V1"
+          >
+          </Terminal>
+        </ConductingEquipment>
+        <ConductingEquipment
+          esld:rot="2"
+          esld:x="19"
+          esld:y="3"
+          name="NEW1"
+          type="NEW"
+        >
+        </ConductingEquipment>
+        <ConductingEquipment
+          esld:rot="3"
+          esld:x="17"
+          esld:y="3"
+          name="VTR1"
+          type="VTR"
+        >
+        </ConductingEquipment>
+        <ConductingEquipment
+          esld:rot="0"
+          esld:x="20"
+          esld:y="4"
+          name="DIS2"
+          type="DIS"
+        >
+        </ConductingEquipment>
+        <ConductingEquipment
+          esld:rot="3"
+          esld:x="19"
+          esld:y="7"
+          name="BAT1"
+          type="BAT"
+        >
+          <Terminal name="erroneous">
+          </Terminal>
+        </ConductingEquipment>
+      </Bay>
+    </VoltageLevel>
+  </Substation>
+</SCL>
+`;
+/* end snapshot Designer given conducting equipment with established connectivity between more than two pieces of equipment deletes conducting equipment on delete menu item select */
+
+snapshots["Designer given conducting equipment with established connectivity between more than two pieces of equipment deletes bays on delete menu item select"] = 
+`<SCL
+  revision="B"
+  version="2007"
+  xmlns="http://www.iec.ch/61850/2003/SCL"
+  xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
+>
+  <Substation
+    esld:h="25"
+    esld:w="50"
+    name="S1"
+    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
+  >
+    <VoltageLevel
+      esld:h="13"
+      esld:w="13"
+      esld:x="1"
+      esld:y="1"
+      name="V1"
+    >
+    </VoltageLevel>
+    <VoltageLevel
+      esld:h="23"
+      esld:w="23"
+      esld:x="15"
+      esld:y="1"
+      name="V2"
+    >
+      <Bay
+        esld:h="6"
+        esld:w="6"
+        esld:x="16"
+        esld:y="2"
+        name="B1"
+      >
+        <ConductingEquipment
+          esld:rot="3"
+          esld:x="17"
+          esld:y="5"
+          name="CTR1"
+          type="CTR"
+        >
+          <Terminal
+            bayName="B1"
+            cNodeName="L1"
+            connectivityNode="S1/V2/B1/L1"
+            name="T2"
+            substationName="S1"
+            voltageLevelName="V2"
+          >
+          </Terminal>
+        </ConductingEquipment>
+        <ConductingEquipment
+          esld:rot="1"
+          esld:x="18"
+          esld:y="4"
+          name="DIS1"
+          type="DIS"
+        >
+        </ConductingEquipment>
+        <ConductingEquipment
+          esld:rot="2"
+          esld:x="19"
+          esld:y="3"
+          name="NEW1"
+          type="NEW"
+        >
+        </ConductingEquipment>
+        <ConductingEquipment
+          esld:rot="3"
+          esld:x="17"
+          esld:y="3"
+          name="VTR1"
+          type="VTR"
+        >
+        </ConductingEquipment>
+        <ConductingEquipment
+          esld:rot="0"
+          esld:x="20"
+          esld:y="4"
+          name="DIS2"
+          type="DIS"
+        >
+        </ConductingEquipment>
+        <ConductingEquipment
+          esld:rot="3"
+          esld:x="19"
+          esld:y="7"
+          name="BAT1"
+          type="BAT"
+        >
+          <Terminal
+            bayName="B1"
+            cNodeName="L1"
+            connectivityNode="S1/V2/B1/L1"
+            name="T1"
+            substationName="S1"
+            voltageLevelName="V2"
+          >
+          </Terminal>
+          <Terminal name="erroneous">
+          </Terminal>
+        </ConductingEquipment>
+        <ConnectivityNode
+          name="L1"
+          pathName="S1/V2/B1/L1"
+        >
+          <Private type="Transpower-SLD-Vertices">
+            <Section>
+              <Vertex
+                esld:x="19"
+                esld:y="7.5"
+              >
+              </Vertex>
+              <Vertex
+                esld:x="18.5"
+                esld:y="7.5"
+              >
+              </Vertex>
+              <Vertex
+                esld:x="18.5"
+                esld:y="5.5"
+              >
+              </Vertex>
+              <Vertex
+                esld:x="18"
+                esld:y="5.5"
+              >
+              </Vertex>
+            </Section>
+          </Private>
+        </ConnectivityNode>
+      </Bay>
+    </VoltageLevel>
+  </Substation>
+</SCL>
+`;
+/* end snapshot Designer given conducting equipment with established connectivity between more than two pieces of equipment deletes bays on delete menu item select */
+
+snapshots["Designer given conducting equipment with established connectivity between more than two pieces of equipment deletes voltage levels on delete menu item select"] = 
+`<SCL
+  revision="B"
+  version="2007"
+  xmlns="http://www.iec.ch/61850/2003/SCL"
+  xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
+>
+  <Substation
+    esld:h="25"
+    esld:w="50"
+    name="S1"
+    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
+  >
+    <VoltageLevel
+      esld:h="13"
+      esld:w="13"
+      esld:x="1"
+      esld:y="1"
+      name="V1"
+    >
+      <Bay
+        esld:h="6"
+        esld:w="6"
+        esld:x="2"
+        esld:y="2"
+        name="B1"
+      >
+        <ConductingEquipment
+          esld:rot="1"
+          esld:x="4"
+          esld:y="4"
+          name="CBR1"
+          type="CBR"
+        >
+        </ConductingEquipment>
+      </Bay>
+    </VoltageLevel>
+  </Substation>
+</SCL>
+`;
+/* end snapshot Designer given conducting equipment with established connectivity between more than two pieces of equipment deletes voltage levels on delete menu item select */
 
