@@ -12,6 +12,13 @@ import '@material/mwc-textfield';
 import { getReference, identity } from '@openscd/oscd-scl';
 import { bayGraphic, equipmentGraphic, movePath, resizePath, symbols, voltageLevelGraphic, } from './icons.js';
 import { attributes, connectionStartPoints, elementPath, isBusBar, newConnectEvent, newPlaceEvent, newResizeEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartResizeEvent, privType, removeNode, removeTerminal, sldNs, svgNs, xmlBoolean, } from './util.js';
+function newEditWizardEvent(element) {
+    return new CustomEvent('oscd-edit-wizard-request', {
+        bubbles: true,
+        composed: true,
+        detail: { element },
+    });
+}
 function contains([x1, y1, w1, h1], [x2, y2, w2, h2]) {
     return x1 <= x2 && y1 <= y2 && x1 + w1 >= x2 + w2 && y1 + h1 >= y2 + h2;
 }
@@ -270,6 +277,13 @@ let SLDEditor = class SLDEditor extends LitElement {
             },
             {
                 content: html `<mwc-list-item graphic="icon">
+          <span>Edit</span>
+          <mwc-icon slot="graphic">edit</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.dispatchEvent(newEditWizardEvent(equipment)),
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
           <span>Delete</span>
           <mwc-icon slot="graphic">delete</mwc-icon>
         </mwc-list-item>`,
@@ -382,6 +396,13 @@ let SLDEditor = class SLDEditor extends LitElement {
             },
             {
                 content: html `<mwc-list-item graphic="icon">
+          <span>Edit</span>
+          <mwc-icon slot="graphic">edit</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.dispatchEvent(newEditWizardEvent(busBar)),
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
           <span>Delete</span>
           <mwc-icon slot="graphic">delete</mwc-icon>
         </mwc-list-item>`,
@@ -424,6 +445,13 @@ let SLDEditor = class SLDEditor extends LitElement {
           </svg>
         </mwc-list-item>`,
                 handler: () => this.dispatchEvent(newStartPlaceEvent(bayOrVL)),
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
+          <span>Edit</span>
+          <mwc-icon slot="graphic">edit</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.dispatchEvent(newEditWizardEvent(bayOrVL)),
             },
             {
                 content: html `<mwc-list-item graphic="icon">
@@ -1112,7 +1140,12 @@ let SLDEditor = class SLDEditor extends LitElement {
                 @click=${handleClick} @auxclick=${handleAuxClick}
                 @contextmenu=${handleContextMenu} @mousedown=${preventDefault}
                 pointer-events="all" stroke="none" stroke-width="1" />`);
-                if (this.connecting && ![x2, y2].find(n => Number.isInteger(n)))
+                if (![x1, y1].find(n => Number.isInteger(n)))
+                    lines.push(svg `<rect x="${x1 - 0.5}" y="${y1 - 0.5}" width="1" height="1"
+                @click=${handleClick} @auxclick=${handleAuxClick}
+                @contextmenu=${handleContextMenu} @mousedown=${preventDefault}
+                pointer-events="all" fill="none" />`);
+                if (![x2, y2].find(n => Number.isInteger(n)))
                     lines.push(svg `<rect x="${x2 - 0.5}" y="${y2 - 0.5}" width="1" height="1"
                 @click=${handleClick} @auxclick=${handleAuxClick}
                 @contextmenu=${handleContextMenu} @mousedown=${preventDefault}
