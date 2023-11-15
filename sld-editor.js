@@ -121,9 +121,27 @@ let SLDEditor = class SLDEditor extends LitElement {
             if (key === 'Escape')
                 this.menu = undefined;
         };
-        this.handleClick = (_e) => {
+        this.handleClick = (e) => {
             this.menu = undefined;
+            this.positionCoordinates(e);
         };
+    }
+    positionCoordinates(e) {
+        const coordinatesDiv = this.coordinatesRef.value;
+        if (coordinatesDiv) {
+            coordinatesDiv.style.top = `${e.clientY}px`;
+            coordinatesDiv.style.left = `${e.clientX + 16}px`;
+        }
+    }
+    openMenu(element, e) {
+        if (e.getModifierState('Shift'))
+            return;
+        if (!this.placing &&
+            !this.resizing &&
+            !this.placingLabel &&
+            !this.connecting)
+            this.menu = { element, left: e.clientX, top: e.clientY };
+        e.preventDefault();
     }
     svgCoordinates(clientX, clientY) {
         const p = new DOMPoint(clientX, clientY);
@@ -600,22 +618,24 @@ let SLDEditor = class SLDEditor extends LitElement {
         if (this.placing) {
             const { dim: [w0, h0], } = attributes(this.placing);
             const invalid = !this.canPlaceAt(this.placing, this.mouseX, this.mouseY, w0, h0);
-            coordinates = html `
-        <div class="${classMap({ indicator: true, invalid })}">
-          (${this.mouseX},${this.mouseY})
-        </div>
-      `;
+            coordinates = html `<div
+        ${ref(this.coordinatesRef)}
+        class="${classMap({ coordinates: true, invalid })}"
+      >
+        (${this.mouseX},${this.mouseY})
+      </div>`;
         }
         if (this.resizing && !isBusBar(this.resizing)) {
             const { pos: [x, y], } = attributes(this.resizing);
             const newW = Math.max(1, this.mouseX - x + 1);
             const newH = Math.max(1, this.mouseY - y + 1);
             const invalid = !this.canResizeTo(this.resizing, newW, newH);
-            coordinates = html `
-        <div class="${classMap({ indicator: true, invalid })}">
-          (${newW}&times;${newH})
-        </div>
-      `;
+            coordinates = html `<div
+        ${ref(this.coordinatesRef)}
+        class="${classMap({ coordinates: true, invalid })}"
+      >
+        (${newW}&times;${newH})
+      </div>`;
         }
         const connectionPreview = [];
         if (this.connecting) {
@@ -700,19 +720,10 @@ let SLDEditor = class SLDEditor extends LitElement {
             this.mouseY = Math.floor(y);
             this.mouseX2 = Math.floor(x * 2) / 2;
             this.mouseY2 = Math.floor(y * 2) / 2;
+            this.positionCoordinates(e);
         }}
       >
         <style>
-          .indicator {
-            font-size: 0.6px;
-            overflow: visible;
-            font-family: 'Roboto', sans-serif;
-            background: white;
-            color: rgb(0, 0, 0 / 0.83);
-          }
-          .indicator.invalid {
-            color: #bb1326;
-          }
           .handle {
             visibility: hidden;
           }
@@ -862,12 +873,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             }
         }}
           @click=${handleClick}
-          @contextmenu=${(e) => {
-            if (e.getModifierState('Shift'))
-                return;
-            this.menu = { element, left: e.clientX, top: e.clientY };
-            e.preventDefault();
-        }}
+          @contextmenu=${(e) => this.openMenu(element, e)}
           pointer-events="${events}" fill="#000000" fill-opacity="0.83"
           style="font: ${fontSize}px sans-serif; cursor: default;">
           ${name}
@@ -955,12 +961,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             preview,
         })} tabindex="0" pointer-events="all" style="outline: none;">
       <rect x="${x}" y="${y}" width="${w}" height="${h}"
-        @contextmenu=${(e) => {
-            if (e.getModifierState('Shift'))
-                return;
-            this.menu = { element: bayOrVL, left: e.clientX, top: e.clientY };
-            e.preventDefault();
-        }}
+        @contextmenu=${(e) => this.openMenu(bayOrVL, e)}
         @click=${handleClick || nothing}
         fill="white" stroke-dasharray="${isVL ? nothing : '0.18'}"
         stroke="${
@@ -1088,12 +1089,7 @@ let SLDEditor = class SLDEditor extends LitElement {
                 e.preventDefault();
             }
         }}
-        @contextmenu=${(e) => {
-            if (e.getModifierState('Shift'))
-                return;
-            this.menu = { element: equipment, left: e.clientX, top: e.clientY };
-            e.preventDefault();
-        }}
+        @contextmenu=${(e) => this.openMenu(equipment, e)}
       />
       ${topConnector}
       ${topIndicator}
@@ -1165,12 +1161,7 @@ let SLDEditor = class SLDEditor extends LitElement {
                         if (button === 1)
                             this.dispatchEvent(newStartResizeEvent(bay));
                     };
-                    handleContextMenu = (e) => {
-                        if (e.getModifierState('Shift'))
-                            return;
-                        this.menu = { element: bay, left: e.clientX, top: e.clientY };
-                        e.preventDefault();
-                    };
+                    handleContextMenu = (e) => this.openMenu(bay, e);
                 }
                 if (busBar && this.resizing === bay) {
                     if (section !== sections.find(s => xmlBoolean(s.getAttribute('bus'))))
@@ -1265,6 +1256,23 @@ SLDEditor.styles = css `
       margin-bottom: 4px;
       --mdc-icon-button-size: 28px;
       --mdc-icon-size: 24px;
+    }
+
+    .coordinates {
+      position: fixed;
+      font-size: 16px;
+      font-family: 'Roboto', sans-serif;
+      padding: 4px;
+      border-radius: 12px;
+      background: #fffd;
+      color: rgb(0, 0, 0 / 0.83);
+    }
+    .coordinates.invalid {
+      color: #bb1326;
+    }
+
+    * {
+      user-select: none;
     }
   `;
 __decorate([
