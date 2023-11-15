@@ -3,7 +3,7 @@ import { css, html, nothing, LitElement, svg } from 'lit';
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
-import { ref } from 'lit/directives/ref.js';
+import { createRef, ref } from 'lit/directives/ref.js';
 import { newEditEvent } from '@openscd/open-scd-core';
 import '@material/mwc-dialog';
 import '@material/mwc-list';
@@ -116,6 +116,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         this.mouseY = 0;
         this.mouseX2 = 0;
         this.mouseY2 = 0;
+        this.coordinatesRef = createRef();
         this.handleKeydown = ({ key }) => {
             if (key === 'Escape')
                 this.menu = undefined;
@@ -595,35 +596,26 @@ let SLDEditor = class SLDEditor extends LitElement {
             else if (isBusBar(this.placing))
                 placingElement = this.renderBusBar(this.placing);
         }
-        let placingIndicator = svg ``;
+        let coordinates = html ``;
         if (this.placing) {
             const { dim: [w0, h0], } = attributes(this.placing);
             const invalid = !this.canPlaceAt(this.placing, this.mouseX, this.mouseY, w0, h0);
-            placingIndicator = svg `
-      <foreignObject x="${this.mouseX + 1}" y="${this.mouseY}"
-          width="1" height="1" class="preview"
-          style="pointer-events: none; overflow: visible;">
-        <span class="${classMap({ indicator: true, invalid })}">
-        (${this.mouseX},${this.mouseY})
-        </span>
-      </foreignObject>
-    `;
+            coordinates = html `
+        <div class="${classMap({ indicator: true, invalid })}">
+          (${this.mouseX},${this.mouseY})
+        </div>
+      `;
         }
-        let resizingIndicator = svg ``;
         if (this.resizing && !isBusBar(this.resizing)) {
             const { pos: [x, y], } = attributes(this.resizing);
             const newW = Math.max(1, this.mouseX - x + 1);
             const newH = Math.max(1, this.mouseY - y + 1);
             const invalid = !this.canResizeTo(this.resizing, newW, newH);
-            resizingIndicator = svg `
-      <foreignObject x="${this.mouseX + 1}" y="${this.mouseY}"
-        width="1" height="1" class="preview"
-        style="pointer-events: none; overflow: visible;">
-        <span class="${classMap({ indicator: true, invalid })}">
-        (${newW}&times;${newH})
-        </span>
-      </foreignObject>
-    `;
+            coordinates = html `
+        <div class="${classMap({ indicator: true, invalid })}">
+          (${newW}&times;${newH})
+        </div>
+      `;
         }
         const connectionPreview = [];
         if (this.connecting) {
@@ -769,11 +761,11 @@ let SLDEditor = class SLDEditor extends LitElement {
                 node.closest(this.placing.tagName) === this.placing) &&
             isBusBar(node.parentElement))
             .map(cNode => this.renderConnectivityNode(cNode))}
-        ${placingElement} ${placingIndicator} ${resizingIndicator}
+        ${placingElement}
         ${Array.from(this.substation.querySelectorAll('VoltageLevel, Bay, ConductingEquipment')).map(element => this.renderLabel(element))}
         ${placingLabelTarget}
       </svg>
-      ${menu}
+      ${menu} ${coordinates}
       <mwc-dialog
         id="resizeSubstationUI"
         heading="Resize ${this.substation.getAttribute('name')}"
@@ -861,22 +853,25 @@ let SLDEditor = class SLDEditor extends LitElement {
         const id = identity(element);
         return svg `<g class="label" id="label:${id}">
         <text x="${x + 0.1}" y="${y - 0.2}"
-        @auxclick=${(e) => {
+          @mousedown=${preventDefault}
+          @auxclick=${(e) => {
             if (e.button === 1) {
                 // middle mouse button
                 this.dispatchEvent(newEditWizardEvent(element));
                 e.preventDefault();
             }
         }}
-        @click=${handleClick}
-        @contextmenu=${(e) => {
+          @click=${handleClick}
+          @contextmenu=${(e) => {
             if (e.getModifierState('Shift'))
                 return;
             this.menu = { element, left: e.clientX, top: e.clientY };
             e.preventDefault();
         }}
           pointer-events="${events}" fill="#000000" fill-opacity="0.83"
-          style="font: ${fontSize}px sans-serif;">${name}</text>
+          style="font: ${fontSize}px sans-serif; cursor: default;">
+          ${name}
+        </text>
       </g>`;
     }
     renderContainer(bayOrVL, preview = false) {
