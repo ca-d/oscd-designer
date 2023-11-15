@@ -122,7 +122,13 @@ let SLDEditor = class SLDEditor extends LitElement {
                 this.menu = undefined;
         };
         this.handleClick = (e) => {
-            this.menu = undefined;
+            if (this.menu &&
+                !e
+                    .composedPath()
+                    .find(elm => 'id' in elm && elm.id === 'sld-context-menu')) {
+                e.stopImmediatePropagation();
+                this.menu = undefined;
+            }
             this.positionCoordinates(e);
         };
     }
@@ -206,7 +212,7 @@ let SLDEditor = class SLDEditor extends LitElement {
     connectedCallback() {
         super.connectedCallback();
         window.addEventListener('keydown', this.handleKeydown);
-        window.addEventListener('click', this.handleClick);
+        window.addEventListener('click', this.handleClick, true);
     }
     disconnectedCallback() {
         super.disconnectedCallback();
@@ -557,6 +563,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             items = this.containerMenuItems(element);
         return html `
       <menu
+        id="sld-context-menu"
         style="position: fixed; top: ${this.menu.top}px; left: ${this.menu
             .left}px; background: var(--oscd-base3, white); margin: 0px; padding: 0px; box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23); --mdc-list-vertical-padding: 0px;"
         ${ref(async (m) => {
@@ -1260,6 +1267,7 @@ SLDEditor.styles = css `
 
     .coordinates {
       position: fixed;
+      pointer-events: none;
       font-size: 16px;
       font-family: 'Roboto', sans-serif;
       padding: 8px;
