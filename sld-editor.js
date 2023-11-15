@@ -1262,8 +1262,8 @@ SLDEditor.styles = css `
       position: fixed;
       font-size: 16px;
       font-family: 'Roboto', sans-serif;
-      padding: 4px;
-      border-radius: 12px;
+      padding: 8px;
+      border-radius: 16px;
       background: #fffd;
       color: rgb(0, 0, 0 / 0.83);
     }

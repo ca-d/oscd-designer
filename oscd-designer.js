@@ -1374,8 +1374,8 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
       position: fixed;
       font-size: 16px;
       font-family: 'Roboto', sans-serif;
-      padding: 4px;
-      border-radius: 12px;
+      padding: 8px;
+      border-radius: 16px;
       background: #fffd;
       color: rgb(0, 0, 0 / 0.83);
     }
