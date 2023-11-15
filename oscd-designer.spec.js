@@ -17,46 +17,49 @@ export const emptyDocString = `<?xml version="1.0" encoding="UTF-8"?>
 <SCL version="2007" revision="B" xmlns="http://www.iec.ch/61850/2003/SCL">
 </SCL>`;
 export const voltageLevelDocString = `<?xml version="1.0" encoding="UTF-8"?>
-<SCL version="2007" revision="B" xmlns:smth="https://transpower.co.nz/SCL/SSD/SLD/v0" xmlns="http://www.iec.ch/61850/2003/SCL">
+<SCL xmlns:smth="https://transpower.co.nz/SCL/SSD/SLD/v0" xmlns="http://www.iec.ch/61850/2003/SCL" version="2007" revision="B">
   <Substation name="S1" smth:w="50" smth:h="25">
-    <VoltageLevel name="V1" smth:x="1" smth:y="1" smth:w="48" smth:h="23" />
+    <VoltageLevel name="V1" smth:x="1" smth:y="1" smth:lx="1" smth:ly="1" smth:w="48" smth:h="23"/>
   </Substation>
-</SCL>`;
+</SCL>
+`;
 export const bayDocString = `<?xml version="1.0" encoding="UTF-8"?>
-<SCL version="2007" revision="B" xmlns="http://www.iec.ch/61850/2003/SCL">
-  <Substation xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0" name="S1" esld:w="50" esld:h="25">
-    <VoltageLevel name="V1" esld:x="1" esld:y="1" esld:w="13" esld:h="13">
-      <Bay name="B1" esld:x="2" esld:y="2" esld:w="3" esld:h="3">
-        <ConnectivityNode name="L1" pathName="S1/V1/B1/L1" />
+<SCL xmlns="http://www.iec.ch/61850/2003/SCL" version="2007" revision="B" xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0">
+  <Substation name="S1" esld:w="50" esld:h="25">
+    <VoltageLevel name="V1" esld:x="1" esld:y="1" esld:w="13" esld:h="13" esld:lx="1" esld:ly="1">
+      <Bay name="B1" esld:x="2" esld:y="2" esld:w="3" esld:h="3" esld:lx="2" esld:ly="2">
+        <ConnectivityNode name="L1" pathName="S1/V1/B1/L1"/>
       </Bay>
     </VoltageLevel>
-    <VoltageLevel name="V2" esld:x="15" esld:y="1" esld:w="13" esld:h="13">
-      <Bay name="B1" esld:x="20" esld:y="11" esld:w="1" esld:h="1" />
+    <VoltageLevel name="V2" esld:x="15" esld:y="1" esld:w="13" esld:h="13" esld:lx="15" esld:ly="1">
+      <Bay name="B1" esld:x="20" esld:y="11" esld:w="1" esld:h="1" esld:lx="20" esld:ly="11"/>
     </VoltageLevel>
   </Substation>
-</SCL>`;
+</SCL>
+`;
 export const equipmentDocString = `<?xml version="1.0" encoding="UTF-8"?>
-<SCL version="2007" revision="B" xmlns="http://www.iec.ch/61850/2003/SCL">
-  <Substation xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0" name="S1" esld:w="50" esld:h="25">
-    <VoltageLevel name="V1" esld:x="1" esld:y="1" esld:w="13" esld:h="13">
-      <Bay name="B1" esld:x="2" esld:y="2" esld:w="6" esld:h="6">
-        <ConductingEquipment type="CBR" name="CBR1" esld:x="4" esld:y="4" esld:rot="1" />
+<SCL xmlns="http://www.iec.ch/61850/2003/SCL" version="2007" revision="B" xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0">
+  <Substation name="S1" esld:w="50" esld:h="25">
+    <VoltageLevel name="V1" esld:x="1" esld:y="1" esld:w="13" esld:h="13" esld:lx="1" esld:ly="1">
+      <Bay name="B1" esld:x="2" esld:y="2" esld:w="6" esld:h="6" esld:lx="2" esld:ly="2">
+        <ConductingEquipment type="CBR" name="CBR1" esld:x="4" esld:y="4" esld:rot="1" esld:lx="3.5" esld:ly="4"/>
       </Bay>
     </VoltageLevel>
-    <VoltageLevel name="V2" esld:x="15" esld:y="1" esld:w="23" esld:h="23">
-      <Bay name="B1" esld:x="16" esld:y="2" esld:w="6" esld:h="6">
-        <ConductingEquipment type="CTR" name="CTR1" esld:x="17" esld:y="5" esld:rot="3" />
-        <ConductingEquipment type="DIS" name="DIS1" esld:x="18" esld:y="4" esld:rot="1" />
-        <ConductingEquipment type="NEW" name="NEW1" esld:x="19" esld:y="3" esld:rot="2" />
-        <ConductingEquipment type="VTR" name="VTR1" esld:x="17" esld:y="3" esld:rot="3" />
-        <ConductingEquipment type="DIS" name="DIS2" esld:x="20" esld:y="4" esld:rot="0" />
-        <ConductingEquipment type="BAT" name="BAT1" esld:x="19" esld:y="7" esld:rot="3">
-          <Terminal name="erroneous" />
+    <VoltageLevel name="V2" esld:x="15" esld:y="1" esld:w="23" esld:h="23" esld:lx="15" esld:ly="1">
+      <Bay name="B1" esld:x="16" esld:y="2" esld:w="6" esld:h="6" esld:lx="16" esld:ly="2">
+        <ConductingEquipment type="CTR" name="CTR1" esld:x="17" esld:y="5" esld:rot="3" esld:lx="17" esld:ly="7.5"/>
+        <ConductingEquipment type="DIS" name="DIS1" esld:x="18" esld:y="4" esld:rot="1" esld:lx="17" esld:ly="4.5"/>
+        <ConductingEquipment type="NEW" name="NEW1" esld:x="19" esld:y="3" esld:rot="2" esld:lx="20" esld:ly="3.5"/>
+        <ConductingEquipment type="VTR" name="VTR1" esld:x="17" esld:y="3" esld:rot="3" esld:lx="17" esld:ly="3"/>
+        <ConductingEquipment type="DIS" name="DIS2" esld:x="20" esld:y="4" esld:rot="0" esld:lx="21" esld:ly="5"/>
+        <ConductingEquipment type="BAT" name="BAT1" esld:x="19" esld:y="7" esld:rot="3" esld:lx="19" esld:ly="7">
+          <Terminal name="erroneous"/>
         </ConductingEquipment>
       </Bay>
     </VoltageLevel>
   </Substation>
-</SCL>`;
+</SCL>
+`;
 describe('Designer', () => {
     let element;
     let lastCalledWizard;

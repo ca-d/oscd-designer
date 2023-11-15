@@ -76,7 +76,14 @@ function preventDefault(e) {
 }
 function renderMenuFooter(element) {
     const name = element.getAttribute('name');
-    const desc = element.getAttribute('desc') || element.getAttribute('type');
+    let detail = element.getAttribute('desc');
+    const type = element.getAttribute('type');
+    if (type) {
+        if (detail)
+            detail = html `${type} &mdash; ${detail}`;
+        else
+            detail = type;
+    }
     let footerGraphic = equipmentGraphic(null);
     if (element.tagName === 'ConductingEquipment')
         footerGraphic = equipmentGraphic(element.getAttribute('type'));
@@ -86,9 +93,16 @@ function renderMenuFooter(element) {
         footerGraphic = bayGraphic;
     else if (element.tagName === 'VoltageLevel')
         footerGraphic = voltageLevelGraphic;
-    return html `<mwc-list-item ?twoline=${desc} graphic="avatar" noninteractive>
+    return html `<mwc-list-item ?twoline=${detail} graphic="avatar" noninteractive>
     <span>${name}</span>
-    ${desc ? html `<span slot="secondary">${desc}</span>` : nothing}
+    ${detail
+        ? html `<span
+          slot="secondary"
+          style="display: inline-block; max-width: 15em; overflow: hidden; text-overflow: ellipsis;"
+        >
+          ${detail}
+        </span>`
+        : nothing}
     ${footerGraphic}
   </mwc-list-item>`;
 }
@@ -291,6 +305,13 @@ let SLDEditor = class SLDEditor extends LitElement {
             },
             {
                 content: html `<mwc-list-item graphic="icon">
+          <span>Move Label</span>
+          <mwc-icon slot="graphic">text_rotation_none</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.dispatchEvent(newStartPlaceLabelEvent(equipment)),
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
           <span>Edit</span>
           <mwc-icon slot="graphic">edit</mwc-icon>
         </mwc-list-item>`,
@@ -410,6 +431,13 @@ let SLDEditor = class SLDEditor extends LitElement {
             },
             {
                 content: html `<mwc-list-item graphic="icon">
+          <span>Move Label</span>
+          <mwc-icon slot="graphic">text_rotation_none</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.dispatchEvent(newStartPlaceLabelEvent(busBar)),
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
           <span>Edit</span>
           <mwc-icon slot="graphic">edit</mwc-icon>
         </mwc-list-item>`,
@@ -459,6 +487,13 @@ let SLDEditor = class SLDEditor extends LitElement {
           </svg>
         </mwc-list-item>`,
                 handler: () => this.dispatchEvent(newStartPlaceEvent(bayOrVL)),
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
+          <span>Move Label</span>
+          <mwc-icon slot="graphic">text_rotation_none</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.dispatchEvent(newStartPlaceLabelEvent(bayOrVL)),
             },
             {
                 content: html `<mwc-list-item graphic="icon">
@@ -541,6 +576,15 @@ let SLDEditor = class SLDEditor extends LitElement {
         const { dim: [w, h], } = attributes(this.substation);
         const placingTarget = ((_a = this.placing) === null || _a === void 0 ? void 0 : _a.tagName) === 'VoltageLevel'
             ? svg `<rect width="100%" height="100%" fill="url(#grid)" />`
+            : nothing;
+        const placingLabelTarget = this.placingLabel
+            ? svg `<rect width="100%" height="100%" fill="url(#halfgrid)"
+      @click=${() => {
+                const element = this.placingLabel;
+                const [x, y] = this.renderedLabelPosition(element);
+                this.dispatchEvent(newPlaceLabelEvent({ element, x, y }));
+            }}
+      />`
             : nothing;
         let placingElement = svg ``;
         if (this.placing) {
@@ -727,6 +771,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             .map(cNode => this.renderConnectivityNode(cNode))}
         ${placingElement} ${placingIndicator} ${resizingIndicator}
         ${Array.from(this.substation.querySelectorAll('VoltageLevel, Bay, ConductingEquipment')).map(element => this.renderLabel(element))}
+        ${placingLabelTarget}
       </svg>
       ${menu}
       <mwc-dialog
@@ -804,21 +849,34 @@ let SLDEditor = class SLDEditor extends LitElement {
         const [x, y] = this.renderedLabelPosition(element);
         const name = element.getAttribute('name');
         const fontSize = element.tagName === 'ConductingEquipment' ? 0.45 : 0.6;
-        let cursor = 'default';
+        let events = 'none';
         let handleClick = nothing;
-        if (this.placingLabel === element)
-            handleClick = () => this.dispatchEvent(newPlaceLabelEvent({ element, x, y }));
-        else if (!this.placing && !this.resizing) {
-            cursor = 'move';
+        if (!this.placing &&
+            !this.resizing &&
+            !this.connecting &&
+            !this.placingLabel) {
+            events = 'all';
             handleClick = () => this.dispatchEvent(newStartPlaceLabelEvent(element));
         }
         const id = identity(element);
         return svg `<g class="label" id="label:${id}">
-        <rect x="${x}" y="${y - 1}" width="1" height="1" fill="none"
-        style="cursor: ${cursor};" @click=${handleClick} pointer-events="all" />
-        <text x="${x + 0.1}" y="${y - 0.2}" @click=${handleClick}
-          pointer-events="all" fill="#000000" fill-opacity="0.83"
-          style="font: ${fontSize}px sans-serif; cursor: ${cursor};">${name}</text>
+        <text x="${x + 0.1}" y="${y - 0.2}"
+        @auxclick=${(e) => {
+            if (e.button === 1) {
+                // middle mouse button
+                this.dispatchEvent(newEditWizardEvent(element));
+                e.preventDefault();
+            }
+        }}
+        @click=${handleClick}
+        @contextmenu=${(e) => {
+            if (e.getModifierState('Shift'))
+                return;
+            this.menu = { element, left: e.clientX, top: e.clientY };
+            e.preventDefault();
+        }}
+          pointer-events="${events}" fill="#000000" fill-opacity="0.83"
+          style="font: ${fontSize}px sans-serif;">${name}</text>
       </g>`;
     }
     renderContainer(bayOrVL, preview = false) {

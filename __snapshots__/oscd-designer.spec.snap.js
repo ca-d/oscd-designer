@@ -12,10 +12,11 @@ snapshots["Designer given a bay updates reparented bays' connectivity node paths
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -24,6 +25,8 @@ snapshots["Designer given a bay updates reparented bays' connectivity node paths
     </VoltageLevel>
     <VoltageLevel
       esld:h="13"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="13"
       esld:x="15"
       esld:y="1"
@@ -31,6 +34,8 @@ snapshots["Designer given a bay updates reparented bays' connectivity node paths
     >
       <Bay
         esld:h="3"
+        esld:lx="18"
+        esld:ly="3"
         esld:w="3"
         esld:x="18"
         esld:y="3"
@@ -44,6 +49,8 @@ snapshots["Designer given a bay updates reparented bays' connectivity node paths
       </Bay>
       <Bay
         esld:h="1"
+        esld:lx="20"
+        esld:ly="11"
         esld:w="1"
         esld:x="20"
         esld:y="11"
@@ -67,10 +74,11 @@ snapshots["Designer given conducting equipment grounds equipment on connection p
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -78,12 +86,16 @@ snapshots["Designer given conducting equipment grounds equipment on connection p
     >
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="1"
           esld:x="4"
           esld:y="4"
@@ -118,6 +130,8 @@ snapshots["Designer given conducting equipment grounds equipment on connection p
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -125,12 +139,16 @@ snapshots["Designer given conducting equipment grounds equipment on connection p
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="7.5"
           esld:rot="3"
           esld:x="17"
           esld:y="5"
@@ -139,6 +157,8 @@ snapshots["Designer given conducting equipment grounds equipment on connection p
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="4.5"
           esld:rot="1"
           esld:x="18"
           esld:y="4"
@@ -147,6 +167,8 @@ snapshots["Designer given conducting equipment grounds equipment on connection p
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="2"
           esld:x="19"
           esld:y="3"
@@ -155,6 +177,8 @@ snapshots["Designer given conducting equipment grounds equipment on connection p
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -163,6 +187,8 @@ snapshots["Designer given conducting equipment grounds equipment on connection p
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -171,6 +197,8 @@ snapshots["Designer given conducting equipment grounds equipment on connection p
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="3"
           esld:x="19"
           esld:y="7"
@@ -198,10 +226,11 @@ snapshots["Designer given conducting equipment connects equipment on connection 
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -209,12 +238,16 @@ snapshots["Designer given conducting equipment connects equipment on connection 
     >
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="1"
           esld:x="4"
           esld:y="4"
@@ -254,6 +287,8 @@ snapshots["Designer given conducting equipment connects equipment on connection 
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -261,12 +296,16 @@ snapshots["Designer given conducting equipment connects equipment on connection 
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="7.5"
           esld:rot="3"
           esld:x="17"
           esld:y="5"
@@ -275,6 +314,8 @@ snapshots["Designer given conducting equipment connects equipment on connection 
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="4.5"
           esld:rot="1"
           esld:x="18"
           esld:y="4"
@@ -292,6 +333,8 @@ snapshots["Designer given conducting equipment connects equipment on connection 
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="2"
           esld:x="19"
           esld:y="3"
@@ -300,6 +343,8 @@ snapshots["Designer given conducting equipment connects equipment on connection 
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -308,6 +353,8 @@ snapshots["Designer given conducting equipment connects equipment on connection 
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -316,6 +363,8 @@ snapshots["Designer given conducting equipment connects equipment on connection 
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="3"
           esld:x="19"
           esld:y="7"
@@ -343,10 +392,11 @@ snapshots["Designer given conducting equipment connects equipment on connect men
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -354,12 +404,16 @@ snapshots["Designer given conducting equipment connects equipment on connect men
     >
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="1"
           esld:x="4"
           esld:y="4"
@@ -442,6 +496,8 @@ snapshots["Designer given conducting equipment connects equipment on connect men
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -449,12 +505,16 @@ snapshots["Designer given conducting equipment connects equipment on connect men
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="7.5"
           esld:rot="3"
           esld:x="17"
           esld:y="5"
@@ -472,6 +532,8 @@ snapshots["Designer given conducting equipment connects equipment on connect men
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="4.5"
           esld:rot="1"
           esld:x="18"
           esld:y="4"
@@ -498,6 +560,8 @@ snapshots["Designer given conducting equipment connects equipment on connect men
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="2"
           esld:x="19"
           esld:y="3"
@@ -515,6 +579,8 @@ snapshots["Designer given conducting equipment connects equipment on connect men
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -532,6 +598,8 @@ snapshots["Designer given conducting equipment connects equipment on connect men
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -549,6 +617,8 @@ snapshots["Designer given conducting equipment connects equipment on connect men
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="3"
           esld:x="19"
           esld:y="7"
@@ -629,10 +699,11 @@ snapshots["Designer given conducting equipment with established connectivity uni
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -640,12 +711,16 @@ snapshots["Designer given conducting equipment with established connectivity uni
     >
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="1"
           esld:x="4"
           esld:y="4"
@@ -723,6 +798,8 @@ snapshots["Designer given conducting equipment with established connectivity uni
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -730,12 +807,16 @@ snapshots["Designer given conducting equipment with established connectivity uni
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="7.5"
           esld:rot="3"
           esld:x="17"
           esld:y="5"
@@ -753,6 +834,8 @@ snapshots["Designer given conducting equipment with established connectivity uni
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="4.5"
           esld:rot="1"
           esld:x="18"
           esld:y="4"
@@ -770,6 +853,8 @@ snapshots["Designer given conducting equipment with established connectivity uni
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="2"
           esld:x="19"
           esld:y="3"
@@ -778,6 +863,8 @@ snapshots["Designer given conducting equipment with established connectivity uni
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -786,6 +873,8 @@ snapshots["Designer given conducting equipment with established connectivity uni
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -794,6 +883,8 @@ snapshots["Designer given conducting equipment with established connectivity uni
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="3"
           esld:x="19"
           esld:y="7"
@@ -821,10 +912,11 @@ snapshots["Designer given conducting equipment with established connectivity con
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -832,12 +924,16 @@ snapshots["Designer given conducting equipment with established connectivity con
     >
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="1"
           esld:x="4"
           esld:y="4"
@@ -906,6 +1002,8 @@ snapshots["Designer given conducting equipment with established connectivity con
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -913,12 +1011,16 @@ snapshots["Designer given conducting equipment with established connectivity con
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="7.5"
           esld:rot="3"
           esld:x="17"
           esld:y="5"
@@ -936,6 +1038,8 @@ snapshots["Designer given conducting equipment with established connectivity con
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="4.5"
           esld:rot="1"
           esld:x="18"
           esld:y="4"
@@ -953,6 +1057,8 @@ snapshots["Designer given conducting equipment with established connectivity con
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="2"
           esld:x="19"
           esld:y="3"
@@ -961,6 +1067,8 @@ snapshots["Designer given conducting equipment with established connectivity con
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -969,6 +1077,8 @@ snapshots["Designer given conducting equipment with established connectivity con
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -977,6 +1087,8 @@ snapshots["Designer given conducting equipment with established connectivity con
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="3"
           esld:x="19"
           esld:y="7"
@@ -1004,10 +1116,11 @@ snapshots["Designer given conducting equipment with established connectivity avo
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -1015,12 +1128,16 @@ snapshots["Designer given conducting equipment with established connectivity avo
     >
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="1"
           esld:x="4"
           esld:y="4"
@@ -1060,6 +1177,8 @@ snapshots["Designer given conducting equipment with established connectivity avo
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -1067,12 +1186,16 @@ snapshots["Designer given conducting equipment with established connectivity avo
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="7.5"
           esld:rot="3"
           esld:x="17"
           esld:y="5"
@@ -1081,6 +1204,8 @@ snapshots["Designer given conducting equipment with established connectivity avo
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="4.5"
           esld:rot="1"
           esld:x="18"
           esld:y="4"
@@ -1098,6 +1223,8 @@ snapshots["Designer given conducting equipment with established connectivity avo
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="2"
           esld:x="19"
           esld:y="3"
@@ -1106,6 +1233,8 @@ snapshots["Designer given conducting equipment with established connectivity avo
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -1114,6 +1243,8 @@ snapshots["Designer given conducting equipment with established connectivity avo
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -1122,6 +1253,8 @@ snapshots["Designer given conducting equipment with established connectivity avo
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="3"
           esld:x="19"
           esld:y="7"
@@ -1149,10 +1282,11 @@ snapshots["Designer given conducting equipment with established connectivity kee
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -1160,12 +1294,16 @@ snapshots["Designer given conducting equipment with established connectivity kee
     >
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="1"
           esld:x="4"
           esld:y="4"
@@ -1285,6 +1423,8 @@ snapshots["Designer given conducting equipment with established connectivity kee
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -1292,12 +1432,16 @@ snapshots["Designer given conducting equipment with established connectivity kee
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="7.5"
           esld:rot="3"
           esld:x="17"
           esld:y="5"
@@ -1315,6 +1459,8 @@ snapshots["Designer given conducting equipment with established connectivity kee
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="4.5"
           esld:rot="1"
           esld:x="18"
           esld:y="4"
@@ -1332,6 +1478,8 @@ snapshots["Designer given conducting equipment with established connectivity kee
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="2"
           esld:x="19"
           esld:y="3"
@@ -1349,6 +1497,8 @@ snapshots["Designer given conducting equipment with established connectivity kee
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -1366,6 +1516,8 @@ snapshots["Designer given conducting equipment with established connectivity kee
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -1374,6 +1526,8 @@ snapshots["Designer given conducting equipment with established connectivity kee
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="3"
           esld:x="19"
           esld:y="7"
@@ -1401,10 +1555,11 @@ snapshots["Designer given conducting equipment with established connectivity bet
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -1412,12 +1567,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="1"
           esld:x="4"
           esld:y="4"
@@ -1457,6 +1616,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -1464,12 +1625,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="7.5"
           esld:rot="0"
           esld:x="17"
           esld:y="5"
@@ -1478,6 +1643,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="4.5"
           esld:rot="1"
           esld:x="18"
           esld:y="4"
@@ -1495,6 +1662,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="2"
           esld:x="19"
           esld:y="3"
@@ -1503,6 +1672,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -1511,6 +1682,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -1519,6 +1692,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="0"
           esld:x="19"
           esld:y="7"
@@ -1544,10 +1719,11 @@ snapshots["Designer given conducting equipment with established connectivity bet
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -1555,12 +1731,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="2"
           esld:x="4"
           esld:y="4"
@@ -1572,6 +1752,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -1579,12 +1761,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="7.5"
           esld:rot="3"
           esld:x="17"
           esld:y="5"
@@ -1611,6 +1797,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="4.5"
           esld:rot="1"
           esld:x="18"
           esld:y="4"
@@ -1628,6 +1816,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="2"
           esld:x="19"
           esld:y="3"
@@ -1636,6 +1826,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -1653,6 +1845,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -1661,6 +1855,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="3"
           esld:x="19"
           esld:y="7"
@@ -1784,10 +1980,11 @@ snapshots["Designer given conducting equipment with established connectivity bet
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -1795,12 +1992,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="1"
           esld:x="4"
           esld:y="4"
@@ -1869,6 +2070,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -1876,12 +2079,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="7.5"
           esld:rot="3"
           esld:x="17"
           esld:y="5"
@@ -1908,6 +2115,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="4.5"
           esld:rot="1"
           esld:x="18"
           esld:y="4"
@@ -1925,6 +2134,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="3"
           esld:x="19"
           esld:y="3"
@@ -1933,6 +2144,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -1941,6 +2154,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -1949,6 +2164,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="3"
           esld:x="19"
           esld:y="7"
@@ -2014,10 +2231,11 @@ snapshots["Designer given conducting equipment with established connectivity bet
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -2025,12 +2243,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="1"
           esld:x="4"
           esld:y="4"
@@ -2128,6 +2350,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -2135,12 +2359,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="7.5"
           esld:rot="3"
           esld:x="17"
           esld:y="5"
@@ -2167,6 +2395,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="4.5"
           esld:rot="1"
           esld:x="18"
           esld:y="4"
@@ -2184,6 +2414,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="3"
           esld:x="19"
           esld:y="3"
@@ -2192,6 +2424,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -2209,6 +2443,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -2217,6 +2453,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="3"
           esld:x="19"
           esld:y="7"
@@ -2282,10 +2520,11 @@ snapshots["Designer given conducting equipment with established connectivity bet
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -2293,12 +2532,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="2"
+          esld:ly="3.5"
           esld:rot="1"
           esld:x="3"
           esld:y="3"
@@ -2307,6 +2550,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="1"
           esld:x="4"
           esld:y="4"
@@ -2356,6 +2601,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -2363,12 +2610,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="7.5"
           esld:rot="3"
           esld:x="17"
           esld:y="5"
@@ -2395,6 +2646,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="2"
           esld:x="19"
           esld:y="3"
@@ -2403,6 +2656,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -2411,6 +2666,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -2419,6 +2676,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="3"
           esld:x="19"
           esld:y="7"
@@ -2484,10 +2743,11 @@ snapshots["Designer given conducting equipment with established connectivity bet
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -2495,12 +2755,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="1"
           esld:x="4"
           esld:y="4"
@@ -2512,6 +2776,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -2519,12 +2785,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="7.5"
           esld:rot="0"
           esld:x="17"
           esld:y="5"
@@ -2533,6 +2803,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="4.5"
           esld:rot="2"
           esld:x="18"
           esld:y="4"
@@ -2541,6 +2813,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="2"
           esld:x="19"
           esld:y="3"
@@ -2549,6 +2823,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -2557,6 +2833,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -2565,6 +2843,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="3"
           esld:x="19"
           esld:y="7"
@@ -2584,6 +2864,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
 snapshots["Designer given a voltage level allows placing a new bus bar"] = 
 `<Bay
   h="8"
+  lx="5"
+  ly="3"
   name="BB1"
   smth:w="1"
   x="5"
@@ -2596,11 +2878,15 @@ snapshots["Designer given a voltage level allows placing a new bus bar"] =
     <Private type="Transpower-SLD-Vertices">
       <Section bus="true">
         <Vertex
+          lx="5"
+          ly="3"
           smth:x="5.5"
           smth:y="3.5"
         >
         </Vertex>
         <Vertex
+          lx="5"
+          ly="3"
           smth:x="5.5"
           smth:y="10.5"
         >
@@ -2626,6 +2912,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
   >
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -2633,12 +2921,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="7.5"
           esld:rot="3"
           esld:x="17"
           esld:y="5"
@@ -2656,6 +2948,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="4.5"
           esld:rot="1"
           esld:x="18"
           esld:y="4"
@@ -2664,6 +2958,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="2"
           esld:x="19"
           esld:y="3"
@@ -2672,6 +2968,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -2680,6 +2978,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -2688,6 +2988,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="3"
           esld:x="19"
           esld:y="7"
@@ -2715,21 +3017,29 @@ snapshots["Designer given conducting equipment with established connectivity bet
               <Vertex
                 esld:x="19"
                 esld:y="7.5"
+                lx="0"
+                ly="0"
               >
               </Vertex>
               <Vertex
                 esld:x="18.5"
                 esld:y="7.5"
+                lx="0"
+                ly="0"
               >
               </Vertex>
               <Vertex
                 esld:x="18.5"
                 esld:y="5.5"
+                lx="0"
+                ly="0"
               >
               </Vertex>
               <Vertex
                 esld:x="18"
                 esld:y="5.5"
+                lx="0"
+                ly="0"
               >
               </Vertex>
             </Section>
@@ -2742,10 +3052,11 @@ snapshots["Designer given conducting equipment with established connectivity bet
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -2753,12 +3064,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="1"
           esld:x="4"
           esld:y="4"
@@ -2784,10 +3099,11 @@ snapshots["Designer given conducting equipment with established connectivity bet
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -2796,6 +3112,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
       <Bay
         esld:w="1"
         h="3"
+        lx="13"
+        ly="2"
         name="BB1"
         x="13"
         y="2"
@@ -2809,11 +3127,15 @@ snapshots["Designer given conducting equipment with established connectivity bet
               <Vertex
                 esld:x="13.5"
                 esld:y="2.5"
+                lx="13"
+                ly="2"
               >
               </Vertex>
               <Vertex
                 esld:x="13.5"
                 esld:y="4.5"
+                lx="13"
+                ly="2"
               >
               </Vertex>
             </Section>
@@ -2822,12 +3144,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
       </Bay>
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="1"
           esld:x="4"
           esld:y="4"
@@ -2839,6 +3165,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -2846,12 +3174,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="1"
         esld:w="6"
         esld:x="16"
         esld:y="1"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="6.5"
           esld:rot="3"
           esld:x="17"
           esld:y="4"
@@ -2869,6 +3201,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3.5"
           esld:rot="1"
           esld:x="18"
           esld:y="3"
@@ -2877,6 +3211,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="2.5"
           esld:rot="2"
           esld:x="19"
           esld:y="2"
@@ -2885,6 +3221,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="2"
           esld:rot="3"
           esld:x="17"
           esld:y="2"
@@ -2893,6 +3231,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="4"
           esld:rot="0"
           esld:x="20"
           esld:y="3"
@@ -2901,6 +3241,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="6"
           esld:rot="3"
           esld:x="19"
           esld:y="6"
@@ -2928,21 +3270,29 @@ snapshots["Designer given conducting equipment with established connectivity bet
               <Vertex
                 esld:x="19"
                 esld:y="6.5"
+                lx="0"
+                ly="-1"
               >
               </Vertex>
               <Vertex
                 esld:x="18.5"
                 esld:y="6.5"
+                lx="0"
+                ly="-1"
               >
               </Vertex>
               <Vertex
                 esld:x="18.5"
                 esld:y="4.5"
+                lx="0"
+                ly="-1"
               >
               </Vertex>
               <Vertex
                 esld:x="18"
                 esld:y="4.5"
+                lx="0"
+                ly="-1"
               >
               </Vertex>
             </Section>
@@ -2966,10 +3316,11 @@ snapshots["Designer given conducting equipment with established connectivity bet
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -2978,6 +3329,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
       <Bay
         esld:w="1"
         h="2"
+        lx="13"
+        ly="2"
         name="BB1"
         x="13"
         y="2"
@@ -2991,11 +3344,15 @@ snapshots["Designer given conducting equipment with established connectivity bet
               <Vertex
                 esld:x="13.5"
                 esld:y="2.5"
+                lx="13"
+                ly="2"
               >
               </Vertex>
               <Vertex
                 esld:x="13.5"
                 esld:y="3.5"
+                lx="13"
+                ly="2"
               >
               </Vertex>
             </Section>
@@ -3004,12 +3361,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
       </Bay>
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="1"
           esld:x="4"
           esld:y="4"
@@ -3078,6 +3439,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -3085,12 +3448,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="7.5"
           esld:rot="3"
           esld:x="17"
           esld:y="5"
@@ -3117,6 +3484,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="4.5"
           esld:rot="1"
           esld:x="18"
           esld:y="4"
@@ -3134,6 +3503,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="2"
           esld:x="19"
           esld:y="3"
@@ -3142,6 +3513,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -3150,6 +3523,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -3158,6 +3533,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="3"
           esld:x="19"
           esld:y="7"
@@ -3223,10 +3600,11 @@ snapshots["Designer given conducting equipment with established connectivity bet
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -3235,6 +3613,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
       <Bay
         esld:w="1"
         h="3"
+        lx="12"
+        ly="10"
         name="BB1"
         x="12"
         y="10"
@@ -3248,11 +3628,15 @@ snapshots["Designer given conducting equipment with established connectivity bet
               <Vertex
                 esld:x="12.5"
                 esld:y="10.5"
+                lx="12"
+                ly="10"
               >
               </Vertex>
               <Vertex
                 esld:x="12.5"
                 esld:y="12.5"
+                lx="12"
+                ly="10"
               >
               </Vertex>
             </Section>
@@ -3261,12 +3645,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
       </Bay>
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="1"
           esld:x="4"
           esld:y="4"
@@ -3335,6 +3723,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -3342,12 +3732,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="7.5"
           esld:rot="3"
           esld:x="17"
           esld:y="5"
@@ -3374,6 +3768,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="4.5"
           esld:rot="1"
           esld:x="18"
           esld:y="4"
@@ -3391,6 +3787,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="2"
           esld:x="19"
           esld:y="3"
@@ -3399,6 +3797,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -3407,6 +3807,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -3415,6 +3817,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="3"
           esld:x="19"
           esld:y="7"
@@ -3710,10 +4114,11 @@ snapshots["Designer given conducting equipment with established connectivity bet
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -3721,12 +4126,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="1"
           esld:x="4"
           esld:y="4"
@@ -3766,6 +4175,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -3773,12 +4184,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="4.5"
           esld:rot="1"
           esld:x="18"
           esld:y="4"
@@ -3796,6 +4211,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="2"
           esld:x="19"
           esld:y="3"
@@ -3804,6 +4221,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -3812,6 +4231,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -3820,6 +4241,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="3"
           esld:x="19"
           esld:y="7"
@@ -3847,10 +4270,11 @@ snapshots["Designer given conducting equipment with established connectivity bet
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -3859,6 +4283,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -3866,12 +4292,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="7.5"
           esld:rot="3"
           esld:x="17"
           esld:y="5"
@@ -3889,6 +4319,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="4.5"
           esld:rot="1"
           esld:x="18"
           esld:y="4"
@@ -3897,6 +4329,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="2"
           esld:x="19"
           esld:y="3"
@@ -3905,6 +4339,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -3913,6 +4349,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -3921,6 +4359,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="3"
           esld:x="19"
           esld:y="7"
@@ -3986,10 +4426,11 @@ snapshots["Designer given conducting equipment with established connectivity bet
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -3997,12 +4438,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="1"
           esld:x="4"
           esld:y="4"
@@ -4028,10 +4473,11 @@ snapshots["Designer given conducting equipment with established connectivity bet
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -4040,6 +4486,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
       <Bay
         esld:w="1"
         h="3"
+        lx="13"
+        ly="2"
         name="BB1"
         x="13"
         y="2"
@@ -4053,11 +4501,15 @@ snapshots["Designer given conducting equipment with established connectivity bet
               <Vertex
                 esld:x="13.5"
                 esld:y="2.5"
+                lx="13"
+                ly="2"
               >
               </Vertex>
               <Vertex
                 esld:x="13.5"
                 esld:y="3.5"
+                lx="13"
+                ly="2"
               >
               </Vertex>
             </Section>
@@ -4077,11 +4529,15 @@ snapshots["Designer given conducting equipment with established connectivity bet
               <Vertex
                 esld:x="13.5"
                 esld:y="3.5"
+                lx="13"
+                ly="2"
               >
               </Vertex>
               <Vertex
                 esld:x="13.5"
                 esld:y="4.5"
+                lx="13"
+                ly="2"
               >
               </Vertex>
             </Section>
@@ -4107,12 +4563,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
       </Bay>
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="2"
           esld:x="4"
           esld:y="4"
@@ -4124,6 +4584,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -4131,12 +4593,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="7.5"
           esld:rot="3"
           esld:x="17"
           esld:y="5"
@@ -4163,6 +4629,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="4.5"
           esld:rot="1"
           esld:x="18"
           esld:y="4"
@@ -4180,6 +4648,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="2"
           esld:x="19"
           esld:y="3"
@@ -4197,6 +4667,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -4214,6 +4686,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -4222,6 +4696,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="3"
           esld:x="19"
           esld:y="7"
@@ -4316,10 +4792,11 @@ snapshots["Designer given conducting equipment with established connectivity bet
     esld:h="25"
     esld:w="50"
     name="S1"
-    xmlns:esld="https://transpower.co.nz/SCL/SSD/SLD/v0"
   >
     <VoltageLevel
       esld:h="13"
+      esld:lx="1"
+      esld:ly="1"
       esld:w="13"
       esld:x="1"
       esld:y="1"
@@ -4327,12 +4804,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="2"
+        esld:ly="2"
         esld:w="6"
         esld:x="2"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="3.5"
+          esld:ly="4"
           esld:rot="1"
           esld:x="4"
           esld:y="4"
@@ -4401,6 +4882,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
     </VoltageLevel>
     <VoltageLevel
       esld:h="23"
+      esld:lx="15"
+      esld:ly="1"
       esld:w="23"
       esld:x="15"
       esld:y="1"
@@ -4408,12 +4891,16 @@ snapshots["Designer given conducting equipment with established connectivity bet
     >
       <Bay
         esld:h="6"
+        esld:lx="16"
+        esld:ly="2"
         esld:w="6"
         esld:x="16"
         esld:y="2"
         name="B1"
       >
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="7.5"
           esld:rot="3"
           esld:x="17"
           esld:y="5"
@@ -4440,6 +4927,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="4.5"
           esld:rot="1"
           esld:x="18"
           esld:y="4"
@@ -4457,6 +4946,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="20"
+          esld:ly="3.5"
           esld:rot="2"
           esld:x="19"
           esld:y="3"
@@ -4465,6 +4956,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="17"
+          esld:ly="3"
           esld:rot="3"
           esld:x="17"
           esld:y="3"
@@ -4473,6 +4966,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="21"
+          esld:ly="5"
           esld:rot="0"
           esld:x="20"
           esld:y="4"
@@ -4481,6 +4976,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
         >
         </ConductingEquipment>
         <ConductingEquipment
+          esld:lx="19"
+          esld:ly="7"
           esld:rot="3"
           esld:x="19"
           esld:y="7"
