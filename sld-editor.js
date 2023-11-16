@@ -140,8 +140,6 @@ let SLDEditor = class SLDEditor extends LitElement {
         }
     }
     openMenu(element, e) {
-        if (e.getModifierState('Shift'))
-            return;
         if (!this.placing &&
             !this.resizing &&
             !this.placingLabel &&
@@ -1029,8 +1027,6 @@ let SLDEditor = class SLDEditor extends LitElement {
       fill="#BB1326" stroke="#F5E214"
     @click=${() => this.dispatchEvent(newStartConnectEvent({ equipment, terminal: 'top' }))}
     @contextmenu=${(e) => {
-                if (e.getModifierState('Shift'))
-                    return;
                 e.preventDefault();
                 this.groundTerminal(equipment, 'T1');
             }}
@@ -1058,8 +1054,6 @@ let SLDEditor = class SLDEditor extends LitElement {
       fill="#BB1326" stroke="#F5E214"
     @click=${() => this.dispatchEvent(newStartConnectEvent({ equipment, terminal: 'bottom' }))}
     @contextmenu=${(e) => {
-                if (e.getModifierState('Shift'))
-                    return;
                 e.preventDefault();
                 this.groundTerminal(equipment, 'T2');
             }}
