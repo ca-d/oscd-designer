@@ -55,6 +55,7 @@ export const equipmentDocString = `<?xml version="1.0" encoding="UTF-8"?>
         <ConductingEquipment type="BAT" name="BAT1" esld:x="19" esld:y="7" esld:rot="3" esld:lx="19" esld:ly="7">
           <Terminal name="erroneous"/>
         </ConductingEquipment>
+        <ConductingEquipment type="SMC" name="SMC1" esld:x="22" esld:y="8" esld:rot="3" esld:lx="22" esld:ly="8" />
       </Bay>
     </VoltageLevel>
   </Substation>
@@ -588,14 +589,14 @@ describe('Designer', () => {
         });
         it('requests equipment edit wizard on edit menu item select', async () => {
             queryUI({
-                scl: '[type="CTR"]',
+                scl: '[type="SMC"]',
                 ui: 'rect',
             }).dispatchEvent(new PointerEvent('contextmenu'));
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
             await element.updateComplete;
             sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(3)').selected = true;
             await sldEditor.updateComplete;
-            expect(lastCalledWizard).to.equal(element.doc.querySelector('[type="CTR"]'));
+            expect(lastCalledWizard).to.equal(element.doc.querySelector('[type="SMC"]'));
         });
         it('moves the equipment label on "move label" menu item select', async () => {
             queryUI({
