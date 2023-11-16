@@ -4786,7 +4786,7 @@ snapshots["Designer given conducting equipment with established connectivity bet
 snapshots["Designer given a voltage level opens a menu on voltage level right click"] = 
 `<menu
   id="sld-context-menu"
-  style="position: fixed; top: 0px; left: 0px; background: var(--oscd-base3, white); margin: 0px; padding: 0px; box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23); --mdc-list-vertical-padding: 0px;"
+  style="position: fixed; top: 0px; left: 0px; background: var(--oscd-base3, white); margin: 0px; padding: 0px; box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23); --mdc-list-vertical-padding: 0px; overflow-y: auto;"
 >
   <mwc-list>
     <mwc-list-item
@@ -4866,7 +4866,7 @@ snapshots["Designer given a voltage level opens a menu on voltage level right cl
 snapshots["Designer given conducting equipment opens a menu on equipment right click"] = 
 `<menu
   id="sld-context-menu"
-  style="position: fixed; top: 550px; left: 750px; background: var(--oscd-base3, white); margin: 0px; padding: 0px; box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23); --mdc-list-vertical-padding: 0px;"
+  style="position: fixed; top: 550px; left: 750px; background: var(--oscd-base3, white); margin: 0px; padding: 0px; box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23); --mdc-list-vertical-padding: 0px; overflow-y: auto;"
 >
   <mwc-list>
     <mwc-list-item

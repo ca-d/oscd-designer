@@ -256,7 +256,7 @@ describe('Designer', () => {
             }).dispatchEvent(new PointerEvent('contextmenu'));
             await element.updateComplete;
             expect(queryUI({ ui: 'menu' })).to.exist;
-            expect(queryUI({ ui: 'menu' })).dom.to.equalSnapshot();
+            await expect(queryUI({ ui: 'menu' })).dom.to.equalSnapshot();
         });
         it('resizes voltage levels on resize menu item select', async () => {
             queryUI({
@@ -521,7 +521,7 @@ describe('Designer', () => {
         });
         it('allows placing new conducting equipment', async () => {
             var _a;
-            (_a = element.shadowRoot.querySelector('[label="Add CBR"]')) === null || _a === void 0 ? void 0 : _a.click();
+            (_a = element.shadowRoot.querySelector('[label="Add GEN"]')) === null || _a === void 0 ? void 0 : _a.click();
             expect(element)
                 .property('placing')
                 .to.have.property('tagName', 'ConductingEquipment');
@@ -640,7 +640,7 @@ describe('Designer', () => {
             queryUI({ scl: 'ConductingEquipment', ui: 'rect' }).dispatchEvent(new PointerEvent('contextmenu', { clientX: 750, clientY: 550 }));
             await element.updateComplete;
             expect(queryUI({ ui: 'menu' })).to.exist;
-            expect(queryUI({ ui: 'menu' })).dom.to.equalSnapshot();
+            await expect(queryUI({ ui: 'menu' })).dom.to.equalSnapshot();
         });
         it('flips equipment on mirror menu item select', async () => {
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
