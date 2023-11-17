@@ -1348,19 +1348,19 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
   </mwc-list-item>`}(t)}
         </mwc-list>
       </menu>
-    `}render(){var t,e;const{dim:[i,n]}=fo(this.substation),o="VoltageLevel"===(null===(t=this.placing)||void 0===t?void 0:t.tagName)?q`<rect width="100%" height="100%" fill="url(#grid)" />`:j,r=this.placingLabel?q`<rect width="100%" height="100%" fill="url(#halfgrid)"
+    `}render(){var t,e,i;const{dim:[n,o]}=fo(this.substation),r="VoltageLevel"===(null===(t=this.placing)||void 0===t?void 0:t.tagName)?q`<rect width="100%" height="100%" fill="url(#grid)" />`:j,a=this.placingLabel?q`<rect width="100%" height="100%" fill="url(#halfgrid)"
       @click=${()=>{const t=this.placingLabel,[e,i]=this.renderedLabelPosition(t);this.dispatchEvent(new CustomEvent("oscd-sld-place-label",{bubbles:!0,composed:!0,detail:{element:t,x:e,y:i}}))}}
-      />`:j;let a=q``;this.placing&&("VoltageLevel"===this.placing.tagName||Ko(this.placing)?a=q`${this.renderContainer(this.placing,!0)}`:"ConductingEquipment"===this.placing.tagName?a=this.renderEquipment(this.placing,{preview:!0}):uo(this.placing)&&(a=this.renderBusBar(this.placing)));let d=U``,s=!1,l=!0;if(this.placing){const{dim:[t,e]}=fo(this.placing);l=!1,s=!this.canPlaceAt(this.placing,this.mouseX,this.mouseY,t,e),d=U`${this.mouseX},${this.mouseY}`}if(this.resizing&&!uo(this.resizing)){const{pos:[t,e]}=fo(this.resizing),i=Math.max(1,this.mouseX-t+1),n=Math.max(1,this.mouseY-e+1);l=!1,s=!this.canResizeTo(this.resizing,i,n),d=U`${i}&times;${n}`}const c=U`<div
+      />`:j;let d=q``;this.placing&&("VoltageLevel"===this.placing.tagName||Ko(this.placing)?d=q`${this.renderContainer(this.placing,!0)}`:"ConductingEquipment"===this.placing.tagName?d=this.renderEquipment(this.placing,{preview:!0}):uo(this.placing)&&(d=this.renderBusBar(this.placing)));let s=U``,l=!1,c=!0;if(this.placing){const{dim:[t,e]}=fo(this.placing);c=!1,l=!this.canPlaceAt(this.placing,this.mouseX,this.mouseY,t,e),s=U`${this.mouseX},${this.mouseY}`}if(this.resizing&&!uo(this.resizing)){const{pos:[t,e]}=fo(this.resizing),i=Math.max(1,this.mouseX-t+1),n=Math.max(1,this.mouseY-e+1);c=!1,l=!this.canResizeTo(this.resizing,i,n),s=U`${i}&times;${n}`}const p=U`<div
       ${si(this.coordinatesRef)}
-      class="${Le({coordinates:!0,invalid:s,hidden:l})}"
+      class="${Le({coordinates:!0,invalid:l,hidden:c})}"
     >
-      (${d})
-    </div>`,p=[];if(this.connecting){const{equipment:t,path:e,terminal:i}=this.connecting;let n=0;for(;n<e.length-2;){const[t,i]=e[n],[o,r]=e[n+1];p.push(q`<line x1="${t}" y1="${i}" x2="${o}" y2="${r}"
-                stroke-linecap="square" stroke="black" />`),n+=1}const[[o,r],[a,d]]=e.slice(-2),s=o===a;let l=this.mouseX+.5,c=this.mouseY+.5,[m,h]=[l,c];const u=Array.from(this.substation.querySelectorAll("ConductingEquipment")).filter((e=>e!==t)).find((t=>{const{pos:[e,i]}=fo(t);return e===this.mouseX&&i===this.mouseY})),f=this.nearestOpenTerminal(u);if(u&&f){const{far:t,close:e}=_o(u)[f];[l,c]=t,[m,h]=e}const g=s?a:l,b=s?c:d;p.push(q`<line x1="${o}" y1="${r}" x2="${g}" y2="${b}"
+      (${s})
+    </div>`,m=[];if((null===(e=this.connecting)||void 0===e?void 0:e.equipment.closest("Substation"))===this.substation){const{equipment:t,path:e,terminal:i}=this.connecting;let n=0;for(;n<e.length-2;){const[t,i]=e[n],[o,r]=e[n+1];m.push(q`<line x1="${t}" y1="${i}" x2="${o}" y2="${r}"
+                stroke-linecap="square" stroke="black" />`),n+=1}const[[o,r],[a,d]]=e.slice(-2),s=o===a;let l=this.mouseX+.5,c=this.mouseY+.5,[p,h]=[l,c];const u=Array.from(this.substation.querySelectorAll("ConductingEquipment")).filter((e=>e!==t)).find((t=>{const{pos:[e,i]}=fo(t);return e===this.mouseX&&i===this.mouseY})),f=this.nearestOpenTerminal(u);if(u&&f){const{far:t,close:e}=_o(u)[f];[l,c]=t,[p,h]=e}const g=s?a:l,b=s?c:d;m.push(q`<line x1="${o}" y1="${r}" x2="${g}" y2="${b}"
                 stroke-linecap="square" stroke="black" />`,q`<line x1="${g}" y1="${b}" x2="${l}" y2="${c}"
-                stroke-linecap="square" stroke="black" />`,q`<line x1="${l}" y1="${c}" x2="${m}" y2="${h}"
-                stroke-linecap="square" stroke="black" />`),p.push(q`<rect width="100%" height="100%" fill="url(#grid)"
-      @click=${()=>{e[e.length-1]=[g,b],e.push([l,c]),e.push([m,h]),Wo(e),this.requestUpdate(),u&&f&&this.dispatchEvent(Eo({equipment:t,terminal:i,path:e,connectTo:u,toTerminal:f}))}} />`)}const m=this.renderMenu();return U`<section>
+                stroke-linecap="square" stroke="black" />`,q`<line x1="${l}" y1="${c}" x2="${p}" y2="${h}"
+                stroke-linecap="square" stroke="black" />`),m.push(q`<rect width="100%" height="100%" fill="url(#grid)"
+      @click=${()=>{e[e.length-1]=[g,b],e.push([l,c]),e.push([p,h]),Wo(e),this.requestUpdate(),u&&f&&this.dispatchEvent(Eo({equipment:t,terminal:i,path:e,connectTo:u,toTerminal:f}))}} />`)}const h=this.renderMenu();return U`<section>
       <h2>
         ${this.substation.getAttribute("name")}
         <mwc-icon-button
@@ -1380,9 +1380,9 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
       </h2>
       <svg
         id="sld"
-        viewBox="0 0 ${i} ${n}"
-        width="${i*this.gridSize}"
-        height="${n*this.gridSize}"
+        viewBox="0 0 ${n} ${o}"
+        width="${n*this.gridSize}"
+        height="${o*this.gridSize}"
         stroke-width="0.06"
         fill="none"
         @mousemove=${t=>{const[e,i]=this.svgCoordinates(t.clientX,t.clientY);this.mouseX=Math.floor(e),this.mouseY=Math.floor(i),this.mouseX2=Math.floor(2*e)/2,this.mouseY2=Math.floor(2*i)/2,this.positionCoordinates(t)}}
@@ -1417,17 +1417,17 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
         </style>
         ${Go}
         <rect width="100%" height="100%" fill="white" />
-        ${o}
+        ${r}
         ${Array.from(this.substation.children).filter((t=>"VoltageLevel"===t.tagName)).map((t=>q`${this.renderContainer(t)}`))}
-        ${p}
-        ${(null===(e=this.connecting)||void 0===e?void 0:e.equipment.closest("Substation"))===this.substation?Array.from(this.substation.querySelectorAll("ConductingEquipment")).map((t=>this.renderEquipment(t,{connect:!0}))):j}
+        ${m}
+        ${(null===(i=this.connecting)||void 0===i?void 0:i.equipment.closest("Substation"))===this.substation?Array.from(this.substation.querySelectorAll("ConductingEquipment")).map((t=>this.renderEquipment(t,{connect:!0}))):j}
         ${Array.from(this.substation.querySelectorAll("ConnectivityNode")).filter((t=>!("grounded"===t.getAttribute("name")||this.placing&&t.closest(this.placing.tagName)===this.placing||uo(t.parentElement)))).map((t=>this.renderConnectivityNode(t)))}
         ${Array.from(this.substation.querySelectorAll("ConnectivityNode")).filter((t=>"grounded"!==t.getAttribute("name")&&!(this.placing&&t.closest(this.placing.tagName)===this.placing)&&uo(t.parentElement))).map((t=>this.renderConnectivityNode(t)))}
-        ${a}
+        ${d}
         ${Array.from(this.substation.querySelectorAll("VoltageLevel, Bay, ConductingEquipment")).filter((t=>!this.placing||t.closest(this.placing.tagName)!==this.placing)).map((t=>this.renderLabel(t)))}
-        ${r}
+        ${a}
       </svg>
-      ${m} ${c}
+      ${h} ${p}
       <mwc-dialog
         id="resizeSubstationUI"
         heading="Resize ${this.substation.getAttribute("name")}"
@@ -1439,7 +1439,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             min="1"
             step="1"
             label="Width"
-            value="${i}"
+            value="${n}"
             dialogInitialFocus
             autoValidate
             .validityTransform=${(t,e)=>{const{dim:[i,n]}=fo(this.substation);return e.valid&&!this.canResizeTo(this.substation,parseInt(t,10),n)?{valid:!1,rangeUnderflow:!0}:{}}}
@@ -1450,7 +1450,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             min="1"
             step="1"
             label="Height"
-            value="${n}"
+            value="${o}"
             autoValidate
             .validityTransform=${(t,e)=>{const{dim:[i,n]}=fo(this.substation);return e.valid&&!this.canResizeTo(this.substation,i,parseInt(t,10))?{valid:!1,rangeUnderflow:!0}:{}}}
           ></mwc-textfield>

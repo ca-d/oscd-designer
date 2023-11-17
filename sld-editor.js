@@ -602,7 +602,7 @@ let SLDEditor = class SLDEditor extends LitElement {
     `;
     }
     render() {
-        var _a, _b;
+        var _a, _b, _c;
         const { dim: [w, h], } = attributes(this.substation);
         const placingTarget = ((_a = this.placing) === null || _a === void 0 ? void 0 : _a.tagName) === 'VoltageLevel'
             ? svg `<rect width="100%" height="100%" fill="url(#grid)" />`
@@ -649,7 +649,7 @@ let SLDEditor = class SLDEditor extends LitElement {
       (${coordinates})
     </div>`;
         const connectionPreview = [];
-        if (this.connecting) {
+        if (((_b = this.connecting) === null || _b === void 0 ? void 0 : _b.equipment.closest('Substation')) === this.substation) {
             const { equipment, path, terminal } = this.connecting;
             let i = 0;
             while (i < path.length - 2) {
@@ -769,7 +769,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             .filter(child => child.tagName === 'VoltageLevel')
             .map(vl => svg `${this.renderContainer(vl)}`)}
         ${connectionPreview}
-        ${((_b = this.connecting) === null || _b === void 0 ? void 0 : _b.equipment.closest('Substation')) === this.substation
+        ${((_c = this.connecting) === null || _c === void 0 ? void 0 : _c.equipment.closest('Substation')) === this.substation
             ? Array.from(this.substation.querySelectorAll('ConductingEquipment')).map(eq => this.renderEquipment(eq, { connect: true }))
             : nothing}
         ${Array.from(this.substation.querySelectorAll('ConnectivityNode'))
