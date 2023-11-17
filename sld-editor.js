@@ -11,7 +11,25 @@ import '@material/mwc-list/mwc-list-item.js';
 import '@material/mwc-textfield';
 import { getReference, identity } from '@openscd/oscd-scl';
 import { bayGraphic, eqRingPath, equipmentGraphic, movePath, resizePath, symbols, voltageLevelGraphic, } from './icons.js';
-import { attributes, connectionStartPoints, elementPath, isBusBar, isEqType, newConnectEvent, newPlaceEvent, newPlaceLabelEvent, newResizeEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartPlaceLabelEvent, newStartResizeEvent, privType, removeNode, removeTerminal, ringedEqTypes, sldNs, svgNs, xmlBoolean, } from './util.js';
+import { attributes, connectionStartPoints, elementPath, isBusBar, isEqType, newConnectEvent, newPlaceEvent, newPlaceLabelEvent, newResizeEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartPlaceLabelEvent, newStartResizeEvent, privType, removeNode, removeTerminal, ringedEqTypes, sldNs, svgNs, uuid, xmlBoolean, } from './util.js';
+const parentTags = {
+    ConductingEquipment: 'Bay',
+    Bay: 'VoltageLevel',
+    VoltageLevel: 'Substation',
+};
+const singleTerminal = new Set([
+    'BAT',
+    'EFN',
+    'FAN',
+    'GEN',
+    'IFL',
+    'MOT',
+    'PMP',
+    'RRC',
+    'SAR',
+    'SMC',
+    'VTR',
+]);
 function newEditWizardEvent(element) {
     return new CustomEvent('oscd-edit-wizard-request', {
         bubbles: true,
@@ -53,26 +71,45 @@ function cleanPath(path) {
 function isBay(element) {
     return element.tagName === 'Bay' && !isBusBar(element);
 }
-const parentTags = {
-    ConductingEquipment: 'Bay',
-    Bay: 'VoltageLevel',
-    VoltageLevel: 'Substation',
-};
-const singleTerminal = new Set([
-    'BAT',
-    'EFN',
-    'FAN',
-    'GEN',
-    'IFL',
-    'MOT',
-    'PMP',
-    'RRC',
-    'SAR',
-    'SMC',
-    'VTR',
-]);
 function preventDefault(e) {
     e.preventDefault();
+}
+function copy(element, nsp) {
+    const clone = element.cloneNode(true);
+    const terminals = new Set(Array.from(element.querySelectorAll('Terminal')));
+    const cNodes = new Set();
+    terminals.forEach(terminal => {
+        const cNode = element.ownerDocument.querySelector(`ConnectivityNode[pathName="${terminal.getAttribute('connectivityNode')}"]`);
+        if (cNode)
+            cNodes.add(cNode);
+    });
+    const foreignCNodes = new Set();
+    cNodes.forEach(cNode => {
+        const foreignTerminal = Array.from(element.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${cNode.getAttribute('pathName')}"]`)).find(terminal => !terminals.has(terminal));
+        if (foreignTerminal)
+            foreignCNodes.add(cNode);
+    });
+    foreignCNodes.forEach(cNode => {
+        var _a;
+        if (cNode.closest(element.tagName) === element) {
+            (_a = clone
+                .querySelector(`ConnectivityNode[pathName="${cNode.getAttribute('pathName')}"]`)) === null || _a === void 0 ? void 0 : _a.remove();
+        }
+        terminals.forEach(terminal => {
+            var _a;
+            if (terminal.getAttribute('connectivityNode') ===
+                cNode.getAttribute('pathName'))
+                (_a = clone
+                    .querySelector(`[*|uuid="${terminal.getAttributeNS(sldNs, 'uuid')}"]`)) === null || _a === void 0 ? void 0 : _a.remove();
+        });
+    });
+    Array.from(clone.querySelectorAll('Terminal')).forEach(terminal => {
+        const oldUUID = terminal.getAttributeNS(sldNs, 'uuid');
+        const newUUID = uuid();
+        Array.from(clone.querySelectorAll(`Vertex[*|uuid="${oldUUID}"`)).forEach(vertex => vertex.setAttributeNS(sldNs, `${nsp}:uuid`, newUUID));
+        terminal.setAttributeNS(sldNs, `${nsp}:uuid`, newUUID);
+    });
+    return clone;
 }
 function renderMenuFooter(element) {
     const name = element.getAttribute('name');
@@ -784,11 +821,10 @@ let SLDEditor = class SLDEditor extends LitElement {
                 node.closest(this.placing.tagName) === this.placing) &&
             isBusBar(node.parentElement))
             .map(cNode => this.renderConnectivityNode(cNode))}
-        ${placingElement}
         ${Array.from(this.substation.querySelectorAll('VoltageLevel, Bay, ConductingEquipment'))
             .filter(e => !this.placing || e.closest(this.placing.tagName) !== this.placing)
             .map(element => this.renderLabel(element))}
-        ${placingLabelTarget}
+        ${placingLabelTarget} ${placingElement}
       </svg>
       ${menu} ${coordinateTooltip}
       <mwc-dialog
@@ -875,7 +911,9 @@ let SLDEditor = class SLDEditor extends LitElement {
             events = 'all';
             handleClick = () => this.dispatchEvent(newStartPlaceLabelEvent(element));
         }
-        const id = element.parentElement ? identity(element) : 'placing...';
+        const id = element.closest('Substation') === this.substation
+            ? identity(element)
+            : nothing;
         return svg `<g class="label" id="label:${id}">
         <text x="${x + 0.1}" y="${y - 0.2}"
           @mousedown=${preventDefault}
@@ -949,27 +987,28 @@ let SLDEditor = class SLDEditor extends LitElement {
             this.resizing.parentElement === bayOrVL)
             resizingTarget = svg `<rect x="${x}" y="${y}" width="${w}" height="${h}"
         fill="url(#grid)" />`;
-        if (!this.placing && !this.resizing && !this.connecting) {
-            moveHandle = svg `
-<a class="handle" href="#0" @click=${() => this.dispatchEvent(newStartPlaceEvent(bayOrVL))}>
-  <svg xmlns="${svgNs}" height="1" width="1" fill="black" opacity="0.83"
-    viewBox="0 96 960 960" x="${x}" y="${y}">
-    <rect fill="white" x="0" y="0" width="100%" height="100%" />
-    ${movePath}
-  </svg>
-</a>
-    `;
-            resizeHandle = svg `
-<a class="handle" href="#0" @click=${() => this.dispatchEvent(newStartResizeEvent(bayOrVL))}>
-  <svg xmlns="${svgNs}" height="1" width="1" fill="black" opacity="0.83"
-    viewBox="0 96 960 960" x="${w + x - 1}" y="${h + y - 1}">
-    <rect fill="white" x="0" y="0" width="100%" height="100%" />
-    ${resizePath}
-  </svg>
-</a>
-      `;
+        if (!this.placing &&
+            !this.resizing &&
+            !this.connecting &&
+            !this.placingLabel) {
+            moveHandle = svg `<svg class="handle" xmlns="${svgNs}" height="1" width="1"
+          fill="black" opacity="0.83" viewBox="0 96 960 960" 
+          @click=${(e) => this.dispatchEvent(newStartPlaceEvent(e.shiftKey ? copy(bayOrVL, this.nsp) : bayOrVL))}
+          x="${x}" y="${y}">
+        <rect fill="white" x="0" y="0" width="100%" height="100%" />
+        ${movePath}
+      </svg>`;
+            resizeHandle = svg `<svg class="handle" xmlns="${svgNs}" height="1" width="1"
+          fill="black" opacity="0.83" viewBox="0 96 960 960" 
+          @click=${() => this.dispatchEvent(newStartResizeEvent(bayOrVL))}
+          x="${w + x - 1}" y="${h + y - 1}">
+        <rect fill="white" x="0" y="0" width="100%" height="100%" />
+        ${resizePath}
+      </svg>`;
         }
-        return svg `<g id="${bayOrVL.parentElement ? identity(bayOrVL) : nothing}" class=${classMap({
+        return svg `<g id="${bayOrVL.closest('Substation') === this.substation
+            ? identity(bayOrVL)
+            : nothing}" class=${classMap({
             voltagelevel: isVL,
             bay: !isVL,
             preview,
@@ -1025,8 +1064,11 @@ let SLDEditor = class SLDEditor extends LitElement {
     ${eqRingPath}
   </svg>`
             : svg `<use href="#${symbol}" pointer-events="none" />`;
-        let handleClick = () => {
-            this.dispatchEvent(newStartPlaceEvent(equipment));
+        let handleClick = (e) => {
+            let placing = equipment;
+            if (e.shiftKey)
+                placing = copy(equipment, this.nsp);
+            this.dispatchEvent(newStartPlaceEvent(placing));
         };
         if (this.placing === equipment) {
             const parent = Array.from(this.substation.querySelectorAll(':root > Substation > VoltageLevel > Bay')).find(vl => containsRect(vl, x, y, 1, 1));
@@ -1098,7 +1140,9 @@ let SLDEditor = class SLDEditor extends LitElement {
             equipment: true,
             preview: this.placing === equipment,
         })}"
-    id="${equipment.parentElement ? identity(equipment) : nothing}"
+    id="${equipment.closest('Substation') === this.substation
+            ? identity(equipment)
+            : nothing}"
     transform="translate(${x} ${y}) rotate(${deg})${flip ? ' scale(-1,1)' : ''}" transform-origin="0.5 0.5">
       <title>${equipment.getAttribute('name')}</title>
       ${icon}
@@ -1145,7 +1189,9 @@ let SLDEditor = class SLDEditor extends LitElement {
                     }));
             }}
         />`;
-        return svg `<g class="bus" id="${busBar.parentElement ? identity(busBar) : nothing}">
+        return svg `<g class="bus" id="${busBar.closest('Substation') === this.substation
+            ? identity(busBar)
+            : nothing}">
       <title>${busBar.getAttribute('name')}</title>
       ${this.renderConnectivityNode(busBar.querySelector('ConnectivityNode'))}
       ${placingTarget}
@@ -1268,7 +1314,9 @@ let SLDEditor = class SLDEditor extends LitElement {
                 i += 1;
             }
         });
-        const id = cNode.parentElement.parentElement ? identity(cNode) : nothing;
+        const id = cNode.closest('Substation') === this.substation
+            ? identity(cNode)
+            : nothing;
         return svg `<g class="node" id="${id}" >
         <title>${cNode.getAttribute('pathName')}</title>
         ${circles}
