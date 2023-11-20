@@ -640,16 +640,16 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
  * @license
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: Apache-2.0
- */;let ro=class extends no{};ro.styles=[oo],ro=n([mt("mwc-textfield")],ro);const ao="Transpower-SLD-Vertices",so="https://transpower.co.nz/SCL/SSD/SLD/v0",lo="http://www.w3.org/2000/svg",co=["CAB","CAP","CBR","CTR","DIS","GEN","IFL","LIN","MOT","REA","RES","SAR","SMC","VTR"];function po(t){return co.includes(t)}const mo=new Set(["GEN","MOT","SMC"]);function ho(){const t=new Array(36);for(let e=0;e<36;e+=1)[8,13,18,23].includes(e)?t[e]="-":t[e]=Math.floor(16*Math.random());return t[14]=4,t[19]&=-5,t[19]|=8,t.map((t=>t.toString(16))).join("")}function uo(t){var e;return["true","1"].includes(null!==(e=null==t?void 0:t.trim())&&void 0!==e?e:"false")}function fo(t){var e;return"Bay"===t.tagName&&uo(null===(e=t.querySelector("Section[bus]"))||void 0===e?void 0:e.getAttribute("bus"))}function go(t){const[e,i,n,o,r,a,d]=["x","y","w","h","rot","lx","ly"].map((e=>{var i;return parseFloat(null!==(i=t.getAttributeNS(so,e))&&void 0!==i?i:"0")})),s=[e,i].map((t=>Math.max(0,t))),l=[n,o].map((t=>Math.max(1,t))),c=[a,d].map((t=>Math.max(0,t))),p=uo(t.getAttribute("bus"));return{pos:s,dim:l,label:c,flip:uo(t.getAttributeNS(so,"flip")),rot:(r%4+4)%4,bus:p}}function bo(t){var e;const i=[];if(uo(null===(e=t.querySelector("Section[bus]"))||void 0===e?void 0:e.getAttribute("bus"))){Array.from(t.querySelectorAll("Section:not([bus])")).forEach((t=>i.push({node:t})));const e=Array.from(t.querySelectorAll("Section[bus]")),n=e[0];Array.from(n.children).slice(1).forEach((t=>i.push({node:t})));const o=e[e.length-1].lastElementChild;o&&i.push({parent:n,node:o,reference:null}),e.slice(1).forEach((t=>i.push({node:t})))}else i.push({node:t});return Array.from(t.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${t.getAttribute("pathName")}"]`)).forEach((t=>i.push({node:t}))),i}function xo(t){const[e,i]=["x","y"].map((e=>t.getAttributeNS(so,e))),n=n=>n!==t&&n.getAttributeNS(so,"x")===e&&n.getAttributeNS(so,"y")===i,o=Array.from(t.closest("Private").getElementsByTagNameNS(so,"Section")).flatMap((t=>Array.from(t.children).filter(n))).map((t=>t.parentElement));if(o.length>2)return[];if(o.length<2)return bo(t.closest("ConnectivityNode"));const[r,a]=o.map((t=>uo(t.getAttribute("bus"))));if(r!==a)return[];const d=[],[s,l]=o;n(s.firstElementChild)&&d.push(function(t){const e=[];return Array.from(t.children).reverse().forEach((i=>e.push({parent:t,node:i,reference:null}))),e}(s));const c=Array.from(l.children);n(l.lastElementChild)&&c.reverse(),c.slice(1).forEach((t=>d.push({parent:s,node:t,reference:null})));const p=Array.from(s.children).find(n),m=n(s.firstElementChild)?s.children[1]:s.children[s.childElementCount-2],h=c[1];return m&&p&&h&&function(t,e,i){const[[n,o],[r,a],[d,s]]=[t,e,i].map((t=>["x","y"].map((e=>t.getAttributeNS(so,e)))));return n===r&&r===d||o===a&&a===s}(m,p,h)&&d.push({node:p}),d.push({node:l}),d}function vo(t,e,i){var n;const o=[],r=Array.from(t.getElementsByTagName("ConnectivityNode"));"ConnectivityNode"===t.tagName&&r.push(t);const a=e.closest("Substation").getAttribute("name");let d=null===(n=e.closest("VoltageLevel"))||void 0===n?void 0:n.getAttribute("name");return"VoltageLevel"===t.tagName&&(d=i),r.forEach((n=>{var r,s;let l=n.getAttribute("name");t===n&&(l=i);let c=null!==(s=null===(r=n.parentElement)||void 0===r?void 0:r.getAttribute("name"))&&void 0!==s?s:"";if("Bay"===t.tagName&&(c=i),"Bay"===e.tagName&&e.hasAttribute("name")&&(c=e.getAttribute("name")),l&&c){const t=`${a}/${d}/${c}/${l}`;o.push({element:n,attributes:{pathName:t}}),a&&d&&c&&o.push(...function(t,e,i,n,o,r,a){const d=[],s=e.getAttribute("pathName");if(!s)return[];const[l,c,p,m]=s.split("/");return Array.from(e.getRootNode().querySelectorAll(`Terminal[substationName="${l}"][voltageLevelName="${c}"][bayName="${p}"][cNodeName="${m}"], Terminal[connectivityNode="${s}"]`)).forEach((t=>{d.push({element:t,attributes:{substationName:i,voltageLevelName:n,bayName:o,connectivityNode:a,cNodeName:r}})})),d}(0,n,a,d,c,l,t))}})),o}function yo(t,e){const i=[];i.push({node:t,parent:e,reference:te(e,t.tagName)});const n=function(t,e){var i,n,o;const r=Array.from(e.children),a=t.getAttribute("name");if(a&&!r.find((t=>t.getAttribute("name")===a)))return a;const d=null!==(o=null!==(n=null===(i=t.getAttribute("name"))||void 0===i?void 0:i.replace(/[0-9]*$/,""))&&void 0!==n?n:t.getAttribute("type"))&&void 0!==o?o:t.tagName.charAt(0);let s=1;function l(t){return t.getAttribute("name")===d+s.toString()}for(;r.find(l);)s+=1;return d+s.toString()}(t,e);return n!==t.getAttribute("name")&&i.push({element:t,attributes:{name:n}}),i.push(...vo(t,e,n)),i}function _o(t){const e=[];e.push({node:t});const i=t.getAttribute("connectivityNode"),n=t.ownerDocument.querySelector(`ConnectivityNode[pathName="${i}"]`),o=Array.from(t.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${i}"]`)).filter((e=>e!==t));if(n&&o.length&&o.some((t=>t.closest("Bay")))&&o.every((t=>t.closest("Bay")!==n.closest("Bay")))&&!fo(n.closest("Bay"))){const t=o.find((t=>t.closest("Bay"))).closest("Bay");t&&e.push(...yo(n,t))}const r=null==n?void 0:n.querySelector(`Private[type="${ao}"]`),a=null==r?void 0:r.querySelector(`Vertex[*|uuid="${t.getAttributeNS(so,"uuid")}"]`),d=null==a?void 0:a.parentElement;if(!d)return e;e.push({node:d});const s=a===d.lastElementChild?d.firstElementChild:d.lastElementChild;return s&&e.push(...xo(s)),e}function wo(t){const{pos:[e,i],rot:n}=go(t);return{top:{close:[[e+.5,i],[e+1,i+.5],[e+.5,i+1],[e,i+.5]][n],far:[[e+.5,i-.5],[e+1.5,i+.5],[e+.5,i+1.5],[e-.5,i+.5]][n]},bottom:{close:[[e+.5,i+1],[e,i+.5],[e+.5,i],[e+1,i+.5]][n],far:[[e+.5,i+1.5],[e-.5,i+.5],[e+.5,i-.5],[e+1.5,i+.5]][n]}}}function Eo(t){return new CustomEvent("oscd-sld-place",{bubbles:!0,composed:!0,detail:t})}function So(t){return new CustomEvent("oscd-sld-connect",{bubbles:!0,composed:!0,detail:t})}function Ao(t){return new CustomEvent("oscd-sld-rotate",{bubbles:!0,composed:!0,detail:t})}function Co(t){return new CustomEvent("oscd-sld-start-resize",{bubbles:!0,composed:!0,detail:t})}function $o(t){return new CustomEvent("oscd-sld-start-place",{bubbles:!0,composed:!0,detail:t})}function ko(t){return new CustomEvent("oscd-sld-start-place-label",{bubbles:!0,composed:!0,detail:t})}function Io(t){return new CustomEvent("oscd-sld-start-connect",{bubbles:!0,composed:!0,detail:t})}const No=q`<path
+ */;let ro=class extends no{};ro.styles=[oo],ro=n([mt("mwc-textfield")],ro);const ao="Transpower-SLD-Vertices",so="https://transpower.co.nz/SCL/SSD/SLD/v0",lo="http://www.w3.org/2000/svg",co=["CAB","CAP","CBR","CTR","DIS","GEN","IFL","LIN","MOT","REA","RES","SAR","SMC","VTR"];function po(t){return co.includes(t)}const mo=new Set(["GEN","MOT","SMC"]);function ho(){const t=new Array(36);for(let e=0;e<36;e+=1)[8,13,18,23].includes(e)?t[e]="-":t[e]=Math.floor(16*Math.random());return t[14]=4,t[19]&=-5,t[19]|=8,t.map((t=>t.toString(16))).join("")}function uo(t){var e;return["true","1"].includes(null!==(e=null==t?void 0:t.trim())&&void 0!==e?e:"false")}function fo(t){var e;return"Bay"===t.tagName&&uo(null===(e=t.querySelector("Section[bus]"))||void 0===e?void 0:e.getAttribute("bus"))}function go(t){const[e,i,n,o,r,a,d]=["x","y","w","h","rot","lx","ly"].map((e=>{var i;return parseFloat(null!==(i=t.getAttributeNS(so,e))&&void 0!==i?i:"0")})),s=[e,i].map((t=>Math.max(0,t))),l=[n,o].map((t=>Math.max(1,t))),c=[a,d].map((t=>Math.max(0,t))),p=uo(t.getAttribute("bus"));return{pos:s,dim:l,label:c,flip:uo(t.getAttributeNS(so,"flip")),rot:(r%4+4)%4,bus:p}}function bo(t,...e){const i=[];let n=t;for(;n.parentElement&&n.hasAttribute("name");)i.unshift(n.getAttribute("name")),n=n.parentElement;return function(...t){return t.join("/")}(...i,...e)}function xo(t){var e;const i=[];if(uo(null===(e=t.querySelector("Section[bus]"))||void 0===e?void 0:e.getAttribute("bus"))){Array.from(t.querySelectorAll("Section:not([bus])")).forEach((t=>i.push({node:t})));const e=Array.from(t.querySelectorAll("Section[bus]")),n=e[0];Array.from(n.children).slice(1).forEach((t=>i.push({node:t})));const o=e[e.length-1].lastElementChild;o&&i.push({parent:n,node:o,reference:null}),e.slice(1).forEach((t=>i.push({node:t})))}else i.push({node:t});return Array.from(t.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${t.getAttribute("pathName")}"]`)).forEach((t=>i.push({node:t}))),i}function vo(t){const[e,i]=["x","y"].map((e=>t.getAttributeNS(so,e))),n=n=>n!==t&&n.getAttributeNS(so,"x")===e&&n.getAttributeNS(so,"y")===i,o=Array.from(t.closest("Private").getElementsByTagNameNS(so,"Section")).flatMap((t=>Array.from(t.children).filter(n))).map((t=>t.parentElement));if(o.length>2)return[];if(o.length<2)return xo(t.closest("ConnectivityNode"));const[r,a]=o.map((t=>uo(t.getAttribute("bus"))));if(r!==a)return[];const d=[],[s,l]=o;n(s.firstElementChild)&&d.push(function(t){const e=[];return Array.from(t.children).reverse().forEach((i=>e.push({parent:t,node:i,reference:null}))),e}(s));const c=Array.from(l.children);n(l.lastElementChild)&&c.reverse(),c.slice(1).forEach((t=>d.push({parent:s,node:t,reference:null})));const p=Array.from(s.children).find(n),m=n(s.firstElementChild)?s.children[1]:s.children[s.childElementCount-2],h=c[1];return m&&p&&h&&function(t,e,i){const[[n,o],[r,a],[d,s]]=[t,e,i].map((t=>["x","y"].map((e=>t.getAttributeNS(so,e)))));return n===r&&r===d||o===a&&a===s}(m,p,h)&&d.push({node:p}),d.push({node:l}),d}function yo(t,e,i){var n;const o=[],r=Array.from(t.getElementsByTagName("ConnectivityNode"));"ConnectivityNode"===t.tagName&&r.push(t);const a=e.closest("Substation").getAttribute("name");let d=null===(n=e.closest("VoltageLevel"))||void 0===n?void 0:n.getAttribute("name");return"VoltageLevel"===t.tagName&&(d=i),r.forEach((n=>{var r,s;let l=n.getAttribute("name");t===n&&(l=i);let c=null!==(s=null===(r=n.parentElement)||void 0===r?void 0:r.getAttribute("name"))&&void 0!==s?s:"";if("Bay"===t.tagName&&(c=i),"Bay"===e.tagName&&e.hasAttribute("name")&&(c=e.getAttribute("name")),l&&c){const t=`${a}/${d}/${c}/${l}`;o.push({element:n,attributes:{pathName:t}}),a&&d&&c&&o.push(...function(t,e,i,n,o,r,a){const d=[],s=e.getAttribute("pathName");if(!s)return[];const[l,c,p,m]=s.split("/");return Array.from(e.getRootNode().querySelectorAll(`Terminal[substationName="${l}"][voltageLevelName="${c}"][bayName="${p}"][cNodeName="${m}"], Terminal[connectivityNode="${s}"]`)).forEach((t=>{d.push({element:t,attributes:{substationName:i,voltageLevelName:n,bayName:o,connectivityNode:a,cNodeName:r}})})),d}(0,n,a,d,c,l,t))}})),o}function _o(t,e){const i=[];i.push({node:t,parent:e,reference:te(e,t.tagName)});const n=function(t,e){var i,n,o;const r=Array.from(e.children),a=t.getAttribute("name");if(a&&!r.find((t=>t.getAttribute("name")===a)))return a;const d=null!==(o=null!==(n=null===(i=t.getAttribute("name"))||void 0===i?void 0:i.replace(/[0-9]*$/,""))&&void 0!==n?n:t.getAttribute("type"))&&void 0!==o?o:t.tagName.charAt(0);let s=1;function l(t){return t.getAttribute("name")===d+s.toString()}for(;r.find(l);)s+=1;return d+s.toString()}(t,e);return n!==t.getAttribute("name")&&i.push({element:t,attributes:{name:n}}),i.push(...yo(t,e,n)),i}function wo(t){const e=[];e.push({node:t});const i=t.getAttribute("connectivityNode"),n=t.ownerDocument.querySelector(`ConnectivityNode[pathName="${i}"]`),o=Array.from(t.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${i}"]`)).filter((e=>e!==t));if(n&&o.length&&o.some((t=>t.closest("Bay")))&&o.every((t=>t.closest("Bay")!==n.closest("Bay")))&&!fo(n.closest("Bay"))){const t=o.find((t=>t.closest("Bay"))).closest("Bay");t&&e.push(..._o(n,t))}const r=null==n?void 0:n.querySelector(`Private[type="${ao}"]`),a=null==r?void 0:r.querySelector(`Vertex[*|uuid="${t.getAttributeNS(so,"uuid")}"]`),d=null==a?void 0:a.parentElement;if(!d)return e;e.push({node:d});const s=a===d.lastElementChild?d.firstElementChild:d.lastElementChild;return s&&e.push(...vo(s)),e}function Eo(t){const{pos:[e,i],rot:n}=go(t);return{top:{close:[[e+.5,i],[e+1,i+.5],[e+.5,i+1],[e,i+.5]][n],far:[[e+.5,i-.5],[e+1.5,i+.5],[e+.5,i+1.5],[e-.5,i+.5]][n]},bottom:{close:[[e+.5,i+1],[e,i+.5],[e+.5,i],[e+1,i+.5]][n],far:[[e+.5,i+1.5],[e-.5,i+.5],[e+.5,i-.5],[e+1.5,i+.5]][n]}}}function So(t){return new CustomEvent("oscd-sld-place",{bubbles:!0,composed:!0,detail:t})}function Ao(t){return new CustomEvent("oscd-sld-connect",{bubbles:!0,composed:!0,detail:t})}function Co(t){return new CustomEvent("oscd-sld-rotate",{bubbles:!0,composed:!0,detail:t})}function $o(t){return new CustomEvent("oscd-sld-start-resize",{bubbles:!0,composed:!0,detail:t})}function ko(t){return new CustomEvent("oscd-sld-start-place",{bubbles:!0,composed:!0,detail:t})}function Io(t){return new CustomEvent("oscd-sld-start-place-label",{bubbles:!0,composed:!0,detail:t})}function No(t){return new CustomEvent("oscd-sld-start-connect",{bubbles:!0,composed:!0,detail:t})}const To=q`<path
   d="M120 616v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 640v-80h80v80h-80Zm0-640v-80h80v80h-80Zm160 640v-80h80v80h-80Zm160 0v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160V296H600v-80h240v240h-80ZM120 936V696h80v160h160v80H120Z"
-/>`,To=q`<path d="M480 976 310 806l57-57 73 73V616l-205-1 73 73-58 58L80 576l169-169 57 57-72 72h206V330l-73 73-57-57 170-170 170 170-57 57-73-73v206l205 1-73-73 58-58 170 170-170 170-57-57 73-73H520l-1 205 73-73 58 58-170 170Z"/>`,Lo=q`<path
+/>`,Lo=q`<path d="M480 976 310 806l57-57 73 73V616l-205-1 73 73-58 58L80 576l169-169 57 57-72 72h206V330l-73 73-57-57 170-170 170 170-57 57-73-73v206l205 1-73-73 58-58 170 170-170 170-57-57 73-73H520l-1 205 73-73 58 58-170 170Z"/>`,Ro=q`<path
     d="M 4 4 L 12.5 21 L 21 4"
     fill="none"
     stroke="currentColor"
     stroke-width="3"
     stroke-linejoin="round"
     stroke-linecap="round"
-  />`,Ro=q`<path
+  />`,Do=q`<path
     d="M 3 2 L 22 2"
     fill="none"
     stroke="currentColor"
@@ -712,28 +712,20 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     stroke-width="1.5"
     stroke-linejoin="round"
     stroke-linecap="round"
-  />`,Do=U`<svg
+  />`,Oo=U`<svg
   id="VoltageLevel"
   viewBox="0 0 25 25"
   width="24"
   height="24"
   slot="icon"
 >
-  ${Lo}
-</svg>`,Oo=U`<svg
+  ${Ro}
+</svg>`,Fo=U`<svg
   id="VoltageLevel"
   viewBox="0 0 25 25"
   width="24"
   height="24"
   slot="graphic"
->
-  ${Lo}
-</svg>`,Fo=U`<svg
-  id="Bay"
-  viewBox="0 0 25 25"
-  width="24"
-  height="24"
-  slot="icon"
 >
   ${Ro}
 </svg>`,zo=U`<svg
@@ -741,10 +733,18 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
   viewBox="0 0 25 25"
   width="24"
   height="24"
+  slot="icon"
+>
+  ${Do}
+</svg>`,Po=U`<svg
+  id="Bay"
+  viewBox="0 0 25 25"
+  width="24"
+  height="24"
   slot="graphic"
 >
-  ${Ro}
-</svg>`,Po={CAB:q`
+  ${Do}
+</svg>`,Ho={CAB:q`
   <path
     d="M 12.5,0 V 4"
     fill="none"
@@ -1088,7 +1088,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     stroke-width="1.5"
     stroke-linecap="round"
   />
-`},Ho=q`
+`},Mo=q`
   <path
     d="M 12.5,0 V 4"
     fill="none"
@@ -1105,7 +1105,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     stroke-width="1.5"
     stroke-linecap="round"
   />
-  `,Mo=q`
+  `,Bo=q`
   <circle
     cx="12.5"
     cy="12.5"
@@ -1154,22 +1154,22 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     stroke-linejoin="round"
     stroke-linecap="round"
   />
-`;function Bo(t){return t&&po(t)?Po[t]:Mo}function Vo(t){return U`<svg
+`;function Vo(t){return t&&po(t)?Ho[t]:Bo}function Uo(t){return U`<svg
     id="${t}"
     viewBox="0 0 25 25"
     width="24"
     height="24"
     slot="graphic"
   >
-    ${Bo(t)}
-    ${t&&mo.has(t)?Ho:j}
-  </svg>`}function Uo(t){return q`<symbol
+    ${Vo(t)}
+    ${t&&mo.has(t)?Mo:j}
+  </svg>`}function qo(t){return q`<symbol
     id="${t}"
     viewBox="0 0 25 25"
     width="1" height="1"
   >
-    ${Bo(t)}
-  </symbol>`}const qo=q`<marker
+    ${Vo(t)}
+  </symbol>`}const Go=q`<marker
   markerWidth="3" markerHeight="3"
   refX="12.5" refY="12.5"
   viewBox="0 0 25 25"
@@ -1181,7 +1181,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     cy="12.5"
     r="12.5"
   />
-</marker>`,Go=q`<marker
+</marker>`,jo=q`<marker
   markerWidth="20" markerHeight="20"
   refX="12.5" refY="12.5"
   viewBox="0 0 25 25"
@@ -1215,7 +1215,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     stroke-linecap="round"
     stroke-width="1.5"
   />
-</marker>`,jo=q`
+</marker>`,Xo=q`
   <defs>
   <pattern id="halfgrid" patternUnits="userSpaceOnUse" width="1" height="1" viewBox="0 0 1 1">
   <circle cx="0.1" cy="0.8" r="0.035" fill="#888" opacity="0.3" />
@@ -1229,18 +1229,18 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
   <line x1="1" y1="0" x2="1" y2="1" stroke="#888" stroke-opacity="0.3" stroke-width="0.06" />
   <line x1="0" y1="1" x2="1" y2="1" stroke="#888" stroke-opacity="0.3" stroke-width="0.06" />
   </pattern>
-  ${co.map((t=>Uo(t)))}
-  ${Uo("ConductingEquipment")}
-  ${qo}
+  ${co.map((t=>qo(t)))}
+  ${qo("ConductingEquipment")}
   ${Go}
+  ${jo}
   </defs>
-`,Xo={ConductingEquipment:"Bay",Bay:"VoltageLevel",VoltageLevel:"Substation"},Yo=new Set(["BAT","EFN","FAN","GEN","IFL","MOT","PMP","RRC","SAR","SMC","VTR"]);function Wo(t){return new CustomEvent("oscd-edit-wizard-request",{bubbles:!0,composed:!0,detail:{element:t}})}function Ko([t,e,i,n],[o,r,a,d]){return t<=o&&e<=r&&t+i>=o+a&&e+n>=r+d}function Zo(t,e,i,n,o){const{pos:[r,a],dim:[d,s]}=go(t);return Ko([r,a,d,s],[e,i,n,o])}function Qo(t){let e=t.length-2;for(;e>0;){const[i,n]=t[e],[o,r]=t[e+1],[a,d]=t[e-1];(i===o&&n===r||i===o&&i===a||n===r&&n===d)&&t.splice(e,1),e-=1}}function Jo(t){return"Bay"===t.tagName&&!fo(t)}function tr(t){t.preventDefault()}function er(t,e){const i=t.cloneNode(!0),n=new Set(Array.from(t.querySelectorAll("Terminal"))),o=new Set;n.forEach((e=>{const i=t.ownerDocument.querySelector(`ConnectivityNode[pathName="${e.getAttribute("connectivityNode")}"]`);i&&o.add(i)}));const r=new Set;return o.forEach((e=>{Array.from(t.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${e.getAttribute("pathName")}"]`)).find((t=>!n.has(t)))&&r.add(e)})),r.forEach((e=>{var o;e.closest(t.tagName)===t&&(null===(o=i.querySelector(`ConnectivityNode[pathName="${e.getAttribute("pathName")}"]`))||void 0===o||o.remove()),n.forEach((t=>{var n;t.getAttribute("connectivityNode")===e.getAttribute("pathName")&&(null===(n=i.querySelector(`[*|uuid="${t.getAttributeNS(so,"uuid")}"]`))||void 0===n||n.remove())}))})),Array.from(i.querySelectorAll("Terminal")).forEach((t=>{const n=t.getAttributeNS(so,"uuid"),o=ho();Array.from(i.querySelectorAll(`Vertex[*|uuid="${n}"`)).forEach((t=>t.setAttributeNS(so,`${e}:uuid`,o))),t.setAttributeNS(so,`${e}:uuid`,o)})),i}let ir=class extends ct{constructor(){super(...arguments),this.editCount=-1,this.gridSize=32,this.nsp="esld",this.mouseX=0,this.mouseY=0,this.mouseX2=0,this.mouseY2=0,this.coordinatesRef=new ai,this.handleKeydown=({key:t})=>{"Escape"===t&&(this.menu=void 0)},this.handleClick=t=>{this.menu&&!t.composedPath().find((t=>"id"in t&&"sld-context-menu"===t.id))&&(t.stopImmediatePropagation(),this.menu=void 0)}}positionCoordinates(t){var e;const i=null===(e=this.coordinatesRef)||void 0===e?void 0:e.value;i&&(i.style.top=`${t.clientY}px`,i.style.left=`${t.clientX+16}px`)}openMenu(t,e){this.placing||this.resizing||this.placingLabel||this.connecting||(this.menu={element:t,left:e.clientX,top:e.clientY}),e.preventDefault()}svgCoordinates(t,e){const i=new DOMPoint(t,e),{x:n,y:o}=i.matrixTransform(this.sld.getScreenCTM().inverse());return[n,o].map((t=>Math.max(0,t)))}canPlaceAt(t,e,i,n,o){if("Substation"===t.tagName)return!0;const r=Array.from(this.substation.querySelectorAll(t.tagName)).find((r=>r!==t&&function(t,e,i,n,o){const{pos:[r,a],dim:[d,s]}=go(t);return function([t,e,i,n],[o,r,a,d]){return!(t>=o+a||o>=t+i||e>=r+d||r>=e+n)}([r,a,d,s],[e,i,n,o])}(r,e,i,n,o)&&!fo(r)));if(r&&!fo(t))return!1;return!!("VoltageLevel"===t.tagName?Zo(this.substation,e,i,n,o):Array.from(this.substation.querySelectorAll(Xo[t.tagName])).find((t=>Zo(t,e,i,n,o))))}canResizeTo(t,e,i){const{pos:[n,o],dim:[r,a]}=go(t);if(!this.canPlaceAt(t,n,o,e,i)&&this.canPlaceAt(t,n,o,r,a))return!1;return!Array.from(t.children).find((r=>{if(Xo[r.tagName]!==t.tagName)return!1;const{pos:[a,d],dim:[s,l]}=go(r);return!Ko([n,o,e,i],[a,d,s,l])}))}renderedLabelPosition(t){let{label:[e,i]}=go(t);if(this.placing&&t.closest(this.placing.tagName)===this.placing){const{pos:[t,n]}=go(this.placing);e+=this.mouseX-t,i+=this.mouseY-n}return this.placingLabel===t&&(e=this.mouseX2,i=this.mouseY2+.5),[e,i]}renderedPosition(t){let{pos:[e,i]}=go(t);if(this.placing&&t.closest(this.placing.tagName)===this.placing){const{pos:[t,n]}=go(this.placing);e+=this.mouseX-t,i+=this.mouseY-n}return[e,i]}connectedCallback(){super.connectedCallback(),window.addEventListener("keydown",this.handleKeydown),window.addEventListener("click",this.handleClick,!0),window.addEventListener("click",this.positionCoordinates)}disconnectedCallback(){super.disconnectedCallback(),window.removeEventListener("keydown",this.handleKeydown),window.removeEventListener("click",this.handleClick),window.removeEventListener("click",this.positionCoordinates)}nearestOpenTerminal(t){if(!t)return;const e=t.querySelector('Terminal[name="T1"]'),i=t.querySelector('Terminal:not([name="T1"])'),n=Yo.has(t.getAttribute("type"));if(e&&i)return;if(n&&(e||i))return;if(n)return"top";if(e)return"bottom";if(i)return"top";const[o,r]=[this.mouseX2,this.mouseY2].map((t=>t%1)),{rot:a}=go(t);return 0===a&&.5===r||1===a&&0===o||2===a&&0===r||3===a&&.5===o?"bottom":"top"}groundTerminal(t,e){const i=t.closest("Bay"),n=[];let o=i.querySelector(':scope > ConnectivityNode[name="grounded"]'),r=null==o?void 0:o.getAttribute("pathName");r||(r=function(t,...e){const i=[];let n=t;for(;n.parentElement&&n.hasAttribute("name");)i.unshift(n.getAttribute("name")),n=n.parentElement;return function(...t){return t.join("/")}(...i,...e)}(t.closest("Bay"),"grounded"),o=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"ConnectivityNode"),o.setAttribute("name","grounded"),o.setAttribute("pathName",r),n.push({parent:i,node:o,reference:te(i,"ConnectivityNode")}));const a=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"Terminal");a.setAttribute("name",e),a.setAttribute("cNodeName","grounded");const d=t.closest("Substation").getAttribute("name");d&&a.setAttribute("substationName",d);const s=t.closest("VoltageLevel").getAttribute("name");s&&a.setAttribute("voltageLevelName",s);const l=t.closest("Bay").getAttribute("name");l&&a.setAttribute("bayName",l),a.setAttribute("connectivityNode",r),n.push({parent:t,node:a,reference:te(t,"Terminal")}),this.dispatchEvent(St(n))}flipElement(t){const{flip:e}=go(t);this.dispatchEvent(St({element:t,attributes:{[`${this.nsp}:flip`]:{namespaceURI:so,value:e?null:"true"}}}))}equipmentMenuItems(t){const e=[{content:U`<mwc-list-item graphic="icon">
+`,Yo={ConductingEquipment:"Bay",Bay:"VoltageLevel",VoltageLevel:"Substation"},Wo=new Set(["BAT","EFN","FAN","GEN","IFL","MOT","PMP","RRC","SAR","SMC","VTR"]);function Ko(t){return new CustomEvent("oscd-edit-wizard-request",{bubbles:!0,composed:!0,detail:{element:t}})}function Zo([t,e,i,n],[o,r,a,d]){return t<=o&&e<=r&&t+i>=o+a&&e+n>=r+d}function Qo(t,e,i,n,o){const{pos:[r,a],dim:[d,s]}=go(t);return Zo([r,a,d,s],[e,i,n,o])}function Jo(t){let e=t.length-2;for(;e>0;){const[i,n]=t[e],[o,r]=t[e+1],[a,d]=t[e-1];(i===o&&n===r||i===o&&i===a||n===r&&n===d)&&t.splice(e,1),e-=1}}function tr(t){return"Bay"===t.tagName&&!fo(t)}function er(t){t.preventDefault()}function ir(t,e){const i=t.cloneNode(!0),n=new Set(Array.from(t.querySelectorAll("Terminal"))),o=new Set;n.forEach((e=>{const i=t.ownerDocument.querySelector(`ConnectivityNode[pathName="${e.getAttribute("connectivityNode")}"]`);i&&o.add(i)}));const r=new Set;return o.forEach((e=>{Array.from(t.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${e.getAttribute("pathName")}"]`)).find((t=>!n.has(t)))&&r.add(e)})),r.forEach((e=>{var o;e.closest(t.tagName)===t&&(null===(o=i.querySelector(`ConnectivityNode[pathName="${e.getAttribute("pathName")}"]`))||void 0===o||o.remove()),n.forEach((t=>{var n;t.getAttribute("connectivityNode")===e.getAttribute("pathName")&&(null===(n=i.querySelector(`[*|uuid="${t.getAttributeNS(so,"uuid")}"]`))||void 0===n||n.remove())}))})),Array.from(i.querySelectorAll("Terminal")).forEach((t=>{const n=t.getAttributeNS(so,"uuid"),o=ho();Array.from(i.querySelectorAll(`Vertex[*|uuid="${n}"`)).forEach((t=>t.setAttributeNS(so,`${e}:uuid`,o))),t.setAttributeNS(so,`${e}:uuid`,o)})),i}let nr=class extends ct{constructor(){super(...arguments),this.editCount=-1,this.gridSize=32,this.nsp="esld",this.mouseX=0,this.mouseY=0,this.mouseX2=0,this.mouseY2=0,this.coordinatesRef=new ai,this.handleKeydown=({key:t})=>{"Escape"===t&&(this.menu=void 0)},this.handleClick=t=>{this.menu&&!t.composedPath().find((t=>"id"in t&&"sld-context-menu"===t.id))&&(t.stopImmediatePropagation(),this.menu=void 0)}}positionCoordinates(t){var e;const i=null===(e=this.coordinatesRef)||void 0===e?void 0:e.value;i&&(i.style.top=`${t.clientY}px`,i.style.left=`${t.clientX+16}px`)}openMenu(t,e){this.placing||this.resizing||this.placingLabel||this.connecting||(this.menu={element:t,left:e.clientX,top:e.clientY}),e.preventDefault()}svgCoordinates(t,e){const i=new DOMPoint(t,e),{x:n,y:o}=i.matrixTransform(this.sld.getScreenCTM().inverse());return[n,o].map((t=>Math.max(0,t)))}canPlaceAt(t,e,i,n,o){if("Substation"===t.tagName)return!0;const r=Array.from(this.substation.querySelectorAll(t.tagName)).find((r=>r!==t&&function(t,e,i,n,o){const{pos:[r,a],dim:[d,s]}=go(t);return function([t,e,i,n],[o,r,a,d]){return!(t>=o+a||o>=t+i||e>=r+d||r>=e+n)}([r,a,d,s],[e,i,n,o])}(r,e,i,n,o)&&!fo(r)));if(r&&!fo(t))return!1;return!!("VoltageLevel"===t.tagName?Qo(this.substation,e,i,n,o):Array.from(this.substation.querySelectorAll(Yo[t.tagName])).find((t=>Qo(t,e,i,n,o))))}canResizeTo(t,e,i){const{pos:[n,o],dim:[r,a]}=go(t);if(!this.canPlaceAt(t,n,o,e,i)&&this.canPlaceAt(t,n,o,r,a))return!1;return!Array.from(t.children).find((r=>{if(Yo[r.tagName]!==t.tagName)return!1;const{pos:[a,d],dim:[s,l]}=go(r);return!Zo([n,o,e,i],[a,d,s,l])}))}renderedLabelPosition(t){let{label:[e,i]}=go(t);if(this.placing&&t.closest(this.placing.tagName)===this.placing){const{pos:[t,n]}=go(this.placing);e+=this.mouseX-t,i+=this.mouseY-n}return this.placingLabel===t&&(e=this.mouseX2,i=this.mouseY2+.5),[e,i]}renderedPosition(t){let{pos:[e,i]}=go(t);if(this.placing&&t.closest(this.placing.tagName)===this.placing){const{pos:[t,n]}=go(this.placing);e+=this.mouseX-t,i+=this.mouseY-n}return[e,i]}connectedCallback(){super.connectedCallback(),window.addEventListener("keydown",this.handleKeydown),window.addEventListener("click",this.handleClick,!0),window.addEventListener("click",this.positionCoordinates)}disconnectedCallback(){super.disconnectedCallback(),window.removeEventListener("keydown",this.handleKeydown),window.removeEventListener("click",this.handleClick),window.removeEventListener("click",this.positionCoordinates)}nearestOpenTerminal(t){if(!t)return;const e=t.querySelector('Terminal[name="T1"]'),i=t.querySelector('Terminal:not([name="T1"])'),n=Wo.has(t.getAttribute("type"));if(e&&i)return;if(n&&(e||i))return;if(n)return"top";if(e)return"bottom";if(i)return"top";const[o,r]=[this.mouseX2,this.mouseY2].map((t=>t%1)),{rot:a}=go(t);return 0===a&&.5===r||1===a&&0===o||2===a&&0===r||3===a&&.5===o?"bottom":"top"}groundTerminal(t,e){const i=t.closest("Bay"),n=[];let o=i.querySelector(':scope > ConnectivityNode[name="grounded"]'),r=null==o?void 0:o.getAttribute("pathName");r||(r=bo(t.closest("Bay"),"grounded"),o=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"ConnectivityNode"),o.setAttribute("name","grounded"),o.setAttribute("pathName",r),n.push({parent:i,node:o,reference:te(i,"ConnectivityNode")}));const a=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"Terminal");a.setAttribute("name",e),a.setAttribute("cNodeName","grounded");const d=t.closest("Substation").getAttribute("name");d&&a.setAttribute("substationName",d);const s=t.closest("VoltageLevel").getAttribute("name");s&&a.setAttribute("voltageLevelName",s);const l=t.closest("Bay").getAttribute("name");l&&a.setAttribute("bayName",l),a.setAttribute("connectivityNode",r),n.push({parent:t,node:a,reference:te(t,"Terminal")}),this.dispatchEvent(St(n))}flipElement(t){const{flip:e}=go(t);this.dispatchEvent(St({element:t,attributes:{[`${this.nsp}:flip`]:{namespaceURI:so,value:e?null:"true"}}}))}equipmentMenuItems(t){const e=[{content:U`<mwc-list-item graphic="icon">
           <span>Mirror</span>
           <mwc-icon slot="graphic">flip</mwc-icon>
         </mwc-list-item>`,handler:()=>this.flipElement(t)},{content:U`<mwc-list-item graphic="icon">
           <span>Rotate</span>
           <mwc-icon slot="graphic">rotate_90_degrees_cw</mwc-icon>
-        </mwc-list-item>`,handler:()=>{this.dispatchEvent(Ao(t))}},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>{this.dispatchEvent(Co(t))}},{content:U`<mwc-list-item graphic="icon">
           <span>Move</span>
           <svg
             xmlns="${lo}"
@@ -1249,21 +1249,21 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             slot="graphic"
             viewBox="0 96 960 960"
           >
-            ${To}
+            ${Lo}
           </svg>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent($o(t))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent(ko(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Move Label</span>
           <mwc-icon slot="graphic">text_rotation_none</mwc-icon>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent(ko(t))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent(Io(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Edit</span>
           <mwc-icon slot="graphic">edit</mwc-icon>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent(Wo(t))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent(Ko(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Delete</span>
           <mwc-icon slot="graphic">delete</mwc-icon>
-        </mwc-list-item>`,handler:()=>{const e=[];Array.from(t.querySelectorAll("Terminal")).forEach((t=>e.push(..._o(t)))),e.push({node:t}),this.dispatchEvent(St(e))}}],{rot:i}=go(t),n={connect:["north","east","south","west"],ground:["expand_less","chevron_right","expand_more","chevron_left"],disconnect:["arrow_drop_up","arrow_right","arrow_drop_down","arrow_left"]},o={connect:["Connect top","Connect right","Connect bottom","Connect left"],ground:["Ground top","Ground right","Ground bottom","Ground left"],disconnect:["Detach top","Detach right","Detach bottom","Detach left"]},r=(t,e)=>U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>{const e=[];Array.from(t.querySelectorAll("Terminal")).forEach((t=>e.push(...wo(t)))),e.push({node:t}),this.dispatchEvent(St(e))}}],{rot:i}=go(t),n={connect:["north","east","south","west"],ground:["expand_less","chevron_right","expand_more","chevron_left"],disconnect:["arrow_drop_up","arrow_right","arrow_drop_down","arrow_left"]},o={connect:["Connect top","Connect right","Connect bottom","Connect left"],ground:["Ground top","Ground right","Ground bottom","Ground left"],disconnect:["Detach top","Detach right","Detach bottom","Detach left"]},r=(t,e)=>U`<mwc-list-item graphic="icon">
         <span>${((t,e)=>o[t][e?i%4:(i+2)%4])(t,e)}</span>
         <mwc-icon slot="graphic">${((t,e)=>n[t][e?i%4:(i+2)%4])(t,e)}</mwc-icon>
-      </mwc-list-item>`,a=t.querySelector('Terminal[name="T1"]'),d=t.querySelector('Terminal:not([name="T1"])');return Yo.has(t.getAttribute("type"))||(d?e.unshift({handler:()=>this.dispatchEvent(St(_o(d))),content:r("disconnect",!1)}):e.unshift({handler:()=>this.dispatchEvent(Io({equipment:t,terminal:"bottom"})),content:r("connect",!1)},{handler:()=>this.groundTerminal(t,"T2"),content:r("ground",!1)})),a?e.unshift({handler:()=>this.dispatchEvent(St(_o(a))),content:r("disconnect",!0)}):e.unshift({handler:()=>this.dispatchEvent(Io({equipment:t,terminal:"top"})),content:r("connect",!0)},{handler:()=>this.groundTerminal(t,"T1"),content:r("ground",!0)}),e}busBarMenuItems(t){return[{content:U`<mwc-list-item graphic="icon">
+      </mwc-list-item>`,a=t.querySelector('Terminal[name="T1"]'),d=t.querySelector('Terminal:not([name="T1"])');return Wo.has(t.getAttribute("type"))||(d?e.unshift({handler:()=>this.dispatchEvent(St(wo(d))),content:r("disconnect",!1)}):e.unshift({handler:()=>this.dispatchEvent(No({equipment:t,terminal:"bottom"})),content:r("connect",!1)},{handler:()=>this.groundTerminal(t,"T2"),content:r("ground",!1)})),a?e.unshift({handler:()=>this.dispatchEvent(St(wo(a))),content:r("disconnect",!0)}):e.unshift({handler:()=>this.dispatchEvent(No({equipment:t,terminal:"top"})),content:r("connect",!0)},{handler:()=>this.groundTerminal(t,"T1"),content:r("ground",!0)}),e}busBarMenuItems(t){return[{content:U`<mwc-list-item graphic="icon">
           <span>Resize</span>
           <svg
             xmlns="${lo}"
@@ -1272,9 +1272,9 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             height="24"
             viewBox="0 96 960 960"
           >
-            ${No}
+            ${To}
           </svg>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent(Co(t))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent($o(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Move</span>
           <svg
             xmlns="${lo}"
@@ -1283,18 +1283,18 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             slot="graphic"
             viewBox="0 96 960 960"
           >
-            ${To}
+            ${Lo}
           </svg>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent($o(t))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent(ko(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Move Label</span>
           <mwc-icon slot="graphic">text_rotation_none</mwc-icon>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent(ko(t))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent(Io(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Edit</span>
           <mwc-icon slot="graphic">edit</mwc-icon>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent(Wo(t))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent(Ko(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Delete</span>
           <mwc-icon slot="graphic">delete</mwc-icon>
-        </mwc-list-item>`,handler:()=>{const e=t.querySelector("ConnectivityNode");this.dispatchEvent(St([...bo(e),{node:t}]))}}]}containerMenuItems(t){return[{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>{const e=t.querySelector("ConnectivityNode");this.dispatchEvent(St([...xo(e),{node:t}]))}}]}containerMenuItems(t){return[{content:U`<mwc-list-item graphic="icon">
           <span>Resize</span>
           <svg
             xmlns="${lo}"
@@ -1303,9 +1303,9 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             height="24"
             viewBox="0 96 960 960"
           >
-            ${No}
+            ${To}
           </svg>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent(Co(t))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent($o(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Move</span>
           <svg
             xmlns="${lo}"
@@ -1314,18 +1314,18 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             slot="graphic"
             viewBox="0 96 960 960"
           >
-            ${To}
+            ${Lo}
           </svg>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent($o(t))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent(ko(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Move Label</span>
           <mwc-icon slot="graphic">text_rotation_none</mwc-icon>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent(ko(t))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent(Io(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Edit</span>
           <mwc-icon slot="graphic">edit</mwc-icon>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent(Wo(t))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent(Ko(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Delete</span>
           <mwc-icon slot="graphic">delete</mwc-icon>
-        </mwc-list-item>`,handler:()=>{const e=[];Array.from(t.getElementsByTagName("ConnectivityNode")).forEach((i=>{Array.from(this.doc.querySelectorAll(`Terminal[connectivityNode="${i.getAttribute("pathName")}"]`)).find((e=>e.closest(t.tagName)!==t))&&e.push(...bo(i))})),Array.from(t.getElementsByTagName("Terminal")).forEach((i=>{const n=this.doc.querySelector(`ConnectivityNode[pathName="${i.getAttribute("connectivityNode")}"]`);n&&n.closest(t.tagName)!==t&&e.push(...bo(n))})),e.push({node:t}),this.dispatchEvent(St(e))}}]}renderMenu(){if(!this.menu)return U``;const{element:t}=this.menu;let e=[];return"ConductingEquipment"===t.tagName?e=this.equipmentMenuItems(t):"Bay"===t.tagName&&fo(t)?e=this.busBarMenuItems(t):"Bay"!==t.tagName&&"VoltageLevel"!==t.tagName||(e=this.containerMenuItems(t)),U`
+        </mwc-list-item>`,handler:()=>{const e=[];Array.from(t.getElementsByTagName("ConnectivityNode")).forEach((i=>{Array.from(this.doc.querySelectorAll(`Terminal[connectivityNode="${i.getAttribute("pathName")}"]`)).find((e=>e.closest(t.tagName)!==t))&&e.push(...xo(i))})),Array.from(t.getElementsByTagName("Terminal")).forEach((i=>{const n=this.doc.querySelector(`ConnectivityNode[pathName="${i.getAttribute("connectivityNode")}"]`);n&&n.closest(t.tagName)!==t&&e.push(...xo(n))})),e.push({node:t}),this.dispatchEvent(St(e))}}]}renderMenu(){if(!this.menu)return U``;const{element:t}=this.menu;let e=[];return"ConductingEquipment"===t.tagName?e=this.equipmentMenuItems(t):"Bay"===t.tagName&&fo(t)?e=this.busBarMenuItems(t):"Bay"!==t.tagName&&"VoltageLevel"!==t.tagName||(e=this.containerMenuItems(t)),U`
       <menu
         id="sld-context-menu"
         style="position: fixed; top: ${this.menu.top}px; left: ${this.menu.left}px; background: var(--oscd-base3, white); margin: 0px; padding: 0px; box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23); --mdc-list-vertical-padding: 0px; overflow-y: auto;"
@@ -1336,7 +1336,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
         >
           ${e.map((t=>t.content))}
           <li divider role="separator"></li>
-          ${function(t){const e=t.getAttribute("name");let i=t.getAttribute("desc");const n=t.getAttribute("type");n&&(i=i?U`${n} &mdash; ${i}`:n);let o=Vo(null);return"ConductingEquipment"===t.tagName?o=Vo(t.getAttribute("type")):"Bay"===t.tagName&&fo(t)?o=U`<mwc-icon slot="graphic">horizontal_rule</mwc-icon>`:"Bay"===t.tagName?o=zo:"VoltageLevel"===t.tagName&&(o=Oo),U`<mwc-list-item ?twoline=${i} graphic="avatar" noninteractive>
+          ${function(t){const e=t.getAttribute("name");let i=t.getAttribute("desc");const n=t.getAttribute("type");n&&(i=i?U`${n} &mdash; ${i}`:n);let o=Uo(null);return"ConductingEquipment"===t.tagName?o=Uo(t.getAttribute("type")):"Bay"===t.tagName&&fo(t)?o=U`<mwc-icon slot="graphic">horizontal_rule</mwc-icon>`:"Bay"===t.tagName?o=Po:"VoltageLevel"===t.tagName&&(o=Fo),U`<mwc-list-item ?twoline=${i} graphic="avatar" noninteractive>
     <span>${e}</span>
     ${i?U`<span
           slot="secondary"
@@ -1350,17 +1350,17 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
       </menu>
     `}render(){var t,e,i;const{dim:[n,o]}=go(this.substation),r="VoltageLevel"===(null===(t=this.placing)||void 0===t?void 0:t.tagName)?q`<rect width="100%" height="100%" fill="url(#grid)" />`:j,a=this.placingLabel?q`<rect width="100%" height="100%" fill="url(#halfgrid)"
       @click=${()=>{const t=this.placingLabel,[e,i]=this.renderedLabelPosition(t);this.dispatchEvent(new CustomEvent("oscd-sld-place-label",{bubbles:!0,composed:!0,detail:{element:t,x:e,y:i}}))}}
-      />`:j;let d=q``;this.placing&&("VoltageLevel"===this.placing.tagName||Jo(this.placing)?d=q`${this.renderContainer(this.placing,!0)}`:"ConductingEquipment"===this.placing.tagName?d=this.renderEquipment(this.placing,{preview:!0}):fo(this.placing)&&(d=this.renderBusBar(this.placing)));let s=U``,l=!1,c=!0;if(this.placing){const{dim:[t,e]}=go(this.placing);c=!1,l=!this.canPlaceAt(this.placing,this.mouseX,this.mouseY,t,e),s=U`${this.mouseX},${this.mouseY}`}if(this.resizing&&!fo(this.resizing)){const{pos:[t,e]}=go(this.resizing),i=Math.max(1,this.mouseX-t+1),n=Math.max(1,this.mouseY-e+1);c=!1,l=!this.canResizeTo(this.resizing,i,n),s=U`${i}&times;${n}`}const p=U`<div
+      />`:j;let d=q``;this.placing&&("VoltageLevel"===this.placing.tagName||tr(this.placing)?d=q`${this.renderContainer(this.placing,!0)}`:"ConductingEquipment"===this.placing.tagName?d=this.renderEquipment(this.placing,{preview:!0}):fo(this.placing)&&(d=this.renderBusBar(this.placing)));let s=U``,l=!1,c=!0;if(this.placing){const{dim:[t,e]}=go(this.placing);c=!1,l=!this.canPlaceAt(this.placing,this.mouseX,this.mouseY,t,e),s=U`${this.mouseX},${this.mouseY}`}if(this.resizing&&!fo(this.resizing)){const{pos:[t,e]}=go(this.resizing),i=Math.max(1,this.mouseX-t+1),n=Math.max(1,this.mouseY-e+1);c=!1,l=!this.canResizeTo(this.resizing,i,n),s=U`${i}&times;${n}`}const p=U`<div
       ${si(this.coordinatesRef)}
       class="${Le({coordinates:!0,invalid:l,hidden:c})}"
     >
       (${s})
     </div>`,m=[];if((null===(e=this.connecting)||void 0===e?void 0:e.equipment.closest("Substation"))===this.substation){const{equipment:t,path:e,terminal:i}=this.connecting;let n=0;for(;n<e.length-2;){const[t,i]=e[n],[o,r]=e[n+1];m.push(q`<line x1="${t}" y1="${i}" x2="${o}" y2="${r}"
-                stroke-linecap="square" stroke="black" />`),n+=1}const[[o,r],[a,d]]=e.slice(-2),s=o===a;let l=this.mouseX+.5,c=this.mouseY+.5,[p,h]=[l,c];const u=Array.from(this.substation.querySelectorAll("ConductingEquipment")).filter((e=>e!==t)).find((t=>{const{pos:[e,i]}=go(t);return e===this.mouseX&&i===this.mouseY})),f=this.nearestOpenTerminal(u);if(u&&f){const{far:t,close:e}=wo(u)[f];[l,c]=t,[p,h]=e}const g=s?a:l,b=s?c:d;m.push(q`<line x1="${o}" y1="${r}" x2="${g}" y2="${b}"
+                stroke-linecap="square" stroke="black" />`),n+=1}const[[o,r],[a,d]]=e.slice(-2),s=o===a;let l=this.mouseX+.5,c=this.mouseY+.5,[p,h]=[l,c];const u=Array.from(this.substation.querySelectorAll("ConductingEquipment")).filter((e=>e!==t)).find((t=>{const{pos:[e,i]}=go(t);return e===this.mouseX&&i===this.mouseY})),f=this.nearestOpenTerminal(u);if(u&&f){const{far:t,close:e}=Eo(u)[f];[l,c]=t,[p,h]=e}const g=s?a:l,b=s?c:d;m.push(q`<line x1="${o}" y1="${r}" x2="${g}" y2="${b}"
                 stroke-linecap="square" stroke="black" />`,q`<line x1="${g}" y1="${b}" x2="${l}" y2="${c}"
                 stroke-linecap="square" stroke="black" />`,q`<line x1="${l}" y1="${c}" x2="${p}" y2="${h}"
                 stroke-linecap="square" stroke="black" />`),m.push(q`<rect width="100%" height="100%" fill="url(#grid)"
-      @click=${()=>{e[e.length-1]=[g,b],e.push([l,c]),e.push([p,h]),Qo(e),this.requestUpdate(),u&&f&&this.dispatchEvent(So({equipment:t,terminal:i,path:e,connectTo:u,toTerminal:f}))}} />`)}const h=this.renderMenu();return U`<section>
+      @click=${()=>{e[e.length-1]=[g,b],e.push([l,c]),e.push([p,h]),Jo(e),this.requestUpdate(),u&&f&&this.dispatchEvent(Ao({equipment:t,terminal:i,path:e,connectTo:u,toTerminal:f}))}} />`)}const h=this.renderMenu();return U`<section>
       <h2>
         ${this.substation.getAttribute("name")}
         <mwc-icon-button
@@ -1374,7 +1374,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             viewBox="0 96 960 960"
             opacity="0.83"
           >
-            ${No}
+            ${To}
           </svg>
         </mwc-icon-button>
       </h2>
@@ -1415,7 +1415,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             opacity: 0.83;
           }
         </style>
-        ${jo}
+        ${Xo}
         <rect width="100%" height="100%" fill="white" />
         ${r}
         ${Array.from(this.substation.children).filter((t=>"VoltageLevel"===t.tagName)).map((t=>q`${this.renderContainer(t)}`))}
@@ -1463,30 +1463,30 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
           >cancel</mwc-button
         >
       </mwc-dialog>
-    </section>`}renderLabel(t){const[e,i]=this.renderedLabelPosition(t),n=t.getAttribute("name"),o="ConductingEquipment"===t.tagName?.45:.6;let r="none",a=j;this.placing||this.resizing||this.connecting||this.placingLabel||(r="all",a=()=>this.dispatchEvent(ko(t)));const d=t.closest("Substation")===this.substation?se(t):j;return q`<g class="label" id="label:${d}">
+    </section>`}renderLabel(t){const[e,i]=this.renderedLabelPosition(t),n=t.getAttribute("name"),o="ConductingEquipment"===t.tagName?.45:.6;let r="none",a=j;this.placing||this.resizing||this.connecting||this.placingLabel||(r="all",a=()=>this.dispatchEvent(Io(t)));const d=t.closest("Substation")===this.substation?se(t):j;return q`<g class="label" id="label:${d}">
         <text x="${e+.1}" y="${i-.2}"
-          @mousedown=${tr}
-          @auxclick=${e=>{1===e.button&&(this.dispatchEvent(Wo(t)),e.preventDefault())}}
+          @mousedown=${er}
+          @auxclick=${e=>{1===e.button&&(this.dispatchEvent(Ko(t)),e.preventDefault())}}
           @click=${a}
           @contextmenu=${e=>this.openMenu(t,e)}
           pointer-events="${r}" fill="#000000" fill-opacity="0.83"
           style="font: ${o}px sans-serif; cursor: default;">
           ${n}
         </text>
-      </g>`}renderContainer(t,e=!1){var i,n;const o="VoltageLevel"===t.tagName;if(this.placing===t&&!e)return q``;const[r,a]=this.renderedPosition(t);let d,{dim:[s,l]}=go(t),c=!1;if(this.resizing===t&&(s=Math.max(1,this.mouseX-r+1),l=Math.max(1,this.mouseY-a+1),this.canResizeTo(t,s,l)?d=()=>{this.dispatchEvent(new CustomEvent("oscd-sld-resize",{bubbles:!0,composed:!0,detail:{w:s,h:l,element:t}}))}:c=!0),this.placing===t){let e;e=o?this.substation:Array.from(this.substation.querySelectorAll(":root > Substation > VoltageLevel")).find((t=>Zo(t,r,a,s,l))),e&&this.canPlaceAt(t,r,a,s,l)?d=()=>{this.dispatchEvent(Eo({x:r,y:a,element:t,parent:e}))}:c=!0}let p=q``,m=q``,h=q``,u=q``;return(this.resizing===t||o&&"Bay"===(null===(i=this.placing)||void 0===i?void 0:i.tagName)||!o&&"ConductingEquipment"===(null===(n=this.placing)||void 0===n?void 0:n.tagName))&&(h=q`<rect x="${r}" y="${a}" width="${s}" height="${l}"
+      </g>`}renderContainer(t,e=!1){var i,n;const o="VoltageLevel"===t.tagName;if(this.placing===t&&!e)return q``;const[r,a]=this.renderedPosition(t);let d,{dim:[s,l]}=go(t),c=!1;if(this.resizing===t&&(s=Math.max(1,this.mouseX-r+1),l=Math.max(1,this.mouseY-a+1),this.canResizeTo(t,s,l)?d=()=>{this.dispatchEvent(new CustomEvent("oscd-sld-resize",{bubbles:!0,composed:!0,detail:{w:s,h:l,element:t}}))}:c=!0),this.placing===t){let e;e=o?this.substation:Array.from(this.substation.querySelectorAll(":root > Substation > VoltageLevel")).find((t=>Qo(t,r,a,s,l))),e&&this.canPlaceAt(t,r,a,s,l)?d=()=>{this.dispatchEvent(So({x:r,y:a,element:t,parent:e}))}:c=!0}let p=q``,m=q``,h=q``,u=q``;return(this.resizing===t||o&&"Bay"===(null===(i=this.placing)||void 0===i?void 0:i.tagName)||!o&&"ConductingEquipment"===(null===(n=this.placing)||void 0===n?void 0:n.tagName))&&(h=q`<rect x="${r}" y="${a}" width="${s}" height="${l}"
         @click=${d||j} fill="url(#grid)" />`),this.resizing&&fo(this.resizing)&&this.resizing.parentElement===t&&(u=q`<rect x="${r}" y="${a}" width="${s}" height="${l}"
         fill="url(#grid)" />`),this.placing||this.resizing||this.connecting||this.placingLabel||(p=q`<svg class="handle" xmlns="${lo}" height="1" width="1"
           fill="black" opacity="0.83" viewBox="0 96 960 960" 
-          @click=${e=>this.dispatchEvent($o(e.shiftKey?er(t,this.nsp):t))}
+          @click=${e=>this.dispatchEvent(ko(e.shiftKey?ir(t,this.nsp):t))}
           x="${r}" y="${a}">
         <rect fill="white" x="0" y="0" width="100%" height="100%" />
-        ${To}
+        ${Lo}
       </svg>`,m=q`<svg class="handle" xmlns="${lo}" height="1" width="1"
           fill="black" opacity="0.83" viewBox="0 96 960 960" 
-          @click=${()=>this.dispatchEvent(Co(t))}
+          @click=${()=>this.dispatchEvent($o(t))}
           x="${s+r-1}" y="${l+a-1}">
         <rect fill="white" x="0" y="0" width="100%" height="100%" />
-        ${No}
+        ${To}
       </svg>`),q`<g id="${t.closest("Substation")===this.substation?se(t):j}" class=${Le({voltagelevel:o,bay:!o,preview:e})} tabindex="0" pointer-events="all" style="outline: none;">
       <rect x="${r}" y="${a}" width="${s}" height="${l}"
         @contextmenu=${e=>this.openMenu(t,e)}
@@ -1494,7 +1494,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
         fill="white" stroke-dasharray="${o?j:"0.18"}"
         stroke="${c?"#BB1326":o?"#F5E214":"#12579B"}" />
       ${p}
-      ${Array.from(t.children).filter(Jo).map((t=>this.renderContainer(t)))}
+      ${Array.from(t.children).filter(tr).map((t=>this.renderContainer(t)))}
       ${Array.from(t.children).filter((t=>"ConductingEquipment"===t.tagName)).map((t=>this.renderEquipment(t)))}
         ${e?Array.from(t.querySelectorAll("ConnectivityNode")).filter((t=>"grounded"!==t.getAttribute("name"))).map((t=>this.renderConnectivityNode(t))):j}
         ${e?Array.from(t.querySelectorAll("Bay, ConductingEquipment")).concat(t).map((t=>this.renderLabel(t))):j}
@@ -1506,17 +1506,17 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     width="1"
     height="1"
   >
-    ${Ho}
-  </svg>`:q`<use href="#${p}" pointer-events="none" />`;let h=e=>{let i=t;e.shiftKey&&(i=er(t,this.nsp)),this.dispatchEvent($o(i))};if(this.placing===t){const e=Array.from(this.substation.querySelectorAll(":root > Substation > VoltageLevel > Bay")).find((t=>Zo(t,o,r,1,1)));e&&this.canPlaceAt(t,o,r,1,1)&&(h=()=>{this.dispatchEvent(Eo({x:o,y:r,element:t,parent:e}))})}const u=Array.from(t.children).filter((t=>"Terminal"===t.tagName)),f=u.find((t=>"T1"===t.getAttribute("name"))),g=u.find((t=>"T1"!==t.getAttribute("name"))),b=f||this.placing||this.resizing||this.connecting?j:q`<circle cx="0.5" cy="0" r="0.2" opacity="0.4"
+    ${Mo}
+  </svg>`:q`<use href="#${p}" pointer-events="none" />`;let h=e=>{let i=t;e.shiftKey&&(i=ir(t,this.nsp)),this.dispatchEvent(ko(i))};if(this.placing===t){const e=Array.from(this.substation.querySelectorAll(":root > Substation > VoltageLevel > Bay")).find((t=>Qo(t,o,r,1,1)));e&&this.canPlaceAt(t,o,r,1,1)&&(h=()=>{this.dispatchEvent(So({x:o,y:r,element:t,parent:e}))})}const u=Array.from(t.children).filter((t=>"Terminal"===t.tagName)),f=u.find((t=>"T1"===t.getAttribute("name"))),g=u.find((t=>"T1"!==t.getAttribute("name"))),b=f||this.placing||this.resizing||this.connecting?j:q`<circle cx="0.5" cy="0" r="0.2" opacity="0.4"
       fill="#BB1326" stroke="#F5E214"
-    @click=${()=>this.dispatchEvent(Io({equipment:t,terminal:"top"}))}
+    @click=${()=>this.dispatchEvent(No({equipment:t,terminal:"top"}))}
     @contextmenu=${e=>{e.preventDefault(),this.groundTerminal(t,"T1")}}
       />`,x=!this.connecting||this.connecting.equipment===t||this.connecting&&this.mouseX===o&&this.mouseY===r&&"top"===this.nearestOpenTerminal(t)||f?j:q`<polygon points="0.3,0 0.7,0 0.5,0.4" 
-                fill="#12579B" opacity="0.4" />`,v="grounded"===(null==f?void 0:f.getAttribute("cNodeName"))?q`<line x1="0.5" y1="-0.1" x2="0.5" y2="0" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`:j,y=g||this.placing||this.resizing||this.connecting||Yo.has(l)?j:q`<circle cx="0.5" cy="1" r="0.2" opacity="0.4"
+                fill="#12579B" opacity="0.4" />`,v="grounded"===(null==f?void 0:f.getAttribute("cNodeName"))?q`<line x1="0.5" y1="-0.1" x2="0.5" y2="0" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`:j,y=g||this.placing||this.resizing||this.connecting||Wo.has(l)?j:q`<circle cx="0.5" cy="1" r="0.2" opacity="0.4"
       fill="#BB1326" stroke="#F5E214"
-    @click=${()=>this.dispatchEvent(Io({equipment:t,terminal:"bottom"}))}
+    @click=${()=>this.dispatchEvent(No({equipment:t,terminal:"bottom"}))}
     @contextmenu=${e=>{e.preventDefault(),this.groundTerminal(t,"T2")}}
-      />`,_=!this.connecting||this.connecting.equipment===t||this.connecting&&this.mouseX===o&&this.mouseY===r&&"bottom"===this.nearestOpenTerminal(t)||g||Yo.has(l)?j:q`<polygon points="0.3,1 0.7,1 0.5,0.6" 
+      />`,_=!this.connecting||this.connecting.equipment===t||this.connecting&&this.mouseX===o&&this.mouseY===r&&"bottom"===this.nearestOpenTerminal(t)||g||Wo.has(l)?j:q`<polygon points="0.3,1 0.7,1 0.5,0.6" 
                 fill="#12579B" opacity="0.4" />`,w="grounded"===(null==g?void 0:g.getAttribute("cNodeName"))?q`<line x1="0.5" y1="1.1" x2="0.5" y2="1" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`:j;return q`<g class="${Le({equipment:!0,preview:this.placing===t})}"
     id="${t.closest("Substation")===this.substation?se(t):j}"
     transform="translate(${o} ${r}) rotate(${s})${a?" scale(-1,1)":""}" transform-origin="0.5 0.5">
@@ -1525,9 +1525,9 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
       ${c?q`<use transform="rotate(${-s} 0.5 0.5)" href="#${p}"
         pointer-events="none" />`:j}
       <rect width="1" height="1" fill="none" pointer-events="${i?"none":"all"}"
-        @mousedown=${tr}
+        @mousedown=${er}
         @click=${h}
-        @auxclick=${e=>{1===e.button&&(this.dispatchEvent(Ao(t)),e.preventDefault())}}
+        @auxclick=${e=>{1===e.button&&(this.dispatchEvent(Co(t)),e.preventDefault())}}
         @contextmenu=${e=>this.openMenu(t,e)}
       />
       ${b}
@@ -1539,31 +1539,31 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     </g>
     <g class="preview">${e?this.renderLabel(t):j}</g>`}renderBusBar(t){const[e,i]=this.renderedPosition(t),{dim:[n,o]}=go(t);let r=q``;return this.placing===t&&(r=q`<rect x="${e}" y="${i}" width="1" height="1"
           pointer-events="all" fill="none" 
-          @click=${()=>{const r=Array.from(this.substation.querySelectorAll(":root > Substation > VoltageLevel")).find((t=>Zo(t,e,i,n,o)));r&&this.dispatchEvent(Eo({x:e,y:i,element:t,parent:r}))}}
+          @click=${()=>{const r=Array.from(this.substation.querySelectorAll(":root > Substation > VoltageLevel")).find((t=>Qo(t,e,i,n,o)));r&&this.dispatchEvent(So({x:e,y:i,element:t,parent:r}))}}
         />`),q`<g class="bus" id="${t.closest("Substation")===this.substation?se(t):j}">
       <title>${t.getAttribute("name")}</title>
       ${this.renderConnectivityNode(t.querySelector("ConnectivityNode"))}
       ${r}
-    </g>`}renderConnectivityNode(t){const e=t.querySelector(`Private[type="${ao}"]`);if(!e)return j;const i=[],n=Object.entries(Array.from(e.querySelectorAll("Vertex")).map((t=>this.renderedPosition(t))).reduce(((t,e)=>{const i=t,n=JSON.stringify(e);return i[n]?i[n].count+=1:i[n]={val:e,count:1},i}),{})).filter((([t,{count:e}])=>e>2)).map((([t,{val:e}])=>e));n.forEach((([t,e])=>i.push(q`<circle fill="black" cx="${t}" cy="${e}" r="0.15" />`)));const o=[],r=Array.from(e.getElementsByTagNameNS(so,"Section")),a=t.closest("Bay");r.forEach((e=>{const n=uo(e.getAttribute("bus")),d=Array.from(e.getElementsByTagNameNS(so,"Vertex")).map((t=>this.renderedPosition(t)));let s=0;for(;s<d.length-1;){const[l,c]=d[s];let[p,m]=d[s+1],h=j,u=j,f=j;if(n&&a&&(h=()=>this.dispatchEvent($o(a)),u=({button:t})=>{1===t&&this.dispatchEvent(Co(a))},f=t=>this.openMenu(a,t)),n&&this.resizing===a){if(e!==r.find((t=>uo(t.getAttribute("bus")))))return;i.length=0;const{pos:[t,n],dim:[u,f]}=go(a.parentElement),g=t+u-.5,b=n+f-.5;if(0===s){Math.max(this.mouseX-l,0)>Math.max(this.mouseY-c,0)?(p=Math.max(l,Math.min(g,this.mouseX+.5)),m=c):(m=Math.max(c,Math.min(b,this.mouseY+.5)),p=l),l===p&&c===m&&(p>=g?m+=1:p+=1)}h=()=>{this.dispatchEvent(Eo({parent:e,element:e.getElementsByTagNameNS(so,"Vertex")[d.length-1],x:p,y:m}))},o.push(q`<rect x="${this.mouseX}" y="${this.mouseY}"
+    </g>`}renderConnectivityNode(t){const e=t.querySelector(`Private[type="${ao}"]`);if(!e)return j;const i=[],n=Object.entries(Array.from(e.querySelectorAll("Vertex")).map((t=>this.renderedPosition(t))).reduce(((t,e)=>{const i=t,n=JSON.stringify(e);return i[n]?i[n].count+=1:i[n]={val:e,count:1},i}),{})).filter((([t,{count:e}])=>e>2)).map((([t,{val:e}])=>e));n.forEach((([t,e])=>i.push(q`<circle fill="black" cx="${t}" cy="${e}" r="0.15" />`)));const o=[],r=Array.from(e.getElementsByTagNameNS(so,"Section")),a=t.closest("Bay");r.forEach((e=>{const n=uo(e.getAttribute("bus")),d=Array.from(e.getElementsByTagNameNS(so,"Vertex")).map((t=>this.renderedPosition(t)));let s=0;for(;s<d.length-1;){const[l,c]=d[s];let[p,m]=d[s+1],h=j,u=j,f=j;if(n&&a&&(h=()=>this.dispatchEvent(ko(a)),u=({button:t})=>{1===t&&this.dispatchEvent($o(a))},f=t=>this.openMenu(a,t)),n&&this.resizing===a){if(e!==r.find((t=>uo(t.getAttribute("bus")))))return;i.length=0;const{pos:[t,n],dim:[u,f]}=go(a.parentElement),g=t+u-.5,b=n+f-.5;if(0===s){Math.max(this.mouseX-l,0)>Math.max(this.mouseY-c,0)?(p=Math.max(l,Math.min(g,this.mouseX+.5)),m=c):(m=Math.max(c,Math.min(b,this.mouseY+.5)),p=l),l===p&&c===m&&(p>=g?m+=1:p+=1)}h=()=>{this.dispatchEvent(So({parent:e,element:e.getElementsByTagNameNS(so,"Vertex")[d.length-1],x:p,y:m}))},o.push(q`<rect x="${this.mouseX}" y="${this.mouseY}"
               width="1" height="1" fill="none" pointer-events="all"
-              @click=${h} />`)}this.connecting&&(h=()=>{const{equipment:e,path:i,terminal:n}=this.connecting;if(e.querySelector(`Terminal[connectivityNode="${t.getAttribute("pathName")}"]`))return;const[[o,r],[a,d]]=i.slice(-2),s=o===a,l=this.mouseX+.5,c=this.mouseY+.5,p=s?a:l,m=s?c:d;i[i.length-1]=[p,m],i.push([l,c]),Qo(i),this.dispatchEvent(So({equipment:e,terminal:n,path:i,connectTo:t}))}),o.push(q`<line x1="${l}" y1="${c}" x2="${p}" y2="${m}"
+              @click=${h} />`)}this.connecting&&(h=()=>{const{equipment:e,path:i,terminal:n}=this.connecting;if(e.querySelector(`Terminal[connectivityNode="${t.getAttribute("pathName")}"]`))return;const[[o,r],[a,d]]=i.slice(-2),s=o===a,l=this.mouseX+.5,c=this.mouseY+.5,p=s?a:l,m=s?c:d;i[i.length-1]=[p,m],i.push([l,c]),Jo(i),this.dispatchEvent(Ao({equipment:e,terminal:n,path:i,connectTo:t}))}),o.push(q`<line x1="${l}" y1="${c}" x2="${p}" y2="${m}"
                 stroke-width="${n?.12:j}" stroke="black" 
                 stroke-linecap="${n?"round":"square"}" />`),o.push(q`<line x1="${l}" y1="${c}" x2="${p}" y2="${m}"
                 @click=${h} @auxclick=${u}
-                @contextmenu=${f} @mousedown=${tr}
+                @contextmenu=${f} @mousedown=${er}
                 pointer-events="all" stroke-width="${this.connecting?.99:.7}" />`),this.connecting&&![l,c].find((t=>Number.isInteger(t)))&&o.push(q`<rect x="${l-.495}" y="${c-.495}"
                   width="0.99" height="0.99"
                   @click=${h} @auxclick=${u}
-                  @contextmenu=${f} @mousedown=${tr}
+                  @contextmenu=${f} @mousedown=${er}
                   pointer-events="all" fill="none" />`),this.connecting&&![p,m].find((t=>Number.isInteger(t)))&&o.push(q`<rect x="${p-.495}" y="${m-.495}"
                   width="0.99" height="0.99"
                   @click=${h} @auxclick=${u}
-                  @contextmenu=${f} @mousedown=${tr}
+                  @contextmenu=${f} @mousedown=${er}
                   pointer-events="all" fill="none" />`),s+=1}}));const d=t.closest("Substation")===this.substation?se(t):j;return q`<g class="node" id="${d}" >
         <title>${t.getAttribute("pathName")}</title>
         ${i}
         ${o}
-      </g>`}};function nr(t,e,[i,n],o){const r=t.parentElement,a=[],d=Array.from(t.getElementsByTagNameNS(so,"Vertex")),s=d.find((t=>t.getAttributeNS(so,"x")===i.toString()&&t.getAttributeNS(so,"y")===n.toString()));if(s===d[0]||s===d[d.length-1])return[];const l=t.cloneNode(!0);Array.from(l.getElementsByTagNameNS(so,"Vertex")).slice(0,e+1).forEach((t=>t.remove()));const c=d[e].cloneNode();if(c.setAttributeNS(so,`${o}:x`,i.toString()),c.setAttributeNS(so,`${o}:y`,n.toString()),c.removeAttributeNS(so,"uuid"),l.prepend(c),a.push({node:l,parent:r,reference:t.nextElementSibling}),d.slice(e+1).forEach((t=>a.push({node:t}))),!s){const e=c.cloneNode();a.push({node:e,parent:t,reference:null})}return a}ir.styles=c`
+      </g>`}};function or(t,e,[i,n],o){const r=t.parentElement,a=[],d=Array.from(t.getElementsByTagNameNS(so,"Vertex")),s=d.find((t=>t.getAttributeNS(so,"x")===i.toString()&&t.getAttributeNS(so,"y")===n.toString()));if(s===d[0]||s===d[d.length-1])return[];const l=t.cloneNode(!0);Array.from(l.getElementsByTagNameNS(so,"Vertex")).slice(0,e+1).forEach((t=>t.remove()));const c=d[e].cloneNode();if(c.setAttributeNS(so,`${o}:x`,i.toString()),c.setAttributeNS(so,`${o}:y`,n.toString()),c.removeAttributeNS(so,"uuid"),l.prepend(c),a.push({node:l,parent:r,reference:t.nextElementSibling}),d.slice(e+1).forEach((t=>a.push({node:t}))),!s){const e=c.cloneNode();a.push({node:e,parent:t,reference:null})}return a}nr.styles=c`
     h2 {
       font-family: Roboto;
       font-weight: 300;
@@ -1596,7 +1596,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     * {
       user-select: none;
     }
-  `,n([ft()],ir.prototype,"doc",void 0),n([ft()],ir.prototype,"substation",void 0),n([ft()],ir.prototype,"editCount",void 0),n([ft()],ir.prototype,"gridSize",void 0),n([ft()],ir.prototype,"nsp",void 0),n([ft()],ir.prototype,"resizing",void 0),n([ft()],ir.prototype,"placing",void 0),n([ft()],ir.prototype,"placingLabel",void 0),n([ft()],ir.prototype,"connecting",void 0),n([vt("#resizeSubstationUI")],ir.prototype,"resizeSubstationUI",void 0),n([vt("#substationWidthUI")],ir.prototype,"substationWidthUI",void 0),n([vt("#substationHeightUI")],ir.prototype,"substationHeightUI",void 0),n([vt("svg#sld")],ir.prototype,"sld",void 0),n([gt()],ir.prototype,"mouseX",void 0),n([gt()],ir.prototype,"mouseY",void 0),n([gt()],ir.prototype,"mouseX2",void 0),n([gt()],ir.prototype,"mouseY2",void 0),n([gt()],ir.prototype,"menu",void 0),ir=n([mt("sld-editor")],ir);class or extends ct{constructor(){super(...arguments),this._editCount=-1,this.gridSize=32,this.nsp="esld",this.templateElements={},this.handleKeydown=({key:t})=>{"Escape"===t&&this.reset()}}get editCount(){return this._editCount}set editCount(t){var e,i;this.connecting=void 0,(null===(e=this.resizing)||void 0===e?void 0:e.parentElement)||(this.resizing=void 0),(null===(i=this.placingLabel)||void 0===i?void 0:i.parentElement)||(this.placingLabel=void 0),this._editCount=t}zoomIn(t=4){this.gridSize+=t}zoomOut(t=4){this.gridSize-=t,this.gridSize<4&&(this.gridSize=4)}startResizing(t){this.reset(),this.resizing=t}startPlacing(t){this.reset(),this.placing=t}startPlacingLabel(t){this.reset(),this.placingLabel=t}startConnecting({equipment:t,terminal:e}){this.reset();const{close:i,far:n}=wo(t)[e];t&&(this.connecting={equipment:t,path:[i,n],terminal:e})}reset(){this.resizing=void 0,this.placing=void 0,this.placingLabel=void 0,this.connecting=void 0}connectedCallback(){super.connectedCallback(),window.addEventListener("keydown",this.handleKeydown)}disconnectedCallback(){super.disconnectedCallback(),window.removeEventListener("keydown",this.handleKeydown)}updated(t){if(!t.has("doc"))return;const e=this.doc.documentElement.lookupPrefix(so);e?this.nsp=e:(this.doc.documentElement.setAttributeNS("http://www.w3.org/2000/xmlns/","xmlns:esld",so),this.nsp="esld"),["Substation","VoltageLevel","Bay","ConductingEquipment"].forEach((t=>{this.templateElements[t]=this.doc.createElementNS(this.doc.documentElement.namespaceURI,t)})),this.templateElements.BusBar=function(t,e){const i=t.createElementNS(t.documentElement.namespaceURI,"Bay");i.setAttribute("name","BB1"),i.setAttributeNS(so,`${e}:w`,"2");const n=t.createElementNS(t.documentElement.namespaceURI,"ConnectivityNode");n.setAttribute("name","L");const o=t.createElementNS(t.documentElement.namespaceURI,"Private");o.setAttribute("type",ao);const r=t.createElementNS(so,`${e}:Section`);r.setAttribute("bus","true");const a=t.createElementNS(so,`${e}:Vertex`);a.setAttributeNS(so,`${e}:x`,"0.5"),a.setAttributeNS(so,`${e}:y`,"0.5"),r.appendChild(a);const d=t.createElementNS(so,`${e}:Vertex`);return d.setAttributeNS(so,`${e}:x`,"1.5"),d.setAttributeNS(so,`${e}:y`,"0.5"),r.appendChild(d),o.appendChild(r),n.appendChild(o),i.appendChild(n),i}(this.doc,this.nsp)}rotateElement(t){const{rot:e}=go(t),i=[{element:t,attributes:{[`${this.nsp}:rot`]:{namespaceURI:so,value:((e+1)%4).toString()}}}];"ConductingEquipment"===t.tagName&&Array.from(t.getElementsByTagName("Terminal")).filter((t=>"grounded"!==t.getAttribute("cNodeName"))).forEach((t=>i.push(..._o(t)))),this.dispatchEvent(St(i))}placeLabel(t,e,i){this.dispatchEvent(St({element:t,attributes:{lx:{namespaceURI:so,value:e.toString()},ly:{namespaceURI:so,value:i.toString()}}})),this.reset()}placeElement(t,e,i,n){const o=[];t.parentElement!==e&&o.push(...yo(t,e));const{pos:[r,a],label:[d,s],rot:l}=go(t),c=i-r,p=n-a;if("Vertex"!==t.localName){let e=d,r=s;"ConductingEquipment"!==t.tagName||t.hasAttributeNS(so,"lx")||l%2!=0||(e+=1,r+=1),o.push({element:t,attributes:{x:{namespaceURI:so,value:i.toString()},y:{namespaceURI:so,value:n.toString()},lx:{namespaceURI:so,value:(e+c).toString()},ly:{namespaceURI:so,value:(r+p).toString()}}})}if(Array.from(t.querySelectorAll("Bay, ConductingEquipment, Vertex")).forEach((t=>{const{pos:[e,i],label:[n,r]}=go(t),a={x:{namespaceURI:so,value:(e+c).toString()},y:{namespaceURI:so,value:(i+p).toString()}};"Vertex"!==t.localName&&(a.lx={namespaceURI:so,value:(n+c).toString()},a.ly={namespaceURI:so,value:(r+p).toString()}),o.push({element:t,attributes:a})})),"ConductingEquipment"===t.tagName?Array.from(t.getElementsByTagName("Terminal")).filter((t=>"grounded"!==t.getAttribute("cNodeName"))).forEach((t=>o.push(..._o(t)))):t.getRootNode()===this.doc&&(Array.from(t.getElementsByTagName("ConnectivityNode")).forEach((e=>{Array.from(this.doc.querySelectorAll(`Terminal[connectivityNode="${e.getAttribute("pathName")}"]`)).find((e=>e.closest(t.tagName)!==t))&&o.push(...bo(e))})),Array.from(t.getElementsByTagName("Terminal")).forEach((e=>{const i=this.doc.querySelector(`ConnectivityNode[pathName="${e.getAttribute("connectivityNode")}"]`);i&&i.closest(t.tagName)!==t&&o.push(...bo(i))}))),"Vertex"===t.localName){const e=t.closest("Bay"),r=Array.from(e.querySelectorAll("Section[bus]")),a=r[0],d=a.querySelector("Vertex"),s=r[r.length-1].querySelector("Vertex:last-of-type"),{pos:[l,c]}=go(d),p=i-l+1,m=n-c+1;fo(e)&&(o.push(...bo(a.closest("ConnectivityNode"))),o.push({element:s,attributes:{x:{namespaceURI:so,value:i.toString()},y:{namespaceURI:so,value:n.toString()}}}),o.push({element:e,attributes:{w:{namespaceURI:so,value:p.toString()},h:{namespaceURI:so,value:m.toString()}}}))}this.dispatchEvent(St(o)),!["Bay","VoltageLevel"].includes(t.tagName)||t.hasAttributeNS(so,"w")&&t.hasAttributeNS(so,"h")?this.reset():this.startResizing(t)}connectEquipment({equipment:t,terminal:e,connectTo:i,toTerminal:n,path:o}){var r,a;const d=[];let s,l,c,p;if("ConnectivityNode"!==i.tagName){s=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"ConnectivityNode"),s.setAttribute("name","L1");const e=t.closest("Bay");d.push(...yo(s,e)),l=d.find((t=>"attributes"in t&&"pathName"in t.attributes)).attributes.pathName,c=null!==(a=null===(r=d.find((t=>"attributes"in t&&"name"in t.attributes)))||void 0===r?void 0:r.attributes.name)&&void 0!==a?a:s.getAttribute("name"),p=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"Private"),p.setAttribute("type",ao),d.push({parent:s,node:p,reference:te(s,"Private")})}else s=i,l=s.getAttribute("pathName"),c=s.getAttribute("name"),p=s.querySelector(`Private[type="${ao}"]`);const m=this.doc.createElementNS(so,`${this.nsp}:Section`);d.push({parent:p,node:m,reference:null});const h=ho(),u=ho();if(o.forEach((([t,e],n)=>{const r=this.doc.createElementNS(so,`${this.nsp}:Vertex`);r.setAttributeNS(so,`${this.nsp}:x`,t.toString()),r.setAttributeNS(so,`${this.nsp}:y`,e.toString()),0===n?r.setAttributeNS(so,`${this.nsp}:uuid`,h):n===o.length-1&&"ConnectivityNode"!==i.tagName&&r.setAttributeNS(so,`${this.nsp}:uuid`,u),d.push({parent:m,node:r,reference:null})})),"ConnectivityNode"===i.tagName){const[t,e]=o[o.length-1];Array.from(p.getElementsByTagNameNS(so,"Section")).find((i=>{const n=Array.from(i.getElementsByTagNameNS(so,"Vertex")).map((t=>go(t).pos));for(let o=0;o<n.length-1;o+=1){const[r,a]=n[o],[s,l]=n[o+1];if(a===e&&e===l&&(r<t&&t<s||s<t&&t<r)||r===t&&t===s&&(a<e&&e<l||l<e&&e<a)||a===e&&r===t)return d.push(nr(i,o,[t,e],this.nsp)),!0}return!1}))}const[f,g,b]=l.split("/",3),x=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"Terminal");x.setAttributeNS(so,`${this.nsp}:uuid`,h);const v="top"===e?"T1":"T2";if(x.setAttribute("name",v),x.setAttribute("connectivityNode",l),x.setAttribute("substationName",f),x.setAttribute("voltageLevelName",g),x.setAttribute("bayName",b),x.setAttribute("cNodeName",c),d.push({node:x,parent:t,reference:te(t,"Terminal")}),"ConductingEquipment"===i.tagName){const t=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"Terminal");t.setAttributeNS(so,`${this.nsp}:uuid`,u);const e="top"===n?"T1":"T2";t.setAttribute("name",e),t.setAttribute("connectivityNode",l),t.setAttribute("substationName",f),t.setAttribute("voltageLevelName",g),t.setAttribute("bayName",b),t.setAttribute("cNodeName",c),d.push({node:t,parent:i,reference:te(i,"Terminal")})}this.reset(),this.dispatchEvent(St(d))}render(){return this.doc?U`<main>
+  `,n([ft()],nr.prototype,"doc",void 0),n([ft()],nr.prototype,"substation",void 0),n([ft()],nr.prototype,"editCount",void 0),n([ft()],nr.prototype,"gridSize",void 0),n([ft()],nr.prototype,"nsp",void 0),n([ft()],nr.prototype,"resizing",void 0),n([ft()],nr.prototype,"placing",void 0),n([ft()],nr.prototype,"placingLabel",void 0),n([ft()],nr.prototype,"connecting",void 0),n([vt("#resizeSubstationUI")],nr.prototype,"resizeSubstationUI",void 0),n([vt("#substationWidthUI")],nr.prototype,"substationWidthUI",void 0),n([vt("#substationHeightUI")],nr.prototype,"substationHeightUI",void 0),n([vt("svg#sld")],nr.prototype,"sld",void 0),n([gt()],nr.prototype,"mouseX",void 0),n([gt()],nr.prototype,"mouseY",void 0),n([gt()],nr.prototype,"mouseX2",void 0),n([gt()],nr.prototype,"mouseY2",void 0),n([gt()],nr.prototype,"menu",void 0),nr=n([mt("sld-editor")],nr);class rr extends ct{constructor(){super(...arguments),this._editCount=-1,this.gridSize=32,this.nsp="esld",this.templateElements={},this.handleKeydown=({key:t})=>{"Escape"===t&&this.reset()}}get editCount(){return this._editCount}set editCount(t){var e,i;this.connecting=void 0,(null===(e=this.resizing)||void 0===e?void 0:e.parentElement)||(this.resizing=void 0),(null===(i=this.placingLabel)||void 0===i?void 0:i.parentElement)||(this.placingLabel=void 0),this._editCount=t}zoomIn(t=4){this.gridSize+=t}zoomOut(t=4){this.gridSize-=t,this.gridSize<4&&(this.gridSize=4)}startResizing(t){this.reset(),this.resizing=t}startPlacing(t){this.reset(),this.placing=t}startPlacingLabel(t){this.reset(),this.placingLabel=t}startConnecting({equipment:t,terminal:e}){this.reset();const{close:i,far:n}=Eo(t)[e];t&&(this.connecting={equipment:t,path:[i,n],terminal:e})}reset(){this.resizing=void 0,this.placing=void 0,this.placingLabel=void 0,this.connecting=void 0}connectedCallback(){super.connectedCallback(),window.addEventListener("keydown",this.handleKeydown)}disconnectedCallback(){super.disconnectedCallback(),window.removeEventListener("keydown",this.handleKeydown)}updated(t){if(!t.has("doc"))return;const e=this.doc.documentElement.lookupPrefix(so);e?this.nsp=e:(this.doc.documentElement.setAttributeNS("http://www.w3.org/2000/xmlns/","xmlns:esld",so),this.nsp="esld"),["Substation","VoltageLevel","Bay","ConductingEquipment"].forEach((t=>{this.templateElements[t]=this.doc.createElementNS(this.doc.documentElement.namespaceURI,t)})),this.templateElements.BusBar=function(t,e){const i=t.createElementNS(t.documentElement.namespaceURI,"Bay");i.setAttribute("name","BB1"),i.setAttributeNS(so,`${e}:w`,"2");const n=t.createElementNS(t.documentElement.namespaceURI,"ConnectivityNode");n.setAttribute("name","L");const o=t.createElementNS(t.documentElement.namespaceURI,"Private");o.setAttribute("type",ao);const r=t.createElementNS(so,`${e}:Section`);r.setAttribute("bus","true");const a=t.createElementNS(so,`${e}:Vertex`);a.setAttributeNS(so,`${e}:x`,"0.5"),a.setAttributeNS(so,`${e}:y`,"0.5"),r.appendChild(a);const d=t.createElementNS(so,`${e}:Vertex`);return d.setAttributeNS(so,`${e}:x`,"1.5"),d.setAttributeNS(so,`${e}:y`,"0.5"),r.appendChild(d),o.appendChild(r),n.appendChild(o),i.appendChild(n),i}(this.doc,this.nsp)}rotateElement(t){const{rot:e}=go(t),i=[{element:t,attributes:{[`${this.nsp}:rot`]:{namespaceURI:so,value:((e+1)%4).toString()}}}];"ConductingEquipment"===t.tagName&&Array.from(t.getElementsByTagName("Terminal")).filter((t=>"grounded"!==t.getAttribute("cNodeName"))).forEach((t=>i.push(...wo(t)))),this.dispatchEvent(St(i))}placeLabel(t,e,i){this.dispatchEvent(St({element:t,attributes:{lx:{namespaceURI:so,value:e.toString()},ly:{namespaceURI:so,value:i.toString()}}})),this.reset()}placeElement(t,e,i,n){const o=[];t.parentElement!==e&&o.push(..._o(t,e));const{pos:[r,a],label:[d,s],rot:l}=go(t),c=i-r,p=n-a;if("Vertex"!==t.localName){let e=d,r=s;"ConductingEquipment"!==t.tagName||t.hasAttributeNS(so,"lx")||l%2!=0||(e+=1,r+=1),o.push({element:t,attributes:{x:{namespaceURI:so,value:i.toString()},y:{namespaceURI:so,value:n.toString()},lx:{namespaceURI:so,value:(e+c).toString()},ly:{namespaceURI:so,value:(r+p).toString()}}})}if(Array.from(t.querySelectorAll("Bay, ConductingEquipment, Vertex")).forEach((t=>{const{pos:[e,i],label:[n,r]}=go(t),a={x:{namespaceURI:so,value:(e+c).toString()},y:{namespaceURI:so,value:(i+p).toString()}};"Vertex"!==t.localName&&(a.lx={namespaceURI:so,value:(n+c).toString()},a.ly={namespaceURI:so,value:(r+p).toString()}),o.push({element:t,attributes:a})})),"ConductingEquipment"===t.tagName){Array.from(t.getElementsByTagName("Terminal")).filter((t=>"grounded"!==t.getAttribute("cNodeName"))).forEach((t=>o.push(...wo(t))));const i=Array.from(t.getElementsByTagName("Terminal")).filter((t=>"grounded"===t.getAttribute("cNodeName")));if(i.length>0){let t=e.querySelector('ConnectivityNode[name="grounded"]');t||(t=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"ConnectivityNode"),t.setAttribute("name","grounded"),t.setAttribute("pathName",bo(e,"grounded")),o.push({node:t,parent:e,reference:te(e,"ConnectivityNode")}));const n=e.closest("Bay").getAttribute("name"),r=e.closest("VoltageLevel").getAttribute("name"),a=e.closest("Substation").getAttribute("name"),d=t.getAttribute("pathName");i.forEach((t=>{o.push({element:t,attributes:{connectivityNode:d,bayName:n,voltageLevelName:r,substationName:a}})}))}}else t.getRootNode()===this.doc&&(Array.from(t.getElementsByTagName("ConnectivityNode")).forEach((e=>{Array.from(this.doc.querySelectorAll(`Terminal[connectivityNode="${e.getAttribute("pathName")}"]`)).find((e=>e.closest(t.tagName)!==t))&&o.push(...xo(e))})),Array.from(t.getElementsByTagName("Terminal")).forEach((e=>{const i=this.doc.querySelector(`ConnectivityNode[pathName="${e.getAttribute("connectivityNode")}"]`);i&&i.closest(t.tagName)!==t&&o.push(...xo(i))})));if("Vertex"===t.localName){const e=t.closest("Bay"),r=Array.from(e.querySelectorAll("Section[bus]")),a=r[0],d=a.querySelector("Vertex"),s=r[r.length-1].querySelector("Vertex:last-of-type"),{pos:[l,c]}=go(d),p=i-l+1,m=n-c+1;fo(e)&&(o.push(...xo(a.closest("ConnectivityNode"))),o.push({element:s,attributes:{x:{namespaceURI:so,value:i.toString()},y:{namespaceURI:so,value:n.toString()}}}),o.push({element:e,attributes:{w:{namespaceURI:so,value:p.toString()},h:{namespaceURI:so,value:m.toString()}}}))}this.dispatchEvent(St(o)),!["Bay","VoltageLevel"].includes(t.tagName)||t.hasAttributeNS(so,"w")&&t.hasAttributeNS(so,"h")?this.reset():this.startResizing(t)}connectEquipment({equipment:t,terminal:e,connectTo:i,toTerminal:n,path:o}){var r,a;const d=[];let s,l,c,p;if("ConnectivityNode"!==i.tagName){s=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"ConnectivityNode"),s.setAttribute("name","L1");const e=t.closest("Bay");d.push(..._o(s,e)),l=d.find((t=>"attributes"in t&&"pathName"in t.attributes)).attributes.pathName,c=null!==(a=null===(r=d.find((t=>"attributes"in t&&"name"in t.attributes)))||void 0===r?void 0:r.attributes.name)&&void 0!==a?a:s.getAttribute("name"),p=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"Private"),p.setAttribute("type",ao),d.push({parent:s,node:p,reference:te(s,"Private")})}else s=i,l=s.getAttribute("pathName"),c=s.getAttribute("name"),p=s.querySelector(`Private[type="${ao}"]`);const m=this.doc.createElementNS(so,`${this.nsp}:Section`);d.push({parent:p,node:m,reference:null});const h=ho(),u=ho();if(o.forEach((([t,e],n)=>{const r=this.doc.createElementNS(so,`${this.nsp}:Vertex`);r.setAttributeNS(so,`${this.nsp}:x`,t.toString()),r.setAttributeNS(so,`${this.nsp}:y`,e.toString()),0===n?r.setAttributeNS(so,`${this.nsp}:uuid`,h):n===o.length-1&&"ConnectivityNode"!==i.tagName&&r.setAttributeNS(so,`${this.nsp}:uuid`,u),d.push({parent:m,node:r,reference:null})})),"ConnectivityNode"===i.tagName){const[t,e]=o[o.length-1];Array.from(p.getElementsByTagNameNS(so,"Section")).find((i=>{const n=Array.from(i.getElementsByTagNameNS(so,"Vertex")).map((t=>go(t).pos));for(let o=0;o<n.length-1;o+=1){const[r,a]=n[o],[s,l]=n[o+1];if(a===e&&e===l&&(r<t&&t<s||s<t&&t<r)||r===t&&t===s&&(a<e&&e<l||l<e&&e<a)||a===e&&r===t)return d.push(or(i,o,[t,e],this.nsp)),!0}return!1}))}const[f,g,b]=l.split("/",3),x=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"Terminal");x.setAttributeNS(so,`${this.nsp}:uuid`,h);const v="top"===e?"T1":"T2";if(x.setAttribute("name",v),x.setAttribute("connectivityNode",l),x.setAttribute("substationName",f),x.setAttribute("voltageLevelName",g),x.setAttribute("bayName",b),x.setAttribute("cNodeName",c),d.push({node:x,parent:t,reference:te(t,"Terminal")}),"ConductingEquipment"===i.tagName){const t=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"Terminal");t.setAttributeNS(so,`${this.nsp}:uuid`,u);const e="top"===n?"T1":"T2";t.setAttribute("name",e),t.setAttribute("connectivityNode",l),t.setAttribute("substationName",f),t.setAttribute("voltageLevelName",g),t.setAttribute("bayName",b),t.setAttribute("cNodeName",c),d.push({node:t,parent:i,reference:te(i,"Terminal")})}this.reset(),this.dispatchEvent(St(d))}render(){return this.doc?U`<main>
       ${Array.from(this.doc.querySelectorAll(":root > Substation")).map((t=>U`<sld-editor
             .doc=${this.doc}
             .editCount=${this.editCount}
@@ -1629,8 +1629,8 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     height="24"
     slot="icon"
   >
-    ${Bo(e)}
-    ${mo.has(e)?Ho:j}
+    ${Vo(e)}
+    ${mo.has(e)?Mo:j}
   </svg>`}</mwc-fab
                 >`;var e})).concat():j}${this.doc.querySelector(":root > Substation > VoltageLevel")?U`<mwc-fab
                 mini
@@ -1646,14 +1646,14 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
                 @click=${()=>{const t=this.templateElements.Bay.cloneNode();this.startPlacing(t)}}
                 style="--mdc-theme-secondary: #12579B;"
               >
-                ${Fo}
+                ${zo}
               </mwc-fab>`:j}${Array.from(this.doc.documentElement.children).find((t=>"Substation"===t.tagName))?U`<mwc-fab
               mini
               label="Add VoltageLevel"
               @click=${()=>{const t=this.templateElements.VoltageLevel.cloneNode();this.startPlacing(t)}}
               style="--mdc-theme-secondary: #F5E214; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83);"
             >
-              ${Do}
+              ${Oo}
             </mwc-fab>`:j}<mwc-fab
           mini
           icon="margin"
@@ -1681,7 +1681,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             >
             </mwc-icon-button>`:j}
       </nav>
-    </main>`:U`<p>Please open an SCL document</p>`}insertSubstation(){const t=this.doc.documentElement,e=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"Substation"),i=te(t,"Substation");let n=1;for(;this.doc.querySelector(`:root > Substation[name="S${n}"]`);)n+=1;e.setAttribute("name",`S${n}`),e.setAttributeNS(so,`${this.nsp}:w`,"50"),e.setAttributeNS(so,`${this.nsp}:h`,"25"),this.dispatchEvent(St({parent:t,node:e,reference:i}))}}or.styles=c`
+    </main>`:U`<p>Please open an SCL document</p>`}insertSubstation(){const t=this.doc.documentElement,e=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"Substation"),i=te(t,"Substation");let n=1;for(;this.doc.querySelector(`:root > Substation[name="S${n}"]`);)n+=1;e.setAttribute("name",`S${n}`),e.setAttributeNS(so,`${this.nsp}:w`,"50"),e.setAttributeNS(so,`${this.nsp}:h`,"25"),this.dispatchEvent(St({parent:t,node:e,reference:i}))}}rr.styles=c`
     main {
       padding: 16px;
     }
@@ -1698,5 +1698,5 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
       background: #fffd;
       border-radius: 24px;
     }
-  `,n([ft()],or.prototype,"doc",void 0),n([ft()],or.prototype,"editCount",null),n([gt()],or.prototype,"_editCount",void 0),n([gt()],or.prototype,"gridSize",void 0),n([gt()],or.prototype,"nsp",void 0),n([gt()],or.prototype,"templateElements",void 0),n([gt()],or.prototype,"resizing",void 0),n([gt()],or.prototype,"placing",void 0),n([gt()],or.prototype,"placingLabel",void 0),n([gt()],or.prototype,"connecting",void 0);export{or as default};
+  `,n([ft()],rr.prototype,"doc",void 0),n([ft()],rr.prototype,"editCount",null),n([gt()],rr.prototype,"_editCount",void 0),n([gt()],rr.prototype,"gridSize",void 0),n([gt()],rr.prototype,"nsp",void 0),n([gt()],rr.prototype,"templateElements",void 0),n([gt()],rr.prototype,"resizing",void 0),n([gt()],rr.prototype,"placing",void 0),n([gt()],rr.prototype,"placingLabel",void 0),n([gt()],rr.prototype,"connecting",void 0);export{rr as default};
 //# sourceMappingURL=oscd-designer.js.map
