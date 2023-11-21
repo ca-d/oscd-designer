@@ -105,6 +105,8 @@ function copy(element, nsp) {
     });
     Array.from(clone.querySelectorAll('Terminal')).forEach(terminal => {
         const oldUUID = terminal.getAttributeNS(sldNs, 'uuid');
+        if (!oldUUID)
+            return;
         const newUUID = uuid();
         Array.from(clone.querySelectorAll(`Vertex[*|uuid="${oldUUID}"`)).forEach(vertex => vertex.setAttributeNS(sldNs, `${nsp}:uuid`, newUUID));
         terminal.setAttributeNS(sldNs, `${nsp}:uuid`, newUUID);
@@ -352,6 +354,13 @@ let SLDEditor = class SLDEditor extends LitElement {
             },
             {
                 content: html `<mwc-list-item graphic="icon">
+          <span>Copy</span>
+          <mwc-icon slot="graphic">copy_all</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.dispatchEvent(newStartPlaceEvent(copy(equipment, this.nsp))),
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
           <span>Move</span>
           <svg
             xmlns="${svgNs}"
@@ -534,6 +543,13 @@ let SLDEditor = class SLDEditor extends LitElement {
           </svg>
         </mwc-list-item>`,
                 handler: () => this.dispatchEvent(newStartResizeEvent(bayOrVL)),
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
+          <span>Copy</span>
+          <mwc-icon slot="graphic">copy_all</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.dispatchEvent(newStartPlaceEvent(copy(bayOrVL, this.nsp))),
             },
             {
                 content: html `<mwc-list-item graphic="icon">
