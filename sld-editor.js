@@ -86,7 +86,9 @@ function copy(element, nsp) {
     const foreignCNodes = new Set();
     cNodes.forEach(cNode => {
         const foreignTerminal = Array.from(element.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${cNode.getAttribute('pathName')}"]`)).find(terminal => !terminals.has(terminal));
-        if (foreignTerminal || isBusBar(cNode.closest('Bay')))
+        if (foreignTerminal ||
+            (isBusBar(cNode.closest('Bay')) &&
+                cNode.closest(element.tagName) !== element))
             foreignCNodes.add(cNode);
     });
     foreignCNodes.forEach(cNode => {

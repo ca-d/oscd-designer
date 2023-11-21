@@ -286,7 +286,7 @@ describe('Designer', () => {
             }).dispatchEvent(new PointerEvent('contextmenu'));
             await element.updateComplete;
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
-            const item = sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(2)');
+            const item = sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(5)');
             item.selected = true;
             await element.updateComplete;
             expect(element)
@@ -317,7 +317,7 @@ describe('Designer', () => {
             }).dispatchEvent(new PointerEvent('contextmenu'));
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
             await element.updateComplete;
-            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(3)').selected = true;
+            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(4)').selected = true;
             await sldEditor.updateComplete;
             expect(element)
                 .property('placingLabel')
@@ -387,7 +387,9 @@ describe('Designer', () => {
             expect(bus).to.have.attribute('y', '3');
             expect(bus).to.have.attribute('smth:w', '1');
             expect(bus).to.have.attribute('h', '8');
-            expect(bus).dom.to.equalSnapshot({ ignoreAttributes: ['esld:uuid'] });
+            await expect(bus).dom.to.equalSnapshot({
+                ignoreAttributes: ['esld:uuid'],
+            });
         });
     });
     describe('given a bay', () => {
@@ -504,7 +506,7 @@ describe('Designer', () => {
             await sendMouse({ type: 'click', position: [600, 200] });
             expect(element).to.have.property('placing', undefined);
             expect(cNode).to.have.attribute('pathName', 'S1/V2/B2/L1');
-            expect(element.doc.documentElement).dom.to.equalSnapshot({
+            await expect(element.doc.documentElement).dom.to.equalSnapshot({
                 ignoreAttributes: ['esld:uuid'],
             });
         });
@@ -626,6 +628,24 @@ describe('Designer', () => {
             expect(equipment).to.have.attribute('esld:x', '3');
             expect(equipment).to.have.attribute('esld:y', '3');
         });
+        it('copies equipment on shift click', async () => {
+            const sldEditor = element.shadowRoot.querySelector('sld-editor');
+            const equipment = element.doc.querySelector('ConductingEquipment');
+            const id = identity(equipment);
+            const eqClickTarget = sldEditor
+                .shadowRoot.getElementById(id)
+                .querySelector('rect');
+            eqClickTarget.dispatchEvent(new PointerEvent('click', { shiftKey: true }));
+            expect(element.doc.querySelector('ConductingEquipment[*|x="3"][*|y="3"]'))
+                .to.not.exist;
+            await sendMouse({ type: 'click', position: [150, 180] });
+            expect(element.doc.querySelector('ConductingEquipment[*|x="3"][*|y="3"]')).to.exist.and.have.attribute('type', equipment.getAttribute('type'));
+            expect(equipment).to.have.attribute('esld:x', '4');
+            expect(equipment).to.have.attribute('esld:y', '4');
+            await expect(element.doc.documentElement).dom.to.equalSnapshot({
+                ignoreAttributes: ['esld:uuid'],
+            });
+        });
         it('rotates equipment on middle mouse button click', () => {
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
             const equipment = element.doc.querySelector('ConductingEquipment');
@@ -692,7 +712,7 @@ describe('Designer', () => {
                 .querySelector('rect');
             eqClickTarget.dispatchEvent(new PointerEvent('contextmenu'));
             await element.updateComplete;
-            const item = sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(7)');
+            const item = sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(5)');
             item.selected = true;
             await element.updateComplete;
             expect(equipment).to.have.attribute('esld:x', '4');
