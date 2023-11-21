@@ -55,7 +55,7 @@ export const equipmentDocString = `<?xml version="1.0" encoding="UTF-8"?>
         <ConductingEquipment type="BAT" name="BAT1" esld:x="19" esld:y="7" esld:rot="3" esld:lx="19" esld:ly="7">
           <Terminal name="erroneous"/>
         </ConductingEquipment>
-        <ConductingEquipment type="SMC" name="SMC1" esld:x="22" esld:y="8" esld:rot="3" esld:lx="22" esld:ly="8" />
+        <ConductingEquipment type="SMC" name="SMC1" esld:x="21" esld:y="7" esld:rot="3" esld:lx="22" esld:ly="8" />
       </Bay>
     </VoltageLevel>
   </Substation>
@@ -236,7 +236,7 @@ describe('Designer', () => {
             expect(voltageLevel).to.have.attribute('smth:w', '8');
             expect(voltageLevel).to.have.attribute('smth:h', '7');
         });
-        it('allows moving voltage levels', async () => {
+        it('moves voltage levels on move handle click', async () => {
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
             const moveHandle = sldEditor.shadowRoot.querySelector('.handle');
             moveHandle.dispatchEvent(new PointerEvent('click'));
@@ -459,7 +459,7 @@ describe('Designer', () => {
             expect(voltageLevel).to.have.attribute('esld:w', '13');
             expect(voltageLevel).to.have.attribute('esld:h', '13');
         });
-        it('allows moving bays', async () => {
+        it('moves bays on move handle click', async () => {
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
             sldEditor
                 .shadowRoot.querySelector('g.bay .handle')
@@ -1199,6 +1199,24 @@ describe('Designer', () => {
                             ignoreAttributes: ['esld:uuid'],
                         });
                     });
+                    it('copies equipment on copy menu item select', async () => {
+                        queryUI({
+                            scl: 'ConductingEquipment',
+                            ui: 'rect',
+                        }).dispatchEvent(new PointerEvent('contextmenu'));
+                        await element.updateComplete;
+                        const sldEditor = element.shadowRoot.querySelector('sld-editor');
+                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(6)').selected = true;
+                        expect(element.doc.querySelector('ConductingEquipment[*|x="3"][*|y="3"]')).to.not.exist;
+                        expect(element.doc.querySelector('ConductingEquipment')).to.have.attribute('esld:x', '4');
+                        expect(element.doc.querySelector('ConductingEquipment')).to.have.attribute('esld:y', '4');
+                        await sendMouse({ type: 'click', position: [150, 180] });
+                        expect(element.doc.querySelector('ConductingEquipment[*|x="3"][*|y="3"]')).to.exist;
+                        expect(element.doc.querySelector('ConductingEquipment[*|x="4"][*|y="4"]')).to.exist;
+                        await expect(element.doc.documentElement).dom.to.equalSnapshot({
+                            ignoreAttributes: ['esld:uuid'],
+                        });
+                    });
                     it('moves the bus bar on move menu item select', async () => {
                         queryUI({
                             scl: '[name="L"]',
@@ -1253,6 +1271,40 @@ describe('Designer', () => {
                         sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(2)').selected = true;
                         await sldEditor.updateComplete;
                         expect(element.doc.querySelector('[name="BB1"]')).to.not.exist;
+                        await expect(element.doc.documentElement).dom.to.equalSnapshot({
+                            ignoreAttributes: ['esld:uuid'],
+                        });
+                    });
+                    it('copies bays on copy menu item select', async () => {
+                        queryUI({
+                            scl: '[name="V2"] [name="B1"]',
+                            ui: 'rect',
+                        }).dispatchEvent(new PointerEvent('contextmenu'));
+                        await element.updateComplete;
+                        const sldEditor = element.shadowRoot.querySelector('sld-editor');
+                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(6)').selected = true;
+                        expect(element.doc.querySelector('[name="V1"] [name="B2"]')).not.to
+                            .exist;
+                        await sendMouse({ type: 'click', position: [280, 350] });
+                        expect(element.doc.querySelector('[name="V1"] [name="B2"]')).to
+                            .exist;
+                        await expect(element.doc.documentElement).dom.to.equalSnapshot({
+                            ignoreAttributes: ['esld:uuid'],
+                        });
+                    });
+                    it('copies voltage levels on move handle shift click', async () => {
+                        var _a;
+                        queryUI({
+                            scl: '[name="V1"]',
+                            ui: '.handle',
+                        }).dispatchEvent(new PointerEvent('click', { shiftKey: true }));
+                        expect(element.doc.querySelector('[name="V1"] [name="B2"]')).not.to
+                            .exist;
+                        (_a = element
+                            .shadowRoot.querySelector('[label="Add Substation"]')) === null || _a === void 0 ? void 0 : _a.click();
+                        await sendMouse({ type: 'click', position: [100, 150] });
+                        expect(element.doc.querySelector('[name="S2"] [name="V1"]')).to
+                            .exist;
                         await expect(element.doc.documentElement).dom.to.equalSnapshot({
                             ignoreAttributes: ['esld:uuid'],
                         });

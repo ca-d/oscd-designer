@@ -77,7 +77,7 @@ function preventDefault(e) {
 function copy(element, nsp) {
     const clone = element.cloneNode(true);
     const terminals = new Set(Array.from(element.querySelectorAll('Terminal')));
-    const cNodes = new Set();
+    const cNodes = new Set(Array.from(element.querySelectorAll('ConnectivityNode')));
     terminals.forEach(terminal => {
         const cNode = element.ownerDocument.querySelector(`ConnectivityNode[pathName="${terminal.getAttribute('connectivityNode')}"]`);
         if (cNode)
@@ -92,10 +92,14 @@ function copy(element, nsp) {
             foreignCNodes.add(cNode);
     });
     foreignCNodes.forEach(cNode => {
-        var _a;
+        var _a, _b, _c;
         if (cNode.closest(element.tagName) === element) {
-            (_a = clone
-                .querySelector(`ConnectivityNode[pathName="${cNode.getAttribute('pathName')}"]`)) === null || _a === void 0 ? void 0 : _a.remove();
+            if (isBusBar(cNode.closest('Bay')))
+                (_b = (_a = clone
+                    .querySelector(`ConnectivityNode[pathName="${cNode.getAttribute('pathName')}"]`)) === null || _a === void 0 ? void 0 : _a.closest('Bay')) === null || _b === void 0 ? void 0 : _b.remove();
+            else
+                (_c = clone
+                    .querySelector(`ConnectivityNode[pathName="${cNode.getAttribute('pathName')}"]`)) === null || _c === void 0 ? void 0 : _c.remove();
         }
         terminals.forEach(terminal => {
             var _a;
@@ -953,7 +957,7 @@ let SLDEditor = class SLDEditor extends LitElement {
       </g>`;
     }
     renderContainer(bayOrVL, preview = false) {
-        var _a, _b;
+        var _a, _b, _c;
         const isVL = bayOrVL.tagName === 'VoltageLevel';
         if (this.placing === bayOrVL && !preview)
             return svg ``;
@@ -997,16 +1001,14 @@ let SLDEditor = class SLDEditor extends LitElement {
         let resizeHandle = svg ``;
         let placingTarget = svg ``;
         let resizingTarget = svg ``;
-        if (this.resizing === bayOrVL ||
-            (isVL && ((_a = this.placing) === null || _a === void 0 ? void 0 : _a.tagName) === 'Bay') ||
+        if ((isVL && ((_a = this.placing) === null || _a === void 0 ? void 0 : _a.tagName) === 'Bay') ||
             (!isVL && ((_b = this.placing) === null || _b === void 0 ? void 0 : _b.tagName) === 'ConductingEquipment'))
             placingTarget = svg `<rect x="${x}" y="${y}" width="${w}" height="${h}"
         @click=${handleClick || nothing} fill="url(#grid)" />`;
-        if (this.resizing &&
-            isBusBar(this.resizing) &&
-            this.resizing.parentElement === bayOrVL)
+        if (this.resizing === bayOrVL ||
+            (((_c = this.resizing) === null || _c === void 0 ? void 0 : _c.parentElement) === bayOrVL && isBusBar(this.resizing)))
             resizingTarget = svg `<rect x="${x}" y="${y}" width="${w}" height="${h}"
-        fill="url(#grid)" />`;
+        @click=${handleClick || nothing} fill="url(#grid)" />`;
         if (!this.placing &&
             !this.resizing &&
             !this.connecting &&
@@ -1015,14 +1017,14 @@ let SLDEditor = class SLDEditor extends LitElement {
           fill="black" opacity="0.83" viewBox="0 96 960 960" 
           @click=${(e) => this.dispatchEvent(newStartPlaceEvent(e.shiftKey ? copy(bayOrVL, this.nsp) : bayOrVL))}
           x="${x}" y="${y}">
-        <rect fill="white" x="0" y="0" width="100%" height="100%" />
+        <rect fill="white" x="28.8" y="124.8" width="902.4" height="902.4" />
         ${movePath}
       </svg>`;
             resizeHandle = svg `<svg class="handle" xmlns="${svgNs}" height="1" width="1"
           fill="black" opacity="0.83" viewBox="0 96 960 960" 
           @click=${() => this.dispatchEvent(newStartResizeEvent(bayOrVL))}
           x="${w + x - 1}" y="${h + y - 1}">
-        <rect fill="white" x="0" y="0" width="100%" height="100%" />
+        <rect fill="white" x="28.8" y="124.8" width="902.4" height="902.4" />
         ${resizePath}
       </svg>`;
         }
@@ -1041,23 +1043,23 @@ let SLDEditor = class SLDEditor extends LitElement {
         // eslint-disable-next-line no-nested-ternary
         invalid ? '#BB1326' : isVL ? '#F5E214' : '#12579B'}" />
       ${moveHandle}
+      ${placingTarget}
       ${Array.from(bayOrVL.children)
             .filter(isBay)
             .map(bay => this.renderContainer(bay))}
       ${Array.from(bayOrVL.children)
             .filter(child => child.tagName === 'ConductingEquipment')
             .map(equipment => this.renderEquipment(equipment))}
-        ${preview
+      ${preview
             ? Array.from(bayOrVL.querySelectorAll('ConnectivityNode'))
                 .filter(child => child.getAttribute('name') !== 'grounded')
                 .map(cNode => this.renderConnectivityNode(cNode))
             : nothing}
-        ${preview
+      ${preview
             ? Array.from(bayOrVL.querySelectorAll('Bay, ConductingEquipment'))
                 .concat(bayOrVL)
                 .map(element => this.renderLabel(element))
             : nothing}
-      ${placingTarget}
       ${resizeHandle}
       ${resizingTarget}
     </g>`;
@@ -1197,24 +1199,24 @@ let SLDEditor = class SLDEditor extends LitElement {
         const [x, y] = this.renderedPosition(busBar);
         const { dim: [w, h], } = attributes(busBar);
         let placingTarget = svg ``;
-        if (this.placing === busBar)
-            placingTarget = svg `<rect x="${x}" y="${y}" width="1" height="1"
+        placingTarget = svg `<rect x="${x}" y="${y}" width="1" height="1"
           pointer-events="all" fill="none" 
           @click=${() => {
-                const parent = Array.from(this.substation.querySelectorAll(':root > Substation > VoltageLevel')).find(vl => containsRect(vl, x, y, w, h));
-                if (parent)
-                    this.dispatchEvent(newPlaceEvent({
-                        x,
-                        y,
-                        element: busBar,
-                        parent: parent,
-                    }));
-            }}
+            const parent = Array.from(this.substation.querySelectorAll(':root > Substation > VoltageLevel')).find(vl => containsRect(vl, x, y, w, h));
+            if (parent)
+                this.dispatchEvent(newPlaceEvent({
+                    x,
+                    y,
+                    element: busBar,
+                    parent: parent,
+                }));
+        }}
         />`;
-        return svg `<g class="bus" id="${busBar.closest('Substation') === this.substation
+        return svg `<g class="bus preview" id="${busBar.closest('Substation') === this.substation
             ? identity(busBar)
             : nothing}">
       <title>${busBar.getAttribute('name')}</title>
+      ${this.renderLabel(busBar)}
       ${this.renderConnectivityNode(busBar.querySelector('ConnectivityNode'))}
       ${placingTarget}
     </g>`;
@@ -1241,6 +1243,8 @@ let SLDEditor = class SLDEditor extends LitElement {
         const lines = [];
         const sections = Array.from(priv.getElementsByTagNameNS(sldNs, 'Section'));
         const bay = cNode.closest('Bay');
+        const targetSize = this.connecting ? 0.99 : 0.7;
+        const pointerEvents = !this.resizing || isBusBar(this.resizing) ? 'all' : 'none';
         sections.forEach(section => {
             const busBar = xmlBoolean(section.getAttribute('bus'));
             const vertices = Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex')).map(vertex => this.renderedPosition(vertex));
@@ -1292,7 +1296,7 @@ let SLDEditor = class SLDEditor extends LitElement {
                         }));
                     };
                     lines.push(svg `<rect x="${this.mouseX}" y="${this.mouseY}"
-              width="1" height="1" fill="none" pointer-events="all"
+              width="1" height="1" fill="none" pointer-events="${pointerEvents}"
               @click=${handleClick} />`);
                 }
                 if (this.connecting)
@@ -1317,24 +1321,27 @@ let SLDEditor = class SLDEditor extends LitElement {
                         }));
                     };
                 lines.push(svg `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
+                pointer-events="${pointerEvents}"
                 stroke-width="${busBar ? 0.12 : nothing}" stroke="black" 
                 stroke-linecap="${busBar ? 'round' : 'square'}" />`);
                 lines.push(svg `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
-                @click=${handleClick} @auxclick=${handleAuxClick}
+                pointer-events="${pointerEvents}" stroke-width="${targetSize}"
                 @contextmenu=${handleContextMenu} @mousedown=${preventDefault}
-                pointer-events="all" stroke-width="${this.connecting ? 0.99 : 0.7}" />`);
-                if (this.connecting && ![x1, y1].find(n => Number.isInteger(n)))
-                    lines.push(svg `<rect x="${x1 - 0.495}" y="${y1 - 0.495}"
-                  width="0.99" height="0.99"
+                @click=${handleClick} @auxclick=${handleAuxClick} />`);
+                if (busBar ||
+                    (this.connecting && ![x1, y1].find(n => Number.isInteger(n))))
+                    lines.push(svg `<rect x="${x1 - targetSize / 2}" y="${y1 - targetSize / 2}"
+                  width="${targetSize}" height="${targetSize}"
                   @click=${handleClick} @auxclick=${handleAuxClick}
                   @contextmenu=${handleContextMenu} @mousedown=${preventDefault}
-                  pointer-events="all" fill="none" />`);
-                if (this.connecting && ![x2, y2].find(n => Number.isInteger(n)))
-                    lines.push(svg `<rect x="${x2 - 0.495}" y="${y2 - 0.495}"
-                  width="0.99" height="0.99"
+                  pointer-events="${pointerEvents}" fill="none" />`);
+                if (busBar ||
+                    (this.connecting && ![x2, y2].find(n => Number.isInteger(n))))
+                    lines.push(svg `<rect x="${x2 - targetSize / 2}" y="${y2 - targetSize / 2}"
+                  width="${targetSize}" height="${targetSize}"
                   @click=${handleClick} @auxclick=${handleAuxClick}
                   @contextmenu=${handleContextMenu} @mousedown=${preventDefault}
-                  pointer-events="all" fill="none" />`);
+                  pointer-events="${pointerEvents}" fill="none" />`);
                 i += 1;
             }
         });
