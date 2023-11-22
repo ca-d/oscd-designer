@@ -81,8 +81,49 @@ const bayPath = svg`<path
     stroke-linecap="round"
   />`;
 
+export const oneWindingPTRPath = svg`<circle cx="20" cy="20" r="11.75" fill="none"
+    stroke="currentColor" stroke-width="1.5" />`;
+
+export const twoWindingPTRPath = svg`<circle cx="20" cy="12.5" r="11.75" fill="none"
+    stroke="currentColor" stroke-width="1.5" />
+  <circle cx="20" cy="27.5" r="11.75" fill="none"
+    stroke="currentColor" stroke-width="1.5" />`;
+
+export const threeWindingPTRPath = svg`<circle cx="20" cy="12.5" r="11.75" fill="none"
+    stroke="currentColor" stroke-width="1.5" />
+  <circle cx="12.5" cy="27.5" r="11.75" fill="none"
+    stroke="currentColor" stroke-width="1.5" />
+  <circle cx="27.5" cy="27.5" r="11.75" fill="none"
+    stroke="currentColor" stroke-width="1.5" />`;
+
+export const oneWindingPTRIcon = html`<svg
+  viewBox="0 0 40 40"
+  width="24"
+  height="24"
+  slot="icon"
+>
+  ${oneWindingPTRPath}
+</svg>`;
+
+export const twoWindingPTRIcon = html`<svg
+  viewBox="0 0 40 40"
+  width="24"
+  height="24"
+  slot="icon"
+>
+  ${twoWindingPTRPath}
+</svg>`;
+
+export const threeWindingPTRIcon = html`<svg
+  viewBox="0 0 40 40"
+  width="24"
+  height="24"
+  slot="icon"
+>
+  ${threeWindingPTRPath}
+</svg>`;
+
 export const voltageLevelIcon = html`<svg
-  id="VoltageLevel"
   viewBox="0 0 25 25"
   width="24"
   height="24"
@@ -92,7 +133,6 @@ export const voltageLevelIcon = html`<svg
 </svg>`;
 
 export const voltageLevelGraphic = html`<svg
-  id="VoltageLevel"
   viewBox="0 0 25 25"
   width="24"
   height="24"
@@ -102,7 +142,6 @@ export const voltageLevelGraphic = html`<svg
 </svg>`;
 
 export const bayIcon = html`<svg
-  id="Bay"
   viewBox="0 0 25 25"
   width="24"
   height="24"
@@ -112,7 +151,6 @@ export const bayIcon = html`<svg
 </svg>`;
 
 export const bayGraphic = html`<svg
-  id="Bay"
   viewBox="0 0 25 25"
   width="24"
   height="24"
@@ -561,26 +599,14 @@ export function equipmentPath(equipmentType: string | null): TemplateResult<2> {
 export function equipmentGraphic(
   equipmentType: string | null,
 ): TemplateResult<1> {
-  return html`<svg
-    id="${equipmentType}"
-    viewBox="0 0 25 25"
-    width="24"
-    height="24"
-    slot="graphic"
-  >
+  return html`<svg viewBox="0 0 25 25" width="24" height="24" slot="graphic">
     ${equipmentPath(equipmentType)}
     ${equipmentType && ringedEqTypes.has(equipmentType) ? eqRingPath : nothing}
   </svg>`;
 }
 
 export function equipmentIcon(equipmentType: string): TemplateResult<1> {
-  return html`<svg
-    id="${equipmentType}"
-    viewBox="0 0 25 25"
-    width="24"
-    height="24"
-    slot="icon"
-  >
+  return html`<svg viewBox="0 0 25 25" width="24" height="24" slot="icon">
     ${equipmentPath(equipmentType)}
     ${ringedEqTypes.has(equipmentType) ? eqRingPath : nothing}
   </svg>`;
@@ -595,20 +621,6 @@ function equipmentSymbol(equipmentType: string): TemplateResult<2> {
     ${equipmentPath(equipmentType)}
   </symbol>`;
 }
-
-export const connectivityNodeMarker = svg`<marker
-  markerWidth="3" markerHeight="3"
-  refX="12.5" refY="12.5"
-  viewBox="0 0 25 25"
-  id="circle"
->
-  <circle
-    fill="black"
-    cx="12.5"
-    cy="12.5"
-    r="12.5"
-  />
-</marker>`;
 
 export const groundedMarker = svg`<marker
   markerWidth="20" markerHeight="20"
@@ -646,49 +658,6 @@ export const groundedMarker = svg`<marker
   />
 </marker>`;
 
-export const powerTransformerTwoWindingSymbol = svg`<symbol
-  id="PTR"
-  viewBox="0 0 25 25"
-  width="1" height="1"
->
-  <line
-    x1="12.5"
-    y1="2"
-    x2="12.5"
-    y2="5"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <circle
-    cx="12.5"
-    cy="10"
-    r="5"
-    stroke="currentColor"
-    fill="none"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <circle
-    cx="12.5"
-    cy="15"
-    r="5"
-    stroke="currentColor"
-    fill="none"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <line
-    x1="12.5"
-    y1="20"
-    x2="12.5"
-    y2="23"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-</symbol>`;
-
 export const symbols = svg`
   <defs>
   <pattern id="halfgrid" patternUnits="userSpaceOnUse" width="1" height="1" viewBox="0 0 1 1">
@@ -705,7 +674,6 @@ export const symbols = svg`
   </pattern>
   ${eqTypes.map(eqType => equipmentSymbol(eqType))}
   ${equipmentSymbol('ConductingEquipment')}
-  ${connectivityNodeMarker}
   ${groundedMarker}
   </defs>
 `;

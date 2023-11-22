@@ -19,8 +19,11 @@ import {
   eqRingPath,
   equipmentGraphic,
   movePath,
+  oneWindingPTRPath,
   resizePath,
   symbols,
+  threeWindingPTRPath,
+  twoWindingPTRPath,
   voltageLevelGraphic,
 } from './icons.js';
 import {
@@ -910,7 +913,8 @@ export class SLDEditor extends LitElement {
     } = attributes(this.substation);
 
     const placingTarget =
-      this.placing?.tagName === 'VoltageLevel'
+      this.placing?.tagName === 'VoltageLevel' ||
+      this.placing?.tagName === 'PowerTransformer'
         ? svg`<rect width="100%" height="100%" fill="url(#grid)" />`
         : nothing;
 
@@ -927,9 +931,11 @@ export class SLDEditor extends LitElement {
     let placingElement = svg``;
     if (this.placing) {
       if (this.placing.tagName === 'VoltageLevel' || isBay(this.placing))
-        placingElement = svg`${this.renderContainer(this.placing, true)}`;
+        placingElement = this.renderContainer(this.placing, true);
       else if (this.placing.tagName === 'ConductingEquipment')
         placingElement = this.renderEquipment(this.placing, { preview: true });
+      else if (this.placing.tagName === 'PowerTransformer')
+        placingElement = this.renderPowerTransformer(this.placing, true);
       else if (isBusBar(this.placing))
         placingElement = this.renderBusBar(this.placing);
     }
@@ -1409,6 +1415,36 @@ export class SLDEditor extends LitElement {
       ${resizeHandle}
       ${resizingTarget}
     </g>`;
+  }
+
+  renderPowerTransformer(
+    transformer: Element,
+    preview: boolean
+  ): TemplateResult<2> {
+    const [x, y] = this.renderedPosition(transformer);
+    const { size } = attributes(transformer);
+    const offset = (size - 1) / 2;
+
+    const windings = transformer.querySelectorAll('TransformerWinding');
+    let [vbw, vbh, path] = [40, 40, oneWindingPTRPath];
+    if (windings.length === 2) {
+      vbh = 40;
+      path = twoWindingPTRPath;
+    } else if (windings.length === 3) {
+      vbh = 40;
+      vbw = 40;
+      path = threeWindingPTRPath;
+    }
+    return svg`<svg
+    class="${classMap({ transformer: true, preview })}"
+      viewBox="0 0 ${vbw} ${vbh}"
+      x="${x - offset}"
+      y="${y - offset}"
+      width="${size}"
+      height="${size}"
+    >
+      ${path}
+    </svg>`;
   }
 
   renderEquipment(
