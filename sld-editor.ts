@@ -19,11 +19,8 @@ import {
   eqRingPath,
   equipmentGraphic,
   movePath,
-  oneWindingPTRPath,
   resizePath,
   symbols,
-  threeWindingPTRPath,
-  twoWindingPTRPath,
   voltageLevelGraphic,
 } from './icons.js';
 import {
@@ -1148,6 +1145,9 @@ export class SLDEditor extends LitElement {
               isBusBar(node.parentElement!),
           )
           .map(cNode => this.renderConnectivityNode(cNode))}
+        ${Array.from(this.substation.querySelectorAll('PowerTransformer')).map(
+          transformer => this.renderPowerTransformer(transformer)
+        )}
         ${Array.from(
           this.substation.querySelectorAll(
             'VoltageLevel, Bay, ConductingEquipment',
@@ -1417,34 +1417,95 @@ export class SLDEditor extends LitElement {
     </g>`;
   }
 
+  renderThreeWindingTransformer(transformer: Element, preview: boolean) {
+    const [x, y] = this.renderedPosition(transformer);
+    const [cx1, cy1] = [x + 0.5, y - 0.5];
+    const [cx2, cy2] = [x - 0.5, y + 1.5];
+    const [cx3, cy3] = [x + 1.5, y + 1.5];
+    return svg`<g class="${classMap({ transformer: true, preview })}"
+    pointer-events="all"
+        @click=${() => {
+          const parent =
+            Array.from(
+              this.substation.querySelectorAll(':scope > VoltageLevel > Bay')
+            )
+              .concat(
+                Array.from(
+                  this.substation.querySelectorAll(':scope > VoltageLevel')
+                )
+              )
+              .find(vl => containsRect(vl, x - 1, y - 1, 5, 5)) ||
+            this.substation;
+          this.dispatchEvent(
+            this.placing === transformer
+              ? newPlaceEvent({
+                  element: transformer,
+                  parent,
+                  x,
+                  y,
+                })
+              : newStartPlaceEvent(transformer)
+          );
+        }}>
+    <circle cx="${cx1}" cy="${cy1}" r="1.25" stroke="black" stroke-width="0.06" />
+    <circle cx="${cx2}" cy="${cy2}" r="1.25" stroke="black" stroke-width="0.06" />
+    <circle cx="${cx3}" cy="${cy3}" r="1.25" stroke="black" stroke-width="0.06" />
+    </g>`;
+  }
+
+  renderTwoWindingTransformer(transformer: Element, preview: boolean) {
+    const [x, y] = this.renderedPosition(transformer);
+    const [cx1, cy1] = [x + 0.5, y - 0.5];
+    const [cx2, cy2] = [x + 0.5, y + 0.5];
+    return svg`<g class="${classMap({ transformer: true, preview })}"
+    pointer-events="all"
+        @click=${() =>
+          this.dispatchEvent(
+            this.placing === transformer
+              ? newPlaceEvent({
+                  element: transformer,
+                  parent: this.substation,
+                  x,
+                  y,
+                })
+              : newStartPlaceEvent(transformer)
+          )}>
+    <circle cx="${cx1}" cy="${cy1}" r="0.7" stroke="black" stroke-width="0.06" />
+    <circle cx="${cx2}" cy="${cy2}" r="0.7" stroke="black" stroke-width="0.06" />
+    </g>`;
+  }
+
+  renderSingleWindingTransformer(transformer: Element, preview: boolean) {
+    const [x, y] = this.renderedPosition(transformer);
+    const [cx1, cy1] = [x + 0.5, y + 0.5];
+    return svg`<g class="${classMap({ transformer: true, preview })}"
+    pointer-events="all"
+        @click=${() =>
+          this.dispatchEvent(
+            this.placing === transformer
+              ? newPlaceEvent({
+                  element: transformer,
+                  parent: this.substation,
+                  x,
+                  y,
+                })
+              : newStartPlaceEvent(transformer)
+          )}>
+    <circle cx="${cx1}" cy="${cy1}" r="0.7" stroke="black" stroke-width="0.06" />
+    </g>`;
+  }
+
   renderPowerTransformer(
     transformer: Element,
-    preview: boolean
+    preview = false
   ): TemplateResult<2> {
-    const [x, y] = this.renderedPosition(transformer);
-    const { size } = attributes(transformer);
-    const offset = (size - 1) / 2;
-
+    if (this.placing === transformer && !preview) return svg``;
     const windings = transformer.querySelectorAll('TransformerWinding');
-    let [vbw, vbh, path] = [40, 40, oneWindingPTRPath];
-    if (windings.length === 2) {
-      vbh = 40;
-      path = twoWindingPTRPath;
-    } else if (windings.length === 3) {
-      vbh = 40;
-      vbw = 40;
-      path = threeWindingPTRPath;
-    }
-    return svg`<svg
-    class="${classMap({ transformer: true, preview })}"
-      viewBox="0 0 ${vbw} ${vbh}"
-      x="${x - offset}"
-      y="${y - offset}"
-      width="${size}"
-      height="${size}"
-    >
-      ${path}
-    </svg>`;
+    if (windings.length === 3)
+      return this.renderThreeWindingTransformer(transformer, preview);
+    if (windings.length === 2)
+      return this.renderTwoWindingTransformer(transformer, preview);
+    return this.renderSingleWindingTransformer(transformer, preview);
   }
 
   renderEquipment(

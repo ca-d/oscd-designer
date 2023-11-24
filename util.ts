@@ -48,7 +48,6 @@ export type Attrs = {
   label: Point;
   flip: boolean;
   rot: 0 | 1 | 2 | 3;
-  size: 2 | 3;
   bus: boolean;
 };
 
@@ -64,7 +63,7 @@ export function isBusBar(element: Element) {
 }
 
 export function attributes(element: Element): Attrs {
-  const [x, y, w, h, rotVal, labelX, labelY, sizeVal] = [
+  const [x, y, w, h, rotVal, labelX, labelY] = [
     'x',
     'y',
     'w',
@@ -72,19 +71,17 @@ export function attributes(element: Element): Attrs {
     'rot',
     'lx',
     'ly',
-    'size',
   ].map(name => parseFloat(element.getAttributeNS(sldNs, name) ?? '0'));
   const pos = [x, y].map(d => Math.max(0, d)) as Point;
   const dim = [w, h].map(d => Math.max(1, d)) as Point;
   const label = [labelX, labelY].map(d => Math.max(0, d)) as Point;
-  const size = sizeVal > 2 ? 3 : 2;
 
   const bus = xmlBoolean(element.getAttribute('bus'));
   const flip = xmlBoolean(element.getAttributeNS(sldNs, 'flip'));
 
   const rot = (((rotVal % 4) + 4) % 4) as 0 | 1 | 2 | 3;
 
-  return { pos, dim, label, flip, rot, size, bus };
+  return { pos, dim, label, flip, rot, bus };
 }
 
 function pathString(...args: string[]) {

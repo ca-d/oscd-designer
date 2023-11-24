@@ -81,15 +81,15 @@ const bayPath = svg`<path
     stroke-linecap="round"
   />`;
 
-export const oneWindingPTRPath = svg`<circle cx="20" cy="20" r="11.75" fill="none"
+const oneWindingPTRPath = svg`<circle cx="20" cy="20" r="11.75" fill="none"
     stroke="currentColor" stroke-width="1.5" />`;
 
-export const twoWindingPTRPath = svg`<circle cx="20" cy="12.5" r="11.75" fill="none"
+const twoWindingPTRPath = svg`<circle cx="20" cy="12.5" r="11.75" fill="none"
     stroke="currentColor" stroke-width="1.5" />
   <circle cx="20" cy="27.5" r="11.75" fill="none"
     stroke="currentColor" stroke-width="1.5" />`;
 
-export const threeWindingPTRPath = svg`<circle cx="20" cy="12.5" r="11.75" fill="none"
+const threeWindingPTRPath = svg`<circle cx="20" cy="12.5" r="11.75" fill="none"
     stroke="currentColor" stroke-width="1.5" />
   <circle cx="12.5" cy="27.5" r="11.75" fill="none"
     stroke="currentColor" stroke-width="1.5" />
