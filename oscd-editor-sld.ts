@@ -31,7 +31,6 @@ import {
   attributes,
   ConnectDetail,
   ConnectEvent,
-  connectionStartPoints,
   elementPath,
   eqTypes,
   isBusBar,
@@ -169,7 +168,7 @@ export default class OscdEditorSLD extends LitElement {
   connecting?: {
     equipment: Element;
     path: Point[];
-    terminal: 'top' | 'bottom';
+    terminal: 'T1' | 'T2';
   };
 
   zoomIn(step = 4) {
@@ -198,15 +197,8 @@ export default class OscdEditorSLD extends LitElement {
 
   startConnecting(detail: StartConnectDetail) {
     if (!('equipment' in detail)) return;
-    const { equipment, terminal } = detail;
     this.reset();
-    const { close, far } = connectionStartPoints(equipment)[terminal];
-    if (equipment)
-      this.connecting = {
-        equipment,
-        path: [close, far],
-        terminal,
-      };
+    this.connecting = detail;
   }
 
   reset() {
@@ -330,7 +322,9 @@ export default class OscdEditorSLD extends LitElement {
     }
 
     Array.from(
-      element.querySelectorAll('Bay, ConductingEquipment, Vertex'),
+      element.querySelectorAll(
+        'Bay, ConductingEquipment, PowerTransformer, Vertex'
+      )
     ).forEach(descendant => {
       const {
         pos: [descX, descY],
@@ -575,7 +569,7 @@ export default class OscdEditorSLD extends LitElement {
       'Terminal',
     );
     fromTermElement.setAttributeNS(sldNs, `${this.nsp}:uuid`, fromTermUUID);
-    const fromTermName = terminal === 'top' ? 'T1' : 'T2';
+    const fromTermName = terminal === 'T1' ? 'T1' : 'T2';
     fromTermElement.setAttribute('name', fromTermName);
     fromTermElement.setAttribute('connectivityNode', connectivityNode);
     fromTermElement.setAttribute('substationName', substationName);
@@ -593,7 +587,7 @@ export default class OscdEditorSLD extends LitElement {
         'Terminal',
       );
       toTermElement.setAttributeNS(sldNs, `${this.nsp}:uuid`, toTermUUID);
-      const toTermName = toTerminal === 'top' ? 'T1' : 'T2';
+      const toTermName = toTerminal === 'T1' ? 'T1' : 'T2';
       toTermElement.setAttribute('name', toTermName);
       toTermElement.setAttribute('connectivityNode', connectivityNode);
       toTermElement.setAttribute('substationName', substationName);

@@ -52,10 +52,11 @@ import {
 import { Edit, EditV2, Transactor } from '@omicronenergy/oscd-api';
 import { newEditEvent } from '@omicronenergy/oscd-api/utils.js';
 
-const parentTags: Partial<Record<string, string>> = {
-  ConductingEquipment: 'Bay',
-  Bay: 'VoltageLevel',
-  VoltageLevel: 'Substation',
+const parentTags: Partial<Record<string, string[]>> = {
+  ConductingEquipment: ['Bay'],
+  Bay: ['VoltageLevel'],
+  VoltageLevel: ['Substation'],
+  PowerTransformer: ['Bay', 'VoltageLevel', 'Substation'],
 };
 
 const singleTerminal = new Set([
@@ -284,7 +285,7 @@ export class SLDEditor extends LitElement {
   connecting?: {
     equipment: Element;
     path: Point[];
-    terminal: 'top' | 'bottom';
+    terminal: 'T1' | 'T2';
   };
 
   @query('#resizeSubstationUI')
@@ -345,10 +346,10 @@ export class SLDEditor extends LitElement {
     if (element.tagName === 'Substation') return true;
 
     const overlappingSibling = Array.from(
-      this.substation.querySelectorAll(element.tagName),
+      this.substation.querySelectorAll(`${element.tagName}, PowerTransformer`)
     ).find(
       sibling =>
-        sibling !== element &&
+        sibling.closest(element.tagName) !== element &&
         overlapsRect(sibling, x, y, w, h) &&
         !isBusBar(sibling),
     );
@@ -360,7 +361,9 @@ export class SLDEditor extends LitElement {
       element.tagName === 'VoltageLevel'
         ? containsRect(this.substation, x, y, w, h)
         : Array.from(
-            this.substation.querySelectorAll(parentTags[element.tagName]!),
+            this.substation.querySelectorAll(
+              parentTags[element.tagName]!.join(',')
+            )
           ).find(
             parent => !isBusBar(parent) && containsRect(parent, x, y, w, h),
           );
@@ -381,7 +384,7 @@ export class SLDEditor extends LitElement {
       return false;
 
     const lostChild = Array.from(element.children).find(child => {
-      if (parentTags[child.tagName] !== element.tagName) return false;
+      if (!parentTags[child.tagName]?.includes(element.tagName)) return false;
       const {
         pos: [cx, cy],
         dim: [cw, ch],
@@ -462,24 +465,24 @@ export class SLDEditor extends LitElement {
     window.removeEventListener('click', this.positionCoordinates);
   }
 
-  nearestOpenTerminal(equipment?: Element): 'top' | 'bottom' | undefined {
+  nearestOpenTerminal(equipment?: Element): 'T1' | 'T2' | undefined {
     if (!equipment) return undefined;
     const topTerminal = equipment.querySelector('Terminal[name="T1"]');
     const bottomTerminal = equipment.querySelector('Terminal:not([name="T1"])');
     const oneSided = singleTerminal.has(equipment.getAttribute('type')!);
     if (topTerminal && bottomTerminal) return undefined;
     if (oneSided && (topTerminal || bottomTerminal)) return undefined;
-    if (oneSided) return 'top';
-    if (topTerminal) return 'bottom';
-    if (bottomTerminal) return 'top';
+    if (oneSided) return 'T1';
+    if (topTerminal) return 'T2';
+    if (bottomTerminal) return 'T1';
 
     const [mX2, mY2] = [this.mouseX2, this.mouseY2].map(n => n % 1);
     const { rot } = attributes(equipment);
-    if (rot === 0 && mY2 === 0.5) return 'bottom';
-    if (rot === 1 && mX2 === 0) return 'bottom';
-    if (rot === 2 && mY2 === 0) return 'bottom';
-    if (rot === 3 && mX2 === 0.5) return 'bottom';
-    return 'top';
+    if (rot === 0 && mY2 === 0.5) return 'T2';
+    if (rot === 1 && mX2 === 0) return 'T2';
+    if (rot === 2 && mY2 === 0) return 'T2';
+    if (rot === 3 && mX2 === 0.5) return 'T2';
+    return 'T1';
   }
 
   groundTerminal(equipment: Element, name: 'T1' | 'T2') {
@@ -662,8 +665,9 @@ export class SLDEditor extends LitElement {
               this.dispatchEvent(
                 newStartConnectEvent({
                   equipment,
-                  terminal: 'bottom',
-                }),
+                  terminal: 'T2',
+                  path: connectionStartPoints(equipment).T2,
+                })
               ),
             content: item('connect', false),
           },
@@ -683,7 +687,11 @@ export class SLDEditor extends LitElement {
         {
           handler: () =>
             this.dispatchEvent(
-              newStartConnectEvent({ equipment, terminal: 'top' }),
+              newStartConnectEvent({
+                equipment,
+                terminal: 'T1',
+                path: connectionStartPoints(equipment).T1,
+              })
             ),
           content: item('connect', true),
         },
@@ -1007,7 +1015,7 @@ export class SLDEditor extends LitElement {
       const toTerminal = this.nearestOpenTerminal(targetEq);
 
       if (targetEq && toTerminal) {
-        const { far, close } = connectionStartPoints(targetEq)[toTerminal];
+        const [close, far] = connectionStartPoints(targetEq)[toTerminal];
         [x3, y3] = far;
         [x4, y4] = close;
       }
@@ -1762,7 +1770,13 @@ export class SLDEditor extends LitElement {
         : svg`<circle cx="0.5" cy="0" r="0.2" opacity="0.4"
       fill="#BB1326" stroke="#F5E214"
     @click=${() =>
-      this.dispatchEvent(newStartConnectEvent({ equipment, terminal: 'top' }))}
+      this.dispatchEvent(
+        newStartConnectEvent({
+          equipment,
+          terminal: 'T1',
+          path: connectionStartPoints(equipment).T1,
+        })
+      )}
     @contextmenu=${(e: MouseEvent) => {
       e.preventDefault();
       this.groundTerminal(equipment, 'T1');
@@ -1775,7 +1789,7 @@ export class SLDEditor extends LitElement {
       (this.connecting &&
         this.mouseX === x &&
         this.mouseY === y &&
-        this.nearestOpenTerminal(equipment) === 'top') ||
+        this.nearestOpenTerminal(equipment) === 'T1') ||
       topTerminal
         ? nothing
         : svg`<polygon points="0.3,0 0.7,0 0.5,0.4" 
@@ -1797,7 +1811,11 @@ export class SLDEditor extends LitElement {
       fill="#BB1326" stroke="#F5E214"
     @click=${() =>
       this.dispatchEvent(
-        newStartConnectEvent({ equipment, terminal: 'bottom' }),
+        newStartConnectEvent({
+          equipment,
+          terminal: 'T2',
+          path: connectionStartPoints(equipment).T2,
+        })
       )}
     @contextmenu=${(e: MouseEvent) => {
       e.preventDefault();
@@ -1811,7 +1829,7 @@ export class SLDEditor extends LitElement {
       (this.connecting &&
         this.mouseX === x &&
         this.mouseY === y &&
-        this.nearestOpenTerminal(equipment) === 'bottom') ||
+        this.nearestOpenTerminal(equipment) === 'T2') ||
       bottomTerminal ||
       singleTerminal.has(eqType)
         ? nothing

@@ -358,44 +358,44 @@ export function removeTerminal(terminal: Element): EditV2[] {
 }
 
 export function connectionStartPoints(equipment: Element): {
-  top: { close: Point; far: Point };
-  bottom: { close: Point; far: Point };
+  T1: [Point, Point];
+  T2: [Point, Point];
 } {
   const {
     pos: [x, y],
     rot,
   } = attributes(equipment);
 
-  const top = {
-    close: [
+  const T1 = [
+    [
       [x + 0.5, y],
       [x + 1, y + 0.5],
       [x + 0.5, y + 1],
       [x, y + 0.5],
-    ][rot] as Point,
-    far: [
+    ][rot],
+    [
       [x + 0.5, y - 0.5],
       [x + 1.5, y + 0.5],
       [x + 0.5, y + 1.5],
       [x - 0.5, y + 0.5],
-    ][rot] as Point,
-  };
-  const bottom = {
-    close: [
+    ][rot],
+  ] as [Point, Point];
+  const T2 = [
+    [
       [x + 0.5, y + 1],
       [x, y + 0.5],
       [x + 0.5, y],
       [x + 1, y + 0.5],
-    ][rot] as Point,
-    far: [
+    ][rot],
+    [
       [x + 0.5, y + 1.5],
       [x - 0.5, y + 0.5],
       [x + 0.5, y - 0.5],
       [x + 1.5, y + 0.5],
-    ][rot] as Point,
-  };
+    ][rot],
+  ] as [Point, Point];
 
-  return { top, bottom };
+  return { T1, T2 };
 }
 
 export type ResizeDetail = {
@@ -444,9 +444,9 @@ export function newPlaceLabelEvent(detail: PlaceLabelDetail): PlaceLabelEvent {
 export type ConnectDetail = {
   equipment: Element;
   path: Point[];
-  terminal: 'top' | 'bottom';
+  terminal: 'T1' | 'T2';
   connectTo: Element;
-  toTerminal?: 'top' | 'bottom';
+  toTerminal?: 'T1' | 'T2';
 };
 export type ConnectEvent = CustomEvent<ConnectDetail>;
 export function newConnectEvent(detail: ConnectDetail): ConnectEvent {
@@ -488,11 +488,13 @@ export function newStartPlaceLabelEvent(detail: Element): StartEvent {
 export type StartConnectDetail =
   | {
       equipment: Element;
-      terminal: 'top' | 'bottom';
+      terminal: 'T1' | 'T2';
+      path: Point[];
     }
   | {
       winding: Element;
-      terminal: 't1' | 't2' | 'n1' | 'n2';
+      terminal: 'T1' | 'T2' | 'N1' | 'N2';
+      path: Point[];
     };
 export type StartConnectEvent = CustomEvent<StartConnectDetail>;
 export function newStartConnectEvent(
