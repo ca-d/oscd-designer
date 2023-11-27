@@ -1417,13 +1417,259 @@ export class SLDEditor extends LitElement {
     </g>`;
   }
 
-  renderThreeWindingTransformer(transformer: Element, preview: boolean) {
+  windingMeasures(winding: Element): {
+    center: Point;
+    size: number;
+    t1?: Point;
+    t2?: Point;
+    n1?: Point;
+    n2?: Point;
+  } {
+    const transformer = winding.parentElement!;
+    const windings = Array.from(transformer.children)
+      .filter(c => c.tagName === 'TransformerWinding')
+      .sort((a, b) =>
+        a.getAttribute('name')!.localeCompare(b.getAttribute('name')!)
+      );
+    const [x, y] = this.renderedPosition(transformer).map(c => c + 0.5);
+    let center = [x, y] as Point;
+    const size = windings.length === 3 ? 1.25 : 0.7;
+    let t1: Point | undefined;
+    let t2: Point | undefined;
+    let n1: Point | undefined;
+    let n2: Point | undefined;
+    const terminals = Array.from(winding.children).filter(
+      c => c.tagName === 'Terminal'
+    );
+    const terminal1 = terminals.find(t => t.getAttribute('name') === 'T1');
+    const terminal2 = terminals.find(t => t.getAttribute('name') !== 'T1');
+    const neutrals = Array.from(winding.children).filter(
+      c => c.tagName === 'NeutralPoint'
+    );
+    const neutral1 = neutrals.find(n => n.getAttribute('name') === 'N1');
+    const neutral2 = neutrals.find(n => n.getAttribute('name') !== 'N1');
+    const windingIndex = windings.indexOf(winding);
+    const { rot } = attributes(transformer);
+    if (windings.length === 1) {
+      if (!neutral1)
+        n1 = [
+          [x - size, y],
+          [x, y - size],
+          [x + size, y],
+          [x, y + size],
+        ][rot] as Point;
+      if (!neutral2)
+        n2 = [
+          [x + size, y],
+          [x, y + size],
+          [x - size, y],
+          [x, y - size],
+        ][rot] as Point;
+      if (!terminal1) {
+        t1 = [
+          [x, y - size],
+          [x + size, y],
+          [x, y + size],
+          [x - size, y],
+        ][rot] as Point;
+      }
+      if (!terminal2) {
+        t2 = [
+          [x, y + size],
+          [x - size, y],
+          [x, y - size],
+          [x + size, y],
+        ][rot] as Point;
+      }
+    } else if (windings.length === 2) {
+      if (windingIndex !== 1) {
+        if (!neutral1)
+          n1 = [
+            [x - size, y - 1],
+            [x + 1, y - size],
+            [x + size, y + 1],
+            [x - 1, y + size],
+          ][rot] as Point;
+        if (!neutral2)
+          n2 = [
+            [x + size, y - 1],
+            [x + 1, y + size],
+            [x - size, y + 1],
+            [x - 1, y - size],
+          ][rot] as Point;
+        if (!terminal1 && !terminal2) {
+          t1 = [
+            [x, y - 1 - size],
+            [x + 1 + size, y],
+            [x, y + 1 + size],
+            [x - 1 - size, y],
+          ][rot] as Point;
+        }
+        center = [
+          [x, y - 1],
+          [x + 1, y],
+          [x, y + 1],
+          [x - 1, y],
+        ][rot] as Point;
+      } else {
+        if (!terminal1)
+          t1 = [
+            [x + size, y],
+            [x, y + size],
+            [x - size, y],
+            [x, y - size],
+          ][rot] as Point;
+        if (!terminal2)
+          t2 = [
+            [x - size, y],
+            [x, y - size],
+            [x + size, y],
+            [x, y + size],
+          ][rot] as Point;
+        if (!neutral1 && !neutral2) {
+          n1 = [
+            [x, y + size],
+            [x - size, y],
+            [x, y - size],
+            [x + size, y],
+          ][rot] as Point;
+        }
+      }
+    } else if (windings.length === 3) {
+      if (windingIndex === 0) {
+        center = [
+          [x, y - 1],
+          [x + 1, y],
+          [x, y + 1],
+          [x - 1, y],
+        ][rot] as Point;
+        if (!terminal1 && !terminal2) {
+          t1 = [
+            [x, y - 1 - size],
+            [x + 1 + size, y],
+            [x, y + 1 + size],
+            [x - 1 - size, y],
+          ][rot] as Point;
+        }
+        if (!neutral1) {
+          n1 = [
+            [x - size, y - 1],
+            [x + 1, y - size],
+            [x + size, y + 1],
+            [x - 1, y + size],
+          ][rot] as Point;
+        }
+        if (!neutral2) {
+          n2 = [
+            [x + size, y - 1],
+            [x + 1, y + size],
+            [x - size, y + 1],
+            [x - 1, y - size],
+          ][rot] as Point;
+        }
+      } else if (windingIndex === 1) {
+        center = [
+          [x + 1, y + 1],
+          [x - 1, y + 1],
+          [x - 1, y - 1],
+          [x + 1, y - 1],
+        ][rot] as Point;
+        if (!terminal1 && !terminal2) {
+          t1 = [
+            [x + 1, y + 1 + size],
+            [x - 1 - size, y + 1],
+            [x - 1, y - 1 - size],
+            [x + 1 + size, y - 1],
+          ][rot] as Point;
+        }
+        if (!neutral1 && !neutral2) {
+          n1 = [
+            [x + 1 + size, y + 1],
+            [x - 1, y + 1 + size],
+            [x - 1 - size, y - 1],
+            [x + 1, y - 1 - size],
+          ][rot] as Point;
+        }
+      } else if (windingIndex === 2) {
+        center = [
+          [x - 1, y + 1],
+          [x - 1, y - 1],
+          [x + 1, y - 1],
+          [x + 1, y + 1],
+        ][rot] as Point;
+        if (!terminal1 && !terminal2) {
+          t1 = [
+            [x - 1, y + 1 + size],
+            [x - 1 - size, y - 1],
+            [x + 1, y - 1 - size],
+            [x + 1 + size, y + 1],
+          ][rot] as Point;
+        }
+        if (!neutral1 && !neutral2) {
+          n1 = [
+            [x - 1 - size, y + 1],
+            [x - 1, y - 1 - size],
+            [x + 1 + size, y - 1],
+            [x + 1, y + 1 + size],
+          ][rot] as Point;
+        }
+      }
+    }
+    return { center, size, t1, t2, n1, n2 };
+  }
+
+  renderTransformerWinding(winding: Element): TemplateResult<2> {
+    const {
+      size,
+      center: [cx, cy],
+      n1,
+      n2,
+      t1,
+      t2,
+    } = this.windingMeasures(winding);
+    const ports = [];
+    if (t1) {
+      const [x, y] = t1;
+      ports.push(svg`<circle cx="${x}" cy="${y}" r="0.2" opacity="0.4"
+      fill="#BB1326" stroke="#F5E214" />`);
+    }
+    if (t2) {
+      const [x, y] = t2;
+      ports.push(svg`<circle cx="${x}" cy="${y}" r="0.2" opacity="0.4"
+      fill="#BB1326" stroke="#F5E214" />`);
+    }
+    if (n1) {
+      const [x, y] = n1;
+      ports.push(svg`<circle cx="${x}" cy="${y}" r="0.2" opacity="0.4"
+      fill="#12579B" stroke="#F5E214" />`);
+    }
+    if (n2) {
+      const [x, y] = n2;
+      ports.push(svg`<circle cx="${x}" cy="${y}" r="0.2" opacity="0.4"
+      fill="#12579B" stroke="#F5E214" />`);
+    }
+    return svg`<circle cx="${cx}" cy="${cy}" r="${size}" stroke="black" stroke-width="0.06" />${ports}`;
+  }
+
+  renderPowerTransformer(
+    transformer: Element,
+    preview = false
+  ): TemplateResult<2> {
+    if (this.placing === transformer && !preview) return svg``;
+    const windings = Array.from(transformer.children).filter(
+      c => c.tagName === 'TransformerWinding'
+    );
     const [x, y] = this.renderedPosition(transformer);
-    const [cx1, cy1] = [x + 0.5, y - 0.5];
-    const [cx2, cy2] = [x - 0.5, y + 1.5];
-    const [cx3, cy3] = [x + 1.5, y + 1.5];
     return svg`<g class="${classMap({ transformer: true, preview })}"
-    pointer-events="all"
+        pointer-events="all"
+        @mousedown=${preventDefault}
+        @auxclick=${(e: MouseEvent) => {
+          if (e.button === 1) {
+            // middle mouse button
+            this.dispatchEvent(newRotateEvent(transformer));
+            e.preventDefault();
+          }
+        }}
         @click=${() => {
           const parent =
             Array.from(
@@ -1434,8 +1680,7 @@ export class SLDEditor extends LitElement {
                   this.substation.querySelectorAll(':scope > VoltageLevel')
                 )
               )
-              .find(vl => containsRect(vl, x - 1, y - 1, 5, 5)) ||
-            this.substation;
+              .find(vl => containsRect(vl, x, y, 1, 1)) || this.substation;
           this.dispatchEvent(
             this.placing === transformer
               ? newPlaceEvent({
@@ -1447,65 +1692,8 @@ export class SLDEditor extends LitElement {
               : newStartPlaceEvent(transformer)
           );
         }}>
-    <circle cx="${cx1}" cy="${cy1}" r="1.25" stroke="black" stroke-width="0.06" />
-    <circle cx="${cx2}" cy="${cy2}" r="1.25" stroke="black" stroke-width="0.06" />
-    <circle cx="${cx3}" cy="${cy3}" r="1.25" stroke="black" stroke-width="0.06" />
-    </g>`;
-  }
-
-  renderTwoWindingTransformer(transformer: Element, preview: boolean) {
-    const [x, y] = this.renderedPosition(transformer);
-    const [cx1, cy1] = [x + 0.5, y - 0.5];
-    const [cx2, cy2] = [x + 0.5, y + 0.5];
-    return svg`<g class="${classMap({ transformer: true, preview })}"
-    pointer-events="all"
-        @click=${() =>
-          this.dispatchEvent(
-            this.placing === transformer
-              ? newPlaceEvent({
-                  element: transformer,
-                  parent: this.substation,
-                  x,
-                  y,
-                })
-              : newStartPlaceEvent(transformer)
-          )}>
-    <circle cx="${cx1}" cy="${cy1}" r="0.7" stroke="black" stroke-width="0.06" />
-    <circle cx="${cx2}" cy="${cy2}" r="0.7" stroke="black" stroke-width="0.06" />
-    </g>`;
-  }
-
-  renderSingleWindingTransformer(transformer: Element, preview: boolean) {
-    const [x, y] = this.renderedPosition(transformer);
-    const [cx1, cy1] = [x + 0.5, y + 0.5];
-    return svg`<g class="${classMap({ transformer: true, preview })}"
-    pointer-events="all"
-        @click=${() =>
-          this.dispatchEvent(
-            this.placing === transformer
-              ? newPlaceEvent({
-                  element: transformer,
-                  parent: this.substation,
-                  x,
-                  y,
-                })
-              : newStartPlaceEvent(transformer)
-          )}>
-    <circle cx="${cx1}" cy="${cy1}" r="0.7" stroke="black" stroke-width="0.06" />
-    </g>`;
-  }
-
-  renderPowerTransformer(
-    transformer: Element,
-    preview = false
-  ): TemplateResult<2> {
-    if (this.placing === transformer && !preview) return svg``;
-    const windings = transformer.querySelectorAll('TransformerWinding');
-    if (windings.length === 3)
-      return this.renderThreeWindingTransformer(transformer, preview);
-    if (windings.length === 2)
-      return this.renderTwoWindingTransformer(transformer, preview);
-    return this.renderSingleWindingTransformer(transformer, preview);
+    ${windings.map(w => this.renderTransformerWinding(w))}
+      </g>`;
   }
 
   renderEquipment(

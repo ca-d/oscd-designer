@@ -485,10 +485,15 @@ export function newStartPlaceLabelEvent(detail: Element): StartEvent {
     detail,
   });
 }
-export type StartConnectDetail = {
-  equipment: Element;
-  terminal: 'top' | 'bottom';
-};
+export type StartConnectDetail =
+  | {
+      equipment: Element;
+      terminal: 'top' | 'bottom';
+    }
+  | {
+      winding: Element;
+      terminal: 't1' | 't2' | 'n1' | 'n2';
+    };
 export type StartConnectEvent = CustomEvent<StartConnectDetail>;
 export function newStartConnectEvent(
   detail: StartConnectDetail,
