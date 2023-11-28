@@ -38,6 +38,11 @@ export function uuid() {
     digits[19] |= 1 << 3;
     return digits.map(x => x.toString(16)).join('');
 }
+/* eslint-enable no-bitwise */
+const transformerKinds = ['default', 'auto', 'earthing'];
+export function isTransformerKind(kind) {
+    return transformerKinds.includes(kind);
+}
 export function xmlBoolean(value) {
     var _a;
     return ['true', '1'].includes((_a = value === null || value === void 0 ? void 0 : value.trim()) !== null && _a !== void 0 ? _a : 'false');
@@ -62,8 +67,10 @@ export function attributes(element) {
     const label = [labelX, labelY].map(d => Math.max(0, d));
     const bus = xmlBoolean(element.getAttribute('bus'));
     const flip = xmlBoolean(element.getAttributeNS(sldNs, 'flip'));
+    const kindVal = element.getAttributeNS(sldNs, 'kind');
+    const kind = isTransformerKind(kindVal) ? kindVal : 'default';
     const rot = (((rotVal % 4) + 4) % 4);
-    return { pos, dim, label, flip, rot, bus };
+    return { pos, dim, label, flip, rot, bus, kind };
 }
 function pathString(...args) {
     return args.join('/');
@@ -261,35 +268,35 @@ export function removeTerminal(terminal) {
 }
 export function connectionStartPoints(equipment) {
     const { pos: [x, y], rot, } = attributes(equipment);
-    const top = {
-        close: [
+    const T1 = [
+        [
             [x + 0.5, y],
             [x + 1, y + 0.5],
             [x + 0.5, y + 1],
             [x, y + 0.5],
         ][rot],
-        far: [
+        [
             [x + 0.5, y - 0.5],
             [x + 1.5, y + 0.5],
             [x + 0.5, y + 1.5],
             [x - 0.5, y + 0.5],
         ][rot],
-    };
-    const bottom = {
-        close: [
+    ];
+    const T2 = [
+        [
             [x + 0.5, y + 1],
             [x, y + 0.5],
             [x + 0.5, y],
             [x + 1, y + 0.5],
         ][rot],
-        far: [
+        [
             [x + 0.5, y + 1.5],
             [x - 0.5, y + 0.5],
             [x + 0.5, y - 0.5],
             [x + 1.5, y + 0.5],
         ][rot],
-    };
-    return { top, bottom };
+    ];
+    return { T1, T2 };
 }
 export function newResizeEvent(detail) {
     return new CustomEvent('oscd-sld-resize', {

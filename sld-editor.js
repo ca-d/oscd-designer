@@ -13,9 +13,10 @@ import { getReference, identity } from '@openscd/oscd-scl';
 import { bayGraphic, eqRingPath, equipmentGraphic, movePath, resizePath, symbols, voltageLevelGraphic, } from './icons.js';
 import { attributes, connectionStartPoints, elementPath, isBusBar, isEqType, newConnectEvent, newPlaceEvent, newPlaceLabelEvent, newResizeEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartPlaceLabelEvent, newStartResizeEvent, privType, removeNode, removeTerminal, ringedEqTypes, sldNs, svgNs, uuid, xlinkNs, xmlBoolean, } from './util.js';
 const parentTags = {
-    ConductingEquipment: 'Bay',
-    Bay: 'VoltageLevel',
-    VoltageLevel: 'Substation',
+    ConductingEquipment: ['Bay'],
+    Bay: ['VoltageLevel'],
+    VoltageLevel: ['Substation'],
+    PowerTransformer: ['Bay', 'VoltageLevel', 'Substation'],
 };
 const singleTerminal = new Set([
     'BAT',
@@ -55,6 +56,21 @@ function overlapsRect(element, x0, y0, w0, h0) {
     const { pos: [x, y], dim: [w, h], } = attributes(element);
     return overlaps([x, y, w, h], [x0, y0, w0, h0]);
 }
+function findIntersection([tx1, ty1], [tx2, ty2], [x1, y1], [x2, y2]) {
+    if (tx1 === x1 && ty1 <= y1 && ty2 <= y2)
+        return [tx1, ty1];
+    if (ty1 === y1 && tx1 <= x1 && tx2 <= x2)
+        return [tx1, ty1];
+    const vertical = tx1 === tx2;
+    if (vertical) {
+        if (Math.abs(x1 - tx1) < Math.abs(x2 - tx1))
+            return [tx1, y1];
+        return [tx1, y2];
+    }
+    if (Math.abs(y1 - ty1) < Math.abs(y2 - ty1))
+        return [x1, ty1];
+    return [x2, ty1];
+}
 function cleanPath(path) {
     let i = path.length - 2;
     while (i > 0) {
@@ -76,7 +92,7 @@ function preventDefault(e) {
 }
 function copy(element, nsp) {
     const clone = element.cloneNode(true);
-    const terminals = new Set(Array.from(element.querySelectorAll('Terminal')));
+    const terminals = new Set(Array.from(element.querySelectorAll('Terminal, NeutralPoint')));
     const cNodes = new Set(Array.from(element.querySelectorAll('ConnectivityNode')));
     terminals.forEach(terminal => {
         const cNode = element.ownerDocument.querySelector(`ConnectivityNode[pathName="${terminal.getAttribute('connectivityNode')}"]`);
@@ -85,7 +101,7 @@ function copy(element, nsp) {
     });
     const foreignCNodes = new Set();
     cNodes.forEach(cNode => {
-        const foreignTerminal = Array.from(element.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${cNode.getAttribute('pathName')}"]`)).find(terminal => !terminals.has(terminal));
+        const foreignTerminal = Array.from(element.ownerDocument.querySelectorAll(`[connectivityNode="${cNode.getAttribute('pathName')}"]`)).find(terminal => !terminals.has(terminal));
         if (foreignTerminal ||
             (isBusBar(cNode.closest('Bay')) &&
                 cNode.closest(element.tagName) !== element))
@@ -109,7 +125,7 @@ function copy(element, nsp) {
                     .querySelector(`[*|uuid="${terminal.getAttributeNS(sldNs, 'uuid')}"]`)) === null || _a === void 0 ? void 0 : _a.remove();
         });
     });
-    Array.from(clone.querySelectorAll('Terminal')).forEach(terminal => {
+    Array.from(clone.querySelectorAll('Terminal, NeutralPoint')).forEach(terminal => {
         const oldUUID = terminal.getAttributeNS(sldNs, 'uuid');
         if (!oldUUID)
             return;
@@ -200,7 +216,7 @@ let SLDEditor = class SLDEditor extends LitElement {
     canPlaceAt(element, x, y, w, h) {
         if (element.tagName === 'Substation')
             return true;
-        const overlappingSibling = Array.from(this.substation.querySelectorAll(element.tagName)).find(sibling => sibling !== element &&
+        const overlappingSibling = Array.from(this.substation.querySelectorAll(`${element.tagName}, PowerTransformer`)).find(sibling => sibling.closest(element.tagName) !== element &&
             overlapsRect(sibling, x, y, w, h) &&
             !isBusBar(sibling));
         if (overlappingSibling && !isBusBar(element)) {
@@ -208,7 +224,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         }
         const containingParent = element.tagName === 'VoltageLevel'
             ? containsRect(this.substation, x, y, w, h)
-            : Array.from(this.substation.querySelectorAll(parentTags[element.tagName])).find(parent => !isBusBar(parent) && containsRect(parent, x, y, w, h));
+            : Array.from(this.substation.querySelectorAll(parentTags[element.tagName].join(','))).find(parent => !isBusBar(parent) && containsRect(parent, x, y, w, h));
         if (containingParent)
             return true;
         return false;
@@ -219,7 +235,8 @@ let SLDEditor = class SLDEditor extends LitElement {
             this.canPlaceAt(element, x, y, oldW, oldH))
             return false;
         const lostChild = Array.from(element.children).find(child => {
-            if (parentTags[child.tagName] !== element.tagName)
+            var _a;
+            if (!((_a = parentTags[child.tagName]) === null || _a === void 0 ? void 0 : _a.includes(element.tagName)))
                 return false;
             const { pos: [cx, cy], dim: [cw, ch], } = attributes(child);
             return !contains([x, y, w, h], [cx, cy, cw, ch]);
@@ -275,22 +292,22 @@ let SLDEditor = class SLDEditor extends LitElement {
         if (oneSided && (topTerminal || bottomTerminal))
             return undefined;
         if (oneSided)
-            return 'top';
+            return 'T1';
         if (topTerminal)
-            return 'bottom';
+            return 'T2';
         if (bottomTerminal)
-            return 'top';
+            return 'T1';
         const [mX2, mY2] = [this.mouseX2, this.mouseY2].map(n => n % 1);
         const { rot } = attributes(equipment);
         if (rot === 0 && mY2 === 0.5)
-            return 'bottom';
+            return 'T2';
         if (rot === 1 && mX2 === 0)
-            return 'bottom';
+            return 'T2';
         if (rot === 2 && mY2 === 0)
-            return 'bottom';
+            return 'T2';
         if (rot === 3 && mX2 === 0.5)
-            return 'bottom';
-        return 'top';
+            return 'T2';
+        return 'T1';
     }
     groundTerminal(equipment, name) {
         const bay = equipment.closest('Bay');
@@ -450,8 +467,9 @@ let SLDEditor = class SLDEditor extends LitElement {
             else
                 items.unshift({
                     handler: () => this.dispatchEvent(newStartConnectEvent({
-                        equipment,
-                        terminal: 'bottom',
+                        from: equipment,
+                        fromTerminal: 'T2',
+                        path: connectionStartPoints(equipment).T2,
                     })),
                     content: item('connect', false),
                 }, {
@@ -466,7 +484,11 @@ let SLDEditor = class SLDEditor extends LitElement {
             });
         else
             items.unshift({
-                handler: () => this.dispatchEvent(newStartConnectEvent({ equipment, terminal: 'top' })),
+                handler: () => this.dispatchEvent(newStartConnectEvent({
+                    from: equipment,
+                    fromTerminal: 'T1',
+                    path: connectionStartPoints(equipment).T1,
+                })),
                 content: item('connect', true),
             }, {
                 handler: () => this.groundTerminal(equipment, 'T1'),
@@ -661,9 +683,10 @@ let SLDEditor = class SLDEditor extends LitElement {
     `;
     }
     render() {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
         const { dim: [w, h], } = attributes(this.substation);
-        const placingTarget = ((_a = this.placing) === null || _a === void 0 ? void 0 : _a.tagName) === 'VoltageLevel'
+        const placingTarget = ((_a = this.placing) === null || _a === void 0 ? void 0 : _a.tagName) === 'VoltageLevel' ||
+            ((_b = this.placing) === null || _b === void 0 ? void 0 : _b.tagName) === 'PowerTransformer'
             ? svg `<rect width="100%" height="100%" fill="url(#grid)" />`
             : nothing;
         const placingLabelTarget = this.placingLabel
@@ -678,9 +701,11 @@ let SLDEditor = class SLDEditor extends LitElement {
         let placingElement = svg ``;
         if (this.placing) {
             if (this.placing.tagName === 'VoltageLevel' || isBay(this.placing))
-                placingElement = svg `${this.renderContainer(this.placing, true)}`;
+                placingElement = this.renderContainer(this.placing, true);
             else if (this.placing.tagName === 'ConductingEquipment')
                 placingElement = this.renderEquipment(this.placing, { preview: true });
+            else if (this.placing.tagName === 'PowerTransformer')
+                placingElement = this.renderPowerTransformer(this.placing, true);
             else if (isBusBar(this.placing))
                 placingElement = this.renderBusBar(this.placing);
         }
@@ -708,8 +733,8 @@ let SLDEditor = class SLDEditor extends LitElement {
       (${coordinates})
     </div>`;
         const connectionPreview = [];
-        if (((_b = this.connecting) === null || _b === void 0 ? void 0 : _b.equipment.closest('Substation')) === this.substation) {
-            const { equipment, path, terminal } = this.connecting;
+        if (((_c = this.connecting) === null || _c === void 0 ? void 0 : _c.from.closest('Substation')) === this.substation) {
+            const { from, path, fromTerminal } = this.connecting;
             let i = 0;
             while (i < path.length - 2) {
                 const [x1, y1] = path[i];
@@ -724,14 +749,14 @@ let SLDEditor = class SLDEditor extends LitElement {
             let y3 = this.mouseY + 0.5;
             let [x4, y4] = [x3, y3];
             const targetEq = Array.from(this.substation.querySelectorAll('ConductingEquipment'))
-                .filter(eq => eq !== equipment)
+                .filter(eq => eq !== from)
                 .find(eq => {
                 const { pos: [x, y], } = attributes(eq);
                 return x === this.mouseX && y === this.mouseY;
             });
             const toTerminal = this.nearestOpenTerminal(targetEq);
             if (targetEq && toTerminal) {
-                const { far, close } = connectionStartPoints(targetEq)[toTerminal];
+                const [close, far] = connectionStartPoints(targetEq)[toTerminal];
                 [x3, y3] = far;
                 [x4, y4] = close;
             }
@@ -750,10 +775,10 @@ let SLDEditor = class SLDEditor extends LitElement {
                 this.requestUpdate();
                 if (targetEq && toTerminal)
                     this.dispatchEvent(newConnectEvent({
-                        equipment,
-                        terminal,
+                        from,
+                        fromTerminal,
                         path,
-                        connectTo: targetEq,
+                        to: targetEq,
                         toTerminal,
                     }));
             }} />`);
@@ -830,7 +855,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             .filter(child => child.tagName === 'VoltageLevel')
             .map(vl => svg `${this.renderContainer(vl)}`)}
         ${connectionPreview}
-        ${((_c = this.connecting) === null || _c === void 0 ? void 0 : _c.equipment.closest('Substation')) === this.substation
+        ${((_d = this.connecting) === null || _d === void 0 ? void 0 : _d.from.closest('Substation')) === this.substation
             ? Array.from(this.substation.querySelectorAll('ConductingEquipment')).map(eq => this.renderEquipment(eq, { connect: true }))
             : nothing}
         ${Array.from(this.substation.querySelectorAll('ConnectivityNode'))
@@ -845,6 +870,7 @@ let SLDEditor = class SLDEditor extends LitElement {
                 node.closest(this.placing.tagName) === this.placing) &&
             isBusBar(node.parentElement))
             .map(cNode => this.renderConnectivityNode(cNode))}
+        ${Array.from(this.substation.querySelectorAll('PowerTransformer')).map(transformer => this.renderPowerTransformer(transformer))}
         ${Array.from(this.substation.querySelectorAll('VoltageLevel, Bay, ConductingEquipment'))
             .filter(e => !this.placing || e.closest(this.placing.tagName) !== this.placing)
             .map(element => this.renderLabel(element))}
@@ -1064,11 +1090,359 @@ let SLDEditor = class SLDEditor extends LitElement {
       ${resizingTarget}
     </g>`;
     }
+    windingMeasures(winding) {
+        const transformer = winding.parentElement;
+        const windings = Array.from(transformer.children)
+            .filter(c => c.tagName === 'TransformerWinding')
+            .sort((a, b) => a.getAttribute('name').localeCompare(b.getAttribute('name')));
+        const [x, y] = this.renderedPosition(transformer).map(c => c + 0.5);
+        let center = [x, y];
+        const size = 0.7;
+        let T1;
+        let T2;
+        let N1;
+        let N2;
+        const terminals = Array.from(winding.children).filter(c => c.tagName === 'Terminal');
+        const terminal1 = terminals.find(t => t.getAttribute('name') === 'T1');
+        const terminal2 = terminals.find(t => t.getAttribute('name') !== 'T1');
+        const neutral = Array.from(winding.children).find(c => c.tagName === 'NeutralPoint');
+        const windingIndex = windings.indexOf(winding);
+        const { rot, kind } = attributes(transformer);
+        if (windings.length === 1 && kind === 'auto') {
+            if (!neutral) {
+                N1 = [
+                    [x - size, y],
+                    [x, y - size],
+                    [x + size, y],
+                    [x, y + size],
+                ][rot];
+                N2 = [
+                    [x + size, y],
+                    [x, y + size],
+                    [x - size, y],
+                    [x, y - size],
+                ][rot];
+            }
+            if (!terminal1) {
+                T1 = [
+                    [x, y - size],
+                    [x + size, y],
+                    [x, y + size],
+                    [x - size, y],
+                ][rot];
+            }
+            if (!terminal2) {
+                T2 = [
+                    [x, y + size],
+                    [x - size, y],
+                    [x, y - size],
+                    [x + size, y],
+                ][rot];
+            }
+        }
+        else if (windings.length === 1 && kind === 'earthing') {
+            if (!neutral) {
+                N1 = [
+                    [x, y + size],
+                    [x - size, y],
+                    [x, y - size],
+                    [x + size, y],
+                ][rot];
+            }
+            if (!terminal1 && !terminal2) {
+                T1 = [
+                    [x, y - size],
+                    [x + size, y],
+                    [x, y + size],
+                    [x - size, y],
+                ][rot];
+            }
+        }
+        else if (windings.length === 2 && kind === 'auto') {
+            if (windingIndex !== 1) {
+                if (!neutral) {
+                    N1 = [
+                        [x - size, y - 1],
+                        [x + 1, y - size],
+                        [x + size, y + 1],
+                        [x - 1, y + size],
+                    ][rot];
+                    N2 = [
+                        [x + size, y - 1],
+                        [x + 1, y + size],
+                        [x - size, y + 1],
+                        [x - 1, y - size],
+                    ][rot];
+                }
+                if (!terminal1 && !terminal2) {
+                    T1 = [
+                        [x, y - 1 - size],
+                        [x + 1 + size, y],
+                        [x, y + 1 + size],
+                        [x - 1 - size, y],
+                    ][rot];
+                }
+                center = [
+                    [x, y - 1],
+                    [x + 1, y],
+                    [x, y + 1],
+                    [x - 1, y],
+                ][rot];
+            }
+            else {
+                if (!terminal1)
+                    T1 = [
+                        [x + size, y],
+                        [x, y + size],
+                        [x - size, y],
+                        [x, y - size],
+                    ][rot];
+                if (!terminal2)
+                    T2 = [
+                        [x - size, y],
+                        [x, y - size],
+                        [x + size, y],
+                        [x, y + size],
+                    ][rot];
+                if (!neutral) {
+                    N1 = [
+                        [x, y + size],
+                        [x - size, y],
+                        [x, y - size],
+                        [x + size, y],
+                    ][rot];
+                }
+            }
+        }
+        else if (windings.length === 2 && kind === 'earthing') {
+            if (windingIndex !== 1) {
+                if (!terminal1 && !terminal2) {
+                    T1 = [
+                        [x, y - 1 - size],
+                        [x + 1 + size, y],
+                        [x, y + 1 + size],
+                        [x - 1 - size, y],
+                    ][rot];
+                }
+                center = [
+                    [x, y - 1],
+                    [x + 1, y],
+                    [x, y + 1],
+                    [x - 1, y],
+                ][rot];
+            }
+            else {
+                if (!terminal1 && !terminal2)
+                    T1 = [
+                        [x - size, y],
+                        [x, y - size],
+                        [x + size, y],
+                        [x, y + size],
+                    ][rot];
+                if (!neutral) {
+                    N1 = [
+                        [x + size, y],
+                        [x, y + size],
+                        [x - size, y],
+                        [x, y - size],
+                    ][rot];
+                }
+            }
+        }
+        else if (windings.length === 2 && kind === 'default') {
+            if (windingIndex !== 1) {
+                if (!neutral) {
+                    N1 = [
+                        [x - size, y - 1],
+                        [x + 1, y - size],
+                        [x + size, y + 1],
+                        [x - 1, y + size],
+                    ][rot];
+                    N2 = [
+                        [x + size, y - 1],
+                        [x + 1, y + size],
+                        [x - size, y + 1],
+                        [x - 1, y - size],
+                    ][rot];
+                }
+                if (!terminal1 && !terminal2) {
+                    T1 = [
+                        [x, y - 1 - size],
+                        [x + 1 + size, y],
+                        [x, y + 1 + size],
+                        [x - 1 - size, y],
+                    ][rot];
+                }
+                center = [
+                    [x, y - 1],
+                    [x + 1, y],
+                    [x, y + 1],
+                    [x - 1, y],
+                ][rot];
+            }
+            else {
+                if (!neutral) {
+                    N1 = [
+                        [x + size, y],
+                        [x, y + size],
+                        [x - size, y],
+                        [x, y - size],
+                    ][rot];
+                    N2 = [
+                        [x - size, y],
+                        [x, y - size],
+                        [x + size, y],
+                        [x, y + size],
+                    ][rot];
+                }
+                if (!terminal1 && !terminal2) {
+                    T1 = [
+                        [x, y + size],
+                        [x - size, y],
+                        [x, y - size],
+                        [x + size, y],
+                    ][rot];
+                }
+            }
+        }
+        else if (windings.length === 3 && kind === 'default') {
+            if (windingIndex === 0) {
+                center = [x, y];
+                if (!terminal1 && !terminal2) {
+                    T1 = [
+                        [x, y - size],
+                        [x + size, y],
+                        [x, y + size],
+                        [x - size, y],
+                    ][rot];
+                }
+                if (!neutral) {
+                    N1 = [
+                        [x - size, y],
+                        [x, y - size],
+                        [x + size, y],
+                        [x, y + size],
+                    ][rot];
+                    N2 = [
+                        [x + size, y],
+                        [x, y + size],
+                        [x - size, y],
+                        [x, y - size],
+                    ][rot];
+                }
+            }
+            else if (windingIndex === 1) {
+                center = [
+                    [x + 0.5, y + 1],
+                    [x - 1, y + 0.5],
+                    [x - 0.5, y - 1],
+                    [x + 1, y - 0.5],
+                ][rot];
+                if (!terminal1 && !terminal2) {
+                    T1 = [
+                        [x + 0.5 + size, y + 1],
+                        [x - 1, y + 0.5 + size],
+                        [x - 0.5 - size, y - 1],
+                        [x + 1, y - 0.5 - size],
+                    ][rot];
+                }
+                if (!neutral) {
+                    N1 = [
+                        [x + 0.5, y + 1 + size],
+                        [x - 1 - size, y + 0.5],
+                        [x - 0.5, y - 1 - size],
+                        [x + 1 + size, y - 0.5],
+                    ][rot];
+                }
+            }
+            else if (windingIndex === 2) {
+                center = [
+                    [x - 0.5, y + 1],
+                    [x - 1, y - 0.5],
+                    [x + 0.5, y - 1],
+                    [x + 1, y + 0.5],
+                ][rot];
+                if (!terminal1 && !terminal2) {
+                    T1 = [
+                        [x - 0.5 - size, y + 1],
+                        [x - 1, y - 0.5 - size],
+                        [x + 0.5 + size, y - 1],
+                        [x + 1, y + 0.5 + size],
+                    ][rot];
+                }
+                if (!neutral) {
+                    N1 = [
+                        [x - 0.5, y + 1 + size],
+                        [x - 1 - size, y - 0.5],
+                        [x + 0.5, y - 1 - size],
+                        [x + 1 + size, y + 0.5],
+                    ][rot];
+                }
+            }
+        }
+        return { center, size, terminals: { T1, T2, N1, N2 } };
+    }
+    renderTransformerWinding(winding) {
+        const { size, center: [cx, cy], terminals, } = this.windingMeasures(winding);
+        const ports = [];
+        Object.entries(terminals).forEach(([name, point]) => {
+            if (!point)
+                return;
+            const [x, y] = point;
+            const x1 = Number.isInteger(x) || Number.isInteger(x - 0.5) ? x : x + 1;
+            const y1 = Number.isInteger(y) || Number.isInteger(y - 0.5) ? y : y + 1;
+            ports.push(svg `<circle cx="${x}" cy="${y}" r="0.2" opacity="0.4"
+              @click=${(e) => {
+                e.stopImmediatePropagation();
+                this.dispatchEvent(newStartConnectEvent({
+                    from: winding,
+                    fromTerminal: name,
+                    path: [
+                        [x, y],
+                        [x1, y1],
+                    ],
+                }));
+            }}
+      fill="#${name.startsWith('T') ? 'BB1326' : '12579B'}" stroke="#F5E214" />`);
+        });
+        return svg `<circle cx="${cx}" cy="${cy}" r="${size}" stroke="black" stroke-width="0.06" />${ports}`;
+    }
+    renderPowerTransformer(transformer, preview = false) {
+        if (this.placing === transformer && !preview)
+            return svg ``;
+        const windings = Array.from(transformer.children).filter(c => c.tagName === 'TransformerWinding');
+        const [x, y] = this.renderedPosition(transformer);
+        return svg `<g class="${classMap({ transformer: true, preview })}"
+        pointer-events="all"
+        @mousedown=${preventDefault}
+        @auxclick=${(e) => {
+            if (e.button === 1) {
+                // middle mouse button
+                this.dispatchEvent(newRotateEvent(transformer));
+                e.preventDefault();
+            }
+        }}
+        @click=${() => {
+            const parent = Array.from(this.substation.querySelectorAll(':scope > VoltageLevel > Bay'))
+                .concat(Array.from(this.substation.querySelectorAll(':scope > VoltageLevel')))
+                .find(vl => containsRect(vl, x, y, 1, 1)) || this.substation;
+            this.dispatchEvent(this.placing === transformer
+                ? newPlaceEvent({
+                    element: transformer,
+                    parent,
+                    x,
+                    y,
+                })
+                : newStartPlaceEvent(transformer));
+        }}>
+    ${windings.map(w => this.renderTransformerWinding(w))}
+      </g>`;
+    }
     renderEquipment(equipment, { preview = false, connect = false } = {}) {
         var _a;
         if (this.placing === equipment && !preview)
             return svg ``;
-        if (((_a = this.connecting) === null || _a === void 0 ? void 0 : _a.equipment.closest('Substation')) === this.substation &&
+        if (((_a = this.connecting) === null || _a === void 0 ? void 0 : _a.from.closest('Substation')) === this.substation &&
             !connect)
             return svg ``;
         const [x, y] = this.renderedPosition(equipment);
@@ -1112,18 +1486,22 @@ let SLDEditor = class SLDEditor extends LitElement {
             ? nothing
             : svg `<circle cx="0.5" cy="0" r="0.2" opacity="0.4"
       fill="#BB1326" stroke="#F5E214"
-    @click=${() => this.dispatchEvent(newStartConnectEvent({ equipment, terminal: 'top' }))}
+    @click=${() => this.dispatchEvent(newStartConnectEvent({
+                from: equipment,
+                fromTerminal: 'T1',
+                path: connectionStartPoints(equipment).T1,
+            }))}
     @contextmenu=${(e) => {
                 e.preventDefault();
                 this.groundTerminal(equipment, 'T1');
             }}
       />`;
         const topIndicator = !this.connecting ||
-            this.connecting.equipment === equipment ||
+            this.connecting.from === equipment ||
             (this.connecting &&
                 this.mouseX === x &&
                 this.mouseY === y &&
-                this.nearestOpenTerminal(equipment) === 'top') ||
+                this.nearestOpenTerminal(equipment) === 'T1') ||
             topTerminal
             ? nothing
             : svg `<polygon points="0.3,0 0.7,0 0.5,0.4" 
@@ -1139,18 +1517,22 @@ let SLDEditor = class SLDEditor extends LitElement {
             ? nothing
             : svg `<circle cx="0.5" cy="1" r="0.2" opacity="0.4"
       fill="#BB1326" stroke="#F5E214"
-    @click=${() => this.dispatchEvent(newStartConnectEvent({ equipment, terminal: 'bottom' }))}
+    @click=${() => this.dispatchEvent(newStartConnectEvent({
+                from: equipment,
+                fromTerminal: 'T2',
+                path: connectionStartPoints(equipment).T2,
+            }))}
     @contextmenu=${(e) => {
                 e.preventDefault();
                 this.groundTerminal(equipment, 'T2');
             }}
       />`;
         const bottomIndicator = !this.connecting ||
-            this.connecting.equipment === equipment ||
+            this.connecting.from === equipment ||
             (this.connecting &&
                 this.mouseX === x &&
                 this.mouseY === y &&
-                this.nearestOpenTerminal(equipment) === 'bottom') ||
+                this.nearestOpenTerminal(equipment) === 'T2') ||
             bottomTerminal ||
             singleTerminal.has(eqType)
             ? nothing
@@ -1301,8 +1683,10 @@ let SLDEditor = class SLDEditor extends LitElement {
                 }
                 if (this.connecting)
                     handleClick = () => {
-                        const { equipment, path, terminal } = this.connecting;
-                        if (equipment.querySelector(`Terminal[connectivityNode="${cNode.getAttribute('pathName')}"]`))
+                        const { from, path, fromTerminal } = this.connecting;
+                        if (from
+                            .closest('ConductingEquipment, PowerTransformer')
+                            .querySelector(`[connectivityNode="${cNode.getAttribute('pathName')}"]`))
                             return;
                         const [[oldX1, _y], [oldX2, oldY2]] = path.slice(-2);
                         const vertical = oldX1 === oldX2;
@@ -1311,13 +1695,15 @@ let SLDEditor = class SLDEditor extends LitElement {
                         const newX2 = vertical ? oldX2 : x3;
                         const newY2 = vertical ? y3 : oldY2;
                         path[path.length - 1] = [newX2, newY2];
-                        path.push([x3, y3]);
+                        path.push([x3, y3]
+                        // findIntersection([newX2, newY2], [x3, y3], [x1, y1], [x2, y2])
+                        );
                         cleanPath(path);
                         this.dispatchEvent(newConnectEvent({
-                            equipment,
-                            terminal,
+                            from,
+                            fromTerminal,
                             path,
-                            connectTo: cNode,
+                            to: cNode,
                         }));
                     };
                 lines.push(svg `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"

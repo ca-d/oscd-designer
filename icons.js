@@ -76,8 +76,92 @@ const bayPath = svg `<path
     stroke-linejoin="round"
     stroke-linecap="round"
   />`;
+const oneWindingAutoPTRPath = svg `
+<line x1="20" y1="0" x2="20" y2="10" stroke-width="1.5" stroke="currentColor" />
+<line x1="20" y1="30" x2="20" y2="40" stroke-width="1.5" stroke="currentColor" />
+<circle cx="20" cy="20" r="10" fill="none"
+    stroke="currentColor" stroke-width="1.5" />`;
+const oneWindingEarthingPTRPath = svg `
+<line x1="20" y1="0" x2="20" y2="10" stroke-width="1.5" stroke="currentColor" />
+<circle cx="20" cy="20" r="10" fill="none"
+    stroke="currentColor" stroke-width="1.5" />`;
+const twoWindingPTRPath = svg `
+<line x1="20" y1="0" x2="20" y2="5" stroke-width="1.5" stroke="currentColor" />
+<line x1="20" y1="35" x2="20" y2="40" stroke-width="1.5" stroke="currentColor" />
+<circle cx="20" cy="15" r="10" fill="none"
+    stroke="currentColor" stroke-width="1.5" />
+  <circle cx="20" cy="25" r="10" fill="none"
+    stroke="currentColor" stroke-width="1.5" />`;
+const twoWindingAutoPTRPath = svg `
+<line x1="20" y1="0" x2="20" y2="5" stroke-width="1.5" stroke="currentColor" />
+<line x1="0" y1="25" x2="10" y2="25" stroke-width="1.5" stroke="currentColor" />
+<line x1="30" y1="25" x2="40" y2="25" stroke-width="1.5" stroke="currentColor" />
+<circle cx="20" cy="15" r="10" fill="none"
+    stroke="currentColor" stroke-width="1.5" />
+  <circle cx="20" cy="25" r="10" fill="none"
+    stroke="currentColor" stroke-width="1.5" />`;
+const twoWindingEarthingPTRPath = svg `
+<line x1="20" y1="0" x2="20" y2="5" stroke-width="1.5" stroke="currentColor" />
+<line x1="0" y1="25" x2="10" y2="25" stroke-width="1.5" stroke="currentColor" />
+<circle cx="20" cy="15" r="10" fill="none"
+    stroke="currentColor" stroke-width="1.5" />
+  <circle cx="20" cy="25" r="10" fill="none"
+    stroke="currentColor" stroke-width="1.5" />`;
+const threeWindingPTRPath = svg `<circle cx="20" cy="15" r="10" fill="none"
+    stroke="currentColor" stroke-width="1.5" />
+  <circle cx="15" cy="25" r="10" fill="none"
+    stroke="currentColor" stroke-width="1.5" />
+  <circle cx="25" cy="25" r="10" fill="none"
+    stroke="currentColor" stroke-width="1.5" />`;
+export const oneWindingEarthingPTRIcon = html `<svg
+  viewBox="0 0 40 40"
+  width="24"
+  height="24"
+  slot="icon"
+>
+  ${oneWindingEarthingPTRPath}
+</svg>`;
+export const oneWindingAutoPTRIcon = html `<svg
+  viewBox="0 0 40 40"
+  width="24"
+  height="24"
+  slot="icon"
+>
+  ${oneWindingAutoPTRPath}
+</svg>`;
+export const twoWindingPTRIcon = html `<svg
+  viewBox="0 0 40 40"
+  width="24"
+  height="24"
+  slot="icon"
+>
+  ${twoWindingPTRPath}
+</svg>`;
+export const twoWindingAutoPTRIcon = html `<svg
+  viewBox="0 0 40 40"
+  width="24"
+  height="24"
+  slot="icon"
+>
+  ${twoWindingAutoPTRPath}
+</svg>`;
+export const twoWindingEarthingPTRIcon = html `<svg
+  viewBox="0 0 40 40"
+  width="24"
+  height="24"
+  slot="icon"
+>
+  ${twoWindingEarthingPTRPath}
+</svg>`;
+export const threeWindingPTRIcon = html `<svg
+  viewBox="0 0 40 40"
+  width="24"
+  height="24"
+  slot="icon"
+>
+  ${threeWindingPTRPath}
+</svg>`;
 export const voltageLevelIcon = html `<svg
-  id="VoltageLevel"
   viewBox="0 0 25 25"
   width="24"
   height="24"
@@ -86,7 +170,6 @@ export const voltageLevelIcon = html `<svg
   ${voltageLevelPath}
 </svg>`;
 export const voltageLevelGraphic = html `<svg
-  id="VoltageLevel"
   viewBox="0 0 25 25"
   width="24"
   height="24"
@@ -95,7 +178,6 @@ export const voltageLevelGraphic = html `<svg
   ${voltageLevelPath}
 </svg>`;
 export const bayIcon = html `<svg
-  id="Bay"
   viewBox="0 0 25 25"
   width="24"
   height="24"
@@ -104,7 +186,6 @@ export const bayIcon = html `<svg
   ${bayPath}
 </svg>`;
 export const bayGraphic = html `<svg
-  id="Bay"
   viewBox="0 0 25 25"
   width="24"
   height="24"
@@ -546,25 +627,13 @@ export function equipmentPath(equipmentType) {
     return defaultEquipmentPath;
 }
 export function equipmentGraphic(equipmentType) {
-    return html `<svg
-    id="${equipmentType}"
-    viewBox="0 0 25 25"
-    width="24"
-    height="24"
-    slot="graphic"
-  >
+    return html `<svg viewBox="0 0 25 25" width="24" height="24" slot="graphic">
     ${equipmentPath(equipmentType)}
     ${equipmentType && ringedEqTypes.has(equipmentType) ? eqRingPath : nothing}
   </svg>`;
 }
 export function equipmentIcon(equipmentType) {
-    return html `<svg
-    id="${equipmentType}"
-    viewBox="0 0 25 25"
-    width="24"
-    height="24"
-    slot="icon"
-  >
+    return html `<svg viewBox="0 0 25 25" width="24" height="24" slot="icon">
     ${equipmentPath(equipmentType)}
     ${ringedEqTypes.has(equipmentType) ? eqRingPath : nothing}
   </svg>`;
@@ -578,19 +647,6 @@ function equipmentSymbol(equipmentType) {
     ${equipmentPath(equipmentType)}
   </symbol>`;
 }
-export const connectivityNodeMarker = svg `<marker
-  markerWidth="3" markerHeight="3"
-  refX="12.5" refY="12.5"
-  viewBox="0 0 25 25"
-  id="circle"
->
-  <circle
-    fill="black"
-    cx="12.5"
-    cy="12.5"
-    r="12.5"
-  />
-</marker>`;
 export const groundedMarker = svg `<marker
   markerWidth="20" markerHeight="20"
   refX="12.5" refY="12.5"
@@ -626,48 +682,6 @@ export const groundedMarker = svg `<marker
     stroke-width="1.5"
   />
 </marker>`;
-export const powerTransformerTwoWindingSymbol = svg `<symbol
-  id="PTR"
-  viewBox="0 0 25 25"
-  width="1" height="1"
->
-  <line
-    x1="12.5"
-    y1="2"
-    x2="12.5"
-    y2="5"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <circle
-    cx="12.5"
-    cy="10"
-    r="5"
-    stroke="currentColor"
-    fill="none"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <circle
-    cx="12.5"
-    cy="15"
-    r="5"
-    stroke="currentColor"
-    fill="none"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <line
-    x1="12.5"
-    y1="20"
-    x2="12.5"
-    y2="23"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-</symbol>`;
 export const symbols = svg `
   <defs>
   <pattern id="halfgrid" patternUnits="userSpaceOnUse" width="1" height="1" viewBox="0 0 1 1">
@@ -684,7 +698,6 @@ export const symbols = svg `
   </pattern>
   ${eqTypes.map(eqType => equipmentSymbol(eqType))}
   ${equipmentSymbol('ConductingEquipment')}
-  ${connectivityNodeMarker}
   ${groundedMarker}
   </defs>
 `;
