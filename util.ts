@@ -41,7 +41,9 @@ export function uuid() {
   return digits.map(x => x.toString(16)).join('');
 }
 
+const transformerKinds = ['default', 'auto', 'earthing'] as const;
 export type Point = [number, number];
+export type TransformerKind = (typeof transformerKinds)[number];
 export type Attrs = {
   pos: Point;
   dim: Point;
@@ -49,7 +51,14 @@ export type Attrs = {
   flip: boolean;
   rot: 0 | 1 | 2 | 3;
   bus: boolean;
+  kind: TransformerKind;
 };
+
+export function isTransformerKind(
+  kind: string | null
+): kind is TransformerKind {
+  return transformerKinds.includes(kind as TransformerKind);
+}
 
 export function xmlBoolean(value?: string | null) {
   return ['true', '1'].includes(value?.trim() ?? 'false');
@@ -78,10 +87,12 @@ export function attributes(element: Element): Attrs {
 
   const bus = xmlBoolean(element.getAttribute('bus'));
   const flip = xmlBoolean(element.getAttributeNS(sldNs, 'flip'));
+  const kindVal = element.getAttributeNS(sldNs, 'kind');
+  const kind = isTransformerKind(kindVal) ? kindVal : 'default';
 
   const rot = (((rotVal % 4) + 4) % 4) as 0 | 1 | 2 | 3;
 
-  return { pos, dim, label, flip, rot, bus };
+  return { pos, dim, label, flip, rot, bus, kind };
 }
 
 function pathString(...args: string[]) {
@@ -442,11 +453,11 @@ export function newPlaceLabelEvent(detail: PlaceLabelDetail): PlaceLabelEvent {
 }
 
 export type ConnectDetail = {
-  equipment: Element;
+  from: Element;
   path: Point[];
-  terminal: 'T1' | 'T2';
-  connectTo: Element;
-  toTerminal?: 'T1' | 'T2';
+  fromTerminal: 'T1' | 'T2' | 'N1' | 'N2';
+  to: Element;
+  toTerminal?: 'T1' | 'T2' | 'N1' | 'N2';
 };
 export type ConnectEvent = CustomEvent<ConnectDetail>;
 export function newConnectEvent(detail: ConnectDetail): ConnectEvent {
@@ -485,17 +496,11 @@ export function newStartPlaceLabelEvent(detail: Element): StartEvent {
     detail,
   });
 }
-export type StartConnectDetail =
-  | {
-      equipment: Element;
-      terminal: 'T1' | 'T2';
-      path: Point[];
-    }
-  | {
-      winding: Element;
-      terminal: 'T1' | 'T2' | 'N1' | 'N2';
-      path: Point[];
-    };
+export type StartConnectDetail = {
+  from: Element;
+  fromTerminal: 'T1' | 'T2' | 'N1' | 'N2';
+  path: Point[];
+};
 export type StartConnectEvent = CustomEvent<StartConnectDetail>;
 export function newStartConnectEvent(
   detail: StartConnectDetail,

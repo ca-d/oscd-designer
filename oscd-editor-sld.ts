@@ -22,8 +22,11 @@ import './sld-editor.js';
 import {
   bayIcon,
   equipmentIcon,
-  oneWindingPTRIcon,
+  oneWindingAutoPTRIcon,
+  oneWindingEarthingPTRIcon,
   threeWindingPTRIcon,
+  twoWindingAutoPTRIcon,
+  twoWindingEarthingPTRIcon,
   twoWindingPTRIcon,
   voltageLevelIcon,
 } from './icons.js';
@@ -166,9 +169,9 @@ export default class OscdEditorSLD extends LitElement {
 
   @state()
   connecting?: {
-    equipment: Element;
+    from: Element;
     path: Point[];
-    terminal: 'T1' | 'T2';
+    fromTerminal: 'T1' | 'T2' | 'N1' | 'N2';
   };
 
   zoomIn(step = 4) {
@@ -196,7 +199,6 @@ export default class OscdEditorSLD extends LitElement {
   }
 
   startConnecting(detail: StartConnectDetail) {
-    if (!('equipment' in detail)) return;
     this.reset();
     this.connecting = detail;
   }
@@ -259,9 +261,12 @@ export default class OscdEditorSLD extends LitElement {
           },
         },
       },
-    ] as EditV2[];
-    if (element.tagName === 'ConductingEquipment') {
-      Array.from(element.getElementsByTagName('Terminal'))
+    ] as Edit[];
+    if (
+      element.tagName === 'ConductingEquipment' ||
+      element.tagName === 'PowerTransformer'
+    ) {
+      Array.from(element.querySelectorAll('Terminal, NeutralPoint'))
         .filter(terminal => terminal.getAttribute('cNodeName') !== 'grounded')
         .forEach(terminal => edits.push(...removeTerminal(terminal)));
     }
@@ -346,13 +351,16 @@ export default class OscdEditorSLD extends LitElement {
       });
     });
 
-    if (element.tagName === 'ConductingEquipment') {
-      Array.from(element.getElementsByTagName('Terminal'))
+    if (
+      element.tagName === 'ConductingEquipment' ||
+      element.tagName === 'PowerTransformer'
+    ) {
+      Array.from(element.querySelectorAll('Terminal, NeutralPoint'))
         .filter(terminal => terminal.getAttribute('cNodeName') !== 'grounded')
         .forEach(terminal => edits.push(...removeTerminal(terminal)));
 
       const groundedTerminals = Array.from(
-        element.getElementsByTagName('Terminal'),
+        element.querySelectorAll('Terminal, NeutralPoint')
       ).filter(terminal => terminal.getAttribute('cNodeName') === 'grounded');
 
       if (groundedTerminals.length > 0) {
@@ -402,22 +410,27 @@ export default class OscdEditorSLD extends LitElement {
           if (
             Array.from(
               this.doc.querySelectorAll(
-                `Terminal[connectivityNode="${cNode.getAttribute('pathName')}"]`,
-              ),
+                `Terminal[connectivityNode="${cNode.getAttribute('pathName')}"],
+                 NeutralPoint[connectivityNode="${cNode.getAttribute(
+                   'pathName'
+                 )}"]`
+              )
             ).find(terminal => terminal.closest(element.tagName) !== element)
           )
             edits.push(...removeNode(cNode));
         },
       );
-      Array.from(element.getElementsByTagName('Terminal')).forEach(terminal => {
-        const cNode = this.doc.querySelector(
-          `ConnectivityNode[pathName="${terminal.getAttribute(
-            'connectivityNode',
-          )}"]`,
-        );
-        if (cNode && cNode.closest(element.tagName) !== element)
-          edits.push(...removeNode(cNode));
-      });
+      Array.from(element.querySelectorAll('Terminal, NeutralPoint')).forEach(
+        terminal => {
+          const cNode = this.doc.querySelector(
+            `ConnectivityNode[pathName="${terminal.getAttribute(
+              'connectivityNode'
+            )}"]`
+          );
+          if (cNode && cNode.closest(element.tagName) !== element)
+            edits.push(...removeNode(cNode));
+        }
+      );
     }
 
     if (element.localName === 'Vertex') {
@@ -466,24 +479,29 @@ export default class OscdEditorSLD extends LitElement {
   }
 
   connectEquipment({
-    equipment,
-    terminal,
-    connectTo,
+    from,
+    fromTerminal,
+    to,
     toTerminal,
     path,
   }: ConnectDetail) {
-    const edits = [] as EditV2[];
+    if (
+      from.tagName === 'TransformerWinding' &&
+      to.tagName === 'TransformerWinding'
+    )
+      return;
+    const edits = [] as Edit[];
     let cNode: Element;
     let connectivityNode: string;
     let cNodeName: string;
     let priv: Element;
-    if (connectTo.tagName !== 'ConnectivityNode') {
+    if (to.tagName !== 'ConnectivityNode') {
       cNode = this.doc.createElementNS(
         this.doc.documentElement.namespaceURI,
         'ConnectivityNode',
       );
       cNode.setAttribute('name', 'L1');
-      const bay = equipment.closest('Bay')!;
+      const bay = from.closest('Bay') || to.closest('Bay')!;
       edits.push(...reparentElement(cNode, bay));
       connectivityNode = (
         edits.find(
@@ -513,7 +531,7 @@ export default class OscdEditorSLD extends LitElement {
         reference: getReference(cNode, 'Private'),
       });
     } else {
-      cNode = connectTo;
+      cNode = to;
       connectivityNode = cNode.getAttribute('pathName')!;
       cNodeName = cNode.getAttribute('name')!;
       priv = cNode.querySelector(`Private[type="${privType}"]`)!;
@@ -528,14 +546,11 @@ export default class OscdEditorSLD extends LitElement {
       vertex.setAttributeNS(sldNs, `${this.nsp}:y`, y.toString());
       if (i === 0)
         vertex.setAttributeNS(sldNs, `${this.nsp}:uuid`, fromTermUUID);
-      else if (
-        i === path.length - 1 &&
-        connectTo.tagName !== 'ConnectivityNode'
-      )
+      else if (i === path.length - 1 && to.tagName !== 'ConnectivityNode')
         vertex.setAttributeNS(sldNs, `${this.nsp}:uuid`, toTermUUID);
       edits.push({ parent: section, node: vertex, reference: null });
     });
-    if (connectTo.tagName === 'ConnectivityNode') {
+    if (to.tagName === 'ConnectivityNode') {
       const [x, y] = path[path.length - 1];
       Array.from(priv.getElementsByTagNameNS(sldNs, 'Section')).find(s => {
         const sectionPath = Array.from(
@@ -564,13 +579,15 @@ export default class OscdEditorSLD extends LitElement {
       '/',
       3,
     );
+    const fromTagName = fromTerminal.startsWith('T')
+      ? 'Terminal'
+      : 'NeutralPoint';
     const fromTermElement = this.doc.createElementNS(
       this.doc.documentElement.namespaceURI,
-      'Terminal',
+      fromTagName
     );
     fromTermElement.setAttributeNS(sldNs, `${this.nsp}:uuid`, fromTermUUID);
-    const fromTermName = terminal === 'T1' ? 'T1' : 'T2';
-    fromTermElement.setAttribute('name', fromTermName);
+    fromTermElement.setAttribute('name', fromTerminal);
     fromTermElement.setAttribute('connectivityNode', connectivityNode);
     fromTermElement.setAttribute('substationName', substationName);
     fromTermElement.setAttribute('voltageLevelName', voltageLevelName);
@@ -578,17 +595,19 @@ export default class OscdEditorSLD extends LitElement {
     fromTermElement.setAttribute('cNodeName', cNodeName);
     edits.push({
       node: fromTermElement,
-      parent: equipment,
-      reference: getReference(equipment, 'Terminal'),
+      parent: from,
+      reference: getReference(from, fromTagName),
     });
-    if (connectTo.tagName === 'ConductingEquipment') {
+    if (to.tagName === 'ConductingEquipment') {
+      const toTagName = toTerminal!.startsWith('T')
+        ? 'Terminal'
+        : 'NeutralPoint';
       const toTermElement = this.doc.createElementNS(
         this.doc.documentElement.namespaceURI,
-        'Terminal',
+        toTagName
       );
       toTermElement.setAttributeNS(sldNs, `${this.nsp}:uuid`, toTermUUID);
-      const toTermName = toTerminal === 'T1' ? 'T1' : 'T2';
-      toTermElement.setAttribute('name', toTermName);
+      toTermElement.setAttribute('name', toTerminal!);
       toTermElement.setAttribute('connectivityNode', connectivityNode);
       toTermElement.setAttribute('substationName', substationName);
       toTermElement.setAttribute('voltageLevelName', voltageLevelName);
@@ -596,8 +615,8 @@ export default class OscdEditorSLD extends LitElement {
       toTermElement.setAttribute('cNodeName', cNodeName);
       edits.push({
         node: toTermElement,
-        parent: connectTo,
-        reference: getReference(connectTo, 'Terminal'),
+        parent: to,
+        reference: getReference(to, toTagName),
       });
     }
     this.reset();
@@ -756,6 +775,48 @@ export default class OscdEditorSLD extends LitElement {
                 >${threeWindingPTRIcon}</mwc-fab
               ><mwc-fab
                 mini
+                label="Add Two Winding Earthing Transformer"
+                @click=${() => {
+                  const element =
+                    this.templateElements.PowerTransformer!.cloneNode() as Element;
+                  element.setAttribute('type', 'PTR');
+                  element.setAttributeNS(sldNs, 'kind', 'earthing');
+                  const windings = [];
+                  for (let i = 1; i <= 2; i += 1) {
+                    const winding =
+                      this.templateElements.TransformerWinding!.cloneNode() as Element;
+                    winding.setAttribute('type', 'PTW');
+                    winding.setAttribute('name', `W${i}`);
+                    windings.push(winding);
+                  }
+                  element.append(...windings);
+                  this.startPlacing(element);
+                }}
+                style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
+                >${twoWindingEarthingPTRIcon}</mwc-fab
+              ><mwc-fab
+                mini
+                label="Add Two Winding Auto Transformer"
+                @click=${() => {
+                  const element =
+                    this.templateElements.PowerTransformer!.cloneNode() as Element;
+                  element.setAttribute('type', 'PTR');
+                  element.setAttributeNS(sldNs, 'kind', 'auto');
+                  const windings = [];
+                  for (let i = 1; i <= 2; i += 1) {
+                    const winding =
+                      this.templateElements.TransformerWinding!.cloneNode() as Element;
+                    winding.setAttribute('type', 'PTW');
+                    winding.setAttribute('name', `W${i}`);
+                    windings.push(winding);
+                  }
+                  element.append(...windings);
+                  this.startPlacing(element);
+                }}
+                style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
+                >${twoWindingAutoPTRIcon}</mwc-fab
+              ><mwc-fab
+                mini
                 label="Add Two Winding Transformer"
                 @click=${() => {
                   const element =
@@ -776,11 +837,12 @@ export default class OscdEditorSLD extends LitElement {
                 >${twoWindingPTRIcon}</mwc-fab
               ><mwc-fab
                 mini
-                label="Add Single Winding Transformer"
+                label="Add Single Winding Earthing Transformer"
                 @click=${() => {
                   const element =
                     this.templateElements.PowerTransformer!.cloneNode() as Element;
                   element.setAttribute('type', 'PTR');
+                  element.setAttributeNS(sldNs, 'kind', 'earthing');
                   const winding =
                     this.templateElements.TransformerWinding!.cloneNode() as Element;
                   winding.setAttribute('type', 'PTW');
@@ -789,7 +851,24 @@ export default class OscdEditorSLD extends LitElement {
                   this.startPlacing(element);
                 }}
                 style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
-                >${oneWindingPTRIcon}</mwc-fab
+                >${oneWindingEarthingPTRIcon}</mwc-fab
+              ><mwc-fab
+                mini
+                label="Add Single Winding Auto Transformer"
+                @click=${() => {
+                  const element =
+                    this.templateElements.PowerTransformer!.cloneNode() as Element;
+                  element.setAttribute('type', 'PTR');
+                  element.setAttributeNS(sldNs, 'kind', 'auto');
+                  const winding =
+                    this.templateElements.TransformerWinding!.cloneNode() as Element;
+                  winding.setAttribute('type', 'PTW');
+                  winding.setAttribute('name', 'W1');
+                  element.appendChild(winding);
+                  this.startPlacing(element);
+                }}
+                style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
+                >${oneWindingAutoPTRIcon}</mwc-fab
               >`
           : nothing}<mwc-icon-button
           icon="zoom_in"

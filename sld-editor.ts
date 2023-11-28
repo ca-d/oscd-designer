@@ -125,6 +125,23 @@ function overlapsRect(
   return overlaps([x, y, w, h], [x0, y0, w0, h0]);
 }
 
+function findIntersection(
+  [tx1, ty1]: Point,
+  [tx2, ty2]: Point,
+  [x1, y1]: Point,
+  [x2, y2]: Point
+): Point {
+  if (tx1 === x1 && ty1 <= y1 && ty2 <= y2) return [tx1, ty1];
+  if (ty1 === y1 && tx1 <= x1 && tx2 <= x2) return [tx1, ty1];
+  const vertical = tx1 === tx2;
+  if (vertical) {
+    if (Math.abs(x1 - tx1) < Math.abs(x2 - tx1)) return [tx1, y1];
+    return [tx1, y2];
+  }
+  if (Math.abs(y1 - ty1) < Math.abs(y2 - ty1)) return [x1, ty1];
+  return [x2, ty1];
+}
+
 function cleanPath(path: Point[]) {
   let i = path.length - 2;
   while (i > 0) {
@@ -153,7 +170,7 @@ function preventDefault(e: Event) {
 function copy(element: Element, nsp: string): Element {
   const clone = element.cloneNode(true) as Element;
   const terminals = new Set<Element>(
-    Array.from(element.querySelectorAll('Terminal')),
+    Array.from(element.querySelectorAll('Terminal, NeutralPoint'))
   );
   const cNodes = new Set<Element>(
     Array.from(element.querySelectorAll('ConnectivityNode')),
@@ -170,8 +187,8 @@ function copy(element: Element, nsp: string): Element {
   cNodes.forEach(cNode => {
     const foreignTerminal = Array.from(
       element.ownerDocument.querySelectorAll(
-        `Terminal[connectivityNode="${cNode.getAttribute('pathName')}"]`,
-      ),
+        `[connectivityNode="${cNode.getAttribute('pathName')}"]`
+      )
     ).find(terminal => !terminals.has(terminal));
     if (
       foreignTerminal ||
@@ -206,15 +223,17 @@ function copy(element: Element, nsp: string): Element {
           ?.remove();
     });
   });
-  Array.from(clone.querySelectorAll('Terminal')).forEach(terminal => {
-    const oldUUID = terminal.getAttributeNS(sldNs, 'uuid');
-    if (!oldUUID) return;
-    const newUUID = uuid();
-    Array.from(clone.querySelectorAll(`Vertex[*|uuid="${oldUUID}"`)).forEach(
-      vertex => vertex.setAttributeNS(sldNs, `${nsp}:uuid`, newUUID),
-    );
-    terminal.setAttributeNS(sldNs, `${nsp}:uuid`, newUUID);
-  });
+  Array.from(clone.querySelectorAll('Terminal, NeutralPoint')).forEach(
+    terminal => {
+      const oldUUID = terminal.getAttributeNS(sldNs, 'uuid');
+      if (!oldUUID) return;
+      const newUUID = uuid();
+      Array.from(clone.querySelectorAll(`Vertex[*|uuid="${oldUUID}"`)).forEach(
+        vertex => vertex.setAttributeNS(sldNs, `${nsp}:uuid`, newUUID)
+      );
+      terminal.setAttributeNS(sldNs, `${nsp}:uuid`, newUUID);
+    }
+  );
   return clone;
 }
 
@@ -283,9 +302,9 @@ export class SLDEditor extends LitElement {
 
   @property({ type: Object })
   connecting?: {
-    equipment: Element;
+    from: Element;
     path: Point[];
-    terminal: 'T1' | 'T2';
+    fromTerminal: 'T1' | 'T2' | 'N1' | 'N2';
   };
 
   @query('#resizeSubstationUI')
@@ -664,8 +683,8 @@ export class SLDEditor extends LitElement {
             handler: () =>
               this.dispatchEvent(
                 newStartConnectEvent({
-                  equipment,
-                  terminal: 'T2',
+                  from: equipment,
+                  fromTerminal: 'T2',
                   path: connectionStartPoints(equipment).T2,
                 })
               ),
@@ -688,8 +707,8 @@ export class SLDEditor extends LitElement {
           handler: () =>
             this.dispatchEvent(
               newStartConnectEvent({
-                equipment,
-                terminal: 'T1',
+                from: equipment,
+                fromTerminal: 'T1',
                 path: connectionStartPoints(equipment).T1,
               })
             ),
@@ -981,8 +1000,8 @@ export class SLDEditor extends LitElement {
     </div>`;
 
     const connectionPreview = [];
-    if (this.connecting?.equipment.closest('Substation') === this.substation) {
-      const { equipment, path, terminal } = this.connecting;
+    if (this.connecting?.from.closest('Substation') === this.substation) {
+      const { from, path, fromTerminal } = this.connecting;
       let i = 0;
       while (i < path.length - 2) {
         const [x1, y1] = path[i];
@@ -1004,7 +1023,7 @@ export class SLDEditor extends LitElement {
       const targetEq = Array.from(
         this.substation.querySelectorAll('ConductingEquipment'),
       )
-        .filter(eq => eq !== equipment)
+        .filter(eq => eq !== from)
         .find(eq => {
           const {
             pos: [x, y],
@@ -1042,10 +1061,10 @@ export class SLDEditor extends LitElement {
         if (targetEq && toTerminal)
           this.dispatchEvent(
             newConnectEvent({
-              equipment,
-              terminal,
+              from,
+              fromTerminal,
               path,
-              connectTo: targetEq,
+              to: targetEq,
               toTerminal,
             }),
           );
@@ -1126,7 +1145,7 @@ export class SLDEditor extends LitElement {
           .filter(child => child.tagName === 'VoltageLevel')
           .map(vl => svg`${this.renderContainer(vl)}`)}
         ${connectionPreview}
-        ${this.connecting?.equipment.closest('Substation') === this.substation
+        ${this.connecting?.from.closest('Substation') === this.substation
           ? Array.from(
               this.substation.querySelectorAll('ConductingEquipment'),
             ).map(eq => this.renderEquipment(eq, { connect: true }))
@@ -1428,10 +1447,12 @@ export class SLDEditor extends LitElement {
   windingMeasures(winding: Element): {
     center: Point;
     size: number;
-    t1?: Point;
-    t2?: Point;
-    n1?: Point;
-    n2?: Point;
+    terminals: {
+      T1?: Point;
+      T2?: Point;
+      N1?: Point;
+      N2?: Point;
+    };
   } {
     const transformer = winding.parentElement!;
     const windings = Array.from(transformer.children)
@@ -1441,40 +1462,38 @@ export class SLDEditor extends LitElement {
       );
     const [x, y] = this.renderedPosition(transformer).map(c => c + 0.5);
     let center = [x, y] as Point;
-    const size = windings.length === 3 ? 1.25 : 0.7;
-    let t1: Point | undefined;
-    let t2: Point | undefined;
-    let n1: Point | undefined;
-    let n2: Point | undefined;
+    const size = 0.7;
+    let T1: Point | undefined;
+    let T2: Point | undefined;
+    let N1: Point | undefined;
+    let N2: Point | undefined;
     const terminals = Array.from(winding.children).filter(
       c => c.tagName === 'Terminal'
     );
     const terminal1 = terminals.find(t => t.getAttribute('name') === 'T1');
     const terminal2 = terminals.find(t => t.getAttribute('name') !== 'T1');
-    const neutrals = Array.from(winding.children).filter(
+    const neutral = Array.from(winding.children).find(
       c => c.tagName === 'NeutralPoint'
     );
-    const neutral1 = neutrals.find(n => n.getAttribute('name') === 'N1');
-    const neutral2 = neutrals.find(n => n.getAttribute('name') !== 'N1');
     const windingIndex = windings.indexOf(winding);
-    const { rot } = attributes(transformer);
-    if (windings.length === 1) {
-      if (!neutral1)
-        n1 = [
+    const { rot, kind } = attributes(transformer);
+    if (windings.length === 1 && kind === 'auto') {
+      if (!neutral) {
+        N1 = [
           [x - size, y],
           [x, y - size],
           [x + size, y],
           [x, y + size],
         ][rot] as Point;
-      if (!neutral2)
-        n2 = [
+        N2 = [
           [x + size, y],
           [x, y + size],
           [x - size, y],
           [x, y - size],
         ][rot] as Point;
+      }
       if (!terminal1) {
-        t1 = [
+        T1 = [
           [x, y - size],
           [x + size, y],
           [x, y + size],
@@ -1482,31 +1501,48 @@ export class SLDEditor extends LitElement {
         ][rot] as Point;
       }
       if (!terminal2) {
-        t2 = [
+        T2 = [
           [x, y + size],
           [x - size, y],
           [x, y - size],
           [x + size, y],
         ][rot] as Point;
       }
-    } else if (windings.length === 2) {
+    } else if (windings.length === 1 && kind === 'earthing') {
+      if (!neutral) {
+        N1 = [
+          [x, y + size],
+          [x - size, y],
+          [x, y - size],
+          [x + size, y],
+        ][rot] as Point;
+      }
+      if (!terminal1 && !terminal2) {
+        T1 = [
+          [x, y - size],
+          [x + size, y],
+          [x, y + size],
+          [x - size, y],
+        ][rot] as Point;
+      }
+    } else if (windings.length === 2 && kind === 'auto') {
       if (windingIndex !== 1) {
-        if (!neutral1)
-          n1 = [
+        if (!neutral) {
+          N1 = [
             [x - size, y - 1],
             [x + 1, y - size],
             [x + size, y + 1],
             [x - 1, y + size],
           ][rot] as Point;
-        if (!neutral2)
-          n2 = [
+          N2 = [
             [x + size, y - 1],
             [x + 1, y + size],
             [x - size, y + 1],
             [x - 1, y - size],
           ][rot] as Point;
+        }
         if (!terminal1 && !terminal2) {
-          t1 = [
+          T1 = [
             [x, y - 1 - size],
             [x + 1 + size, y],
             [x, y + 1 + size],
@@ -1521,21 +1557,21 @@ export class SLDEditor extends LitElement {
         ][rot] as Point;
       } else {
         if (!terminal1)
-          t1 = [
+          T1 = [
             [x + size, y],
             [x, y + size],
             [x - size, y],
             [x, y - size],
           ][rot] as Point;
         if (!terminal2)
-          t2 = [
+          T2 = [
             [x - size, y],
             [x, y - size],
             [x + size, y],
             [x, y + size],
           ][rot] as Point;
-        if (!neutral1 && !neutral2) {
-          n1 = [
+        if (!neutral) {
+          N1 = [
             [x, y + size],
             [x - size, y],
             [x, y - size],
@@ -1543,119 +1579,199 @@ export class SLDEditor extends LitElement {
           ][rot] as Point;
         }
       }
-    } else if (windings.length === 3) {
-      if (windingIndex === 0) {
-        center = [
-          [x, y - 1],
-          [x + 1, y],
-          [x, y + 1],
-          [x - 1, y],
-        ][rot] as Point;
+    } else if (windings.length === 2 && kind === 'earthing') {
+      if (windingIndex !== 1) {
         if (!terminal1 && !terminal2) {
-          t1 = [
+          T1 = [
             [x, y - 1 - size],
             [x + 1 + size, y],
             [x, y + 1 + size],
             [x - 1 - size, y],
           ][rot] as Point;
         }
-        if (!neutral1) {
-          n1 = [
+        center = [
+          [x, y - 1],
+          [x + 1, y],
+          [x, y + 1],
+          [x - 1, y],
+        ][rot] as Point;
+      } else {
+        if (!terminal1 && !terminal2)
+          T1 = [
+            [x - size, y],
+            [x, y - size],
+            [x + size, y],
+            [x, y + size],
+          ][rot] as Point;
+        if (!neutral) {
+          N1 = [
+            [x + size, y],
+            [x, y + size],
+            [x - size, y],
+            [x, y - size],
+          ][rot] as Point;
+        }
+      }
+    } else if (windings.length === 2 && kind === 'default') {
+      if (windingIndex !== 1) {
+        if (!neutral) {
+          N1 = [
             [x - size, y - 1],
             [x + 1, y - size],
             [x + size, y + 1],
             [x - 1, y + size],
           ][rot] as Point;
-        }
-        if (!neutral2) {
-          n2 = [
+          N2 = [
             [x + size, y - 1],
             [x + 1, y + size],
             [x - size, y + 1],
             [x - 1, y - size],
           ][rot] as Point;
         }
-      } else if (windingIndex === 1) {
-        center = [
-          [x + 1, y + 1],
-          [x - 1, y + 1],
-          [x - 1, y - 1],
-          [x + 1, y - 1],
-        ][rot] as Point;
         if (!terminal1 && !terminal2) {
-          t1 = [
-            [x + 1, y + 1 + size],
-            [x - 1 - size, y + 1],
-            [x - 1, y - 1 - size],
-            [x + 1 + size, y - 1],
+          T1 = [
+            [x, y - 1 - size],
+            [x + 1 + size, y],
+            [x, y + 1 + size],
+            [x - 1 - size, y],
           ][rot] as Point;
         }
-        if (!neutral1 && !neutral2) {
-          n1 = [
-            [x + 1 + size, y + 1],
-            [x - 1, y + 1 + size],
-            [x - 1 - size, y - 1],
-            [x + 1, y - 1 - size],
+        center = [
+          [x, y - 1],
+          [x + 1, y],
+          [x, y + 1],
+          [x - 1, y],
+        ][rot] as Point;
+      } else {
+        if (!neutral) {
+          N1 = [
+            [x + size, y],
+            [x, y + size],
+            [x - size, y],
+            [x, y - size],
+          ][rot] as Point;
+          N2 = [
+            [x - size, y],
+            [x, y - size],
+            [x + size, y],
+            [x, y + size],
+          ][rot] as Point;
+        }
+        if (!terminal1 && !terminal2) {
+          T1 = [
+            [x, y + size],
+            [x - size, y],
+            [x, y - size],
+            [x + size, y],
+          ][rot] as Point;
+        }
+      }
+    } else if (windings.length === 3 && kind === 'default') {
+      if (windingIndex === 0) {
+        center = [x, y];
+        if (!terminal1 && !terminal2) {
+          T1 = [
+            [x, y - size],
+            [x + size, y],
+            [x, y + size],
+            [x - size, y],
+          ][rot] as Point;
+        }
+        if (!neutral) {
+          N1 = [
+            [x - size, y],
+            [x, y - size],
+            [x + size, y],
+            [x, y + size],
+          ][rot] as Point;
+          N2 = [
+            [x + size, y],
+            [x, y + size],
+            [x - size, y],
+            [x, y - size],
+          ][rot] as Point;
+        }
+      } else if (windingIndex === 1) {
+        center = [
+          [x + 0.5, y + 1],
+          [x - 1, y + 0.5],
+          [x - 0.5, y - 1],
+          [x + 1, y - 0.5],
+        ][rot] as Point;
+        if (!terminal1 && !terminal2) {
+          T1 = [
+            [x + 0.5 + size, y + 1],
+            [x - 1, y + 0.5 + size],
+            [x - 0.5 - size, y - 1],
+            [x + 1, y - 0.5 - size],
+          ][rot] as Point;
+        }
+        if (!neutral) {
+          N1 = [
+            [x + 0.5, y + 1 + size],
+            [x - 1 - size, y + 0.5],
+            [x - 0.5, y - 1 - size],
+            [x + 1 + size, y - 0.5],
           ][rot] as Point;
         }
       } else if (windingIndex === 2) {
         center = [
-          [x - 1, y + 1],
-          [x - 1, y - 1],
-          [x + 1, y - 1],
-          [x + 1, y + 1],
+          [x - 0.5, y + 1],
+          [x - 1, y - 0.5],
+          [x + 0.5, y - 1],
+          [x + 1, y + 0.5],
         ][rot] as Point;
         if (!terminal1 && !terminal2) {
-          t1 = [
-            [x - 1, y + 1 + size],
-            [x - 1 - size, y - 1],
-            [x + 1, y - 1 - size],
-            [x + 1 + size, y + 1],
+          T1 = [
+            [x - 0.5 - size, y + 1],
+            [x - 1, y - 0.5 - size],
+            [x + 0.5 + size, y - 1],
+            [x + 1, y + 0.5 + size],
           ][rot] as Point;
         }
-        if (!neutral1 && !neutral2) {
-          n1 = [
-            [x - 1 - size, y + 1],
-            [x - 1, y - 1 - size],
-            [x + 1 + size, y - 1],
-            [x + 1, y + 1 + size],
+        if (!neutral) {
+          N1 = [
+            [x - 0.5, y + 1 + size],
+            [x - 1 - size, y - 0.5],
+            [x + 0.5, y - 1 - size],
+            [x + 1 + size, y + 0.5],
           ][rot] as Point;
         }
       }
     }
-    return { center, size, t1, t2, n1, n2 };
+    return { center, size, terminals: { T1, T2, N1, N2 } };
   }
 
   renderTransformerWinding(winding: Element): TemplateResult<2> {
     const {
       size,
       center: [cx, cy],
-      n1,
-      n2,
-      t1,
-      t2,
+      terminals,
     } = this.windingMeasures(winding);
-    const ports = [];
-    if (t1) {
-      const [x, y] = t1;
+    const ports: TemplateResult<2>[] = [];
+    Object.entries(terminals).forEach(([name, point]) => {
+      if (!point) return;
+      const [x, y] = point;
+      const x1 = Number.isInteger(x) || Number.isInteger(x - 0.5) ? x : x + 1;
+      const y1 = Number.isInteger(y) || Number.isInteger(y - 0.5) ? y : y + 1;
       ports.push(svg`<circle cx="${x}" cy="${y}" r="0.2" opacity="0.4"
-      fill="#BB1326" stroke="#F5E214" />`);
-    }
-    if (t2) {
-      const [x, y] = t2;
-      ports.push(svg`<circle cx="${x}" cy="${y}" r="0.2" opacity="0.4"
-      fill="#BB1326" stroke="#F5E214" />`);
-    }
-    if (n1) {
-      const [x, y] = n1;
-      ports.push(svg`<circle cx="${x}" cy="${y}" r="0.2" opacity="0.4"
-      fill="#12579B" stroke="#F5E214" />`);
-    }
-    if (n2) {
-      const [x, y] = n2;
-      ports.push(svg`<circle cx="${x}" cy="${y}" r="0.2" opacity="0.4"
-      fill="#12579B" stroke="#F5E214" />`);
-    }
+              @click=${(e: MouseEvent) => {
+                e.stopImmediatePropagation();
+                this.dispatchEvent(
+                  newStartConnectEvent({
+                    from: winding,
+                    fromTerminal: name as 'T1' | 'T2' | 'N1' | 'N2',
+                    path: [
+                      [x, y],
+                      [x1, y1],
+                    ],
+                  })
+                );
+              }}
+      fill="#${
+        name.startsWith('T') ? 'BB1326' : '12579B'
+      }" stroke="#F5E214" />`);
+    });
     return svg`<circle cx="${cx}" cy="${cy}" r="${size}" stroke="black" stroke-width="0.06" />${ports}`;
   }
 
@@ -1710,7 +1826,7 @@ export class SLDEditor extends LitElement {
   ) {
     if (this.placing === equipment && !preview) return svg``;
     if (
-      this.connecting?.equipment.closest('Substation') === this.substation &&
+      this.connecting?.from.closest('Substation') === this.substation &&
       !connect
     )
       return svg``;
@@ -1772,8 +1888,8 @@ export class SLDEditor extends LitElement {
     @click=${() =>
       this.dispatchEvent(
         newStartConnectEvent({
-          equipment,
-          terminal: 'T1',
+          from: equipment,
+          fromTerminal: 'T1',
           path: connectionStartPoints(equipment).T1,
         })
       )}
@@ -1785,7 +1901,7 @@ export class SLDEditor extends LitElement {
 
     const topIndicator =
       !this.connecting ||
-      this.connecting.equipment === equipment ||
+      this.connecting.from === equipment ||
       (this.connecting &&
         this.mouseX === x &&
         this.mouseY === y &&
@@ -1812,8 +1928,8 @@ export class SLDEditor extends LitElement {
     @click=${() =>
       this.dispatchEvent(
         newStartConnectEvent({
-          equipment,
-          terminal: 'T2',
+          from: equipment,
+          fromTerminal: 'T2',
           path: connectionStartPoints(equipment).T2,
         })
       )}
@@ -1825,7 +1941,7 @@ export class SLDEditor extends LitElement {
 
     const bottomIndicator =
       !this.connecting ||
-      this.connecting.equipment === equipment ||
+      this.connecting.from === equipment ||
       (this.connecting &&
         this.mouseX === x &&
         this.mouseY === y &&
@@ -2013,11 +2129,13 @@ export class SLDEditor extends LitElement {
         }
         if (this.connecting)
           handleClick = () => {
-            const { equipment, path, terminal } = this.connecting!;
+            const { from, path, fromTerminal } = this.connecting!;
             if (
-              equipment.querySelector(
-                `Terminal[connectivityNode="${cNode.getAttribute('pathName')}"]`,
-              )
+              from
+                .closest('ConductingEquipment, PowerTransformer')!
+                .querySelector(
+                  `[connectivityNode="${cNode.getAttribute('pathName')}"]`
+                )
             )
               return;
             const [[oldX1, _y], [oldX2, oldY2]] = path.slice(-2);
@@ -2030,15 +2148,18 @@ export class SLDEditor extends LitElement {
             const newY2 = vertical ? y3 : oldY2;
 
             path[path.length - 1] = [newX2, newY2];
-            path.push([x3, y3]);
+            path.push(
+              [x3, y3]
+              // findIntersection([newX2, newY2], [x3, y3], [x1, y1], [x2, y2])
+            );
             cleanPath(path);
             this.dispatchEvent(
               newConnectEvent({
-                equipment,
-                terminal,
+                from,
+                fromTerminal,
                 path,
-                connectTo: cNode,
-              }),
+                to: cNode,
+              })
             );
           };
 
