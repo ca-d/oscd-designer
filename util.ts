@@ -136,8 +136,10 @@ export function removeNode(node: Element): EditV2[] {
 
   Array.from(
     node.ownerDocument.querySelectorAll(
-      `Terminal[connectivityNode="${node.getAttribute('pathName')}"]`,
-    ),
+      `Terminal[connectivityNode="${node.getAttribute(
+        'pathName'
+      )}"], NeutralPoint[connectivityNode="${node.getAttribute('pathName')}"]`
+    )
   ).forEach(terminal => edits.push({ node: terminal }));
 
   return edits;
@@ -222,8 +224,8 @@ function updateTerminals(
 
   const terminals = Array.from(
     (cNode.getRootNode() as Document | Element).querySelectorAll(
-      `Terminal[substationName="${oldSubstationName}"][voltageLevelName="${oldVoltageLevelName}"][bayName="${oldBayName}"][cNodeName="${oldCNodeName}"], Terminal[connectivityNode="${oldPathName}"]`,
-    ),
+      `Terminal[substationName="${oldSubstationName}"][voltageLevelName="${oldVoltageLevelName}"][bayName="${oldBayName}"][cNodeName="${oldCNodeName}"], Terminal[connectivityNode="${oldPathName}"], NeutralPoint[substationName="${oldSubstationName}"][voltageLevelName="${oldVoltageLevelName}"][bayName="${oldBayName}"][cNodeName="${oldCNodeName}"], NeutralPoint[connectivityNode="${oldPathName}"]`
+    )
   );
   terminals.forEach(terminal => {
     updates.push({
@@ -333,8 +335,8 @@ export function removeTerminal(terminal: Element): EditV2[] {
 
   const otherTerminals = Array.from(
     terminal.ownerDocument.querySelectorAll(
-      `Terminal[connectivityNode="${pathName}"]`,
-    ),
+      `Terminal[connectivityNode="${pathName}"], NeutralPoint[connectivityNode="${pathName}"]`
+    )
   ).filter(t => t !== terminal);
 
   if (
