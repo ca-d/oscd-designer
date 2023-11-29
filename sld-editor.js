@@ -68,6 +68,8 @@ function pointsOnLine(p1, p2) {
     const coord = p1[0] === p2[0] ? 1 : 0;
     let p = p1[coord] < p2[coord] ? p1 : p2;
     const q = p === p1 ? p2 : p1;
+    p = p.slice();
+    p[coord] = Math.floor(p[coord] * 2) / 2;
     while (p[coord] <= q[coord]) {
         points.push(p);
         p = p.slice();
