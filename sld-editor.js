@@ -56,20 +56,41 @@ function overlapsRect(element, x0, y0, w0, h0) {
     const { pos: [x, y], dim: [w, h], } = attributes(element);
     return overlaps([x, y, w, h], [x0, y0, w0, h0]);
 }
-function findIntersection([tx1, ty1], [tx2, ty2], [x1, y1], [x2, y2]) {
-    if (tx1 === x1 && ty1 <= y1 && ty2 <= y2)
-        return [tx1, ty1];
-    if (ty1 === y1 && tx1 <= x1 && tx2 <= x2)
-        return [tx1, ty1];
-    const vertical = tx1 === tx2;
-    if (vertical) {
-        if (Math.abs(x1 - tx1) < Math.abs(x2 - tx1))
-            return [tx1, y1];
-        return [tx1, y2];
+function between(a, x, b) {
+    return (a <= x && x <= b) || (b <= x && x <= a);
+}
+function liesOn([x, y], [x1, y1], [x2, y2]) {
+    return ((x === x1 && x === x2 && between(y1, y, y2)) ||
+        (y === y1 && y === y2 && between(x1, x, x2)));
+}
+function pointsOnLine(p1, p2) {
+    const points = [];
+    const coord = p1[0] === p2[0] ? 1 : 0;
+    let p = p1[coord] < p2[coord] ? p1 : p2;
+    const q = p === p1 ? p2 : p1;
+    while (p[coord] <= q[coord]) {
+        points.push(p);
+        p = p.slice();
+        p[coord] += 0.5;
     }
-    if (Math.abs(y1 - ty1) < Math.abs(y2 - ty1))
-        return [x1, ty1];
-    return [x2, ty1];
+    return points;
+}
+function distance([x1, y1], [x2, y2]) {
+    return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+}
+function closestPointOnLine(p, p1, p2) {
+    let point = p1;
+    const points = pointsOnLine(p1, p2);
+    points.forEach(candidate => {
+        if (distance(candidate, p) < distance(point, p))
+            point = candidate;
+    });
+    return point;
+}
+function findIntersection(p1, p2, lp1, lp2) {
+    if (liesOn(p1, lp1, lp2))
+        return p1;
+    return closestPointOnLine(p2, lp1, lp2);
 }
 function cleanPath(path) {
     let i = path.length - 2;
@@ -1629,11 +1650,11 @@ let SLDEditor = class SLDEditor extends LitElement {
         const pointerEvents = !this.resizing || isBusBar(this.resizing) ? 'all' : 'none';
         sections.forEach(section => {
             const busBar = xmlBoolean(section.getAttribute('bus'));
-            const vertices = Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex')).map(vertex => this.renderedPosition(vertex));
+            const vertices = Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex'));
             let i = 0;
             while (i < vertices.length - 1) {
-                const [x1, y1] = vertices[i];
-                let [x2, y2] = vertices[i + 1];
+                const [x1, y1] = this.renderedPosition(vertices[i]);
+                let [x2, y2] = this.renderedPosition(vertices[i + 1]);
                 let handleClick = nothing;
                 let handleAuxClick = nothing;
                 let handleContextMenu = nothing;
@@ -1672,7 +1693,7 @@ let SLDEditor = class SLDEditor extends LitElement {
                     handleClick = () => {
                         this.dispatchEvent(newPlaceEvent({
                             parent: section,
-                            element: section.getElementsByTagNameNS(sldNs, 'Vertex')[vertices.length - 1],
+                            element: vertices[vertices.length - 1],
                             x: x2,
                             y: y2,
                         }));
@@ -1690,14 +1711,15 @@ let SLDEditor = class SLDEditor extends LitElement {
                             return;
                         const [[oldX1, _y], [oldX2, oldY2]] = path.slice(-2);
                         const vertical = oldX1 === oldX2;
-                        const x3 = this.mouseX + 0.5;
-                        const y3 = this.mouseY + 0.5;
-                        const newX2 = vertical ? oldX2 : x3;
-                        const newY2 = vertical ? y3 : oldY2;
+                        let x3 = this.mouseX + 0.5;
+                        let y3 = this.mouseY + 0.5;
+                        let newX2 = vertical ? oldX2 : x3;
+                        let newY2 = vertical ? y3 : oldY2;
+                        [x3, y3] = findIntersection([newX2, newY2], [x3, y3], [x1, y1], [x2, y2]);
+                        newX2 = vertical ? oldX2 : x3;
+                        newY2 = vertical ? y3 : oldY2;
                         path[path.length - 1] = [newX2, newY2];
-                        path.push([x3, y3]
-                        // findIntersection([newX2, newY2], [x3, y3], [x1, y1], [x2, y2])
-                        );
+                        path.push([x3, y3]);
                         cleanPath(path);
                         this.dispatchEvent(newConnectEvent({
                             from,
@@ -1715,14 +1737,14 @@ let SLDEditor = class SLDEditor extends LitElement {
                 @contextmenu=${handleContextMenu} @mousedown=${preventDefault}
                 @click=${handleClick} @auxclick=${handleAuxClick} />`);
                 if (busBar ||
-                    (this.connecting && ![x1, y1].find(n => Number.isInteger(n))))
+                    (this.connecting && !vertices[i].hasAttributeNS(sldNs, 'uuid')))
                     lines.push(svg `<rect x="${x1 - targetSize / 2}" y="${y1 - targetSize / 2}"
                   width="${targetSize}" height="${targetSize}"
                   @click=${handleClick} @auxclick=${handleAuxClick}
                   @contextmenu=${handleContextMenu} @mousedown=${preventDefault}
                   pointer-events="${pointerEvents}" fill="none" />`);
                 if (busBar ||
-                    (this.connecting && ![x2, y2].find(n => Number.isInteger(n))))
+                    (this.connecting && !vertices[i + 1].hasAttributeNS(sldNs, 'uuid')))
                     lines.push(svg `<rect x="${x2 - targetSize / 2}" y="${y2 - targetSize / 2}"
                   width="${targetSize}" height="${targetSize}"
                   @click=${handleClick} @auxclick=${handleAuxClick}

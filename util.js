@@ -105,7 +105,7 @@ export function removeNode(node) {
     }
     else
         edits.push({ node });
-    Array.from(node.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${node.getAttribute('pathName')}"]`)).forEach(terminal => edits.push({ node: terminal }));
+    Array.from(node.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${node.getAttribute('pathName')}"], NeutralPoint[connectivityNode="${node.getAttribute('pathName')}"]`)).forEach(terminal => edits.push({ node: terminal }));
     return edits;
 }
 function reverseSection(section) {
@@ -158,7 +158,7 @@ function updateTerminals(parent, cNode, substationName, voltageLevelName, bayNam
     if (!oldPathName)
         return [];
     const [oldSubstationName, oldVoltageLevelName, oldBayName, oldCNodeName] = oldPathName.split('/');
-    const terminals = Array.from(cNode.getRootNode().querySelectorAll(`Terminal[substationName="${oldSubstationName}"][voltageLevelName="${oldVoltageLevelName}"][bayName="${oldBayName}"][cNodeName="${oldCNodeName}"], Terminal[connectivityNode="${oldPathName}"]`));
+    const terminals = Array.from(cNode.getRootNode().querySelectorAll(`Terminal[substationName="${oldSubstationName}"][voltageLevelName="${oldVoltageLevelName}"][bayName="${oldBayName}"][cNodeName="${oldCNodeName}"], Terminal[connectivityNode="${oldPathName}"], NeutralPoint[substationName="${oldSubstationName}"][voltageLevelName="${oldVoltageLevelName}"][bayName="${oldBayName}"][cNodeName="${oldCNodeName}"], NeutralPoint[connectivityNode="${oldPathName}"]`));
     terminals.forEach(terminal => {
         updates.push({
             element: terminal,
@@ -241,7 +241,7 @@ export function removeTerminal(terminal) {
     edits.push({ node: terminal });
     const pathName = terminal.getAttribute('connectivityNode');
     const cNode = terminal.ownerDocument.querySelector(`ConnectivityNode[pathName="${pathName}"]`);
-    const otherTerminals = Array.from(terminal.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${pathName}"]`)).filter(t => t !== terminal);
+    const otherTerminals = Array.from(terminal.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${pathName}"], NeutralPoint[connectivityNode="${pathName}"]`)).filter(t => t !== terminal);
     if (cNode &&
         otherTerminals.length &&
         otherTerminals.some(t => t.closest('Bay')) &&
