@@ -1450,19 +1450,19 @@ snapshots["Designer given conducting equipment with established connectivity kee
               </Vertex>
               <Vertex
                 esld:x="11.5"
-                esld:y="7.5"
+                esld:y="7"
               >
               </Vertex>
             </Section>
             <Section>
               <Vertex
                 esld:x="11.5"
-                esld:y="7.5"
+                esld:y="7"
               >
               </Vertex>
               <Vertex
                 esld:x="8.5"
-                esld:y="7.5"
+                esld:y="7"
               >
               </Vertex>
               <Vertex
@@ -1491,12 +1491,12 @@ snapshots["Designer given conducting equipment with established connectivity kee
               </Vertex>
               <Vertex
                 esld:x="19.5"
-                esld:y="7.5"
+                esld:y="7"
               >
               </Vertex>
               <Vertex
                 esld:x="11.5"
-                esld:y="7.5"
+                esld:y="7"
               >
               </Vertex>
             </Section>

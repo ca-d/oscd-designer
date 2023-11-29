@@ -768,8 +768,8 @@ let SLDEditor = class SLDEditor extends LitElement {
             }
             const [[x1, y1], [oldX2, oldY2]] = path.slice(-2);
             const vertical = x1 === oldX2;
-            let x3 = this.mouseX + 0.5;
-            let y3 = this.mouseY + 0.5;
+            let x3 = this.mouseX2;
+            let y3 = this.mouseY2;
             let [x4, y4] = [x3, y3];
             const targetEq = Array.from(this.substation.querySelectorAll('ConductingEquipment'))
                 .filter(eq => eq !== from)
@@ -1412,8 +1412,8 @@ let SLDEditor = class SLDEditor extends LitElement {
             if (!point)
                 return;
             const [x, y] = point;
-            const x1 = Number.isInteger(x) || Number.isInteger(x - 0.5) ? x : x + 1;
-            const y1 = Number.isInteger(y) || Number.isInteger(y - 0.5) ? y : y + 1;
+            const x1 = Number.isInteger(x * 2) ? x : x + 1;
+            const y1 = Number.isInteger(y * 2) ? y : y + 1;
             ports.push(svg `<circle cx="${x}" cy="${y}" r="0.2" opacity="0.4"
               @click=${(e) => {
                 e.stopImmediatePropagation();
@@ -1631,24 +1631,24 @@ let SLDEditor = class SLDEditor extends LitElement {
         if (!priv)
             return nothing;
         const circles = [];
-        const intersections = Object.entries(Array.from(priv.querySelectorAll('Vertex'))
-            .map(v => this.renderedPosition(v))
-            .reduce((obj, pos) => {
-            const ret = obj;
-            const key = JSON.stringify(pos);
+        const intersections = Object.entries(Array.from(priv.querySelectorAll('Vertex')).reduce((record, vertex) => {
+            const ret = record;
+            const key = JSON.stringify(this.renderedPosition(vertex));
             if (ret[key])
-                ret[key].count += 1;
+                ret[key].push(vertex);
             else
-                ret[key] = { val: pos, count: 1 };
+                ret[key] = [vertex];
             return ret;
         }, {}))
-            .filter(([_, { count }]) => count > 2)
-            .map(([_, { val }]) => val);
+            .filter(([_, vertices]) => vertices.length > 2 ||
+            (vertices.length === 2 &&
+                vertices.find(v => v.hasAttributeNS(sldNs, 'uuid'))))
+            .map(([_, [vertex]]) => this.renderedPosition(vertex));
         intersections.forEach(([x, y]) => circles.push(svg `<circle fill="black" cx="${x}" cy="${y}" r="0.15" />`));
         const lines = [];
         const sections = Array.from(priv.getElementsByTagNameNS(sldNs, 'Section'));
         const bay = cNode.closest('Bay');
-        const targetSize = this.connecting ? 0.99 : 0.7;
+        const targetSize = 0.5;
         const pointerEvents = !this.resizing || isBusBar(this.resizing) ? 'all' : 'none';
         sections.forEach(section => {
             const busBar = xmlBoolean(section.getAttribute('bus'));
@@ -1713,8 +1713,8 @@ let SLDEditor = class SLDEditor extends LitElement {
                             return;
                         const [[oldX1, _y], [oldX2, oldY2]] = path.slice(-2);
                         const vertical = oldX1 === oldX2;
-                        let x3 = this.mouseX + 0.5;
-                        let y3 = this.mouseY + 0.5;
+                        let x3 = this.mouseX2;
+                        let y3 = this.mouseY2;
                         let newX2 = vertical ? oldX2 : x3;
                         let newY2 = vertical ? y3 : oldY2;
                         [x3, y3] = findIntersection([newX2, newY2], [x3, y3], [x1, y1], [x2, y2]);
