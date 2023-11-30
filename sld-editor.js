@@ -892,7 +892,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             isBusBar(node.parentElement))
             .map(cNode => this.renderConnectivityNode(cNode))}
         ${Array.from(this.substation.querySelectorAll('PowerTransformer')).map(transformer => this.renderPowerTransformer(transformer))}
-        ${Array.from(this.substation.querySelectorAll('VoltageLevel, Bay, ConductingEquipment'))
+        ${Array.from(this.substation.querySelectorAll('VoltageLevel, Bay, ConductingEquipment, PowerTransformer'))
             .filter(e => !this.placing || e.closest(this.placing.tagName) !== this.placing)
             .map(element => this.renderLabel(element))}
         ${placingLabelTarget} ${placingElement}
