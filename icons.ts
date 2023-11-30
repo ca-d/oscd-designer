@@ -1,5 +1,11 @@
 import { html, nothing, svg, TemplateResult } from 'lit';
-import { EqType, eqTypes, isEqType, ringedEqTypes } from './util.js';
+import {
+  EqType,
+  eqTypes,
+  isEqType,
+  ringedEqTypes,
+  singleTerminal,
+} from './util.js';
 
 export const resizePath = svg`<path
   d="M120 616v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 640v-80h80v80h-80Zm0-640v-80h80v80h-80Zm160 640v-80h80v80h-80Zm160 0v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160V296H600v-80h240v240h-80ZM120 936V696h80v160h160v80H120Z"
@@ -217,13 +223,6 @@ export const bayGraphic = html`<svg
 const equipmentPaths: Record<EqType, TemplateResult<2>> = {
   CAB: svg`
   <path
-    d="M 12.5,0 V 4"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-    />
-  <path
     d="M 9.4,4.2 H 15.6 L 12.5,8.3 Z"
     fill="currentColor"
     stroke="currentColor"
@@ -244,13 +243,6 @@ const equipmentPaths: Record<EqType, TemplateResult<2>> = {
     stroke-width="1.5"
     stroke-linecap="round"
     />
-  <path
-    d="m 12.5,21.3 v 4"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-    />
   `,
   CAP: svg`
   <path
@@ -261,7 +253,7 @@ const equipmentPaths: Record<EqType, TemplateResult<2>> = {
     stroke-linecap="round"
     />
   <path
-    d="M 12.5,0 V 10.1"
+    d="M 12.5,4 V 10.1"
     fill="none"
     stroke="currentColor"
     stroke-width="1.5"
@@ -275,7 +267,7 @@ const equipmentPaths: Record<EqType, TemplateResult<2>> = {
     stroke-linecap="round"
     />
   <path
-    d="M 12.5,14.9 V 25"
+    d="M 12.5,14.9 V 21"
     fill="none"
     stroke="currentColor"
     stroke-width="1.5"
@@ -283,24 +275,6 @@ const equipmentPaths: Record<EqType, TemplateResult<2>> = {
     />
   `,
   CBR: svg`
-  <line
-    x1="12.5"
-    y1="0"
-    x2="12.5"
-    y2="4"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <line
-    x1="12.5"
-    y1="25"
-    x2="12.5"
-    y2="21"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
   <line
     x1="12.5"
     y1="21"
@@ -332,9 +306,9 @@ const equipmentPaths: Record<EqType, TemplateResult<2>> = {
   CTR: svg`
   <line
     x1="12.5"
-    y1="0"
+    y1="4"
     x2="12.5"
-    y2="25"
+    y2="21"
     stroke="currentColor"
     stroke-width="1.5"
     stroke-linecap="round"
@@ -350,20 +324,6 @@ const equipmentPaths: Record<EqType, TemplateResult<2>> = {
   />
   `,
   DIS: svg`
-  <path
-    d="M 12.5 0 L 12.5 4"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <path
-    d=" M 12.5 25 L 12.5 21"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
   <path
     d="M 12.5 21 L 4 4"
     fill="none"
@@ -389,20 +349,6 @@ const equipmentPaths: Record<EqType, TemplateResult<2>> = {
   />
   `,
   IFL: svg`
-  <path
-    d="M 12.5 0 L 12.5 4"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <path
-    d="M 12.5 25 L 12.5 21"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
   <polygon
     points="4,4 12.5,21 21,4"
     fill="none"
@@ -414,7 +360,7 @@ const equipmentPaths: Record<EqType, TemplateResult<2>> = {
   `,
   LIN: svg`
   <path
-    d="M 12.5,0 V 25"
+    d="M 12.5,4 V 21"
     fill="none"
     stroke="currentColor"
     stroke-width="1.5"
@@ -446,7 +392,7 @@ const equipmentPaths: Record<EqType, TemplateResult<2>> = {
   `,
   REA: svg`
   <path
-    d="m 4.5,12.5 h 8 V 0"
+    d="m 4.5,12.5 h 8 V 4"
     stroke="currentColor"
     fill="none"
     stroke-width="1.5"
@@ -460,7 +406,7 @@ const equipmentPaths: Record<EqType, TemplateResult<2>> = {
     stroke-linecap="round"
   />
   <path
-    d="M 12.5,20.5 V 25"
+    d="M 12.5,20.5 V 21"
     stroke="currentColor"
     fill="none"
     stroke-width="1.5"
@@ -468,20 +414,6 @@ const equipmentPaths: Record<EqType, TemplateResult<2>> = {
   />
   `,
   RES: svg`
-  <path
-    d="M 12.5,0 V 4"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <path
-    d="m 12.5 25 v -4"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
   <rect
     y="4"
     x="8.5"
@@ -495,7 +427,7 @@ const equipmentPaths: Record<EqType, TemplateResult<2>> = {
   `,
   SAR: svg`
   <path
-    d="M 12.5,0 V 8"
+    d="M 12.5,4 V 8"
     fill="none"
     stroke="currentColor"
     stroke-width="1.5"
@@ -547,7 +479,7 @@ const equipmentPaths: Record<EqType, TemplateResult<2>> = {
   VTR: svg`
   <line
     x1="12.5"
-    y1="0"
+    y1="4"
     x2="12.5"
     y2="5"
     stroke="currentColor"
@@ -576,13 +508,6 @@ const equipmentPaths: Record<EqType, TemplateResult<2>> = {
 };
 
 export const eqRingPath = svg`
-  <path
-    d="M 12.5,0 V 4"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-    />
   <circle
     cx="12.5"
     cy="12.5"
@@ -655,6 +580,26 @@ export function equipmentGraphic(
   equipmentType: string | null,
 ): TemplateResult<1> {
   return html`<svg viewBox="0 0 25 25" width="24" height="24" slot="graphic">
+    <line
+      x1="12.5"
+      y1="0"
+      x2="12.5"
+      y2="4"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+    />
+    ${!equipmentType || !singleTerminal.has(equipmentType)
+      ? svg`<line
+      x1="12.5"
+      y1="21"
+      x2="12.5"
+      y2="25"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+    />`
+      : nothing}
     ${equipmentPath(equipmentType)}
     ${equipmentType && ringedEqTypes.has(equipmentType) ? eqRingPath : nothing}
   </svg>`;
@@ -662,6 +607,26 @@ export function equipmentGraphic(
 
 export function equipmentIcon(equipmentType: string): TemplateResult<1> {
   return html`<svg viewBox="0 0 25 25" width="24" height="24" slot="icon">
+    <line
+      x1="12.5"
+      y1="0"
+      x2="12.5"
+      y2="4"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+    />
+    ${!singleTerminal.has(equipmentType)
+      ? svg`<line
+      x1="12.5"
+      y1="21"
+      x2="12.5"
+      y2="25"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+    />`
+      : nothing}
     ${equipmentPath(equipmentType)}
     ${ringedEqTypes.has(equipmentType) ? eqRingPath : nothing}
   </svg>`;

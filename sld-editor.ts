@@ -43,6 +43,7 @@ import {
   removeNode,
   removeTerminal,
   ringedEqTypes,
+  singleTerminal,
   sldNs,
   svgNs,
   uuid,
@@ -58,20 +59,6 @@ const parentTags: Partial<Record<string, string[]>> = {
   VoltageLevel: ['Substation'],
   PowerTransformer: ['Bay', 'VoltageLevel', 'Substation'],
 };
-
-const singleTerminal = new Set([
-  'BAT',
-  'EFN',
-  'FAN',
-  'GEN',
-  'IFL',
-  'MOT',
-  'PMP',
-  'RRC',
-  'SAR',
-  'SMC',
-  'VTR',
-]);
 
 type EditWizardDetial = { element: Element };
 
@@ -1051,6 +1038,8 @@ export class SLDEditor extends LitElement {
       let x3 = this.mouseX2;
       let y3 = this.mouseY2;
 
+      let [x4, y4] = [x3, y3];
+
       const targetEq = Array.from(
         this.substation.querySelectorAll('ConductingEquipment'),
       )
@@ -1065,7 +1054,9 @@ export class SLDEditor extends LitElement {
       const toTerminal = this.nearestOpenTerminal(targetEq);
 
       if (targetEq && toTerminal) {
-        [[x3, y3]] = connectionStartPoints(targetEq)[toTerminal];
+        const [close, far] = connectionStartPoints(targetEq)[toTerminal];
+        [x3, y3] = far;
+        [x4, y4] = close;
       }
 
       const x2 = vertical ? oldX2 : x3;
@@ -1075,6 +1066,8 @@ export class SLDEditor extends LitElement {
         svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
                 stroke-linecap="square" stroke="black" />`,
         svg`<line x1="${x2}" y1="${y2}" x2="${x3}" y2="${y3}"
+                stroke-linecap="square" stroke="black" />`,
+        svg`<line x1="${x3}" y1="${y3}" x2="${x4}" y2="${y4}"
                 stroke-linecap="square" stroke="black" />`
       );
       connectionPreview.push(
@@ -1082,6 +1075,7 @@ export class SLDEditor extends LitElement {
       @click=${() => {
         path[path.length - 1] = [x2, y2];
         path.push([x3, y3]);
+        path.push([x4, y4]);
         cleanPath(path);
         this.requestUpdate();
         if (targetEq && toTerminal)
@@ -1939,7 +1933,7 @@ export class SLDEditor extends LitElement {
 
     const topGrounded =
       topTerminal?.getAttribute('cNodeName') === 'grounded'
-        ? svg`<line x1="0.5" y1="-0.1" x2="0.5" y2="0" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`
+        ? svg`<line x1="0.5" y1="-0.1" x2="0.5" y2="0.16" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`
         : nothing;
 
     const bottomConnector =
@@ -1980,7 +1974,7 @@ export class SLDEditor extends LitElement {
 
     const bottomGrounded =
       bottomTerminal?.getAttribute('cNodeName') === 'grounded'
-        ? svg`<line x1="0.5" y1="1.1" x2="0.5" y2="1" stroke="black"
+        ? svg`<line x1="0.5" y1="1.1" x2="0.5" y2="0.84" stroke="black"
                 stroke-width="0.06" marker-start="url(#grounded)" />`
         : nothing;
 

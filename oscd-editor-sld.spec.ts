@@ -1350,13 +1350,13 @@ describe('oscd-editor-sld', () => {
           );
           await sendMouse({ type: 'click', position: [300, 220] });
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(6);
-          expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(15);
+          expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(16);
           queryUI({ scl: '[type="CBR"]', ui: 'rect' }).dispatchEvent(
             new PointerEvent('auxclick', { button: 1 }),
           );
           element.updateComplete;
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(4);
-          expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(12);
+          expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(13);
           await expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
@@ -1368,13 +1368,13 @@ describe('oscd-editor-sld', () => {
           );
           await sendMouse({ type: 'click', position: [600, 270] });
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(6);
-          expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(15);
+          expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(16);
           queryUI({ scl: '[type="NEW"]', ui: 'rect' }).dispatchEvent(
             new PointerEvent('auxclick', { button: 1 }),
           );
           element.updateComplete;
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(4);
-          expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(10);
+          expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(11);
           await expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
@@ -1390,12 +1390,12 @@ describe('oscd-editor-sld', () => {
           );
           await sendMouse({ type: 'click', position: [300, 220] });
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(7);
-          expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(18);
+          expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(19);
           queryUI({ scl: '[type="NEW"]', ui: 'rect' }).dispatchEvent(
             new PointerEvent('auxclick', { button: 1 }),
           );
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(6);
-          expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(15);
+          expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(16);
           await expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
