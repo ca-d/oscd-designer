@@ -324,12 +324,18 @@ let SLDEditor = class SLDEditor extends LitElement {
         return 'T1';
     }
     groundTerminal(equipment, name) {
-        const bay = equipment.closest('Bay');
+        var _a;
+        const neutralPoint = name.startsWith('N');
+        const bay = equipment.closest('Bay') ||
+            Array.from(((_a = equipment.closest('VoltageLevel')) === null || _a === void 0 ? void 0 : _a.querySelectorAll('Bay')) ||
+                equipment.closest('Substation').querySelectorAll('Bay')).find(b => !isBusBar(b));
+        if (!bay)
+            return;
         const edits = [];
         let grounded = bay.querySelector(':scope > ConnectivityNode[name="grounded"]');
         let pathName = grounded === null || grounded === void 0 ? void 0 : grounded.getAttribute('pathName');
         if (!pathName) {
-            pathName = elementPath(equipment.closest('Bay'), 'grounded');
+            pathName = elementPath(bay, 'grounded');
             grounded = this.doc.createElementNS(this.doc.documentElement.namespaceURI, 'ConnectivityNode');
             grounded.setAttribute('name', 'grounded');
             grounded.setAttribute('pathName', pathName);
@@ -339,16 +345,17 @@ let SLDEditor = class SLDEditor extends LitElement {
                 reference: getReference(bay, 'ConnectivityNode'),
             });
         }
-        const terminal = this.doc.createElementNS(this.doc.documentElement.namespaceURI, 'Terminal');
+        const tagName = neutralPoint ? 'NeutralPoint' : 'Terminal';
+        const terminal = this.doc.createElementNS(this.doc.documentElement.namespaceURI, tagName);
         terminal.setAttribute('name', name);
         terminal.setAttribute('cNodeName', 'grounded');
-        const sName = equipment.closest('Substation').getAttribute('name');
+        const sName = bay.closest('Substation').getAttribute('name');
         if (sName)
             terminal.setAttribute('substationName', sName);
-        const vlName = equipment.closest('VoltageLevel').getAttribute('name');
+        const vlName = bay.closest('VoltageLevel').getAttribute('name');
         if (vlName)
             terminal.setAttribute('voltageLevelName', vlName);
-        const bName = equipment.closest('Bay').getAttribute('name');
+        const bName = bay.getAttribute('name');
         if (bName)
             terminal.setAttribute('bayName', bName);
         terminal.setAttribute('connectivityNode', pathName);
@@ -630,10 +637,10 @@ let SLDEditor = class SLDEditor extends LitElement {
                 handler: () => {
                     const edits = [];
                     Array.from(bayOrVL.getElementsByTagName('ConnectivityNode')).forEach(cNode => {
-                        if (Array.from(this.doc.querySelectorAll(`Terminal[connectivityNode="${cNode.getAttribute('pathName')}"]`)).find(terminal => terminal.closest(bayOrVL.tagName) !== bayOrVL))
+                        if (Array.from(this.doc.querySelectorAll(`[connectivityNode="${cNode.getAttribute('pathName')}"]`)).find(terminal => terminal.closest(bayOrVL.tagName) !== bayOrVL))
                             edits.push(...removeNode(cNode));
                     });
-                    Array.from(bayOrVL.getElementsByTagName('Terminal')).forEach(terminal => {
+                    Array.from(bayOrVL.querySelectorAll('Terminal, NeutralPoint')).forEach(terminal => {
                         const cNode = this.doc.querySelector(`ConnectivityNode[pathName="${terminal.getAttribute('connectivityNode')}"]`);
                         if (cNode && cNode.closest(bayOrVL.tagName) !== bayOrVL)
                             edits.push(...removeNode(cNode));
@@ -1112,314 +1119,276 @@ let SLDEditor = class SLDEditor extends LitElement {
         const [x, y] = this.renderedPosition(transformer).map(c => c + 0.5);
         let center = [x, y];
         const size = 0.7;
-        let T1;
-        let T2;
-        let N1;
-        let N2;
-        const terminals = Array.from(winding.children).filter(c => c.tagName === 'Terminal');
-        const terminal1 = terminals.find(t => t.getAttribute('name') === 'T1');
-        const terminal2 = terminals.find(t => t.getAttribute('name') !== 'T1');
+        const grounded = {};
+        const terminals = {};
+        let arc;
+        const terminalElements = Array.from(winding.children).filter(c => c.tagName === 'Terminal');
+        const terminal1 = terminalElements.find(t => t.getAttribute('name') === 'T1');
+        const terminal2 = terminalElements.find(t => t.getAttribute('name') !== 'T1');
         const neutral = Array.from(winding.children).find(c => c.tagName === 'NeutralPoint');
         const windingIndex = windings.indexOf(winding);
         const { rot, kind } = attributes(transformer);
-        if (windings.length === 1 && kind === 'auto') {
-            if (!neutral) {
-                N1 = [
-                    [x - size, y],
-                    [x, y - size],
-                    [x + size, y],
-                    [x, y + size],
-                ][rot];
-                N2 = [
-                    [x + size, y],
-                    [x, y + size],
-                    [x - size, y],
-                    [x, y - size],
-                ][rot];
-            }
-            if (!terminal1) {
-                T1 = [
-                    [x, y - size],
-                    [x + size, y],
-                    [x, y + size],
-                    [x - size, y],
-                ][rot];
-            }
-            if (!terminal2) {
-                T2 = [
-                    [x, y + size],
-                    [x - size, y],
-                    [x, y - size],
-                    [x + size, y],
-                ][rot];
-            }
+        function shift(point, coord, amount) {
+            const shifted = point.slice();
+            if (coord === 0)
+                shifted[rot % 2] += rot < 2 ? amount : -amount;
+            else
+                shifted[(rot + 1) % 2] += rot > 0 && rot < 3 ? -amount : amount;
+            return shifted;
         }
-        else if (windings.length === 1 && kind === 'earthing') {
-            if (!neutral) {
-                N1 = [
-                    [x, y + size],
-                    [x - size, y],
-                    [x, y - size],
-                    [x + size, y],
-                ][rot];
-            }
-            if (!terminal1 && !terminal2) {
-                T1 = [
-                    [x, y - size],
-                    [x + size, y],
-                    [x, y + size],
-                    [x - size, y],
-                ][rot];
-            }
-        }
-        else if (windings.length === 2 && kind === 'auto') {
-            if (windingIndex !== 1) {
+        if (windings.length === 1) {
+            if (kind === 'earthing') {
+                const n1 = shift(center, 1, size);
                 if (!neutral) {
-                    N1 = [
-                        [x - size, y - 1],
-                        [x + 1, y - size],
-                        [x + size, y + 1],
-                        [x - 1, y + size],
-                    ][rot];
-                    N2 = [
-                        [x + size, y - 1],
-                        [x + 1, y + size],
-                        [x - size, y + 1],
-                        [x - 1, y - size],
-                    ][rot];
+                    terminals.N1 = n1;
+                }
+                else if (neutral.getAttribute('cNodeName') === 'grounded') {
+                    const n1p = shift(n1, 1, 0.2);
+                    grounded.N1 = [n1p, n1];
                 }
                 if (!terminal1 && !terminal2) {
-                    T1 = [
-                        [x, y - 1 - size],
-                        [x + 1 + size, y],
-                        [x, y + 1 + size],
-                        [x - 1 - size, y],
-                    ][rot];
+                    terminals.T1 = shift(center, 1, -size);
                 }
-                center = [
-                    [x, y - 1],
-                    [x + 1, y],
-                    [x, y + 1],
-                    [x - 1, y],
-                ][rot];
             }
             else {
-                if (!terminal1)
-                    T1 = [
-                        [x + size, y],
-                        [x, y + size],
-                        [x - size, y],
-                        [x, y - size],
-                    ][rot];
-                if (!terminal2)
-                    T2 = [
-                        [x - size, y],
-                        [x, y - size],
-                        [x + size, y],
-                        [x, y + size],
-                    ][rot];
+                const n1 = shift(center, 0, -size);
+                const n2 = shift(center, 0, size);
+                const t1 = shift(center, 1, -size - 0.5);
+                const t2 = shift(center, 1, size);
                 if (!neutral) {
-                    N1 = [
-                        [x, y + size],
-                        [x - size, y],
-                        [x, y - size],
-                        [x + size, y],
-                    ][rot];
+                    terminals.N1 = n1;
+                    terminals.N2 = n2;
+                }
+                else if (neutral.getAttribute('cNodeName') === 'grounded') {
+                    if (neutral.getAttribute('name') === 'N1') {
+                        const n1p = shift(n1, 0, -0.2);
+                        grounded.N1 = [n1p, n1];
+                    }
+                    else {
+                        const n2p = shift(n2, 0, 0.2);
+                        grounded.N2 = [n2p, n2];
+                    }
+                }
+                arc = {
+                    from: n2,
+                    fromCtl: shift(n2, 1, -1),
+                    to: t1,
+                    toCtl: shift(shift(t1, 0, 0.2), 1, 0.1),
+                };
+                if (!terminal1) {
+                    terminals.T1 = t1;
+                }
+                if (!terminal2) {
+                    terminals.T2 = t2;
                 }
             }
         }
-        else if (windings.length === 2 && kind === 'earthing') {
-            if (windingIndex !== 1) {
-                if (!terminal1 && !terminal2) {
-                    T1 = [
-                        [x, y - 1 - size],
-                        [x + 1 + size, y],
-                        [x, y + 1 + size],
-                        [x - 1 - size, y],
-                    ][rot];
-                }
-                center = [
-                    [x, y - 1],
-                    [x + 1, y],
-                    [x, y + 1],
-                    [x - 1, y],
-                ][rot];
+        else if (windings.length === 2) {
+            if (windingIndex === 1) {
+                center = shift(center, 1, 1);
             }
-            else {
-                if (!terminal1 && !terminal2)
-                    T1 = [
-                        [x - size, y],
-                        [x, y - size],
-                        [x + size, y],
-                        [x, y + size],
-                    ][rot];
-                if (!neutral) {
-                    N1 = [
-                        [x + size, y],
-                        [x, y + size],
-                        [x - size, y],
-                        [x, y - size],
-                    ][rot];
+            if (kind === 'auto') {
+                if (windingIndex === 1) {
+                    const n1 = shift(center, 0, -size);
+                    const n2 = shift(center, 0, size);
+                    if (!neutral) {
+                        terminals.N1 = n1;
+                        terminals.N2 = n2;
+                    }
+                    else if (neutral.getAttribute('cNodeName') === 'grounded') {
+                        if (neutral.getAttribute('name') === 'N1') {
+                            const n1p = shift(n1, 0, -0.2);
+                            grounded.N1 = [n1p, n1];
+                        }
+                        else {
+                            const n2p = shift(n2, 0, 0.2);
+                            grounded.N2 = [n2p, n2];
+                        }
+                    }
+                    if (!terminal1 && !terminal2) {
+                        terminals.T1 = shift(center, 1, size);
+                    }
                 }
-            }
-        }
-        else if (windings.length === 2 && kind === 'default') {
-            if (windingIndex !== 1) {
-                if (!neutral) {
-                    N1 = [
-                        [x - size, y - 1],
-                        [x + 1, y - size],
-                        [x + size, y + 1],
-                        [x - 1, y + size],
-                    ][rot];
-                    N2 = [
-                        [x + size, y - 1],
-                        [x + 1, y + size],
-                        [x - size, y + 1],
-                        [x - 1, y - size],
-                    ][rot];
-                }
-                if (!terminal1 && !terminal2) {
-                    T1 = [
-                        [x, y - 1 - size],
-                        [x + 1 + size, y],
-                        [x, y + 1 + size],
-                        [x - 1 - size, y],
-                    ][rot];
-                }
-                center = [
-                    [x, y - 1],
-                    [x + 1, y],
-                    [x, y + 1],
-                    [x - 1, y],
-                ][rot];
-            }
-            else {
-                if (!neutral) {
-                    N1 = [
-                        [x + size, y],
-                        [x, y + size],
-                        [x - size, y],
-                        [x, y - size],
-                    ][rot];
-                    N2 = [
-                        [x - size, y],
-                        [x, y - size],
-                        [x + size, y],
-                        [x, y + size],
-                    ][rot];
-                }
-                if (!terminal1 && !terminal2) {
-                    T1 = [
-                        [x, y + size],
-                        [x - size, y],
-                        [x, y - size],
-                        [x + size, y],
-                    ][rot];
+                else {
+                    const t1 = shift(center, 0, size);
+                    const t2 = shift(center, 0, -size - 0.5);
+                    const n1 = shift(center, 1, -size);
+                    arc = {
+                        from: n1,
+                        fromCtl: shift(n1, 0, -1),
+                        to: t2,
+                        toCtl: shift(shift(t2, 1, -0.2), 0, 0.1),
+                    };
+                    if (!terminal1)
+                        terminals.T1 = t1;
+                    if (!terminal2)
+                        terminals.T2 = t2;
+                    if (!neutral) {
+                        terminals.N1 = n1;
+                    }
+                    else if (neutral.getAttribute('cNodeName') === 'grounded') {
+                        const n1p = shift(n1, 1, -0.2);
+                        grounded.N1 = [n1p, n1];
+                    }
                 }
             }
-        }
-        else if (windings.length === 3 && kind === 'default') {
-            if (windingIndex === 0) {
-                center = [x, y];
-                if (!terminal1 && !terminal2) {
-                    T1 = [
-                        [x, y - size],
-                        [x + size, y],
-                        [x, y + size],
-                        [x - size, y],
-                    ][rot];
+            else if (kind === 'earthing') {
+                if (windingIndex === 1) {
+                    if (!terminal1 && !terminal2) {
+                        terminals.T1 = shift(center, 1, size);
+                    }
                 }
-                if (!neutral) {
-                    N1 = [
-                        [x - size, y],
-                        [x, y - size],
-                        [x + size, y],
-                        [x, y + size],
-                    ][rot];
-                    N2 = [
-                        [x + size, y],
-                        [x, y + size],
-                        [x - size, y],
-                        [x, y - size],
-                    ][rot];
+                else {
+                    if (!terminal1 && !terminal2)
+                        terminals.T1 = shift(center, 0, -size);
+                    const n1 = shift(center, 0, size);
+                    if (!neutral) {
+                        terminals.N1 = n1;
+                    }
+                    else if (neutral.getAttribute('cNodeName') === 'grounded') {
+                        const n1p = shift(n1, 0, 0.2);
+                        grounded.N1 = [n1p, n1];
+                    }
                 }
             }
             else if (windingIndex === 1) {
-                center = [
-                    [x + 0.5, y + 1],
-                    [x - 1, y + 0.5],
-                    [x - 0.5, y - 1],
-                    [x + 1, y - 0.5],
-                ][rot];
-                if (!terminal1 && !terminal2) {
-                    T1 = [
-                        [x + 0.5 + size, y + 1],
-                        [x - 1, y + 0.5 + size],
-                        [x - 0.5 - size, y - 1],
-                        [x + 1, y - 0.5 - size],
-                    ][rot];
-                }
+                const n1 = shift(center, 0, -size);
+                const n2 = shift(center, 0, +size);
                 if (!neutral) {
-                    N1 = [
-                        [x + 0.5, y + 1 + size],
-                        [x - 1 - size, y + 0.5],
-                        [x - 0.5, y - 1 - size],
-                        [x + 1 + size, y - 0.5],
-                    ][rot];
+                    terminals.N1 = n1;
+                    terminals.N2 = n2;
+                }
+                else if (neutral.getAttribute('cNodeName') === 'grounded') {
+                    if (neutral.getAttribute('name') === 'N1') {
+                        const n1p = shift(n1, 0, -0.2);
+                        grounded.N1 = [n1p, n1];
+                    }
+                    else {
+                        const n2p = shift(n2, 0, 0.2);
+                        grounded.N2 = [n2p, n2];
+                    }
+                }
+                if (!terminal1 && !terminal2) {
+                    terminals.T1 = shift(center, 1, +size);
                 }
             }
-            else if (windingIndex === 2) {
-                center = [
-                    [x - 0.5, y + 1],
-                    [x - 1, y - 0.5],
-                    [x + 0.5, y - 1],
-                    [x + 1, y + 0.5],
-                ][rot];
-                if (!terminal1 && !terminal2) {
-                    T1 = [
-                        [x - 0.5 - size, y + 1],
-                        [x - 1, y - 0.5 - size],
-                        [x + 0.5 + size, y - 1],
-                        [x + 1, y + 0.5 + size],
-                    ][rot];
-                }
+            else {
+                const n1 = shift(center, 0, -size);
+                const n2 = shift(center, 0, +size);
                 if (!neutral) {
-                    N1 = [
-                        [x - 0.5, y + 1 + size],
-                        [x - 1 - size, y - 0.5],
-                        [x + 0.5, y - 1 - size],
-                        [x + 1 + size, y + 0.5],
-                    ][rot];
+                    terminals.N1 = n1;
+                    terminals.N2 = n2;
+                }
+                else if (neutral.getAttribute('cNodeName') === 'grounded') {
+                    if (neutral.getAttribute('name') === 'N1') {
+                        const n1p = shift(n1, 0, -0.2);
+                        grounded.N1 = [n1p, n1];
+                    }
+                    else {
+                        const n2p = shift(n2, 0, 0.2);
+                        grounded.N2 = [n2p, n2];
+                    }
+                }
+                if (!terminal1 && !terminal2) {
+                    terminals.T1 = shift(center, 1, -size);
                 }
             }
         }
-        return { center, size, terminals: { T1, T2, N1, N2 } };
+        else if (windings.length === 3) {
+            if (windingIndex === 0) {
+                if (!terminal1 && !terminal2) {
+                    terminals.T1 = shift(center, 1, -size);
+                }
+                const n1 = shift(center, 0, -size);
+                const n2 = shift(center, 0, +size);
+                if (!neutral) {
+                    terminals.N1 = n1;
+                    terminals.N2 = n2;
+                }
+                else if (neutral.getAttribute('cNodeName') === 'grounded') {
+                    if (neutral.getAttribute('name') === 'N1') {
+                        const n1p = shift(n1, 0, -0.2);
+                        grounded.N1 = [n1p, n1];
+                    }
+                    else {
+                        const n2p = shift(n2, 0, 0.2);
+                        grounded.N2 = [n2p, n2];
+                    }
+                }
+            }
+            else if (windingIndex === 1) {
+                center = shift(shift(center, 0, 0.5), 1, 1);
+                if (!terminal1 && !terminal2) {
+                    terminals.T1 = shift(center, 0, size);
+                }
+                const n1 = shift(center, 1, size);
+                if (!neutral) {
+                    terminals.N1 = n1;
+                }
+                else if (neutral.getAttribute('cNodeName') === 'grounded') {
+                    const n1p = shift(n1, 1, 0.2);
+                    grounded.N1 = [n1p, n1];
+                }
+            }
+            else if (windingIndex === 2) {
+                center = shift(shift(center, 0, -0.5), 1, 1);
+                if (!terminal1 && !terminal2) {
+                    terminals.T1 = shift(center, 0, -size);
+                }
+                const n1 = shift(center, 1, size);
+                if (!neutral) {
+                    terminals.N1 = n1;
+                }
+                else if (neutral.getAttribute('cNodeName') === 'grounded') {
+                    const n1p = shift(n1, 1, 0.2);
+                    grounded.N1 = [n1p, n1];
+                }
+            }
+        }
+        return { center, size, terminals, grounded, arc };
     }
     renderTransformerWinding(winding) {
-        const { size, center: [cx, cy], terminals, } = this.windingMeasures(winding);
+        const { size, center: [cx, cy], terminals, grounded, arc, } = this.windingMeasures(winding);
         const ports = [];
-        Object.entries(terminals).forEach(([name, point]) => {
-            if (!point)
-                return;
-            const [x, y] = point;
-            const x1 = Number.isInteger(x * 2) ? x : x + 1;
-            const y1 = Number.isInteger(y * 2) ? y : y + 1;
-            ports.push(svg `<circle cx="${x}" cy="${y}" r="0.2" opacity="0.4"
-              @click=${(e) => {
-                e.stopImmediatePropagation();
-                this.dispatchEvent(newStartConnectEvent({
-                    from: winding,
-                    fromTerminal: name,
-                    path: [
-                        [x, y],
-                        [x1, y1],
-                    ],
-                }));
-            }}
-      fill="#${name.startsWith('T') ? 'BB1326' : '12579B'}" stroke="#F5E214" />`);
+        Object.entries(grounded).forEach(([_, [[x1, y1], [x2, y2]]]) => {
+            ports.push(svg `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`);
         });
-        return svg `<circle cx="${cx}" cy="${cy}" r="${size}" stroke="black" stroke-width="0.06" />${ports}`;
+        if (!(this.connecting ||
+            this.resizing ||
+            (this.placing && this.placing !== winding.closest('PowerTransformer'))))
+            Object.entries(terminals).forEach(([name, point]) => {
+                if (!point)
+                    return;
+                const [x, y] = point;
+                const x1 = Number.isInteger(x * 2) ? x : x + 1;
+                const y1 = Number.isInteger(y * 2) ? y : y + 1;
+                const terminal = name.startsWith('T');
+                ports.push(svg `<circle cx="${x}" cy="${y}" r="0.2" opacity="0.4"
+              @contextmenu=${(e) => {
+                    if (terminal)
+                        return;
+                    e.preventDefault();
+                    this.groundTerminal(winding, name);
+                }}
+              @click=${(e) => {
+                    e.stopImmediatePropagation();
+                    this.dispatchEvent(newStartConnectEvent({
+                        from: winding,
+                        fromTerminal: name,
+                        path: [
+                            [x, y],
+                            [x1, y1],
+                        ],
+                    }));
+                }}
+      fill="#${terminal ? 'BB1326' : '12579B'}" stroke="#F5E214" />`);
+            });
+        let arcPath = svg ``;
+        if (arc) {
+            const { from: [xf, yf], fromCtl: [xfc, yfc], to: [xt, yt], toCtl: [xtc, ytc], } = arc;
+            arcPath = svg `<path d="M ${xf} ${yf} C ${xfc} ${yfc}, ${xtc} ${ytc}, ${xt} ${yt}" stroke="black" stroke-width="0.06" />`;
+        }
+        return svg `<circle cx="${cx}" cy="${cy}" r="${size}" stroke="black" stroke-width="0.06" />${arcPath}${ports}`;
     }
     renderPowerTransformer(transformer, preview = false) {
         if (this.placing === transformer && !preview)
