@@ -383,26 +383,27 @@ export default class OscdEditorSLD extends LitElement {
           });
         }
 
-        const bayName = parent.closest('Bay')!.getAttribute('name');
+        const bayName = parent.closest('Bay')?.getAttribute('name');
         const voltageLevelName = parent
-          .closest('VoltageLevel')!
-          .getAttribute('name')!;
+          .closest('VoltageLevel')
+          ?.getAttribute('name');
         const substationName = parent
           .closest('Substation')!
           .getAttribute('name')!;
         const connectivityNode = newCNode!.getAttribute('pathName');
 
-        groundedTerminals.forEach(terminal => {
-          edits.push({
-            element: terminal,
-            attributes: {
-              connectivityNode,
-              bayName,
-              voltageLevelName,
-              substationName,
-            },
+        if (bayName)
+          groundedTerminals.forEach(terminal => {
+            edits.push({
+              element: terminal,
+              attributes: {
+                connectivityNode,
+                bayName,
+                voltageLevelName,
+                substationName,
+              },
+            });
           });
-        });
       }
     } else if (element.getRootNode() === this.doc) {
       Array.from(element.getElementsByTagName('ConnectivityNode')).forEach(
