@@ -79,6 +79,10 @@ function closestPointOnLine(p, p1, p2) {
 function findIntersection(p1, p2, lp1, lp2) {
     if (liesOn(p1, lp1, lp2))
         return p1;
+    if (liesOn(lp1, p1, p2))
+        return lp1;
+    if (liesOn(lp2, p1, p2))
+        return lp2;
     return closestPointOnLine(p2, lp1, lp2);
 }
 function cleanPath(path) {
@@ -1492,10 +1496,13 @@ let SLDEditor = class SLDEditor extends LitElement {
         const terminals = Array.from(equipment.children).filter(c => c.tagName === 'Terminal');
         const topTerminal = terminals.find(t => t.getAttribute('name') === 'T1');
         const bottomTerminal = terminals.find(t => t.getAttribute('name') !== 'T1');
-        const topConnector = topTerminal || this.placing || this.resizing || this.connecting
+        const topConnector = topTerminal ||
+            this.resizing ||
+            this.connecting ||
+            (this.placing && this.placing !== equipment)
             ? nothing
             : svg `<circle cx="0.5" cy="0" r="0.2" opacity="0.4"
-      fill="#BB1326" stroke="#F5E214"
+      fill="#BB1326" stroke="#F5E214" pointer-events="${this.placing ? 'none' : nothing}"
     @click=${() => this.dispatchEvent(newStartConnectEvent({
                 from: equipment,
                 fromTerminal: 'T1',
@@ -1515,18 +1522,18 @@ let SLDEditor = class SLDEditor extends LitElement {
             topTerminal
             ? nothing
             : svg `<polygon points="0.3,0 0.7,0 0.5,0.4" 
-                fill="#12579B" opacity="0.4" />`;
+                fill="#BB1326" opacity="0.4" />`;
         const topGrounded = (topTerminal === null || topTerminal === void 0 ? void 0 : topTerminal.getAttribute('cNodeName')) === 'grounded'
             ? svg `<line x1="0.5" y1="-0.1" x2="0.5" y2="0.16" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`
             : nothing;
         const bottomConnector = bottomTerminal ||
-            this.placing ||
             this.resizing ||
             this.connecting ||
+            (this.placing && this.placing !== equipment) ||
             singleTerminal.has(eqType)
             ? nothing
             : svg `<circle cx="0.5" cy="1" r="0.2" opacity="0.4"
-      fill="#BB1326" stroke="#F5E214"
+      fill="#BB1326" stroke="#F5E214" pointer-events="${this.placing ? 'none' : nothing}"
     @click=${() => this.dispatchEvent(newStartConnectEvent({
                 from: equipment,
                 fromTerminal: 'T2',
@@ -1547,7 +1554,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             singleTerminal.has(eqType)
             ? nothing
             : svg `<polygon points="0.3,1 0.7,1 0.5,0.6" 
-                fill="#12579B" opacity="0.4" />`;
+                fill="#BB1326" opacity="0.4" />`;
         const bottomGrounded = (bottomTerminal === null || bottomTerminal === void 0 ? void 0 : bottomTerminal.getAttribute('cNodeName')) === 'grounded'
             ? svg `<line x1="0.5" y1="1.1" x2="0.5" y2="0.84" stroke="black"
                 stroke-width="0.06" marker-start="url(#grounded)" />`

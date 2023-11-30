@@ -450,19 +450,10 @@ const equipmentPaths = {
   />
   `,
     VTR: svg `
-  <line
-    x1="12.5"
-    y1="4"
-    x2="12.5"
-    y2="5"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
   <circle
     cx="12.5"
-    cy="10"
-    r="5"
+    cy="9.5"
+    r="5.25"
     stroke="currentColor"
     fill="none"
     stroke-width="1.5"
@@ -470,8 +461,8 @@ const equipmentPaths = {
   />
   <circle
     cx="12.5"
-    cy="15"
-    r="5"
+    cy="15.5"
+    r="5.25"
     stroke="currentColor"
     fill="none"
     stroke-width="1.5"
