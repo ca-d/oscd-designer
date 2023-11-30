@@ -220,7 +220,7 @@ function updateConnectivityNodes(element, parent, name) {
     });
     return updates;
 }
-function uniqueName(element, parent) {
+export function uniqueName(element, parent) {
     var _a, _b, _c;
     const children = Array.from(parent.children);
     const oldName = element.getAttribute('name');
