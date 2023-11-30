@@ -1516,10 +1516,20 @@ let SLDEditor = class SLDEditor extends LitElement {
                         return;
                     e.preventDefault();
                     e.stopImmediatePropagation();
+                    if (this.placing ||
+                        this.connecting ||
+                        this.resizing ||
+                        this.placingLabel)
+                        return;
                     this.groundTerminal(winding, name);
                 }}
               @click=${(e) => {
                     e.stopImmediatePropagation();
+                    if (this.placing ||
+                        this.connecting ||
+                        this.resizing ||
+                        this.placingLabel)
+                        return;
                     this.dispatchEvent(newStartConnectEvent({
                         from: winding,
                         fromTerminal: name,
