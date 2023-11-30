@@ -123,6 +123,39 @@ export const threeWindingPTRIcon = html `<svg
 >
   ${threeWindingPTRPath}
 </svg>`;
+export const oneWindingPTRGraphic = html `<svg
+  viewBox="0 0 30 30"
+  width="24"
+  height="24"
+  slot="graphic"
+>
+  ${oneWindingPTRPath}
+</svg>`;
+export const twoWindingPTRGraphic = html `<svg
+  viewBox="0 0 30 30"
+  width="24"
+  height="24"
+  slot="graphic"
+>
+  ${twoWindingPTRPath}
+</svg>`;
+export const twoWindingPTRGraphicHorizontal = html `<svg
+  viewBox="0 0 30 30"
+  width="24"
+  height="24"
+  transform="rotate(-90)"
+  slot="graphic"
+>
+  ${twoWindingPTRPath}
+</svg>`;
+export const threeWindingPTRGraphic = html `<svg
+  viewBox="-2 -1 34 34"
+  width="24"
+  height="24"
+  slot="graphic"
+>
+  ${threeWindingPTRPath}
+</svg>`;
 export const voltageLevelIcon = html `<svg
   viewBox="0 0 25 25"
   width="24"

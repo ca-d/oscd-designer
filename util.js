@@ -256,7 +256,7 @@ export function removeTerminal(terminal) {
     const cNode = terminal.ownerDocument.querySelector(`ConnectivityNode[pathName="${pathName}"]`);
     const otherTerminals = Array.from(terminal.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${pathName}"], NeutralPoint[connectivityNode="${pathName}"]`)).filter(t => t !== terminal);
     if (cNode &&
-        otherTerminals.length &&
+        otherTerminals.length > 1 &&
         otherTerminals.some(t => t.closest('Bay')) &&
         otherTerminals.every(t => t.closest('Bay') !== cNode.closest('Bay')) &&
         !isBusBar(cNode.closest('Bay'))) {
@@ -265,6 +265,9 @@ export function removeTerminal(terminal) {
             .closest('Bay');
         if (newParent)
             edits.push(...reparentElement(cNode, newParent));
+    }
+    if (cNode && otherTerminals.length <= 1) {
+        edits.push(...removeNode(cNode));
     }
     const priv = cNode === null || cNode === void 0 ? void 0 : cNode.querySelector(`Private[type="${privType}"]`);
     const vertex = priv === null || priv === void 0 ? void 0 : priv.querySelector(`Vertex[*|uuid="${terminal.getAttributeNS(sldNs, 'uuid')}"]`);

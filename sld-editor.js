@@ -10,7 +10,7 @@ import '@material/mwc-list';
 import '@material/mwc-list/mwc-list-item.js';
 import '@material/mwc-textfield';
 import { getReference, identity } from '@openscd/oscd-scl';
-import { bayGraphic, eqRingPath, equipmentGraphic, movePath, resizePath, symbols, voltageLevelGraphic, } from './icons.js';
+import { bayGraphic, eqRingPath, equipmentGraphic, movePath, oneWindingPTRGraphic, resizePath, symbols, threeWindingPTRGraphic, twoWindingPTRGraphic, twoWindingPTRGraphicHorizontal, voltageLevelGraphic, } from './icons.js';
 import { attributes, connectionStartPoints, elementPath, isBusBar, isEqType, newConnectEvent, newPlaceEvent, newPlaceLabelEvent, newResizeEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartPlaceLabelEvent, newStartResizeEvent, privType, removeNode, removeTerminal, ringedEqTypes, singleTerminal, sldNs, svgNs, uuid, xlinkNs, xmlBoolean, } from './util.js';
 const parentTags = {
     ConductingEquipment: ['Bay'],
@@ -160,8 +160,25 @@ function renderMenuFooter(element) {
             detail = type;
     }
     let footerGraphic = equipmentGraphic(null);
-    if (element.tagName === 'ConductingEquipment')
-        footerGraphic = equipmentGraphic(element.getAttribute('type'));
+    if (element.tagName === 'PowerTransformer') {
+        const windings = element.querySelectorAll('TransformerWinding').length;
+        const kind = element.getAttributeNS(sldNs, 'kind');
+        if (windings === 3) {
+            footerGraphic = threeWindingPTRGraphic;
+        }
+        else if (windings === 2) {
+            footerGraphic = ['auto', 'earthing'].includes(kind !== null && kind !== void 0 ? kind : 'default')
+                ? twoWindingPTRGraphicHorizontal
+                : twoWindingPTRGraphic;
+        }
+        else {
+            footerGraphic = oneWindingPTRGraphic;
+        }
+    }
+    else if (element.tagName === 'TransformerWinding')
+        footerGraphic = oneWindingPTRGraphic;
+    else if (element.tagName === 'ConductingEquipment')
+        footerGraphic = equipmentGraphic(type);
     else if (element.tagName === 'Bay' && isBusBar(element))
         footerGraphic = html `<mwc-icon slot="graphic">horizontal_rule</mwc-icon>`;
     else if (element.tagName === 'Bay')
@@ -378,6 +395,100 @@ let SLDEditor = class SLDEditor extends LitElement {
             },
         }));
     }
+    transformerWindingMenuItems(winding) {
+        const items = [];
+        const neutralPoints = Array.from(winding.querySelectorAll('NeutralPoint'));
+        if (neutralPoints.length)
+            items.unshift({
+                handler: () => this.dispatchEvent(newEditEvent(neutralPoints.map(neutralPoint => removeTerminal(neutralPoint)))),
+                content: html `<mwc-list-item graphic="icon">
+          <span>Detach Neutral Point</span>
+          <mwc-icon slot="graphic">remove</mwc-icon>
+        </mwc-list-item>`,
+            });
+        const terminals = Array.from(winding.querySelectorAll('Terminal'));
+        if (terminals.length)
+            items.unshift({
+                handler: () => this.dispatchEvent(newEditEvent(terminals.map(terminal => removeTerminal(terminal)))),
+                content: html `<mwc-list-item graphic="icon">
+          <span>Detach Terminal${terminals.length > 1 ? 's' : nothing}</span>
+          <mwc-icon slot="graphic">remove</mwc-icon>
+        </mwc-list-item>`,
+            });
+        return items;
+    }
+    transformerMenuItems(transformer) {
+        const items = [
+            {
+                content: html `<mwc-list-item graphic="icon">
+          <span>Rotate</span>
+          <mwc-icon slot="graphic">rotate_90_degrees_cw</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => {
+                    this.dispatchEvent(newRotateEvent(transformer));
+                },
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
+          <span>Copy</span>
+          <mwc-icon slot="graphic">copy_all</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.dispatchEvent(newStartPlaceEvent(copy(transformer, this.nsp))),
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
+          <span>Move</span>
+          <svg
+            xmlns="${svgNs}"
+            height="24"
+            width="24"
+            slot="graphic"
+            viewBox="0 96 960 960"
+          >
+            ${movePath}
+          </svg>
+        </mwc-list-item>`,
+                handler: () => this.dispatchEvent(newStartPlaceEvent(transformer)),
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
+          <span>Move Label</span>
+          <mwc-icon slot="graphic">text_rotation_none</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.dispatchEvent(newStartPlaceLabelEvent(transformer)),
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
+          <span>Edit</span>
+          <mwc-icon slot="graphic">edit</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.dispatchEvent(newEditWizardEvent(transformer)),
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
+          <span>Delete</span>
+          <mwc-icon slot="graphic">delete</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => {
+                    const edits = [];
+                    Array.from(transformer.querySelectorAll('Terminal, NeutralPoint')).forEach(terminal => edits.push(...removeTerminal(terminal)));
+                    edits.push({ node: transformer });
+                    this.dispatchEvent(newEditEvent(edits));
+                },
+            },
+        ];
+        const kind = transformer.getAttributeNS(sldNs, 'kind');
+        const windingCount = transformer.querySelectorAll('TransformerWinding').length;
+        if (kind === 'auto' || (kind === 'earthing' && windingCount === 2))
+            items.unshift({
+                content: html `<mwc-list-item graphic="icon">
+          <span>Mirror</span>
+          <mwc-icon slot="graphic">flip</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.flipElement(transformer),
+            });
+        return items;
+    }
     equipmentMenuItems(equipment) {
         const items = [
             {
@@ -479,24 +590,23 @@ let SLDEditor = class SLDEditor extends LitElement {
       </mwc-list-item>`;
         const topTerminal = equipment.querySelector('Terminal[name="T1"]');
         const bottomTerminal = equipment.querySelector('Terminal:not([name="T1"])');
-        if (!singleTerminal.has(equipment.getAttribute('type'))) {
-            if (bottomTerminal)
-                items.unshift({
-                    handler: () => this.dispatchEvent(newEditEvent(removeTerminal(bottomTerminal))),
-                    content: item('disconnect', false),
-                });
-            else
-                items.unshift({
-                    handler: () => this.dispatchEvent(newStartConnectEvent({
-                        from: equipment,
-                        fromTerminal: 'T2',
-                        path: connectionStartPoints(equipment).T2,
-                    })),
-                    content: item('connect', false),
-                }, {
-                    handler: () => this.groundTerminal(equipment, 'T2'),
-                    content: item('ground', false),
-                });
+        if (bottomTerminal)
+            items.unshift({
+                handler: () => this.dispatchEvent(newEditEvent(removeTerminal(bottomTerminal))),
+                content: item('disconnect', false),
+            });
+        else if (!singleTerminal.has(equipment.getAttribute('type'))) {
+            items.unshift({
+                handler: () => this.dispatchEvent(newStartConnectEvent({
+                    from: equipment,
+                    fromTerminal: 'T2',
+                    path: connectionStartPoints(equipment).T2,
+                })),
+                content: item('connect', false),
+            }, {
+                handler: () => this.groundTerminal(equipment, 'T2'),
+                content: item('ground', false),
+            });
         }
         if (topTerminal)
             items.unshift({
@@ -659,10 +769,23 @@ let SLDEditor = class SLDEditor extends LitElement {
         let items = [];
         if (element.tagName === 'ConductingEquipment')
             items = this.equipmentMenuItems(element);
+        else if (element.tagName === 'PowerTransformer')
+            items = this.transformerMenuItems(element);
+        else if (element.tagName === 'TransformerWinding')
+            items = this.transformerWindingMenuItems(element);
         else if (element.tagName === 'Bay' && isBusBar(element))
             items = this.busBarMenuItems(element);
         else if (element.tagName === 'Bay' || element.tagName === 'VoltageLevel')
             items = this.containerMenuItems(element);
+        items.push({ content: html `<li divider role="separator"></li>` });
+        items.push({ content: renderMenuFooter(element) });
+        if (element.tagName === 'TransformerWinding') {
+            const transformer = element.parentElement;
+            items.push({ content: html `<li divider role="separator"></li>` });
+            items.push(...this.transformerMenuItems(transformer));
+            items.push({ content: html `<li divider role="separator"></li>` });
+            items.push({ content: renderMenuFooter(transformer) });
+        }
         return html `
       <menu
         id="sld-context-menu"
@@ -691,14 +814,12 @@ let SLDEditor = class SLDEditor extends LitElement {
       >
         <mwc-list
           @selected=${({ detail: { index } }) => {
-            var _a;
-            (_a = items[index]) === null || _a === void 0 ? void 0 : _a.handler();
+            var _a, _b;
+            (_b = (_a = items[index]) === null || _a === void 0 ? void 0 : _a.handler) === null || _b === void 0 ? void 0 : _b.call(_a);
             this.menu = undefined;
         }}
         >
           ${items.map(i => i.content)}
-          <li divider role="separator"></li>
-          ${renderMenuFooter(element)}
         </mwc-list>
       </menu>
     `;
@@ -1368,6 +1489,7 @@ let SLDEditor = class SLDEditor extends LitElement {
                     if (terminal)
                         return;
                     e.preventDefault();
+                    e.stopImmediatePropagation();
                     this.groundTerminal(winding, name);
                 }}
               @click=${(e) => {
@@ -1388,7 +1510,9 @@ let SLDEditor = class SLDEditor extends LitElement {
             const { from: [xf, yf], fromCtl: [xfc, yfc], to: [xt, yt], toCtl: [xtc, ytc], } = arc;
             arcPath = svg `<path d="M ${xf} ${yf} C ${xfc} ${yfc}, ${xtc} ${ytc}, ${xt} ${yt}" stroke="black" stroke-width="0.06" />`;
         }
-        return svg `<circle cx="${cx}" cy="${cy}" r="${size}" stroke="black" stroke-width="0.06" />${arcPath}${ports}`;
+        return svg `<g class="winding"
+        @contextmenu=${(e) => this.openMenu(winding, e)}
+    ><circle cx="${cx}" cy="${cy}" r="${size}" stroke="black" stroke-width="0.06" />${arcPath}${ports}</g>`;
     }
     renderPowerTransformer(transformer, preview = false) {
         if (this.placing === transformer && !preview)
@@ -1405,21 +1529,28 @@ let SLDEditor = class SLDEditor extends LitElement {
                 e.preventDefault();
             }
         }}
-        @click=${() => {
-            const parent = Array.from(this.substation.querySelectorAll(':scope > VoltageLevel > Bay'))
-                .concat(Array.from(this.substation.querySelectorAll(':scope > VoltageLevel')))
-                .find(vl => containsRect(vl, x, y, 1, 1)) || this.substation;
-            this.dispatchEvent(this.placing === transformer
-                ? newPlaceEvent({
+        @click=${(e) => {
+            if (this.placing === transformer) {
+                const parent = Array.from(this.substation.querySelectorAll(':scope > VoltageLevel > Bay'))
+                    .concat(Array.from(this.substation.querySelectorAll(':scope > VoltageLevel')))
+                    .find(vl => containsRect(vl, x, y, 1, 1)) || this.substation;
+                this.dispatchEvent(newPlaceEvent({
                     element: transformer,
                     parent,
                     x,
                     y,
-                })
-                : newStartPlaceEvent(transformer));
+                }));
+            }
+            else {
+                let placing = transformer;
+                if (e.shiftKey)
+                    placing = copy(transformer, this.nsp);
+                this.dispatchEvent(newStartPlaceEvent(placing));
+            }
         }}>
-    ${windings.map(w => this.renderTransformerWinding(w))}
-      </g>`;
+        ${windings.map(w => this.renderTransformerWinding(w))}
+      </g>
+      <g class="preview">${preview ? this.renderLabel(transformer) : nothing}</g>`;
     }
     renderEquipment(equipment, { preview = false, connect = false } = {}) {
         var _a;
@@ -1493,7 +1624,8 @@ let SLDEditor = class SLDEditor extends LitElement {
             : svg `<polygon points="0.3,0 0.7,0 0.5,0.4" 
                 fill="#BB1326" opacity="0.4" />`;
         const topGrounded = (topTerminal === null || topTerminal === void 0 ? void 0 : topTerminal.getAttribute('cNodeName')) === 'grounded'
-            ? svg `<line x1="0.5" y1="-0.1" x2="0.5" y2="0.16" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`
+            ? svg `<line x1="0.5" y1="-0.1" x2="0.5" y2="0.16" stroke="black"
+                stroke-width="0.06" marker-start="url(#grounded)" />`
             : nothing;
         const bottomConnector = bottomTerminal ||
             this.resizing ||
