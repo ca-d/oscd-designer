@@ -531,13 +531,8 @@ snapshots["Designer given conducting equipment connects equipment on connect men
               >
               </Vertex>
               <Vertex
-                esld:x="16.5"
+                esld:x="17"
                 esld:y="4.5"
-              >
-              </Vertex>
-              <Vertex
-                esld:x="16.5"
-                esld:y="3.5"
               >
               </Vertex>
               <Vertex
@@ -730,13 +725,8 @@ snapshots["Designer given conducting equipment connects equipment on connect men
               >
               </Vertex>
               <Vertex
-                esld:x="18.5"
+                esld:x="18"
                 esld:y="4.5"
-              >
-              </Vertex>
-              <Vertex
-                esld:x="18.5"
-                esld:y="5.5"
               >
               </Vertex>
               <Vertex
@@ -825,17 +815,12 @@ snapshots["Designer given conducting equipment with established connectivity uni
               >
               </Vertex>
               <Vertex
-                esld:x="16.5"
+                esld:x="18"
                 esld:y="4.5"
               >
               </Vertex>
               <Vertex
-                esld:x="16.5"
-                esld:y="5.5"
-              >
-              </Vertex>
-              <Vertex
-                esld:x="17"
+                esld:x="18"
                 esld:y="5.5"
               >
               </Vertex>
@@ -894,7 +879,7 @@ snapshots["Designer given conducting equipment with established connectivity uni
             bayName="B1"
             cNodeName="L2"
             connectivityNode="S1/V1/B1/L2"
-            name="T1"
+            name="T2"
             substationName="S1"
             voltageLevelName="V1"
           >
@@ -1444,19 +1429,19 @@ snapshots["Designer given conducting equipment with established connectivity kee
               >
               </Vertex>
               <Vertex
-                esld:x="11.5"
+                esld:x="12"
                 esld:y="5.5"
               >
               </Vertex>
               <Vertex
-                esld:x="11.5"
+                esld:x="12"
                 esld:y="7"
               >
               </Vertex>
             </Section>
             <Section>
               <Vertex
-                esld:x="11.5"
+                esld:x="12"
                 esld:y="7"
               >
               </Vertex>
@@ -1495,7 +1480,7 @@ snapshots["Designer given conducting equipment with established connectivity kee
               >
               </Vertex>
               <Vertex
-                esld:x="11.5"
+                esld:x="12"
                 esld:y="7"
               >
               </Vertex>
@@ -2077,13 +2062,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                esld:x="18.5"
+                esld:x="18"
                 esld:y="7.5"
-              >
-              </Vertex>
-              <Vertex
-                esld:x="18.5"
-                esld:y="5.5"
               >
               </Vertex>
               <Vertex
@@ -2339,13 +2319,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                esld:x="18.5"
+                esld:x="18"
                 esld:y="7.5"
-              >
-              </Vertex>
-              <Vertex
-                esld:x="18.5"
-                esld:y="5.5"
               >
               </Vertex>
               <Vertex
@@ -2639,13 +2614,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                esld:x="18.5"
+                esld:x="18"
                 esld:y="7.5"
-              >
-              </Vertex>
-              <Vertex
-                esld:x="18.5"
-                esld:y="5.5"
               >
               </Vertex>
               <Vertex
@@ -2873,13 +2843,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                esld:x="18.5"
+                esld:x="18"
                 esld:y="7.5"
-              >
-              </Vertex>
-              <Vertex
-                esld:x="18.5"
-                esld:y="5.5"
               >
               </Vertex>
               <Vertex
@@ -3169,13 +3134,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                esld:x="18.5"
+                esld:x="18"
                 esld:y="7.5"
-              >
-              </Vertex>
-              <Vertex
-                esld:x="18.5"
-                esld:y="5.5"
               >
               </Vertex>
               <Vertex
@@ -3539,13 +3499,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                esld:x="18.5"
+                esld:x="18"
                 esld:y="7.5"
-              >
-              </Vertex>
-              <Vertex
-                esld:x="18.5"
-                esld:y="5.5"
               >
               </Vertex>
               <Vertex
@@ -3803,13 +3758,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                esld:x="18.5"
+                esld:x="18"
                 esld:y="6.5"
-              >
-              </Vertex>
-              <Vertex
-                esld:x="18.5"
-                esld:y="4.5"
               >
               </Vertex>
               <Vertex
@@ -4125,13 +4075,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                esld:x="18.5"
+                esld:x="18"
                 esld:y="7.5"
-              >
-              </Vertex>
-              <Vertex
-                esld:x="18.5"
-                esld:y="5.5"
               >
               </Vertex>
               <Vertex
@@ -5470,13 +5415,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                esld:x="18.5"
+                esld:x="18"
                 esld:y="7.5"
-              >
-              </Vertex>
-              <Vertex
-                esld:x="18.5"
-                esld:y="5.5"
               >
               </Vertex>
               <Vertex
@@ -5761,13 +5701,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                esld:x="18.5"
+                esld:x="18"
                 esld:y="7.5"
-              >
-              </Vertex>
-              <Vertex
-                esld:x="18.5"
-                esld:y="5.5"
               >
               </Vertex>
               <Vertex
@@ -6275,13 +6210,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                esld:x="18.5"
+                esld:x="18"
                 esld:y="7.5"
-              >
-              </Vertex>
-              <Vertex
-                esld:x="18.5"
-                esld:y="5.5"
               >
               </Vertex>
               <Vertex
@@ -7255,13 +7185,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                esld:x="18.5"
+                esld:x="18"
                 esld:y="7.5"
-              >
-              </Vertex>
-              <Vertex
-                esld:x="18.5"
-                esld:y="5.5"
               >
               </Vertex>
               <Vertex
@@ -7411,13 +7336,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                esld:x="10.5"
+                esld:x="10"
                 esld:y="13.5"
-              >
-              </Vertex>
-              <Vertex
-                esld:x="10.5"
-                esld:y="11.5"
               >
               </Vertex>
               <Vertex
@@ -7708,13 +7628,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                esld:x="18.5"
+                esld:x="18"
                 esld:y="7.5"
-              >
-              </Vertex>
-              <Vertex
-                esld:x="18.5"
-                esld:y="5.5"
               >
               </Vertex>
               <Vertex
@@ -8069,13 +7984,8 @@ snapshots["Designer given conducting equipment with established connectivity bet
               >
               </Vertex>
               <Vertex
-                esld:x="18.5"
+                esld:x="18"
                 esld:y="7.5"
-              >
-              </Vertex>
-              <Vertex
-                esld:x="18.5"
-                esld:y="5.5"
               >
               </Vertex>
               <Vertex

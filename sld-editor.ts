@@ -460,7 +460,7 @@ export class SLDEditor extends LitElement {
       y += this.mouseY - parentY;
     }
     if (this.placingLabel === element) {
-      x = this.mouseX2;
+      x = this.mouseX2 - 0.5;
       y = this.mouseY2 + 0.5;
     }
     return [x, y];
@@ -524,12 +524,15 @@ export class SLDEditor extends LitElement {
     if (topTerminal) return 'T2';
     if (bottomTerminal) return 'T1';
 
-    const [mX2, mY2] = [this.mouseX2, this.mouseY2].map(n => n % 1);
-    const { rot } = attributes(equipment);
-    if (rot === 0 && mY2 === 0.5) return 'T2';
-    if (rot === 1 && mX2 === 0) return 'T2';
-    if (rot === 2 && mY2 === 0) return 'T2';
-    if (rot === 3 && mX2 === 0.5) return 'T2';
+    const [mx, my] = [this.mouseX2, this.mouseY2];
+    const {
+      rot,
+      pos: [x, y],
+    } = attributes(equipment);
+    if (rot === 0 && my >= y + 0.5) return 'T2';
+    if (rot === 1 && mx <= x + 0.5) return 'T2';
+    if (rot === 2 && my <= y + 0.5) return 'T2';
+    if (rot === 3 && mx >= x + 0.5) return 'T2';
     return 'T1';
   }
 
@@ -1047,7 +1050,6 @@ export class SLDEditor extends LitElement {
 
       let x3 = this.mouseX2;
       let y3 = this.mouseY2;
-      let [x4, y4] = [x3, y3];
 
       const targetEq = Array.from(
         this.substation.querySelectorAll('ConductingEquipment'),
@@ -1063,9 +1065,7 @@ export class SLDEditor extends LitElement {
       const toTerminal = this.nearestOpenTerminal(targetEq);
 
       if (targetEq && toTerminal) {
-        const [close, far] = connectionStartPoints(targetEq)[toTerminal];
-        [x3, y3] = far;
-        [x4, y4] = close;
+        [[x3, y3]] = connectionStartPoints(targetEq)[toTerminal];
       }
 
       const x2 = vertical ? oldX2 : x3;
@@ -1075,16 +1075,13 @@ export class SLDEditor extends LitElement {
         svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
                 stroke-linecap="square" stroke="black" />`,
         svg`<line x1="${x2}" y1="${y2}" x2="${x3}" y2="${y3}"
-                stroke-linecap="square" stroke="black" />`,
-        svg`<line x1="${x3}" y1="${y3}" x2="${x4}" y2="${y4}"
-                stroke-linecap="square" stroke="black" />`,
+                stroke-linecap="square" stroke="black" />`
       );
       connectionPreview.push(
         svg`<rect width="100%" height="100%" fill="url(#grid)"
       @click=${() => {
         path[path.length - 1] = [x2, y2];
         path.push([x3, y3]);
-        path.push([x4, y4]);
         cleanPath(path);
         this.requestUpdate();
         if (targetEq && toTerminal)
@@ -1134,8 +1131,8 @@ export class SLDEditor extends LitElement {
           const [x, y] = this.svgCoordinates(e.clientX, e.clientY);
           this.mouseX = Math.floor(x);
           this.mouseY = Math.floor(y);
-          this.mouseX2 = Math.floor(x * 2) / 2;
-          this.mouseY2 = Math.floor(y * 2) / 2;
+          this.mouseX2 = Math.round(x * 2) / 2;
+          this.mouseY2 = Math.round(y * 2) / 2;
           this.positionCoordinates(e);
         }}
       >
