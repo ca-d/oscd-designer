@@ -50,6 +50,7 @@ import {
   singleTerminal,
   sldNs,
   svgNs,
+  uniqueName,
   uuid,
   xlinkNs,
   xmlBoolean,
@@ -611,6 +612,39 @@ export class SLDEditor extends LitElement {
   transformerWindingMenuItems(winding: Element) {
     const items = [];
 
+    const tapChanger = winding.querySelector('TapChanger');
+
+    if (tapChanger)
+      items.push({
+        handler: () => this.dispatchEvent(newEditEvent({ node: tapChanger })),
+        content: html`<mwc-list-item graphic="icon">
+          <span>Remove Tap Changer</span>
+          <mwc-icon slot="graphic">remove</mwc-icon>
+        </mwc-list-item>`,
+      });
+    else
+      items.push({
+        handler: () => {
+          const node = this.doc.createElementNS(
+            this.doc.documentElement.namespaceURI,
+            'TapChanger'
+          );
+          node.setAttribute('name', 'LTC');
+          node.setAttribute('name', uniqueName(node, winding));
+          this.dispatchEvent(
+            newEditEvent({
+              parent: winding,
+              node,
+              reference: getReference(winding, 'TapChanger'),
+            })
+          );
+        },
+        content: html`<mwc-list-item graphic="icon">
+          <span>Add Tap Changer</span>
+          <mwc-icon slot="graphic">north_east</mwc-icon>
+        </mwc-list-item>`,
+      });
+
     const neutralPoints = Array.from(winding.querySelectorAll('NeutralPoint'));
 
     if (neutralPoints.length)
@@ -623,7 +657,7 @@ export class SLDEditor extends LitElement {
           ),
         content: html`<mwc-list-item graphic="icon">
           <span>Detach Neutral Point</span>
-          <mwc-icon slot="graphic">remove</mwc-icon>
+          <mwc-icon slot="graphic">remove_circle_outline</mwc-icon>
         </mwc-list-item>`,
       });
 
@@ -636,7 +670,7 @@ export class SLDEditor extends LitElement {
           ),
         content: html`<mwc-list-item graphic="icon">
           <span>Detach Terminal${terminals.length > 1 ? 's' : nothing}</span>
-          <mwc-icon slot="graphic">remove</mwc-icon>
+          <mwc-icon slot="graphic">cancel</mwc-icon>
         </mwc-list-item>`,
       });
 
@@ -1913,9 +1947,16 @@ export class SLDEditor extends LitElement {
       } = arc;
       arcPath = svg`<path d="M ${xf} ${yf} C ${xfc} ${yfc}, ${xtc} ${ytc}, ${xt} ${yt}" stroke="black" stroke-width="0.06" />`;
     }
+    const { rot } = attributes(winding.parentElement!);
+    const tapChanger = winding.querySelector('TapChanger')
+      ? svg`<line x1="${cx - 0.8}" y1="${cy + 0.8}" x2="${cx + 0.8}" y2="${
+          cy - (arc && rot === 1 ? 1 : 0.8)
+        }"
+              stroke="black" stroke-width="0.06" marker-end="url(#arrow)" />`
+      : nothing;
     return svg`<g class="winding"
         @contextmenu=${(e: MouseEvent) => this.openMenu(winding, e)}
-    ><circle cx="${cx}" cy="${cy}" r="${size}" stroke="black" stroke-width="0.06" />${arcPath}${ports}</g>`;
+    ><circle cx="${cx}" cy="${cy}" r="${size}" stroke="black" stroke-width="0.06" />${arcPath}${tapChanger}${ports}</g>`;
   }
 
   renderPowerTransformer(

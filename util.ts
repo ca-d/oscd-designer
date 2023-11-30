@@ -301,7 +301,7 @@ function updateConnectivityNodes(
   return updates;
 }
 
-function uniqueName(element: Element, parent: Element): string {
+export function uniqueName(element: Element, parent: Element): string {
   const children = Array.from(parent.children);
   const oldName = element.getAttribute('name');
   if (

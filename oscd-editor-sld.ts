@@ -315,8 +315,11 @@ export default class OscdEditorSLD extends LitElement {
         element.tagName === 'PowerTransformer' &&
         !element.hasAttributeNS(sldNs, 'lx')
       ) {
-        lx -= 0.5;
-        ly -= 0.5;
+        if (rot < 2) lx += 1.5;
+        else {
+          lx -= 2;
+          ly += 2;
+        }
       }
       edits.push({
         element,
