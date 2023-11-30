@@ -2165,7 +2165,7 @@ export class SLDEditor extends LitElement {
                 )
             )
               return;
-            const [[oldX1, _y], [oldX2, oldY2]] = path.slice(-2);
+            const [[oldX1, oldY1], [oldX2, oldY2]] = path.slice(-2);
             const vertical = oldX1 === oldX2;
 
             let x3 = this.mouseX2;
@@ -2174,12 +2174,12 @@ export class SLDEditor extends LitElement {
             let newX2 = vertical ? oldX2 : x3;
             let newY2 = vertical ? y3 : oldY2;
 
-            [x3, y3] = findIntersection(
-              [newX2, newY2],
-              [x3, y3],
-              [x1, y1],
-              [x2, y2]
-            );
+            const start =
+              newX2 === x3 && newY2 === y3
+                ? ([oldX1, oldY1] as Point)
+                : ([newX2, newY2] as Point);
+
+            [x3, y3] = findIntersection(start, [x3, y3], [x1, y1], [x2, y2]);
 
             newX2 = vertical ? oldX2 : x3;
             newY2 = vertical ? y3 : oldY2;
