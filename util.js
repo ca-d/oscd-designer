@@ -24,6 +24,19 @@ export function isEqType(str) {
     return eqTypes.includes(str);
 }
 export const ringedEqTypes = new Set(['GEN', 'MOT', 'SMC']);
+export const singleTerminal = new Set([
+    'BAT',
+    'EFN',
+    'FAN',
+    'GEN',
+    'IFL',
+    'MOT',
+    'PMP',
+    'RRC',
+    'SAR',
+    'SMC',
+    'VTR',
+]);
 /* eslint-disable no-bitwise */
 export function uuid() {
     const digits = new Array(36);
@@ -270,30 +283,30 @@ export function connectionStartPoints(equipment) {
     const { pos: [x, y], rot, } = attributes(equipment);
     const T1 = [
         [
+            [x + 0.5, y + 0.16],
+            [x + 0.84, y + 0.5],
+            [x + 0.5, y + 0.84],
+            [x + 0.16, y + 0.5],
+        ][rot],
+        [
             [x + 0.5, y],
             [x + 1, y + 0.5],
             [x + 0.5, y + 1],
             [x, y + 0.5],
-        ][rot],
-        [
-            [x + 0.5, y - 0.5],
-            [x + 1.5, y + 0.5],
-            [x + 0.5, y + 1.5],
-            [x - 0.5, y + 0.5],
         ][rot],
     ];
     const T2 = [
         [
+            [x + 0.5, y + 0.84],
+            [x + 0.16, y + 0.5],
+            [x + 0.5, y + 0.16],
+            [x + 0.84, y + 0.5],
+        ][rot],
+        [
             [x + 0.5, y + 1],
             [x, y + 0.5],
             [x + 0.5, y],
             [x + 1, y + 0.5],
-        ][rot],
-        [
-            [x + 0.5, y + 1.5],
-            [x - 0.5, y + 0.5],
-            [x + 0.5, y - 0.5],
-            [x + 1.5, y + 0.5],
         ][rot],
     ];
     return { T1, T2 };

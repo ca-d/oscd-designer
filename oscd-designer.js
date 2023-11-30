@@ -15,7 +15,7 @@ const r=window,a=r.ShadowRoot&&(void 0===r.ShadyCSS||r.ShadyCSS.nativeShadow)&&"
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-var w;_[y]=!0,_.elementProperties=new Map,_.elementStyles=[],_.shadowRootOptions={mode:"open"},null==g||g({ReactiveElement:_}),(null!==(m=h.reactiveElementVersions)&&void 0!==m?m:h.reactiveElementVersions=[]).push("1.6.3");const E=window,S=E.trustedTypes,A=S?S.createPolicy("lit-html",{createHTML:t=>t}):void 0,C="$lit$",k=`lit$${(Math.random()+"").slice(9)}$`,$="?"+k,N=`<${$}>`,I=document,T=()=>I.createComment(""),L=t=>null===t||"object"!=typeof t&&"function"!=typeof t,R=Array.isArray,D="[ \t\n\f\r]",O=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,F=/-->/g,P=/>/g,z=RegExp(`>|${D}(?:([^\\s"'>=/]+)(${D}*=${D}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),H=/'/g,M=/"/g,B=/^(?:script|style|textarea|title)$/i,V=t=>(e,...i)=>({_$litType$:t,strings:e,values:i}),U=V(1),q=V(2),G=Symbol.for("lit-noChange"),j=Symbol.for("lit-nothing"),W=new WeakMap,X=I.createTreeWalker(I,129,null,!1);function Y(t,e){if(!Array.isArray(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==A?A.createHTML(e):e}const K=(t,e)=>{const i=t.length-1,n=[];let o,r=2===e?"<svg>":"",a=O;for(let e=0;e<i;e++){const i=t[e];let d,s,l=-1,c=0;for(;c<i.length&&(a.lastIndex=c,s=a.exec(i),null!==s);)c=a.lastIndex,a===O?"!--"===s[1]?a=F:void 0!==s[1]?a=P:void 0!==s[2]?(B.test(s[2])&&(o=RegExp("</"+s[2],"g")),a=z):void 0!==s[3]&&(a=z):a===z?">"===s[0]?(a=null!=o?o:O,l=-1):void 0===s[1]?l=-2:(l=a.lastIndex-s[2].length,d=s[1],a=void 0===s[3]?z:'"'===s[3]?M:H):a===M||a===H?a=z:a===F||a===P?a=O:(a=z,o=void 0);const p=a===z&&t[e+1].startsWith("/>")?" ":"";r+=a===O?i+N:l>=0?(n.push(d),i.slice(0,l)+C+i.slice(l)+k+p):i+k+(-2===l?(n.push(void 0),e):p)}return[Y(t,r+(t[i]||"<?>")+(2===e?"</svg>":"")),n]};class Z{constructor({strings:t,_$litType$:e},i){let n;this.parts=[];let o=0,r=0;const a=t.length-1,d=this.parts,[s,l]=K(t,e);if(this.el=Z.createElement(s,i),X.currentNode=this.el.content,2===e){const t=this.el.content,e=t.firstChild;e.remove(),t.append(...e.childNodes)}for(;null!==(n=X.nextNode())&&d.length<a;){if(1===n.nodeType){if(n.hasAttributes()){const t=[];for(const e of n.getAttributeNames())if(e.endsWith(C)||e.startsWith(k)){const i=l[r++];if(t.push(e),void 0!==i){const t=n.getAttribute(i.toLowerCase()+C).split(k),e=/([.?@])?(.*)/.exec(i);d.push({type:1,index:o,name:e[2],strings:t,ctor:"."===e[1]?it:"?"===e[1]?ot:"@"===e[1]?rt:et})}else d.push({type:6,index:o})}for(const e of t)n.removeAttribute(e)}if(B.test(n.tagName)){const t=n.textContent.split(k),e=t.length-1;if(e>0){n.textContent=S?S.emptyScript:"";for(let i=0;i<e;i++)n.append(t[i],T()),X.nextNode(),d.push({type:2,index:++o});n.append(t[e],T())}}}else if(8===n.nodeType)if(n.data===$)d.push({type:2,index:o});else{let t=-1;for(;-1!==(t=n.data.indexOf(k,t+1));)d.push({type:7,index:o}),t+=k.length-1}o++}}static createElement(t,e){const i=I.createElement("template");return i.innerHTML=t,i}}function Q(t,e,i=t,n){var o,r,a,d;if(e===G)return e;let s=void 0!==n?null===(o=i._$Co)||void 0===o?void 0:o[n]:i._$Cl;const l=L(e)?void 0:e._$litDirective$;return(null==s?void 0:s.constructor)!==l&&(null===(r=null==s?void 0:s._$AO)||void 0===r||r.call(s,!1),void 0===l?s=void 0:(s=new l(t),s._$AT(t,i,n)),void 0!==n?(null!==(a=(d=i)._$Co)&&void 0!==a?a:d._$Co=[])[n]=s:i._$Cl=s),void 0!==s&&(e=Q(t,s._$AS(t,e.values),s,n)),e}class J{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){var e;const{el:{content:i},parts:n}=this._$AD,o=(null!==(e=null==t?void 0:t.creationScope)&&void 0!==e?e:I).importNode(i,!0);X.currentNode=o;let r=X.nextNode(),a=0,d=0,s=n[0];for(;void 0!==s;){if(a===s.index){let e;2===s.type?e=new tt(r,r.nextSibling,this,t):1===s.type?e=new s.ctor(r,s.name,s.strings,this,t):6===s.type&&(e=new at(r,this,t)),this._$AV.push(e),s=n[++d]}a!==(null==s?void 0:s.index)&&(r=X.nextNode(),a++)}return X.currentNode=I,o}v(t){let e=0;for(const i of this._$AV)void 0!==i&&(void 0!==i.strings?(i._$AI(t,i,e),e+=i.strings.length-2):i._$AI(t[e])),e++}}class tt{constructor(t,e,i,n){var o;this.type=2,this._$AH=j,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=i,this.options=n,this._$Cp=null===(o=null==n?void 0:n.isConnected)||void 0===o||o}get _$AU(){var t,e;return null!==(e=null===(t=this._$AM)||void 0===t?void 0:t._$AU)&&void 0!==e?e:this._$Cp}get parentNode(){let t=this._$AA.parentNode;const e=this._$AM;return void 0!==e&&11===(null==t?void 0:t.nodeType)&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=Q(this,t,e),L(t)?t===j||null==t||""===t?(this._$AH!==j&&this._$AR(),this._$AH=j):t!==this._$AH&&t!==G&&this._(t):void 0!==t._$litType$?this.g(t):void 0!==t.nodeType?this.$(t):(t=>R(t)||"function"==typeof(null==t?void 0:t[Symbol.iterator]))(t)?this.T(t):this._(t)}k(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}$(t){this._$AH!==t&&(this._$AR(),this._$AH=this.k(t))}_(t){this._$AH!==j&&L(this._$AH)?this._$AA.nextSibling.data=t:this.$(I.createTextNode(t)),this._$AH=t}g(t){var e;const{values:i,_$litType$:n}=t,o="number"==typeof n?this._$AC(t):(void 0===n.el&&(n.el=Z.createElement(Y(n.h,n.h[0]),this.options)),n);if((null===(e=this._$AH)||void 0===e?void 0:e._$AD)===o)this._$AH.v(i);else{const t=new J(o,this),e=t.u(this.options);t.v(i),this.$(e),this._$AH=t}}_$AC(t){let e=W.get(t.strings);return void 0===e&&W.set(t.strings,e=new Z(t)),e}T(t){R(this._$AH)||(this._$AH=[],this._$AR());const e=this._$AH;let i,n=0;for(const o of t)n===e.length?e.push(i=new tt(this.k(T()),this.k(T()),this,this.options)):i=e[n],i._$AI(o),n++;n<e.length&&(this._$AR(i&&i._$AB.nextSibling,n),e.length=n)}_$AR(t=this._$AA.nextSibling,e){var i;for(null===(i=this._$AP)||void 0===i||i.call(this,!1,!0,e);t&&t!==this._$AB;){const e=t.nextSibling;t.remove(),t=e}}setConnected(t){var e;void 0===this._$AM&&(this._$Cp=t,null===(e=this._$AP)||void 0===e||e.call(this,t))}}class et{constructor(t,e,i,n,o){this.type=1,this._$AH=j,this._$AN=void 0,this.element=t,this.name=e,this._$AM=n,this.options=o,i.length>2||""!==i[0]||""!==i[1]?(this._$AH=Array(i.length-1).fill(new String),this.strings=i):this._$AH=j}get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}_$AI(t,e=this,i,n){const o=this.strings;let r=!1;if(void 0===o)t=Q(this,t,e,0),r=!L(t)||t!==this._$AH&&t!==G,r&&(this._$AH=t);else{const n=t;let a,d;for(t=o[0],a=0;a<o.length-1;a++)d=Q(this,n[i+a],e,a),d===G&&(d=this._$AH[a]),r||(r=!L(d)||d!==this._$AH[a]),d===j?t=j:t!==j&&(t+=(null!=d?d:"")+o[a+1]),this._$AH[a]=d}r&&!n&&this.j(t)}j(t){t===j?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,null!=t?t:"")}}class it extends et{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===j?void 0:t}}const nt=S?S.emptyScript:"";class ot extends et{constructor(){super(...arguments),this.type=4}j(t){t&&t!==j?this.element.setAttribute(this.name,nt):this.element.removeAttribute(this.name)}}class rt extends et{constructor(t,e,i,n,o){super(t,e,i,n,o),this.type=5}_$AI(t,e=this){var i;if((t=null!==(i=Q(this,t,e,0))&&void 0!==i?i:j)===G)return;const n=this._$AH,o=t===j&&n!==j||t.capture!==n.capture||t.once!==n.once||t.passive!==n.passive,r=t!==j&&(n===j||o);o&&this.element.removeEventListener(this.name,this,n),r&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){var e,i;"function"==typeof this._$AH?this._$AH.call(null!==(i=null===(e=this.options)||void 0===e?void 0:e.host)&&void 0!==i?i:this.element,t):this._$AH.handleEvent(t)}}class at{constructor(t,e,i){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=i}get _$AU(){return this._$AM._$AU}_$AI(t){Q(this,t)}}const dt=E.litHtmlPolyfillSupport;null==dt||dt(Z,tt),(null!==(w=E.litHtmlVersions)&&void 0!==w?w:E.litHtmlVersions=[]).push("2.8.0");
+var w;_[y]=!0,_.elementProperties=new Map,_.elementStyles=[],_.shadowRootOptions={mode:"open"},null==g||g({ReactiveElement:_}),(null!==(m=h.reactiveElementVersions)&&void 0!==m?m:h.reactiveElementVersions=[]).push("1.6.3");const E=window,S=E.trustedTypes,A=S?S.createPolicy("lit-html",{createHTML:t=>t}):void 0,C="$lit$",$=`lit$${(Math.random()+"").slice(9)}$`,k="?"+$,N=`<${k}>`,I=document,T=()=>I.createComment(""),L=t=>null===t||"object"!=typeof t&&"function"!=typeof t,R=Array.isArray,D="[ \t\n\f\r]",O=/<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g,F=/-->/g,P=/>/g,z=RegExp(`>|${D}(?:([^\\s"'>=/]+)(${D}*=${D}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`,"g"),H=/'/g,M=/"/g,B=/^(?:script|style|textarea|title)$/i,V=t=>(e,...i)=>({_$litType$:t,strings:e,values:i}),U=V(1),q=V(2),G=Symbol.for("lit-noChange"),j=Symbol.for("lit-nothing"),W=new WeakMap,X=I.createTreeWalker(I,129,null,!1);function Y(t,e){if(!Array.isArray(t)||!t.hasOwnProperty("raw"))throw Error("invalid template strings array");return void 0!==A?A.createHTML(e):e}const K=(t,e)=>{const i=t.length-1,n=[];let o,r=2===e?"<svg>":"",a=O;for(let e=0;e<i;e++){const i=t[e];let d,s,l=-1,c=0;for(;c<i.length&&(a.lastIndex=c,s=a.exec(i),null!==s);)c=a.lastIndex,a===O?"!--"===s[1]?a=F:void 0!==s[1]?a=P:void 0!==s[2]?(B.test(s[2])&&(o=RegExp("</"+s[2],"g")),a=z):void 0!==s[3]&&(a=z):a===z?">"===s[0]?(a=null!=o?o:O,l=-1):void 0===s[1]?l=-2:(l=a.lastIndex-s[2].length,d=s[1],a=void 0===s[3]?z:'"'===s[3]?M:H):a===M||a===H?a=z:a===F||a===P?a=O:(a=z,o=void 0);const p=a===z&&t[e+1].startsWith("/>")?" ":"";r+=a===O?i+N:l>=0?(n.push(d),i.slice(0,l)+C+i.slice(l)+$+p):i+$+(-2===l?(n.push(void 0),e):p)}return[Y(t,r+(t[i]||"<?>")+(2===e?"</svg>":"")),n]};class Z{constructor({strings:t,_$litType$:e},i){let n;this.parts=[];let o=0,r=0;const a=t.length-1,d=this.parts,[s,l]=K(t,e);if(this.el=Z.createElement(s,i),X.currentNode=this.el.content,2===e){const t=this.el.content,e=t.firstChild;e.remove(),t.append(...e.childNodes)}for(;null!==(n=X.nextNode())&&d.length<a;){if(1===n.nodeType){if(n.hasAttributes()){const t=[];for(const e of n.getAttributeNames())if(e.endsWith(C)||e.startsWith($)){const i=l[r++];if(t.push(e),void 0!==i){const t=n.getAttribute(i.toLowerCase()+C).split($),e=/([.?@])?(.*)/.exec(i);d.push({type:1,index:o,name:e[2],strings:t,ctor:"."===e[1]?it:"?"===e[1]?ot:"@"===e[1]?rt:et})}else d.push({type:6,index:o})}for(const e of t)n.removeAttribute(e)}if(B.test(n.tagName)){const t=n.textContent.split($),e=t.length-1;if(e>0){n.textContent=S?S.emptyScript:"";for(let i=0;i<e;i++)n.append(t[i],T()),X.nextNode(),d.push({type:2,index:++o});n.append(t[e],T())}}}else if(8===n.nodeType)if(n.data===k)d.push({type:2,index:o});else{let t=-1;for(;-1!==(t=n.data.indexOf($,t+1));)d.push({type:7,index:o}),t+=$.length-1}o++}}static createElement(t,e){const i=I.createElement("template");return i.innerHTML=t,i}}function Q(t,e,i=t,n){var o,r,a,d;if(e===G)return e;let s=void 0!==n?null===(o=i._$Co)||void 0===o?void 0:o[n]:i._$Cl;const l=L(e)?void 0:e._$litDirective$;return(null==s?void 0:s.constructor)!==l&&(null===(r=null==s?void 0:s._$AO)||void 0===r||r.call(s,!1),void 0===l?s=void 0:(s=new l(t),s._$AT(t,i,n)),void 0!==n?(null!==(a=(d=i)._$Co)&&void 0!==a?a:d._$Co=[])[n]=s:i._$Cl=s),void 0!==s&&(e=Q(t,s._$AS(t,e.values),s,n)),e}class J{constructor(t,e){this._$AV=[],this._$AN=void 0,this._$AD=t,this._$AM=e}get parentNode(){return this._$AM.parentNode}get _$AU(){return this._$AM._$AU}u(t){var e;const{el:{content:i},parts:n}=this._$AD,o=(null!==(e=null==t?void 0:t.creationScope)&&void 0!==e?e:I).importNode(i,!0);X.currentNode=o;let r=X.nextNode(),a=0,d=0,s=n[0];for(;void 0!==s;){if(a===s.index){let e;2===s.type?e=new tt(r,r.nextSibling,this,t):1===s.type?e=new s.ctor(r,s.name,s.strings,this,t):6===s.type&&(e=new at(r,this,t)),this._$AV.push(e),s=n[++d]}a!==(null==s?void 0:s.index)&&(r=X.nextNode(),a++)}return X.currentNode=I,o}v(t){let e=0;for(const i of this._$AV)void 0!==i&&(void 0!==i.strings?(i._$AI(t,i,e),e+=i.strings.length-2):i._$AI(t[e])),e++}}class tt{constructor(t,e,i,n){var o;this.type=2,this._$AH=j,this._$AN=void 0,this._$AA=t,this._$AB=e,this._$AM=i,this.options=n,this._$Cp=null===(o=null==n?void 0:n.isConnected)||void 0===o||o}get _$AU(){var t,e;return null!==(e=null===(t=this._$AM)||void 0===t?void 0:t._$AU)&&void 0!==e?e:this._$Cp}get parentNode(){let t=this._$AA.parentNode;const e=this._$AM;return void 0!==e&&11===(null==t?void 0:t.nodeType)&&(t=e.parentNode),t}get startNode(){return this._$AA}get endNode(){return this._$AB}_$AI(t,e=this){t=Q(this,t,e),L(t)?t===j||null==t||""===t?(this._$AH!==j&&this._$AR(),this._$AH=j):t!==this._$AH&&t!==G&&this._(t):void 0!==t._$litType$?this.g(t):void 0!==t.nodeType?this.$(t):(t=>R(t)||"function"==typeof(null==t?void 0:t[Symbol.iterator]))(t)?this.T(t):this._(t)}k(t){return this._$AA.parentNode.insertBefore(t,this._$AB)}$(t){this._$AH!==t&&(this._$AR(),this._$AH=this.k(t))}_(t){this._$AH!==j&&L(this._$AH)?this._$AA.nextSibling.data=t:this.$(I.createTextNode(t)),this._$AH=t}g(t){var e;const{values:i,_$litType$:n}=t,o="number"==typeof n?this._$AC(t):(void 0===n.el&&(n.el=Z.createElement(Y(n.h,n.h[0]),this.options)),n);if((null===(e=this._$AH)||void 0===e?void 0:e._$AD)===o)this._$AH.v(i);else{const t=new J(o,this),e=t.u(this.options);t.v(i),this.$(e),this._$AH=t}}_$AC(t){let e=W.get(t.strings);return void 0===e&&W.set(t.strings,e=new Z(t)),e}T(t){R(this._$AH)||(this._$AH=[],this._$AR());const e=this._$AH;let i,n=0;for(const o of t)n===e.length?e.push(i=new tt(this.k(T()),this.k(T()),this,this.options)):i=e[n],i._$AI(o),n++;n<e.length&&(this._$AR(i&&i._$AB.nextSibling,n),e.length=n)}_$AR(t=this._$AA.nextSibling,e){var i;for(null===(i=this._$AP)||void 0===i||i.call(this,!1,!0,e);t&&t!==this._$AB;){const e=t.nextSibling;t.remove(),t=e}}setConnected(t){var e;void 0===this._$AM&&(this._$Cp=t,null===(e=this._$AP)||void 0===e||e.call(this,t))}}class et{constructor(t,e,i,n,o){this.type=1,this._$AH=j,this._$AN=void 0,this.element=t,this.name=e,this._$AM=n,this.options=o,i.length>2||""!==i[0]||""!==i[1]?(this._$AH=Array(i.length-1).fill(new String),this.strings=i):this._$AH=j}get tagName(){return this.element.tagName}get _$AU(){return this._$AM._$AU}_$AI(t,e=this,i,n){const o=this.strings;let r=!1;if(void 0===o)t=Q(this,t,e,0),r=!L(t)||t!==this._$AH&&t!==G,r&&(this._$AH=t);else{const n=t;let a,d;for(t=o[0],a=0;a<o.length-1;a++)d=Q(this,n[i+a],e,a),d===G&&(d=this._$AH[a]),r||(r=!L(d)||d!==this._$AH[a]),d===j?t=j:t!==j&&(t+=(null!=d?d:"")+o[a+1]),this._$AH[a]=d}r&&!n&&this.j(t)}j(t){t===j?this.element.removeAttribute(this.name):this.element.setAttribute(this.name,null!=t?t:"")}}class it extends et{constructor(){super(...arguments),this.type=3}j(t){this.element[this.name]=t===j?void 0:t}}const nt=S?S.emptyScript:"";class ot extends et{constructor(){super(...arguments),this.type=4}j(t){t&&t!==j?this.element.setAttribute(this.name,nt):this.element.removeAttribute(this.name)}}class rt extends et{constructor(t,e,i,n,o){super(t,e,i,n,o),this.type=5}_$AI(t,e=this){var i;if((t=null!==(i=Q(this,t,e,0))&&void 0!==i?i:j)===G)return;const n=this._$AH,o=t===j&&n!==j||t.capture!==n.capture||t.once!==n.once||t.passive!==n.passive,r=t!==j&&(n===j||o);o&&this.element.removeEventListener(this.name,this,n),r&&this.element.addEventListener(this.name,this,t),this._$AH=t}handleEvent(t){var e,i;"function"==typeof this._$AH?this._$AH.call(null!==(i=null===(e=this.options)||void 0===e?void 0:e.host)&&void 0!==i?i:this.element,t):this._$AH.handleEvent(t)}}class at{constructor(t,e,i){this.element=t,this.type=6,this._$AN=void 0,this._$AM=e,this.options=i}get _$AU(){return this._$AM._$AU}_$AI(t){Q(this,t)}}const dt=E.litHtmlPolyfillSupport;null==dt||dt(Z,tt),(null!==(w=E.litHtmlVersions)&&void 0!==w?w:E.litHtmlVersions=[]).push("2.8.0");
 /**
  * @license
  * Copyright 2017 Google LLC
@@ -68,7 +68,7 @@ const mt=t=>e=>"function"==typeof e?((t,e)=>(customElements.define(t,e),e))(t,e)
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-function Et(t,e,i){let n,o=t;return"object"==typeof t?(o=t.slot,n=t):n={flatten:e},i?function(t){const{slot:e,selector:i}=null!=t?t:{};return bt({descriptor:n=>({get(){var n;const o="slot"+(e?`[name=${e}]`:":not([name])"),r=null===(n=this.renderRoot)||void 0===n?void 0:n.querySelector(o),a=null!=r?wt(r,t):[];return i?a.filter((t=>t.matches(i))):a},enumerable:!0,configurable:!0})})}({slot:o,flatten:e,selector:i}):bt({descriptor:t=>({get(){var t,e;const i="slot"+(o?`[name=${o}]`:":not([name])"),r=null===(t=this.renderRoot)||void 0===t?void 0:t.querySelector(i);return null!==(e=null==r?void 0:r.assignedNodes(n))&&void 0!==e?e:[]},enumerable:!0,configurable:!0})})}function St(t){return new CustomEvent("oscd-edit",{composed:!0,bubbles:!0,detail:t})}const At=["TransformerWinding","ConductingEquipment"],Ct=["GeneralEquipment","PowerTransformer",...At],kt=["Substation","VoltageLevel","Bay"],$t=["Process","Line"],Nt=["EqSubFunction","EqFunction"],It=["ConnectivityNode",...["SubFunction","Function","TapChanger","SubEquipment",...Ct,...kt,...$t,...Nt]],Tt=["LN0","LN"],Lt=["GSSE","GOOSE","ConfReportControl","SMVsc","DynDataSet","ConfDataSet"],Rt=[...["SCL",...["SubNetwork","GOOSESecurity","SMVSecurity",...It],...["ConnectedAP","PhysConn","SDO","DO","DAI","SDI","DOI","Inputs","RptEnabled","Server","ServerAt","SettingControl","Communication","Log","LDevice","DataSet","AccessPoint","IED","NeutralPoint",...["SampledValueControl","GSEControl","LogControl","ReportControl"],"GSE","SMV","BDA","DA"],"LNodeType","DOType","DAType","EnumType"],"Text","Private","Hitem","AccessControl","Header","LNode","Val","Voltage","Services","Subject","IssuerName","MinTime","MaxTime","Association","FCDA","ClientLN","IEDName","ExtRef","Protocol",...Tt,"FileHandling","TimeSyncProt","CommProt","SGEdit","ConfSG","GetDirectory","GetDataObjectDefinition","DataObjectDirectory","GetDataSetValue","SetDataSetValue","DataSetDirectory","ReadWrite","TimerActivatedControl","GetCBValues","GSEDir","ConfLdName","DynAssociation","SettingGroups",...Lt,"ConfLogControl","ConfSigRef","ReportSettings","LogSettings","GSESettings","SMVSettings","ConfLNs","ClientServices","SupSubscription","ValueHandling","RedProt","McSecurity","KDC","Address","P","ProtNs","EnumVal","Terminal","BitRate","Authentication","DataTypeTemplates","History","OptFields","SmvOpts","TrgOps","SamplesPerSec","SmpRate","SecPerSamples"],Dt=["Text","Private"],Ot=[...Dt],Ft=[...Dt],Pt=[...Dt],zt=[...Ft,"Val"],Ht=[...Ot,"LNode"],Mt=[...Ht],Bt=[...Mt],Vt=[...Mt,"PowerTransformer","GeneralEquipment"],Ut=[...Bt,"Terminal"],qt=[...Ft,"Address"],Gt=[...Ot],jt=[...Gt,"IEDName"],Wt=[...Ft,"DataSet","ReportControl","LogControl","DOI","Inputs","Log"],Xt=[...Mt,"GeneralEquipment","Function"],Yt=[...Gt,"TrgOps"],Kt=[...Mt,"GeneralEquipment","EqSubFunction"],Zt={AccessControl:{parents:["LDevice"],children:[]},AccessPoint:{parents:["IED"],children:[...Ot,"Server","LN","ServerAt","Services","GOOSESecurity","SMVSecurity"]},Address:{parents:["ConnectedAP","GSE","SMV"],children:["P"]},Association:{parents:["Server"],children:[]},Authentication:{parents:["Server"],children:[]},BDA:{parents:["DAType"],children:[...zt]},BitRate:{parents:["SubNetwork"],children:[]},Bay:{parents:["VoltageLevel"],children:[...Vt,"ConductingEquipment","ConnectivityNode","Function"]},ClientLN:{parents:["RptEnabled"],children:[]},ClientServices:{parents:["Services"],children:["TimeSyncProt","McSecurity"]},CommProt:{parents:["Services"],children:[]},Communication:{parents:["SCL"],children:[...Ft,"SubNetwork"]},ConductingEquipment:{parents:["Process","Line","SubFunction","Function","Bay"],children:[...Ut,"EqFunction","SubEquipment"]},ConfDataSet:{parents:["Services"],children:[]},ConfLdName:{parents:["Services"],children:[]},ConfLNs:{parents:["Services"],children:[]},ConfLogControl:{parents:["Services"],children:[]},ConfReportControl:{parents:["Services"],children:[]},ConfSG:{parents:["SettingGroups"],children:[]},ConfSigRef:{parents:["Services"],children:[]},ConnectedAP:{parents:["SubNetwork"],children:[...Ft,"Address","GSE","SMV","PhysConn"]},ConnectivityNode:{parents:["Bay","Line"],children:[...Ht]},DA:{parents:["DOType"],children:[...zt]},DAI:{parents:["DOI","SDI"],children:[...Ft,"Val"]},DAType:{parents:["DataTypeTemplates"],children:[...Pt,"BDA","ProtNs"]},DO:{parents:["LNodeType"],children:[...Ft]},DOI:{parents:[...Tt],children:[...Ft,"SDI","DAI"]},DOType:{parents:["DataTypeTemplates"],children:[...Pt,"SDO","DA"]},DataObjectDirectory:{parents:["Services"],children:[]},DataSet:{parents:[...Tt],children:[...Ot,"FCDA"]},DataSetDirectory:{parents:["Services"],children:[]},DataTypeTemplates:{parents:["SCL"],children:["LNodeType","DOType","DAType","EnumType"]},DynAssociation:{parents:["Services"],children:[]},DynDataSet:{parents:["Services"],children:[]},EnumType:{parents:["DataTypeTemplates"],children:[...Pt,"EnumVal"]},EnumVal:{parents:["EnumType"],children:[]},EqFunction:{parents:["GeneralEquipment","TapChanger","TransformerWinding","PowerTransformer","SubEquipment","ConductingEquipment"],children:[...Kt]},EqSubFunction:{parents:["EqSubFunction","EqFunction"],children:[...Kt]},ExtRef:{parents:["Inputs"],children:[]},FCDA:{parents:["DataSet"],children:[]},FileHandling:{parents:["Services"],children:[]},Function:{parents:["Bay","VoltageLevel","Substation","Process","Line"],children:[...Mt,"SubFunction","GeneralEquipment","ConductingEquipment"]},GeneralEquipment:{parents:["SubFunction","Function",...$t,...Nt,...kt],children:[...Bt,"EqFunction"]},GetCBValues:{parents:["Services"],children:[]},GetDataObjectDefinition:{parents:["Services"],children:[]},GetDataSetValue:{parents:["Services"],children:[]},GetDirectory:{parents:["Services"],children:[]},GOOSE:{parents:["Services"],children:[]},GOOSESecurity:{parents:["AccessPoint"],children:[...Ot,"Subject","IssuerName"]},GSE:{parents:["ConnectedAP"],children:[...qt,"MinTime","MaxTime"]},GSEDir:{parents:["Services"],children:[]},GSEControl:{parents:["LN0"],children:[...jt,"Protocol"]},GSESettings:{parents:["Services"],children:[]},GSSE:{parents:["Services"],children:[]},Header:{parents:["SCL"],children:["Text","History"]},History:{parents:["Header"],children:["Hitem"]},Hitem:{parents:["History"],children:[]},IED:{parents:["SCL"],children:[...Ft,"Services","AccessPoint","KDC"]},IEDName:{parents:["GSEControl","SampledValueControl"],children:[]},Inputs:{parents:[...Tt],children:[...Ft,"ExtRef"]},IssuerName:{parents:["GOOSESecurity","SMVSecurity"],children:[]},KDC:{parents:["IED"],children:[]},LDevice:{parents:["Server"],children:[...Ft,"LN0","LN","AccessControl"]},LN:{parents:["AccessPoint","LDevice"],children:[...Wt]},LN0:{parents:["LDevice"],children:[...Wt,"GSEControl","SampledValueControl","SettingControl"]},LNode:{parents:[...It],children:[...Ft]},LNodeType:{parents:["DataTypeTemplates"],children:[...Pt,"DO"]},Line:{parents:["Process","SCL"],children:[...Xt,"Voltage","ConductingEquipment"]},Log:{parents:[...Tt],children:[...Ft]},LogControl:{parents:[...Tt],children:[...Yt]},LogSettings:{parents:["Services"],children:[]},MaxTime:{parents:["GSE"],children:[]},McSecurity:{parents:["GSESettings","SMVSettings","ClientServices"],children:[]},MinTime:{parents:["GSE"],children:[]},NeutralPoint:{parents:["TransformerWinding"],children:[...Ft]},OptFields:{parents:["ReportControl"],children:[]},P:{parents:["Address","PhysConn"],children:[]},PhysConn:{parents:["ConnectedAP"],children:[...Ft,"P"]},PowerTransformer:{parents:[...kt],children:[...Bt,"TransformerWinding","SubEquipment","EqFunction"]},Private:{parents:[],children:[]},Process:{parents:["Process","SCL"],children:[...Xt,"ConductingEquipment","Substation","Line","Process"]},ProtNs:{parents:["DAType","DA"],children:[]},Protocol:{parents:["GSEControl","SampledValueControl"],children:[]},ReadWrite:{parents:["Services"],children:[]},RedProt:{parents:["Services"],children:[]},ReportControl:{parents:[...Tt],children:[...Yt,"OptFields","RptEnabled"]},ReportSettings:{parents:["Services"],children:[]},RptEnabled:{parents:["ReportControl"],children:[...Ft,"ClientLN"]},SamplesPerSec:{parents:["SMVSettings"],children:[]},SampledValueControl:{parents:["LN0"],children:[...jt,"SmvOpts"]},SecPerSamples:{parents:["SMVSettings"],children:[]},SCL:{parents:[],children:[...Dt,"Header","Substation","Communication","IED","DataTypeTemplates","Line","Process"]},SDI:{parents:["DOI","SDI"],children:[...Ft,"SDI","DAI"]},SDO:{parents:["DOType"],children:[...Ot]},Server:{parents:["AccessPoint"],children:[...Ft,"Authentication","LDevice","Association"]},ServerAt:{parents:["AccessPoint"],children:[...Ft]},Services:{parents:["IED","AccessPoint"],children:["DynAssociation","SettingGroups","GetDirectory","GetDataObjectDefinition","DataObjectDirectory","GetDataSetValue","SetDataSetValue","DataSetDirectory","ConfDataSet","DynDataSet","ReadWrite","TimerActivatedControl","ConfReportControl","GetCBValues","ConfLogControl","ReportSettings","LogSettings","GSESettings","SMVSettings","GSEDir","GOOSE","GSSE","SMVsc","FileHandling","ConfLNs","ClientServices","ConfLdName","SupSubscription","ConfSigRef","ValueHandling","RedProt","TimeSyncProt","CommProt"]},SetDataSetValue:{parents:["Services"],children:[]},SettingControl:{parents:["LN0"],children:[...Ft]},SettingGroups:{parents:["Services"],children:["SGEdit","ConfSG"]},SGEdit:{parents:["SettingGroups"],children:[]},SmpRate:{parents:["SMVSettings"],children:[]},SMV:{parents:["ConnectedAP"],children:[...qt]},SmvOpts:{parents:["SampledValueControl"],children:[]},SMVsc:{parents:["Services"],children:[]},SMVSecurity:{parents:["AccessPoint"],children:[...Ot,"Subject","IssuerName"]},SMVSettings:{parents:["Services"],children:["SmpRate","SamplesPerSec","SecPerSamples","McSecurity"]},SubEquipment:{parents:["TapChanger","PowerTransformer","ConductingEquipment","TransformerWinding",...At],children:[...Mt,"EqFunction"]},SubFunction:{parents:["SubFunction","Function"],children:[...Mt,"GeneralEquipment","ConductingEquipment","SubFunction"]},SubNetwork:{parents:["Communication"],children:[...Ot,"BitRate","ConnectedAP"]},Subject:{parents:["GOOSESecurity","SMVSecurity"],children:[]},Substation:{parents:["SCL"],children:[...Vt,"VoltageLevel","Function"]},SupSubscription:{parents:["Services"],children:[]},TapChanger:{parents:["TransformerWinding"],children:[...Mt,"SubEquipment","EqFunction"]},Terminal:{parents:[...Ct],children:[...Ft]},Text:{parents:Rt.filter((t=>"Text"!==t&&"Private"!==t)),children:[]},TimerActivatedControl:{parents:["Services"],children:[]},TimeSyncProt:{parents:["Services","ClientServices"],children:[]},TransformerWinding:{parents:["PowerTransformer"],children:[...Ut,"TapChanger","NeutralPoint","EqFunction","SubEquipment"]},TrgOps:{parents:["ReportControl"],children:[]},Val:{parents:["DAI","DA","BDA"],children:[]},ValueHandling:{parents:["Services"],children:[]},Voltage:{parents:["VoltageLevel"],children:[]},VoltageLevel:{parents:["Substation"],children:[...Vt,"Voltage","Bay","Function"]}},Qt=new Set(Rt);function Jt(t){return Qt.has(t)}function te(t,e){if(!Jt(e))return null;const i=t.tagName,n=Array.from(t.children);if("Services"===i||"SettingGroups"===i||!Jt(i))return n.find((t=>t.tagName===e))??null;const o=Zt[i].children;let r,a=o.findIndex((t=>t===e));if(a<0)return null;for(;a<o.length&&!r;)r=n.find((t=>t.tagName===o[a])),a+=1;return r??null}function ee(t){return`${se(t.parentElement)}>${t.getAttribute("connectivityNode")}`}function ie(t){const[e,i]=["name","ix"].map((e=>t.getAttribute(e)));return`${se(t.parentElement)}>${e}${i?`[${i}]`:""}`}function ne(t){const[e,i]=["ldInst","cbName"].map((e=>t.getAttribute(e)));return`${e} ${i}`}function oe(t){return"SCL"===t.parentElement.tagName?t.getAttribute("name"):`${se(t.parentElement)}>${t.getAttribute("name")}`}function re(t){return se(t.parentElement).toString()}function ae(t){return`#${t.id}`}const de={AccessControl:{identity:re},AccessPoint:{identity:oe},Address:{identity:re},Association:{identity:function(t){const[e,i,n,o,r]=["iedName","ldInst","prefix","lnClass","lnInst","lnType"].map((e=>t.getAttribute(e)));return`${se(t.parentElement)}>${e} ${i}/${n??""} ${o} ${r??""}`}},Authentication:{identity:re},BDA:{identity:oe},BitRate:{identity:re},Bay:{identity:oe},ClientLN:{identity:function(t){const[e,i,n,o,r,a]=["apRef","iedName","ldInst","prefix","lnClass","lnInst"].map((e=>t.getAttribute(e)));return`${se(t.parentElement)}>${i} ${e||""} ${n}/${o??""} ${r} ${a}`}},ClientServices:{identity:re},CommProt:{identity:re},Communication:{identity:re},ConductingEquipment:{identity:oe},ConfDataSet:{identity:re},ConfLdName:{identity:re},ConfLNs:{identity:re},ConfLogControl:{identity:re},ConfReportControl:{identity:re},ConfSG:{identity:re},ConfSigRef:{identity:re},ConnectedAP:{identity:function(t){const[e,i]=["iedName","apName"].map((e=>t.getAttribute(e)));return`${e} ${i}`}},ConnectivityNode:{identity:oe},DA:{identity:oe},DAI:{identity:ie},DAType:{identity:ae},DO:{identity:oe},DOI:{identity:oe},DOType:{identity:ae},DataObjectDirectory:{identity:re},DataSet:{identity:oe},DataSetDirectory:{identity:re},DataTypeTemplates:{identity:re},DynAssociation:{identity:re},DynDataSet:{identity:re},EnumType:{identity:ae},EnumVal:{identity:function(t){return`${se(t.parentElement)}>${t.getAttribute("ord")}`}},EqFunction:{identity:oe},EqSubFunction:{identity:oe},ExtRef:{identity:function(t){if(!t.parentElement)return NaN;const e=se(t.parentElement),i=t.getAttribute("iedName"),n=t.getAttribute("intAddr"),o=Array.from(t.parentElement.querySelectorAll(`ExtRef[intAddr="${n}"]`)).indexOf(t);if(!i)return`${e}>${n}[${o}]`;const[r,a,d,s,l,c,p,m,h,u,f,g]=["ldInst","prefix","lnClass","lnInst","doName","daName","serviceType","srcLDInst","srcPrefix","srcLNClass","srcLNInst","srcCBName"].map((e=>t.getAttribute(e))),b=g?`${p}:${g} ${m??""}/${h??""} ${u??""} ${f??""}`:"";return`${e}>${b?`${b} `:""}${`${i} ${r}/${a??""} ${d} ${s??""} ${l} ${c||""}`}${n?`@${n}`:""}`}},FCDA:{identity:function(t){const[e,i,n,o,r,a,d,s]=["ldInst","prefix","lnClass","lnInst","doName","daName","fc","ix"].map((e=>t.getAttribute(e))),l=`${e}/${i??""} ${n} ${o??""}.${r} ${a||""}`;return`${se(t.parentElement)}>${l} (${d}${s?` [${s}]`:""})`}},FileHandling:{identity:re},Function:{identity:oe},GeneralEquipment:{identity:oe},GetCBValues:{identity:re},GetDataObjectDefinition:{identity:re},GetDataSetValue:{identity:re},GetDirectory:{identity:re},GOOSE:{identity:re},GOOSESecurity:{identity:oe},GSE:{identity:ne},GSEDir:{identity:re},GSEControl:{identity:oe},GSESettings:{identity:re},GSSE:{identity:re},Header:{identity:re},History:{identity:re},Hitem:{identity:function(t){return`${t.getAttribute("version")}\t${t.getAttribute("revision")}`}},IED:{identity:oe},IEDName:{identity:function(t){const e=t.textContent,[i,n,o,r,a]=["apRef","ldInst","prefix","lnClass","lnInst"].map((e=>t.getAttribute(e)));return`${se(t.parentElement)}>${e} ${i||""} ${n||""}/${o??""} ${r??""} ${a??""}`}},Inputs:{identity:re},IssuerName:{identity:re},KDC:{identity:function(t){return`${se(t.parentElement)}>${t.getAttribute("iedName")} ${t.getAttribute("apName")}`}},LDevice:{identity:function(t){return`${se(t.closest("IED"))}>>${t.getAttribute("inst")}`}},LN:{identity:function(t){const[e,i,n]=["prefix","lnClass","inst"].map((e=>t.getAttribute(e)));return`${se(t.parentElement)}>${e??""} ${i} ${n}`}},LN0:{identity:re},LNode:{identity:function(t){const[e,i,n,o,r,a]=["iedName","ldInst","prefix","lnClass","lnInst","lnType"].map((e=>t.getAttribute(e)));return"None"===e?`${se(t.parentElement)}>(${o} ${a})`:`${e} ${i||"(Client)"}/${n??""} ${o} ${r??""}`}},LNodeType:{identity:ae},Line:{identity:oe},Log:{identity:oe},LogControl:{identity:oe},LogSettings:{identity:re},MaxTime:{identity:re},McSecurity:{identity:re},MinTime:{identity:re},NeutralPoint:{identity:ee},OptFields:{identity:re},P:{identity:function(t){if(!t.parentElement)return NaN;const e=t.parentElement,i=t.getAttribute("type");if("PhysConn"===e.tagName)return`${se(t.parentElement)}>${i}`;const n=Array.from(t.parentElement.children).filter((t=>t.getAttribute("type")===i)).findIndex((e=>e.isSameNode(t)));return`${se(t.parentElement)}>${i} [${n}]`}},PhysConn:{identity:function(t){if(!t.parentElement)return NaN;if(!t.parentElement.querySelector('PhysConn[type="RedConn"]'))return NaN;const e=t.getAttribute("type");return t.parentElement.children.length>1&&"Connection"!==e&&"RedConn"!==e?NaN:`${se(t.parentElement)}>${e}`}},PowerTransformer:{identity:oe},Private:{identity:()=>NaN},Process:{identity:oe},ProtNs:{identity:function(t){return`${se(t.parentElement)}>${t.getAttribute("type")||"8-MMS"}\t${t.textContent}`}},Protocol:{identity:re},ReadWrite:{identity:re},RedProt:{identity:re},ReportControl:{identity:oe},ReportSettings:{identity:re},RptEnabled:{identity:re},SamplesPerSec:{identity:re},SampledValueControl:{identity:oe},SecPerSamples:{identity:re},SCL:{identity:function(){return""}},SDI:{identity:ie},SDO:{identity:oe},Server:{identity:re},ServerAt:{identity:re},Services:{identity:re},SetDataSetValue:{identity:re},SettingControl:{identity:re},SettingGroups:{identity:re},SGEdit:{identity:re},SmpRate:{identity:re},SMV:{identity:ne},SmvOpts:{identity:re},SMVsc:{identity:re},SMVSecurity:{identity:oe},SMVSettings:{identity:re},SubEquipment:{identity:oe},SubFunction:{identity:oe},SubNetwork:{identity:oe},Subject:{identity:re},Substation:{identity:oe},SupSubscription:{identity:re},TapChanger:{identity:oe},Terminal:{identity:ee},Text:{identity:re},TimerActivatedControl:{identity:re},TimeSyncProt:{identity:re},TransformerWinding:{identity:oe},TrgOps:{identity:re},Val:{identity:function(t){if(!t.parentElement)return NaN;const e=t.getAttribute("sGroup"),i=Array.from(t.parentElement.children).filter((t=>t.getAttribute("sGroup")===e)).findIndex((e=>e.isSameNode(t)));return`${se(t.parentElement)}>${e?`${e}.`:""} ${i}`}},ValueHandling:{identity:re},Voltage:{identity:re},VoltageLevel:{identity:oe}};function se(t){if(null===t)return NaN;if(t.closest("Private"))return NaN;const e=t.tagName;return Jt(e)?de[e].identity(t):NaN}
+function Et(t,e,i){let n,o=t;return"object"==typeof t?(o=t.slot,n=t):n={flatten:e},i?function(t){const{slot:e,selector:i}=null!=t?t:{};return bt({descriptor:n=>({get(){var n;const o="slot"+(e?`[name=${e}]`:":not([name])"),r=null===(n=this.renderRoot)||void 0===n?void 0:n.querySelector(o),a=null!=r?wt(r,t):[];return i?a.filter((t=>t.matches(i))):a},enumerable:!0,configurable:!0})})}({slot:o,flatten:e,selector:i}):bt({descriptor:t=>({get(){var t,e;const i="slot"+(o?`[name=${o}]`:":not([name])"),r=null===(t=this.renderRoot)||void 0===t?void 0:t.querySelector(i);return null!==(e=null==r?void 0:r.assignedNodes(n))&&void 0!==e?e:[]},enumerable:!0,configurable:!0})})}function St(t){return new CustomEvent("oscd-edit",{composed:!0,bubbles:!0,detail:t})}const At=["TransformerWinding","ConductingEquipment"],Ct=["GeneralEquipment","PowerTransformer",...At],$t=["Substation","VoltageLevel","Bay"],kt=["Process","Line"],Nt=["EqSubFunction","EqFunction"],It=["ConnectivityNode",...["SubFunction","Function","TapChanger","SubEquipment",...Ct,...$t,...kt,...Nt]],Tt=["LN0","LN"],Lt=["GSSE","GOOSE","ConfReportControl","SMVsc","DynDataSet","ConfDataSet"],Rt=[...["SCL",...["SubNetwork","GOOSESecurity","SMVSecurity",...It],...["ConnectedAP","PhysConn","SDO","DO","DAI","SDI","DOI","Inputs","RptEnabled","Server","ServerAt","SettingControl","Communication","Log","LDevice","DataSet","AccessPoint","IED","NeutralPoint",...["SampledValueControl","GSEControl","LogControl","ReportControl"],"GSE","SMV","BDA","DA"],"LNodeType","DOType","DAType","EnumType"],"Text","Private","Hitem","AccessControl","Header","LNode","Val","Voltage","Services","Subject","IssuerName","MinTime","MaxTime","Association","FCDA","ClientLN","IEDName","ExtRef","Protocol",...Tt,"FileHandling","TimeSyncProt","CommProt","SGEdit","ConfSG","GetDirectory","GetDataObjectDefinition","DataObjectDirectory","GetDataSetValue","SetDataSetValue","DataSetDirectory","ReadWrite","TimerActivatedControl","GetCBValues","GSEDir","ConfLdName","DynAssociation","SettingGroups",...Lt,"ConfLogControl","ConfSigRef","ReportSettings","LogSettings","GSESettings","SMVSettings","ConfLNs","ClientServices","SupSubscription","ValueHandling","RedProt","McSecurity","KDC","Address","P","ProtNs","EnumVal","Terminal","BitRate","Authentication","DataTypeTemplates","History","OptFields","SmvOpts","TrgOps","SamplesPerSec","SmpRate","SecPerSamples"],Dt=["Text","Private"],Ot=[...Dt],Ft=[...Dt],Pt=[...Dt],zt=[...Ft,"Val"],Ht=[...Ot,"LNode"],Mt=[...Ht],Bt=[...Mt],Vt=[...Mt,"PowerTransformer","GeneralEquipment"],Ut=[...Bt,"Terminal"],qt=[...Ft,"Address"],Gt=[...Ot],jt=[...Gt,"IEDName"],Wt=[...Ft,"DataSet","ReportControl","LogControl","DOI","Inputs","Log"],Xt=[...Mt,"GeneralEquipment","Function"],Yt=[...Gt,"TrgOps"],Kt=[...Mt,"GeneralEquipment","EqSubFunction"],Zt={AccessControl:{parents:["LDevice"],children:[]},AccessPoint:{parents:["IED"],children:[...Ot,"Server","LN","ServerAt","Services","GOOSESecurity","SMVSecurity"]},Address:{parents:["ConnectedAP","GSE","SMV"],children:["P"]},Association:{parents:["Server"],children:[]},Authentication:{parents:["Server"],children:[]},BDA:{parents:["DAType"],children:[...zt]},BitRate:{parents:["SubNetwork"],children:[]},Bay:{parents:["VoltageLevel"],children:[...Vt,"ConductingEquipment","ConnectivityNode","Function"]},ClientLN:{parents:["RptEnabled"],children:[]},ClientServices:{parents:["Services"],children:["TimeSyncProt","McSecurity"]},CommProt:{parents:["Services"],children:[]},Communication:{parents:["SCL"],children:[...Ft,"SubNetwork"]},ConductingEquipment:{parents:["Process","Line","SubFunction","Function","Bay"],children:[...Ut,"EqFunction","SubEquipment"]},ConfDataSet:{parents:["Services"],children:[]},ConfLdName:{parents:["Services"],children:[]},ConfLNs:{parents:["Services"],children:[]},ConfLogControl:{parents:["Services"],children:[]},ConfReportControl:{parents:["Services"],children:[]},ConfSG:{parents:["SettingGroups"],children:[]},ConfSigRef:{parents:["Services"],children:[]},ConnectedAP:{parents:["SubNetwork"],children:[...Ft,"Address","GSE","SMV","PhysConn"]},ConnectivityNode:{parents:["Bay","Line"],children:[...Ht]},DA:{parents:["DOType"],children:[...zt]},DAI:{parents:["DOI","SDI"],children:[...Ft,"Val"]},DAType:{parents:["DataTypeTemplates"],children:[...Pt,"BDA","ProtNs"]},DO:{parents:["LNodeType"],children:[...Ft]},DOI:{parents:[...Tt],children:[...Ft,"SDI","DAI"]},DOType:{parents:["DataTypeTemplates"],children:[...Pt,"SDO","DA"]},DataObjectDirectory:{parents:["Services"],children:[]},DataSet:{parents:[...Tt],children:[...Ot,"FCDA"]},DataSetDirectory:{parents:["Services"],children:[]},DataTypeTemplates:{parents:["SCL"],children:["LNodeType","DOType","DAType","EnumType"]},DynAssociation:{parents:["Services"],children:[]},DynDataSet:{parents:["Services"],children:[]},EnumType:{parents:["DataTypeTemplates"],children:[...Pt,"EnumVal"]},EnumVal:{parents:["EnumType"],children:[]},EqFunction:{parents:["GeneralEquipment","TapChanger","TransformerWinding","PowerTransformer","SubEquipment","ConductingEquipment"],children:[...Kt]},EqSubFunction:{parents:["EqSubFunction","EqFunction"],children:[...Kt]},ExtRef:{parents:["Inputs"],children:[]},FCDA:{parents:["DataSet"],children:[]},FileHandling:{parents:["Services"],children:[]},Function:{parents:["Bay","VoltageLevel","Substation","Process","Line"],children:[...Mt,"SubFunction","GeneralEquipment","ConductingEquipment"]},GeneralEquipment:{parents:["SubFunction","Function",...kt,...Nt,...$t],children:[...Bt,"EqFunction"]},GetCBValues:{parents:["Services"],children:[]},GetDataObjectDefinition:{parents:["Services"],children:[]},GetDataSetValue:{parents:["Services"],children:[]},GetDirectory:{parents:["Services"],children:[]},GOOSE:{parents:["Services"],children:[]},GOOSESecurity:{parents:["AccessPoint"],children:[...Ot,"Subject","IssuerName"]},GSE:{parents:["ConnectedAP"],children:[...qt,"MinTime","MaxTime"]},GSEDir:{parents:["Services"],children:[]},GSEControl:{parents:["LN0"],children:[...jt,"Protocol"]},GSESettings:{parents:["Services"],children:[]},GSSE:{parents:["Services"],children:[]},Header:{parents:["SCL"],children:["Text","History"]},History:{parents:["Header"],children:["Hitem"]},Hitem:{parents:["History"],children:[]},IED:{parents:["SCL"],children:[...Ft,"Services","AccessPoint","KDC"]},IEDName:{parents:["GSEControl","SampledValueControl"],children:[]},Inputs:{parents:[...Tt],children:[...Ft,"ExtRef"]},IssuerName:{parents:["GOOSESecurity","SMVSecurity"],children:[]},KDC:{parents:["IED"],children:[]},LDevice:{parents:["Server"],children:[...Ft,"LN0","LN","AccessControl"]},LN:{parents:["AccessPoint","LDevice"],children:[...Wt]},LN0:{parents:["LDevice"],children:[...Wt,"GSEControl","SampledValueControl","SettingControl"]},LNode:{parents:[...It],children:[...Ft]},LNodeType:{parents:["DataTypeTemplates"],children:[...Pt,"DO"]},Line:{parents:["Process","SCL"],children:[...Xt,"Voltage","ConductingEquipment"]},Log:{parents:[...Tt],children:[...Ft]},LogControl:{parents:[...Tt],children:[...Yt]},LogSettings:{parents:["Services"],children:[]},MaxTime:{parents:["GSE"],children:[]},McSecurity:{parents:["GSESettings","SMVSettings","ClientServices"],children:[]},MinTime:{parents:["GSE"],children:[]},NeutralPoint:{parents:["TransformerWinding"],children:[...Ft]},OptFields:{parents:["ReportControl"],children:[]},P:{parents:["Address","PhysConn"],children:[]},PhysConn:{parents:["ConnectedAP"],children:[...Ft,"P"]},PowerTransformer:{parents:[...$t],children:[...Bt,"TransformerWinding","SubEquipment","EqFunction"]},Private:{parents:[],children:[]},Process:{parents:["Process","SCL"],children:[...Xt,"ConductingEquipment","Substation","Line","Process"]},ProtNs:{parents:["DAType","DA"],children:[]},Protocol:{parents:["GSEControl","SampledValueControl"],children:[]},ReadWrite:{parents:["Services"],children:[]},RedProt:{parents:["Services"],children:[]},ReportControl:{parents:[...Tt],children:[...Yt,"OptFields","RptEnabled"]},ReportSettings:{parents:["Services"],children:[]},RptEnabled:{parents:["ReportControl"],children:[...Ft,"ClientLN"]},SamplesPerSec:{parents:["SMVSettings"],children:[]},SampledValueControl:{parents:["LN0"],children:[...jt,"SmvOpts"]},SecPerSamples:{parents:["SMVSettings"],children:[]},SCL:{parents:[],children:[...Dt,"Header","Substation","Communication","IED","DataTypeTemplates","Line","Process"]},SDI:{parents:["DOI","SDI"],children:[...Ft,"SDI","DAI"]},SDO:{parents:["DOType"],children:[...Ot]},Server:{parents:["AccessPoint"],children:[...Ft,"Authentication","LDevice","Association"]},ServerAt:{parents:["AccessPoint"],children:[...Ft]},Services:{parents:["IED","AccessPoint"],children:["DynAssociation","SettingGroups","GetDirectory","GetDataObjectDefinition","DataObjectDirectory","GetDataSetValue","SetDataSetValue","DataSetDirectory","ConfDataSet","DynDataSet","ReadWrite","TimerActivatedControl","ConfReportControl","GetCBValues","ConfLogControl","ReportSettings","LogSettings","GSESettings","SMVSettings","GSEDir","GOOSE","GSSE","SMVsc","FileHandling","ConfLNs","ClientServices","ConfLdName","SupSubscription","ConfSigRef","ValueHandling","RedProt","TimeSyncProt","CommProt"]},SetDataSetValue:{parents:["Services"],children:[]},SettingControl:{parents:["LN0"],children:[...Ft]},SettingGroups:{parents:["Services"],children:["SGEdit","ConfSG"]},SGEdit:{parents:["SettingGroups"],children:[]},SmpRate:{parents:["SMVSettings"],children:[]},SMV:{parents:["ConnectedAP"],children:[...qt]},SmvOpts:{parents:["SampledValueControl"],children:[]},SMVsc:{parents:["Services"],children:[]},SMVSecurity:{parents:["AccessPoint"],children:[...Ot,"Subject","IssuerName"]},SMVSettings:{parents:["Services"],children:["SmpRate","SamplesPerSec","SecPerSamples","McSecurity"]},SubEquipment:{parents:["TapChanger","PowerTransformer","ConductingEquipment","TransformerWinding",...At],children:[...Mt,"EqFunction"]},SubFunction:{parents:["SubFunction","Function"],children:[...Mt,"GeneralEquipment","ConductingEquipment","SubFunction"]},SubNetwork:{parents:["Communication"],children:[...Ot,"BitRate","ConnectedAP"]},Subject:{parents:["GOOSESecurity","SMVSecurity"],children:[]},Substation:{parents:["SCL"],children:[...Vt,"VoltageLevel","Function"]},SupSubscription:{parents:["Services"],children:[]},TapChanger:{parents:["TransformerWinding"],children:[...Mt,"SubEquipment","EqFunction"]},Terminal:{parents:[...Ct],children:[...Ft]},Text:{parents:Rt.filter((t=>"Text"!==t&&"Private"!==t)),children:[]},TimerActivatedControl:{parents:["Services"],children:[]},TimeSyncProt:{parents:["Services","ClientServices"],children:[]},TransformerWinding:{parents:["PowerTransformer"],children:[...Ut,"TapChanger","NeutralPoint","EqFunction","SubEquipment"]},TrgOps:{parents:["ReportControl"],children:[]},Val:{parents:["DAI","DA","BDA"],children:[]},ValueHandling:{parents:["Services"],children:[]},Voltage:{parents:["VoltageLevel"],children:[]},VoltageLevel:{parents:["Substation"],children:[...Vt,"Voltage","Bay","Function"]}},Qt=new Set(Rt);function Jt(t){return Qt.has(t)}function te(t,e){if(!Jt(e))return null;const i=t.tagName,n=Array.from(t.children);if("Services"===i||"SettingGroups"===i||!Jt(i))return n.find((t=>t.tagName===e))??null;const o=Zt[i].children;let r,a=o.findIndex((t=>t===e));if(a<0)return null;for(;a<o.length&&!r;)r=n.find((t=>t.tagName===o[a])),a+=1;return r??null}function ee(t){return`${se(t.parentElement)}>${t.getAttribute("connectivityNode")}`}function ie(t){const[e,i]=["name","ix"].map((e=>t.getAttribute(e)));return`${se(t.parentElement)}>${e}${i?`[${i}]`:""}`}function ne(t){const[e,i]=["ldInst","cbName"].map((e=>t.getAttribute(e)));return`${e} ${i}`}function oe(t){return"SCL"===t.parentElement.tagName?t.getAttribute("name"):`${se(t.parentElement)}>${t.getAttribute("name")}`}function re(t){return se(t.parentElement).toString()}function ae(t){return`#${t.id}`}const de={AccessControl:{identity:re},AccessPoint:{identity:oe},Address:{identity:re},Association:{identity:function(t){const[e,i,n,o,r]=["iedName","ldInst","prefix","lnClass","lnInst","lnType"].map((e=>t.getAttribute(e)));return`${se(t.parentElement)}>${e} ${i}/${n??""} ${o} ${r??""}`}},Authentication:{identity:re},BDA:{identity:oe},BitRate:{identity:re},Bay:{identity:oe},ClientLN:{identity:function(t){const[e,i,n,o,r,a]=["apRef","iedName","ldInst","prefix","lnClass","lnInst"].map((e=>t.getAttribute(e)));return`${se(t.parentElement)}>${i} ${e||""} ${n}/${o??""} ${r} ${a}`}},ClientServices:{identity:re},CommProt:{identity:re},Communication:{identity:re},ConductingEquipment:{identity:oe},ConfDataSet:{identity:re},ConfLdName:{identity:re},ConfLNs:{identity:re},ConfLogControl:{identity:re},ConfReportControl:{identity:re},ConfSG:{identity:re},ConfSigRef:{identity:re},ConnectedAP:{identity:function(t){const[e,i]=["iedName","apName"].map((e=>t.getAttribute(e)));return`${e} ${i}`}},ConnectivityNode:{identity:oe},DA:{identity:oe},DAI:{identity:ie},DAType:{identity:ae},DO:{identity:oe},DOI:{identity:oe},DOType:{identity:ae},DataObjectDirectory:{identity:re},DataSet:{identity:oe},DataSetDirectory:{identity:re},DataTypeTemplates:{identity:re},DynAssociation:{identity:re},DynDataSet:{identity:re},EnumType:{identity:ae},EnumVal:{identity:function(t){return`${se(t.parentElement)}>${t.getAttribute("ord")}`}},EqFunction:{identity:oe},EqSubFunction:{identity:oe},ExtRef:{identity:function(t){if(!t.parentElement)return NaN;const e=se(t.parentElement),i=t.getAttribute("iedName"),n=t.getAttribute("intAddr"),o=Array.from(t.parentElement.querySelectorAll(`ExtRef[intAddr="${n}"]`)).indexOf(t);if(!i)return`${e}>${n}[${o}]`;const[r,a,d,s,l,c,p,m,h,u,f,g]=["ldInst","prefix","lnClass","lnInst","doName","daName","serviceType","srcLDInst","srcPrefix","srcLNClass","srcLNInst","srcCBName"].map((e=>t.getAttribute(e))),b=g?`${p}:${g} ${m??""}/${h??""} ${u??""} ${f??""}`:"";return`${e}>${b?`${b} `:""}${`${i} ${r}/${a??""} ${d} ${s??""} ${l} ${c||""}`}${n?`@${n}`:""}`}},FCDA:{identity:function(t){const[e,i,n,o,r,a,d,s]=["ldInst","prefix","lnClass","lnInst","doName","daName","fc","ix"].map((e=>t.getAttribute(e))),l=`${e}/${i??""} ${n} ${o??""}.${r} ${a||""}`;return`${se(t.parentElement)}>${l} (${d}${s?` [${s}]`:""})`}},FileHandling:{identity:re},Function:{identity:oe},GeneralEquipment:{identity:oe},GetCBValues:{identity:re},GetDataObjectDefinition:{identity:re},GetDataSetValue:{identity:re},GetDirectory:{identity:re},GOOSE:{identity:re},GOOSESecurity:{identity:oe},GSE:{identity:ne},GSEDir:{identity:re},GSEControl:{identity:oe},GSESettings:{identity:re},GSSE:{identity:re},Header:{identity:re},History:{identity:re},Hitem:{identity:function(t){return`${t.getAttribute("version")}\t${t.getAttribute("revision")}`}},IED:{identity:oe},IEDName:{identity:function(t){const e=t.textContent,[i,n,o,r,a]=["apRef","ldInst","prefix","lnClass","lnInst"].map((e=>t.getAttribute(e)));return`${se(t.parentElement)}>${e} ${i||""} ${n||""}/${o??""} ${r??""} ${a??""}`}},Inputs:{identity:re},IssuerName:{identity:re},KDC:{identity:function(t){return`${se(t.parentElement)}>${t.getAttribute("iedName")} ${t.getAttribute("apName")}`}},LDevice:{identity:function(t){return`${se(t.closest("IED"))}>>${t.getAttribute("inst")}`}},LN:{identity:function(t){const[e,i,n]=["prefix","lnClass","inst"].map((e=>t.getAttribute(e)));return`${se(t.parentElement)}>${e??""} ${i} ${n}`}},LN0:{identity:re},LNode:{identity:function(t){const[e,i,n,o,r,a]=["iedName","ldInst","prefix","lnClass","lnInst","lnType"].map((e=>t.getAttribute(e)));return"None"===e?`${se(t.parentElement)}>(${o} ${a})`:`${e} ${i||"(Client)"}/${n??""} ${o} ${r??""}`}},LNodeType:{identity:ae},Line:{identity:oe},Log:{identity:oe},LogControl:{identity:oe},LogSettings:{identity:re},MaxTime:{identity:re},McSecurity:{identity:re},MinTime:{identity:re},NeutralPoint:{identity:ee},OptFields:{identity:re},P:{identity:function(t){if(!t.parentElement)return NaN;const e=t.parentElement,i=t.getAttribute("type");if("PhysConn"===e.tagName)return`${se(t.parentElement)}>${i}`;const n=Array.from(t.parentElement.children).filter((t=>t.getAttribute("type")===i)).findIndex((e=>e.isSameNode(t)));return`${se(t.parentElement)}>${i} [${n}]`}},PhysConn:{identity:function(t){if(!t.parentElement)return NaN;if(!t.parentElement.querySelector('PhysConn[type="RedConn"]'))return NaN;const e=t.getAttribute("type");return t.parentElement.children.length>1&&"Connection"!==e&&"RedConn"!==e?NaN:`${se(t.parentElement)}>${e}`}},PowerTransformer:{identity:oe},Private:{identity:()=>NaN},Process:{identity:oe},ProtNs:{identity:function(t){return`${se(t.parentElement)}>${t.getAttribute("type")||"8-MMS"}\t${t.textContent}`}},Protocol:{identity:re},ReadWrite:{identity:re},RedProt:{identity:re},ReportControl:{identity:oe},ReportSettings:{identity:re},RptEnabled:{identity:re},SamplesPerSec:{identity:re},SampledValueControl:{identity:oe},SecPerSamples:{identity:re},SCL:{identity:function(){return""}},SDI:{identity:ie},SDO:{identity:oe},Server:{identity:re},ServerAt:{identity:re},Services:{identity:re},SetDataSetValue:{identity:re},SettingControl:{identity:re},SettingGroups:{identity:re},SGEdit:{identity:re},SmpRate:{identity:re},SMV:{identity:ne},SmvOpts:{identity:re},SMVsc:{identity:re},SMVSecurity:{identity:oe},SMVSettings:{identity:re},SubEquipment:{identity:oe},SubFunction:{identity:oe},SubNetwork:{identity:oe},Subject:{identity:re},Substation:{identity:oe},SupSubscription:{identity:re},TapChanger:{identity:oe},Terminal:{identity:ee},Text:{identity:re},TimerActivatedControl:{identity:re},TimeSyncProt:{identity:re},TransformerWinding:{identity:oe},TrgOps:{identity:re},Val:{identity:function(t){if(!t.parentElement)return NaN;const e=t.getAttribute("sGroup"),i=Array.from(t.parentElement.children).filter((t=>t.getAttribute("sGroup")===e)).findIndex((e=>e.isSameNode(t)));return`${se(t.parentElement)}>${e?`${e}.`:""} ${i}`}},ValueHandling:{identity:re},Voltage:{identity:re},VoltageLevel:{identity:oe}};function se(t){if(null===t)return NaN;if(t.closest("Private"))return NaN;const e=t.tagName;return Jt(e)?de[e].identity(t):NaN}
 /**
  * @license
  * Copyright 2021 Google LLC
@@ -162,7 +162,7 @@ var _e=["touchstart","pointerdown","mousedown","keydown"],we=["touchend","pointe
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const Ce=1,ke=2,$e=3,Ne=4,Ie=t=>(...e)=>({_$litDirective$:t,values:e});class Te{constructor(t){}get _$AU(){return this._$AM._$AU}_$AT(t,e,i){this._$Ct=t,this._$AM=e,this._$Ci=i}_$AS(t,e){return this.update(t,e)}update(t,e){return this.render(...e)}}
+const Ce=1,$e=2,ke=3,Ne=4,Ie=t=>(...e)=>({_$litDirective$:t,values:e});class Te{constructor(t){}get _$AU(){return this._$AM._$AU}_$AT(t,e,i){this._$Ct=t,this._$AM=e,this._$Ci=i}_$AS(t,e){return this.update(t,e)}update(t,e){return this.render(...e)}}
 /**
  * @license
  * Copyright 2018 Google LLC
@@ -266,7 +266,7 @@ const Ze=t=>void 0===t.strings,Qe={},Je=(t,e)=>{var i,n;const o=t._$AN;if(void 0
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
- */function ii(t){void 0!==this._$AN?(ti(this),this._$AM=t,ei(this)):this._$AM=t}function ni(t,e=!1,i=0){const n=this._$AH,o=this._$AN;if(void 0!==o&&0!==o.size)if(e)if(Array.isArray(n))for(let t=i;t<n.length;t++)Je(n[t],!1),ti(n[t]);else null!=n&&(Je(n,!1),ti(n));else Je(this,t)}const oi=t=>{var e,i,n,o;t.type==ke&&(null!==(e=(n=t)._$AP)&&void 0!==e||(n._$AP=ni),null!==(i=(o=t)._$AQ)&&void 0!==i||(o._$AQ=ii))};class ri extends Te{constructor(){super(...arguments),this._$AN=void 0}_$AT(t,e,i){super._$AT(t,e,i),ei(this),this.isConnected=t._$AU}_$AO(t,e=!0){var i,n;t!==this.isConnected&&(this.isConnected=t,t?null===(i=this.reconnected)||void 0===i||i.call(this):null===(n=this.disconnected)||void 0===n||n.call(this)),e&&(Je(this,t),ti(this))}setValue(t){if(Ze(this._$Ct))this._$Ct._$AI(t,this);else{const e=[...this._$Ct._$AH];e[this._$Ci]=t,this._$Ct._$AI(e,this,0)}}disconnected(){}reconnected(){}}
+ */function ii(t){void 0!==this._$AN?(ti(this),this._$AM=t,ei(this)):this._$AM=t}function ni(t,e=!1,i=0){const n=this._$AH,o=this._$AN;if(void 0!==o&&0!==o.size)if(e)if(Array.isArray(n))for(let t=i;t<n.length;t++)Je(n[t],!1),ti(n[t]);else null!=n&&(Je(n,!1),ti(n));else Je(this,t)}const oi=t=>{var e,i,n,o;t.type==$e&&(null!==(e=(n=t)._$AP)&&void 0!==e||(n._$AP=ni),null!==(i=(o=t)._$AQ)&&void 0!==i||(o._$AQ=ii))};class ri extends Te{constructor(){super(...arguments),this._$AN=void 0}_$AT(t,e,i){super._$AT(t,e,i),ei(this),this.isConnected=t._$AU}_$AO(t,e=!0){var i,n;t!==this.isConnected&&(this.isConnected=t,t?null===(i=this.reconnected)||void 0===i||i.call(this):null===(n=this.disconnected)||void 0===n||n.call(this)),e&&(Je(this,t),ti(this))}setValue(t){if(Ze(this._$Ct))this._$Ct._$AI(t,this);else{const e=[...this._$Ct._$AH];e[this._$Ci]=t,this._$Ct._$AI(e,this,0)}}disconnected(){}reconnected(){}}
 /**
  * @license
  * Copyright 2020 Google LLC
@@ -417,7 +417,7 @@ const Si=c`:host{cursor:pointer;user-select:none;-webkit-tap-highlight-color:tra
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-var Ci="Unknown",ki="Backspace",$i="Enter",Ni="Spacebar",Ii="PageUp",Ti="PageDown",Li="End",Ri="Home",Di="ArrowLeft",Oi="ArrowUp",Fi="ArrowRight",Pi="ArrowDown",zi="Delete",Hi="Escape",Mi="Tab",Bi=new Set;Bi.add(ki),Bi.add($i),Bi.add(Ni),Bi.add(Ii),Bi.add(Ti),Bi.add(Li),Bi.add(Ri),Bi.add(Di),Bi.add(Oi),Bi.add(Fi),Bi.add(Pi),Bi.add(zi),Bi.add(Hi),Bi.add(Mi);var Vi=8,Ui=13,qi=32,Gi=33,ji=34,Wi=35,Xi=36,Yi=37,Ki=38,Zi=39,Qi=40,Ji=46,tn=27,en=9,nn=new Map;nn.set(Vi,ki),nn.set(Ui,$i),nn.set(qi,Ni),nn.set(Gi,Ii),nn.set(ji,Ti),nn.set(Wi,Li),nn.set(Xi,Ri),nn.set(Yi,Di),nn.set(Ki,Oi),nn.set(Zi,Fi),nn.set(Qi,Pi),nn.set(Ji,zi),nn.set(tn,Hi),nn.set(en,Mi);var on,rn,an=new Set;function dn(t){var e=t.key;if(Bi.has(e))return e;var i=nn.get(t.keyCode);return i||Ci}
+var Ci="Unknown",$i="Backspace",ki="Enter",Ni="Spacebar",Ii="PageUp",Ti="PageDown",Li="End",Ri="Home",Di="ArrowLeft",Oi="ArrowUp",Fi="ArrowRight",Pi="ArrowDown",zi="Delete",Hi="Escape",Mi="Tab",Bi=new Set;Bi.add($i),Bi.add(ki),Bi.add(Ni),Bi.add(Ii),Bi.add(Ti),Bi.add(Li),Bi.add(Ri),Bi.add(Di),Bi.add(Oi),Bi.add(Fi),Bi.add(Pi),Bi.add(zi),Bi.add(Hi),Bi.add(Mi);var Vi=8,Ui=13,qi=32,Gi=33,ji=34,Wi=35,Xi=36,Yi=37,Ki=38,Zi=39,Qi=40,Ji=46,tn=27,en=9,nn=new Map;nn.set(Vi,$i),nn.set(Ui,ki),nn.set(qi,Ni),nn.set(Gi,Ii),nn.set(ji,Ti),nn.set(Wi,Li),nn.set(Xi,Ri),nn.set(Yi,Di),nn.set(Ki,Oi),nn.set(Zi,Fi),nn.set(Qi,Pi),nn.set(Ji,zi),nn.set(tn,Hi),nn.set(en,Mi);var on,rn,an=new Set;function dn(t){var e=t.key;if(Bi.has(e))return e;var i=nn.get(t.keyCode);return i||Ci}
 /**
  * @license
  * Copyright 2018 Google Inc.
@@ -461,7 +461,7 @@ const Cn=c`@keyframes mdc-ripple-fg-radius-in{from{animation-timing-function:cub
  * @license
  * Copyright 2020 Google LLC
  * SPDX-License-Identifier: Apache-2.0
- */;let kn=class extends An{};kn.styles=[Cn],kn=n([mt("mwc-list")],kn);
+ */;let $n=class extends An{};$n.styles=[Cn],$n=n([mt("mwc-list")],$n);
 /**
  * @license
  * Copyright 2018 Google Inc.
@@ -484,7 +484,7 @@ const Cn=c`@keyframes mdc-ripple-fg-radius-in{from{animation-timing-function:cub
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-var $n={NOTCH_ELEMENT_SELECTOR:".mdc-notched-outline__notch"},Nn={NOTCH_ELEMENT_PADDING:8},In={NO_LABEL:"mdc-notched-outline--no-label",OUTLINE_NOTCHED:"mdc-notched-outline--notched",OUTLINE_UPGRADED:"mdc-notched-outline--upgraded"},Tn=function(t){function n(e){return t.call(this,i(i({},n.defaultAdapter),e))||this}return e(n,t),Object.defineProperty(n,"strings",{get:function(){return $n},enumerable:!1,configurable:!0}),Object.defineProperty(n,"cssClasses",{get:function(){return In},enumerable:!1,configurable:!0}),Object.defineProperty(n,"numbers",{get:function(){return Nn},enumerable:!1,configurable:!0}),Object.defineProperty(n,"defaultAdapter",{get:function(){return{addClass:function(){},removeClass:function(){},setNotchWidthProperty:function(){},removeNotchWidthProperty:function(){}}},enumerable:!1,configurable:!0}),n.prototype.notch=function(t){var e=n.cssClasses.OUTLINE_NOTCHED;t>0&&(t+=Nn.NOTCH_ELEMENT_PADDING),this.adapter.setNotchWidthProperty(t),this.adapter.addClass(e)},n.prototype.closeNotch=function(){var t=n.cssClasses.OUTLINE_NOTCHED;this.adapter.removeClass(t),this.adapter.removeNotchWidthProperty()},n}(be);
+var kn={NOTCH_ELEMENT_SELECTOR:".mdc-notched-outline__notch"},Nn={NOTCH_ELEMENT_PADDING:8},In={NO_LABEL:"mdc-notched-outline--no-label",OUTLINE_NOTCHED:"mdc-notched-outline--notched",OUTLINE_UPGRADED:"mdc-notched-outline--upgraded"},Tn=function(t){function n(e){return t.call(this,i(i({},n.defaultAdapter),e))||this}return e(n,t),Object.defineProperty(n,"strings",{get:function(){return kn},enumerable:!1,configurable:!0}),Object.defineProperty(n,"cssClasses",{get:function(){return In},enumerable:!1,configurable:!0}),Object.defineProperty(n,"numbers",{get:function(){return Nn},enumerable:!1,configurable:!0}),Object.defineProperty(n,"defaultAdapter",{get:function(){return{addClass:function(){},removeClass:function(){},setNotchWidthProperty:function(){},removeNotchWidthProperty:function(){}}},enumerable:!1,configurable:!0}),n.prototype.notch=function(t){var e=n.cssClasses.OUTLINE_NOTCHED;t>0&&(t+=Nn.NOTCH_ELEMENT_PADDING),this.adapter.setNotchWidthProperty(t),this.adapter.addClass(e)},n.prototype.closeNotch=function(){var t=n.cssClasses.OUTLINE_NOTCHED;this.adapter.removeClass(t),this.adapter.removeNotchWidthProperty()},n}(be);
 /**
  * @license
  * Copyright 2019 Google LLC
@@ -552,7 +552,7 @@ var Hn={LABEL_FLOAT_ABOVE:"mdc-floating-label--float-above",LABEL_REQUIRED:"mdc-
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- */const Bn=Ie(class extends Te{constructor(t){switch(super(t),this.foundation=null,this.previousPart=null,t.type){case Ce:case $e:break;default:throw new Error("FloatingLabel directive only support attribute and property parts")}}update(t,[e]){if(t!==this.previousPart){this.foundation&&this.foundation.destroy(),this.previousPart=t;const e=t.element;e.classList.add("mdc-floating-label");const i=(t=>({addClass:e=>t.classList.add(e),removeClass:e=>t.classList.remove(e),getWidth:()=>t.scrollWidth,registerInteractionHandler:(e,i)=>{t.addEventListener(e,i)},deregisterInteractionHandler:(e,i)=>{t.removeEventListener(e,i)}}))(e);this.foundation=new Mn(i),this.foundation.init()}return this.render(e)}render(t){return this.foundation}});
+ */const Bn=Ie(class extends Te{constructor(t){switch(super(t),this.foundation=null,this.previousPart=null,t.type){case Ce:case ke:break;default:throw new Error("FloatingLabel directive only support attribute and property parts")}}update(t,[e]){if(t!==this.previousPart){this.foundation&&this.foundation.destroy(),this.previousPart=t;const e=t.element;e.classList.add("mdc-floating-label");const i=(t=>({addClass:e=>t.classList.add(e),removeClass:e=>t.classList.remove(e),getWidth:()=>t.scrollWidth,registerInteractionHandler:(e,i)=>{t.addEventListener(e,i)},deregisterInteractionHandler:(e,i)=>{t.removeEventListener(e,i)}}))(e);this.foundation=new Mn(i),this.foundation.init()}return this.render(e)}render(t){return this.foundation}});
 /**
  * @license
  * Copyright 2018 Google Inc.
@@ -596,7 +596,7 @@ var Hn={LABEL_FLOAT_ABOVE:"mdc-floating-label--float-above",LABEL_REQUIRED:"mdc-
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- */const qn=Ie(class extends Te{constructor(t){switch(super(t),this.previousPart=null,this.foundation=null,t.type){case Ce:case $e:return;default:throw new Error("LineRipple only support attribute and property parts.")}}update(t,e){if(this.previousPart!==t){this.foundation&&this.foundation.destroy(),this.previousPart=t;const e=t.element;e.classList.add("mdc-line-ripple");const i=(t=>({addClass:e=>t.classList.add(e),removeClass:e=>t.classList.remove(e),hasClass:e=>t.classList.contains(e),setStyle:(e,i)=>t.style.setProperty(e,i),registerEventHandler:(e,i)=>{t.addEventListener(e,i)},deregisterEventHandler:(e,i)=>{t.removeEventListener(e,i)}}))(e);this.foundation=new Un(i),this.foundation.init()}return this.render()}render(){return this.foundation}});
+ */const qn=Ie(class extends Te{constructor(t){switch(super(t),this.previousPart=null,this.foundation=null,t.type){case Ce:case ke:return;default:throw new Error("LineRipple only support attribute and property parts.")}}update(t,e){if(this.previousPart!==t){this.foundation&&this.foundation.destroy(),this.previousPart=t;const e=t.element;e.classList.add("mdc-line-ripple");const i=(t=>({addClass:e=>t.classList.add(e),removeClass:e=>t.classList.remove(e),hasClass:e=>t.classList.contains(e),setStyle:(e,i)=>t.style.setProperty(e,i),registerEventHandler:(e,i)=>{t.addEventListener(e,i)},deregisterEventHandler:(e,i)=>{t.removeEventListener(e,i)}}))(e);this.foundation=new Un(i),this.foundation.init()}return this.render()}render(){return this.foundation}});
 /**
  * @license
  * Copyright 2016 Google Inc.
@@ -624,7 +624,7 @@ var Hn={LABEL_FLOAT_ABOVE:"mdc-floating-label--float-above",LABEL_REQUIRED:"mdc-
  * Copyright 2020 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const to=Ie(class extends Te{constructor(t){if(super(t),t.type!==$e&&t.type!==Ce&&t.type!==Ne)throw Error("The `live` directive is not allowed on child or event bindings");if(!Ze(t))throw Error("`live` bindings can only contain a single expression")}render(t){return t}update(t,[e]){if(e===G||e===j)return e;const i=t.element,n=t.name;if(t.type===$e){if(e===i[n])return G}else if(t.type===Ne){if(!!e===i.hasAttribute(n))return G}else if(t.type===Ce&&i.getAttribute(n)===e+"")return G;return((t,e=Qe)=>{t._$AH=e})(t),e}}),eo=["touchstart","touchmove","scroll","mousewheel"],io=(t={})=>{const e={};for(const i in t)e[i]=t[i];return Object.assign({badInput:!1,customError:!1,patternMismatch:!1,rangeOverflow:!1,rangeUnderflow:!1,stepMismatch:!1,tooLong:!1,tooShort:!1,typeMismatch:!1,valid:!0,valueMissing:!1},e)};
+const to=Ie(class extends Te{constructor(t){if(super(t),t.type!==ke&&t.type!==Ce&&t.type!==Ne)throw Error("The `live` directive is not allowed on child or event bindings");if(!Ze(t))throw Error("`live` bindings can only contain a single expression")}render(t){return t}update(t,[e]){if(e===G||e===j)return e;const i=t.element,n=t.name;if(t.type===ke){if(e===i[n])return G}else if(t.type===Ne){if(!!e===i.hasAttribute(n))return G}else if(t.type===Ce&&i.getAttribute(n)===e+"")return G;return((t,e=Qe)=>{t._$AH=e})(t),e}}),eo=["touchstart","touchmove","scroll","mousewheel"],io=(t={})=>{const e={};for(const i in t)e[i]=t[i];return Object.assign({badInput:!1,customError:!1,patternMismatch:!1,rangeOverflow:!1,rangeUnderflow:!1,stepMismatch:!1,tooLong:!1,tooShort:!1,typeMismatch:!1,valid:!0,valueMissing:!1},e)};
 /**
  * @license
  * Copyright 2019 Google LLC
@@ -640,16 +640,16 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
  * @license
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: Apache-2.0
- */;let ro=class extends no{};ro.styles=[oo],ro=n([mt("mwc-textfield")],ro);const ao="Transpower-SLD-Vertices",so="https://transpower.co.nz/SCL/SSD/SLD/v0",lo="http://www.w3.org/2000/svg",co=["CAB","CAP","CBR","CTR","DIS","GEN","IFL","LIN","MOT","REA","RES","SAR","SMC","VTR"];function po(t){return co.includes(t)}const mo=new Set(["GEN","MOT","SMC"]);function ho(){const t=new Array(36);for(let e=0;e<36;e+=1)[8,13,18,23].includes(e)?t[e]="-":t[e]=Math.floor(16*Math.random());return t[14]=4,t[19]&=-5,t[19]|=8,t.map((t=>t.toString(16))).join("")}const uo=["default","auto","earthing"];function fo(t){var e;return["true","1"].includes(null!==(e=null==t?void 0:t.trim())&&void 0!==e?e:"false")}function go(t){var e;return"Bay"===t.tagName&&fo(null===(e=t.querySelector("Section[bus]"))||void 0===e?void 0:e.getAttribute("bus"))}function bo(t){const[e,i,n,o,r,a,d]=["x","y","w","h","rot","lx","ly"].map((e=>{var i;return parseFloat(null!==(i=t.getAttributeNS(so,e))&&void 0!==i?i:"0")})),s=[e,i].map((t=>Math.max(0,t))),l=[n,o].map((t=>Math.max(1,t))),c=[a,d].map((t=>Math.max(0,t))),p=fo(t.getAttribute("bus")),m=fo(t.getAttributeNS(so,"flip")),h=t.getAttributeNS(so,"kind");return{pos:s,dim:l,label:c,flip:m,rot:(r%4+4)%4,bus:p,kind:function(t){return uo.includes(t)}(h)?h:"default"}}function xo(t,...e){const i=[];let n=t;for(;n.parentElement&&n.hasAttribute("name");)i.unshift(n.getAttribute("name")),n=n.parentElement;return function(...t){return t.join("/")}(...i,...e)}function vo(t){var e;const i=[];if(fo(null===(e=t.querySelector("Section[bus]"))||void 0===e?void 0:e.getAttribute("bus"))){Array.from(t.querySelectorAll("Section:not([bus])")).forEach((t=>i.push({node:t})));const e=Array.from(t.querySelectorAll("Section[bus]")),n=e[0];Array.from(n.children).slice(1).forEach((t=>i.push({node:t})));const o=e[e.length-1].lastElementChild;o&&i.push({parent:n,node:o,reference:null}),e.slice(1).forEach((t=>i.push({node:t})))}else i.push({node:t});return Array.from(t.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${t.getAttribute("pathName")}"], NeutralPoint[connectivityNode="${t.getAttribute("pathName")}"]`)).forEach((t=>i.push({node:t}))),i}function yo(t){const[e,i]=["x","y"].map((e=>t.getAttributeNS(so,e))),n=n=>n!==t&&n.getAttributeNS(so,"x")===e&&n.getAttributeNS(so,"y")===i,o=Array.from(t.closest("Private").getElementsByTagNameNS(so,"Section")).flatMap((t=>Array.from(t.children).filter(n))).map((t=>t.parentElement));if(o.length>2)return[];if(o.length<2)return vo(t.closest("ConnectivityNode"));const[r,a]=o.map((t=>fo(t.getAttribute("bus"))));if(r!==a)return[];const d=[],[s,l]=o;n(s.firstElementChild)&&d.push(function(t){const e=[];return Array.from(t.children).reverse().forEach((i=>e.push({parent:t,node:i,reference:null}))),e}(s));const c=Array.from(l.children);n(l.lastElementChild)&&c.reverse(),c.slice(1).forEach((t=>d.push({parent:s,node:t,reference:null})));const p=Array.from(s.children).find(n),m=n(s.firstElementChild)?s.children[1]:s.children[s.childElementCount-2],h=c[1];return m&&p&&h&&function(t,e,i){const[[n,o],[r,a],[d,s]]=[t,e,i].map((t=>["x","y"].map((e=>t.getAttributeNS(so,e)))));return n===r&&r===d||o===a&&a===s}(m,p,h)&&d.push({node:p}),d.push({node:l}),d}function _o(t,e,i){var n;const o=[],r=Array.from(t.getElementsByTagName("ConnectivityNode"));"ConnectivityNode"===t.tagName&&r.push(t);const a=e.closest("Substation").getAttribute("name");let d=null===(n=e.closest("VoltageLevel"))||void 0===n?void 0:n.getAttribute("name");return"VoltageLevel"===t.tagName&&(d=i),r.forEach((n=>{var r,s;let l=n.getAttribute("name");t===n&&(l=i);let c=null!==(s=null===(r=n.parentElement)||void 0===r?void 0:r.getAttribute("name"))&&void 0!==s?s:"";if("Bay"===t.tagName&&(c=i),"Bay"===e.tagName&&e.hasAttribute("name")&&(c=e.getAttribute("name")),l&&c){const t=`${a}/${d}/${c}/${l}`;o.push({element:n,attributes:{pathName:t}}),a&&d&&c&&o.push(...function(t,e,i,n,o,r,a){const d=[],s=e.getAttribute("pathName");if(!s)return[];const[l,c,p,m]=s.split("/");return Array.from(e.getRootNode().querySelectorAll(`Terminal[substationName="${l}"][voltageLevelName="${c}"][bayName="${p}"][cNodeName="${m}"], Terminal[connectivityNode="${s}"], NeutralPoint[substationName="${l}"][voltageLevelName="${c}"][bayName="${p}"][cNodeName="${m}"], NeutralPoint[connectivityNode="${s}"]`)).forEach((t=>{d.push({element:t,attributes:{substationName:i,voltageLevelName:n,bayName:o,connectivityNode:a,cNodeName:r}})})),d}(0,n,a,d,c,l,t))}})),o}function wo(t,e){const i=[];i.push({node:t,parent:e,reference:te(e,t.tagName)});const n=function(t,e){var i,n,o;const r=Array.from(e.children),a=t.getAttribute("name");if(a&&!r.find((t=>t.getAttribute("name")===a)))return a;const d=null!==(o=null!==(n=null===(i=t.getAttribute("name"))||void 0===i?void 0:i.replace(/[0-9]*$/,""))&&void 0!==n?n:t.getAttribute("type"))&&void 0!==o?o:t.tagName.charAt(0);let s=1;function l(t){return t.getAttribute("name")===d+s.toString()}for(;r.find(l);)s+=1;return d+s.toString()}(t,e);return n!==t.getAttribute("name")&&i.push({element:t,attributes:{name:n}}),i.push(..._o(t,e,n)),i}function Eo(t){const e=[];e.push({node:t});const i=t.getAttribute("connectivityNode"),n=t.ownerDocument.querySelector(`ConnectivityNode[pathName="${i}"]`),o=Array.from(t.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${i}"], NeutralPoint[connectivityNode="${i}"]`)).filter((e=>e!==t));if(n&&o.length&&o.some((t=>t.closest("Bay")))&&o.every((t=>t.closest("Bay")!==n.closest("Bay")))&&!go(n.closest("Bay"))){const t=o.find((t=>t.closest("Bay"))).closest("Bay");t&&e.push(...wo(n,t))}const r=null==n?void 0:n.querySelector(`Private[type="${ao}"]`),a=null==r?void 0:r.querySelector(`Vertex[*|uuid="${t.getAttributeNS(so,"uuid")}"]`),d=null==a?void 0:a.parentElement;if(!d)return e;e.push({node:d});const s=a===d.lastElementChild?d.firstElementChild:d.lastElementChild;return s&&e.push(...yo(s)),e}function So(t){const{pos:[e,i],rot:n}=bo(t);return{T1:[[[e+.5,i],[e+1,i+.5],[e+.5,i+1],[e,i+.5]][n],[[e+.5,i-.5],[e+1.5,i+.5],[e+.5,i+1.5],[e-.5,i+.5]][n]],T2:[[[e+.5,i+1],[e,i+.5],[e+.5,i],[e+1,i+.5]][n],[[e+.5,i+1.5],[e-.5,i+.5],[e+.5,i-.5],[e+1.5,i+.5]][n]]}}function Ao(t){return new CustomEvent("oscd-sld-place",{bubbles:!0,composed:!0,detail:t})}function Co(t){return new CustomEvent("oscd-sld-connect",{bubbles:!0,composed:!0,detail:t})}function ko(t){return new CustomEvent("oscd-sld-rotate",{bubbles:!0,composed:!0,detail:t})}function $o(t){return new CustomEvent("oscd-sld-start-resize",{bubbles:!0,composed:!0,detail:t})}function No(t){return new CustomEvent("oscd-sld-start-place",{bubbles:!0,composed:!0,detail:t})}function Io(t){return new CustomEvent("oscd-sld-start-place-label",{bubbles:!0,composed:!0,detail:t})}function To(t){return new CustomEvent("oscd-sld-start-connect",{bubbles:!0,composed:!0,detail:t})}const Lo=q`<path
+ */;let ro=class extends no{};ro.styles=[oo],ro=n([mt("mwc-textfield")],ro);const ao="Transpower-SLD-Vertices",so="https://transpower.co.nz/SCL/SSD/SLD/v0",lo="http://www.w3.org/2000/svg",co=["CAB","CAP","CBR","CTR","DIS","GEN","IFL","LIN","MOT","REA","RES","SAR","SMC","VTR"];function po(t){return co.includes(t)}const mo=new Set(["GEN","MOT","SMC"]),ho=new Set(["BAT","EFN","FAN","GEN","IFL","MOT","PMP","RRC","SAR","SMC","VTR"]);function uo(){const t=new Array(36);for(let e=0;e<36;e+=1)[8,13,18,23].includes(e)?t[e]="-":t[e]=Math.floor(16*Math.random());return t[14]=4,t[19]&=-5,t[19]|=8,t.map((t=>t.toString(16))).join("")}const fo=["default","auto","earthing"];function go(t){var e;return["true","1"].includes(null!==(e=null==t?void 0:t.trim())&&void 0!==e?e:"false")}function bo(t){var e;return"Bay"===t.tagName&&go(null===(e=t.querySelector("Section[bus]"))||void 0===e?void 0:e.getAttribute("bus"))}function xo(t){const[e,i,n,o,r,a,d]=["x","y","w","h","rot","lx","ly"].map((e=>{var i;return parseFloat(null!==(i=t.getAttributeNS(so,e))&&void 0!==i?i:"0")})),s=[e,i].map((t=>Math.max(0,t))),l=[n,o].map((t=>Math.max(1,t))),c=[a,d].map((t=>Math.max(0,t))),p=go(t.getAttribute("bus")),m=go(t.getAttributeNS(so,"flip")),h=t.getAttributeNS(so,"kind");return{pos:s,dim:l,label:c,flip:m,rot:(r%4+4)%4,bus:p,kind:function(t){return fo.includes(t)}(h)?h:"default"}}function vo(t,...e){const i=[];let n=t;for(;n.parentElement&&n.hasAttribute("name");)i.unshift(n.getAttribute("name")),n=n.parentElement;return function(...t){return t.join("/")}(...i,...e)}function yo(t){var e;const i=[];if(go(null===(e=t.querySelector("Section[bus]"))||void 0===e?void 0:e.getAttribute("bus"))){Array.from(t.querySelectorAll("Section:not([bus])")).forEach((t=>i.push({node:t})));const e=Array.from(t.querySelectorAll("Section[bus]")),n=e[0];Array.from(n.children).slice(1).forEach((t=>i.push({node:t})));const o=e[e.length-1].lastElementChild;o&&i.push({parent:n,node:o,reference:null}),e.slice(1).forEach((t=>i.push({node:t})))}else i.push({node:t});return Array.from(t.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${t.getAttribute("pathName")}"], NeutralPoint[connectivityNode="${t.getAttribute("pathName")}"]`)).forEach((t=>i.push({node:t}))),i}function _o(t){const[e,i]=["x","y"].map((e=>t.getAttributeNS(so,e))),n=n=>n!==t&&n.getAttributeNS(so,"x")===e&&n.getAttributeNS(so,"y")===i,o=Array.from(t.closest("Private").getElementsByTagNameNS(so,"Section")).flatMap((t=>Array.from(t.children).filter(n))).map((t=>t.parentElement));if(o.length>2)return[];if(o.length<2)return yo(t.closest("ConnectivityNode"));const[r,a]=o.map((t=>go(t.getAttribute("bus"))));if(r!==a)return[];const d=[],[s,l]=o;n(s.firstElementChild)&&d.push(function(t){const e=[];return Array.from(t.children).reverse().forEach((i=>e.push({parent:t,node:i,reference:null}))),e}(s));const c=Array.from(l.children);n(l.lastElementChild)&&c.reverse(),c.slice(1).forEach((t=>d.push({parent:s,node:t,reference:null})));const p=Array.from(s.children).find(n),m=n(s.firstElementChild)?s.children[1]:s.children[s.childElementCount-2],h=c[1];return m&&p&&h&&function(t,e,i){const[[n,o],[r,a],[d,s]]=[t,e,i].map((t=>["x","y"].map((e=>t.getAttributeNS(so,e)))));return n===r&&r===d||o===a&&a===s}(m,p,h)&&d.push({node:p}),d.push({node:l}),d}function wo(t,e,i){var n;const o=[],r=Array.from(t.getElementsByTagName("ConnectivityNode"));"ConnectivityNode"===t.tagName&&r.push(t);const a=e.closest("Substation").getAttribute("name");let d=null===(n=e.closest("VoltageLevel"))||void 0===n?void 0:n.getAttribute("name");return"VoltageLevel"===t.tagName&&(d=i),r.forEach((n=>{var r,s;let l=n.getAttribute("name");t===n&&(l=i);let c=null!==(s=null===(r=n.parentElement)||void 0===r?void 0:r.getAttribute("name"))&&void 0!==s?s:"";if("Bay"===t.tagName&&(c=i),"Bay"===e.tagName&&e.hasAttribute("name")&&(c=e.getAttribute("name")),l&&c){const t=`${a}/${d}/${c}/${l}`;o.push({element:n,attributes:{pathName:t}}),a&&d&&c&&o.push(...function(t,e,i,n,o,r,a){const d=[],s=e.getAttribute("pathName");if(!s)return[];const[l,c,p,m]=s.split("/");return Array.from(e.getRootNode().querySelectorAll(`Terminal[substationName="${l}"][voltageLevelName="${c}"][bayName="${p}"][cNodeName="${m}"], Terminal[connectivityNode="${s}"], NeutralPoint[substationName="${l}"][voltageLevelName="${c}"][bayName="${p}"][cNodeName="${m}"], NeutralPoint[connectivityNode="${s}"]`)).forEach((t=>{d.push({element:t,attributes:{substationName:i,voltageLevelName:n,bayName:o,connectivityNode:a,cNodeName:r}})})),d}(0,n,a,d,c,l,t))}})),o}function Eo(t,e){const i=[];i.push({node:t,parent:e,reference:te(e,t.tagName)});const n=function(t,e){var i,n,o;const r=Array.from(e.children),a=t.getAttribute("name");if(a&&!r.find((t=>t.getAttribute("name")===a)))return a;const d=null!==(o=null!==(n=null===(i=t.getAttribute("name"))||void 0===i?void 0:i.replace(/[0-9]*$/,""))&&void 0!==n?n:t.getAttribute("type"))&&void 0!==o?o:t.tagName.charAt(0);let s=1;function l(t){return t.getAttribute("name")===d+s.toString()}for(;r.find(l);)s+=1;return d+s.toString()}(t,e);return n!==t.getAttribute("name")&&i.push({element:t,attributes:{name:n}}),i.push(...wo(t,e,n)),i}function So(t){const e=[];e.push({node:t});const i=t.getAttribute("connectivityNode"),n=t.ownerDocument.querySelector(`ConnectivityNode[pathName="${i}"]`),o=Array.from(t.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${i}"], NeutralPoint[connectivityNode="${i}"]`)).filter((e=>e!==t));if(n&&o.length&&o.some((t=>t.closest("Bay")))&&o.every((t=>t.closest("Bay")!==n.closest("Bay")))&&!bo(n.closest("Bay"))){const t=o.find((t=>t.closest("Bay"))).closest("Bay");t&&e.push(...Eo(n,t))}const r=null==n?void 0:n.querySelector(`Private[type="${ao}"]`),a=null==r?void 0:r.querySelector(`Vertex[*|uuid="${t.getAttributeNS(so,"uuid")}"]`),d=null==a?void 0:a.parentElement;if(!d)return e;e.push({node:d});const s=a===d.lastElementChild?d.firstElementChild:d.lastElementChild;return s&&e.push(..._o(s)),e}function Ao(t){const{pos:[e,i],rot:n}=xo(t);return{T1:[[[e+.5,i+.16],[e+.84,i+.5],[e+.5,i+.84],[e+.16,i+.5]][n],[[e+.5,i],[e+1,i+.5],[e+.5,i+1],[e,i+.5]][n]],T2:[[[e+.5,i+.84],[e+.16,i+.5],[e+.5,i+.16],[e+.84,i+.5]][n],[[e+.5,i+1],[e,i+.5],[e+.5,i],[e+1,i+.5]][n]]}}function Co(t){return new CustomEvent("oscd-sld-place",{bubbles:!0,composed:!0,detail:t})}function $o(t){return new CustomEvent("oscd-sld-connect",{bubbles:!0,composed:!0,detail:t})}function ko(t){return new CustomEvent("oscd-sld-rotate",{bubbles:!0,composed:!0,detail:t})}function No(t){return new CustomEvent("oscd-sld-start-resize",{bubbles:!0,composed:!0,detail:t})}function Io(t){return new CustomEvent("oscd-sld-start-place",{bubbles:!0,composed:!0,detail:t})}function To(t){return new CustomEvent("oscd-sld-start-place-label",{bubbles:!0,composed:!0,detail:t})}function Lo(t){return new CustomEvent("oscd-sld-start-connect",{bubbles:!0,composed:!0,detail:t})}const Ro=q`<path
   d="M120 616v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 640v-80h80v80h-80Zm0-640v-80h80v80h-80Zm160 640v-80h80v80h-80Zm160 0v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160V296H600v-80h240v240h-80ZM120 936V696h80v160h160v80H120Z"
-/>`,Ro=q`<path d="M480 976 310 806l57-57 73 73V616l-205-1 73 73-58 58L80 576l169-169 57 57-72 72h206V330l-73 73-57-57 170-170 170 170-57 57-73-73v206l205 1-73-73 58-58 170 170-170 170-57-57 73-73H520l-1 205 73-73 58 58-170 170Z"/>`,Do=q`<path
+/>`,Do=q`<path d="M480 976 310 806l57-57 73 73V616l-205-1 73 73-58 58L80 576l169-169 57 57-72 72h206V330l-73 73-57-57 170-170 170 170-57 57-73-73v206l205 1-73-73 58-58 170 170-170 170-57-57 73-73H520l-1 205 73-73 58 58-170 170Z"/>`,Oo=q`<path
     d="M 4 4 L 12.5 21 L 21 4"
     fill="none"
     stroke="currentColor"
     stroke-width="3"
     stroke-linejoin="round"
     stroke-linecap="round"
-  />`,Oo=q`<path
+  />`,Fo=q`<path
     d="M 3 2 L 22 2"
     fill="none"
     stroke="currentColor"
@@ -712,58 +712,51 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     stroke-width="1.5"
     stroke-linejoin="round"
     stroke-linecap="round"
-  />`,Fo=q`
+  />`,Po=q`
 <line x1="20" y1="0" x2="20" y2="10" stroke-width="1.5" stroke="currentColor" />
 <line x1="20" y1="30" x2="20" y2="40" stroke-width="1.5" stroke="currentColor" />
 <circle cx="20" cy="20" r="10" fill="none"
-    stroke="currentColor" stroke-width="1.5" />`,Po=q`
+    stroke="currentColor" stroke-width="1.5" />`,zo=q`
 <line x1="20" y1="0" x2="20" y2="10" stroke-width="1.5" stroke="currentColor" />
 <circle cx="20" cy="20" r="10" fill="none"
-    stroke="currentColor" stroke-width="1.5" />`,zo=q`
-<line x1="20" y1="0" x2="20" y2="5" stroke-width="1.5" stroke="currentColor" />
-<line x1="20" y1="35" x2="20" y2="40" stroke-width="1.5" stroke="currentColor" />
-<circle cx="20" cy="15" r="10" fill="none"
-    stroke="currentColor" stroke-width="1.5" />
-  <circle cx="20" cy="25" r="10" fill="none"
     stroke="currentColor" stroke-width="1.5" />`,Ho=q`
 <line x1="20" y1="0" x2="20" y2="5" stroke-width="1.5" stroke="currentColor" />
-<line x1="0" y1="25" x2="10" y2="25" stroke-width="1.5" stroke="currentColor" />
-<line x1="30" y1="25" x2="40" y2="25" stroke-width="1.5" stroke="currentColor" />
+<line x1="20" y1="35" x2="20" y2="40" stroke-width="1.5" stroke="currentColor" />
 <circle cx="20" cy="15" r="10" fill="none"
     stroke="currentColor" stroke-width="1.5" />
   <circle cx="20" cy="25" r="10" fill="none"
     stroke="currentColor" stroke-width="1.5" />`,Mo=q`
 <line x1="20" y1="0" x2="20" y2="5" stroke-width="1.5" stroke="currentColor" />
 <line x1="0" y1="25" x2="10" y2="25" stroke-width="1.5" stroke="currentColor" />
+<line x1="30" y1="25" x2="40" y2="25" stroke-width="1.5" stroke="currentColor" />
 <circle cx="20" cy="15" r="10" fill="none"
     stroke="currentColor" stroke-width="1.5" />
   <circle cx="20" cy="25" r="10" fill="none"
-    stroke="currentColor" stroke-width="1.5" />`,Bo=q`<circle cx="20" cy="15" r="10" fill="none"
+    stroke="currentColor" stroke-width="1.5" />`,Bo=q`
+<line x1="20" y1="0" x2="20" y2="5" stroke-width="1.5" stroke="currentColor" />
+<line x1="0" y1="25" x2="10" y2="25" stroke-width="1.5" stroke="currentColor" />
+<circle cx="20" cy="15" r="10" fill="none"
+    stroke="currentColor" stroke-width="1.5" />
+  <circle cx="20" cy="25" r="10" fill="none"
+    stroke="currentColor" stroke-width="1.5" />`,Vo=q`<circle cx="20" cy="15" r="10" fill="none"
     stroke="currentColor" stroke-width="1.5" />
   <circle cx="15" cy="25" r="10" fill="none"
     stroke="currentColor" stroke-width="1.5" />
   <circle cx="25" cy="25" r="10" fill="none"
-    stroke="currentColor" stroke-width="1.5" />`,Vo=U`<svg
-  viewBox="0 0 40 40"
-  width="24"
-  height="24"
-  slot="icon"
->
-  ${Po}
-</svg>`,Uo=U`<svg
-  viewBox="0 0 40 40"
-  width="24"
-  height="24"
-  slot="icon"
->
-  ${Fo}
-</svg>`,qo=U`<svg
+    stroke="currentColor" stroke-width="1.5" />`,Uo=U`<svg
   viewBox="0 0 40 40"
   width="24"
   height="24"
   slot="icon"
 >
   ${zo}
+</svg>`,qo=U`<svg
+  viewBox="0 0 40 40"
+  width="24"
+  height="24"
+  slot="icon"
+>
+  ${Po}
 </svg>`,Go=U`<svg
   viewBox="0 0 40 40"
   width="24"
@@ -786,41 +779,41 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
 >
   ${Bo}
 </svg>`,Xo=U`<svg
-  viewBox="0 0 25 25"
+  viewBox="0 0 40 40"
   width="24"
   height="24"
   slot="icon"
 >
-  ${Do}
+  ${Vo}
 </svg>`,Yo=U`<svg
   viewBox="0 0 25 25"
   width="24"
   height="24"
-  slot="graphic"
+  slot="icon"
 >
-  ${Do}
+  ${Oo}
 </svg>`,Ko=U`<svg
   viewBox="0 0 25 25"
   width="24"
   height="24"
-  slot="icon"
+  slot="graphic"
 >
   ${Oo}
 </svg>`,Zo=U`<svg
   viewBox="0 0 25 25"
   width="24"
   height="24"
+  slot="icon"
+>
+  ${Fo}
+</svg>`,Qo=U`<svg
+  viewBox="0 0 25 25"
+  width="24"
+  height="24"
   slot="graphic"
 >
-  ${Oo}
-</svg>`,Qo={CAB:q`
-  <path
-    d="M 12.5,0 V 4"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-    />
+  ${Fo}
+</svg>`,Jo={CAB:q`
   <path
     d="M 9.4,4.2 H 15.6 L 12.5,8.3 Z"
     fill="currentColor"
@@ -842,13 +835,6 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     stroke-width="1.5"
     stroke-linecap="round"
     />
-  <path
-    d="m 12.5,21.3 v 4"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-    />
   `,CAP:q`
   <path
     d="M 6.5,10.1 H 18.5"
@@ -858,7 +844,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     stroke-linecap="round"
     />
   <path
-    d="M 12.5,0 V 10.1"
+    d="M 12.5,4 V 10.1"
     fill="none"
     stroke="currentColor"
     stroke-width="1.5"
@@ -872,31 +858,13 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     stroke-linecap="round"
     />
   <path
-    d="M 12.5,14.9 V 25"
+    d="M 12.5,14.9 V 21"
     fill="none"
     stroke="currentColor"
     stroke-width="1.5"
     stroke-linecap="round"
     />
   `,CBR:q`
-  <line
-    x1="12.5"
-    y1="0"
-    x2="12.5"
-    y2="4"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <line
-    x1="12.5"
-    y1="25"
-    x2="12.5"
-    y2="21"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
   <line
     x1="12.5"
     y1="21"
@@ -927,9 +895,9 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
   `,CTR:q`
   <line
     x1="12.5"
-    y1="0"
+    y1="4"
     x2="12.5"
-    y2="25"
+    y2="21"
     stroke="currentColor"
     stroke-width="1.5"
     stroke-linecap="round"
@@ -944,20 +912,6 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     stroke-linecap="round"
   />
   `,DIS:q`
-  <path
-    d="M 12.5 0 L 12.5 4"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <path
-    d=" M 12.5 25 L 12.5 21"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
   <path
     d="M 12.5 21 L 4 4"
     fill="none"
@@ -981,20 +935,6 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     stroke-linecap="round"
   />
   `,IFL:q`
-  <path
-    d="M 12.5 0 L 12.5 4"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <path
-    d="M 12.5 25 L 12.5 21"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
   <polygon
     points="4,4 12.5,21 21,4"
     fill="none"
@@ -1005,7 +945,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
   />
   `,LIN:q`
   <path
-    d="M 12.5,0 V 25"
+    d="M 12.5,4 V 21"
     fill="none"
     stroke="currentColor"
     stroke-width="1.5"
@@ -1035,7 +975,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
   />
   `,REA:q`
   <path
-    d="m 4.5,12.5 h 8 V 0"
+    d="m 4.5,12.5 h 8 V 4"
     stroke="currentColor"
     fill="none"
     stroke-width="1.5"
@@ -1049,27 +989,13 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     stroke-linecap="round"
   />
   <path
-    d="M 12.5,20.5 V 25"
+    d="M 12.5,20.5 V 21"
     stroke="currentColor"
     fill="none"
     stroke-width="1.5"
     stroke-linecap="round"
   />
   `,RES:q`
-  <path
-    d="M 12.5,0 V 4"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <path
-    d="m 12.5 25 v -4"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
   <rect
     y="4"
     x="8.5"
@@ -1082,7 +1008,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
   />
   `,SAR:q`
   <path
-    d="M 12.5,0 V 8"
+    d="M 12.5,4 V 8"
     fill="none"
     stroke="currentColor"
     stroke-width="1.5"
@@ -1132,7 +1058,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
   `,VTR:q`
   <line
     x1="12.5"
-    y1="0"
+    y1="4"
     x2="12.5"
     y2="5"
     stroke="currentColor"
@@ -1157,14 +1083,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     stroke-width="1.5"
     stroke-linecap="round"
   />
-`},Jo=q`
-  <path
-    d="M 12.5,0 V 4"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-    />
+`},tr=q`
   <circle
     cx="12.5"
     cy="12.5"
@@ -1174,7 +1093,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     stroke-width="1.5"
     stroke-linecap="round"
   />
-  `,tr=q`
+  `,er=q`
   <circle
     cx="12.5"
     cy="12.5"
@@ -1223,16 +1142,34 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     stroke-linejoin="round"
     stroke-linecap="round"
   />
-`;function er(t){return t&&po(t)?Qo[t]:tr}function ir(t){return U`<svg viewBox="0 0 25 25" width="24" height="24" slot="graphic">
-    ${er(t)}
-    ${t&&mo.has(t)?Jo:j}
-  </svg>`}function nr(t){return q`<symbol
+`;function ir(t){return t&&po(t)?Jo[t]:er}function nr(t){return U`<svg viewBox="0 0 25 25" width="24" height="24" slot="graphic">
+    <line
+      x1="12.5"
+      y1="0"
+      x2="12.5"
+      y2="4"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+    />
+    ${t&&ho.has(t)?j:q`<line
+      x1="12.5"
+      y1="21"
+      x2="12.5"
+      y2="25"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+    />`}
+    ${ir(t)}
+    ${t&&mo.has(t)?tr:j}
+  </svg>`}function or(t){return q`<symbol
     id="${t}"
     viewBox="0 0 25 25"
     width="1" height="1"
   >
-    ${er(t)}
-  </symbol>`}const or=q`<marker
+    ${ir(t)}
+  </symbol>`}const rr=q`<marker
   markerWidth="20" markerHeight="20"
   refX="12.5" refY="12.5"
   viewBox="0 0 25 25"
@@ -1266,7 +1203,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     stroke-linecap="round"
     stroke-width="1.5"
   />
-</marker>`,rr=q`
+</marker>`,ar=q`
   <defs>
   <pattern id="halfgrid" patternUnits="userSpaceOnUse" width="1" height="1" viewBox="0 0 1 1">
   <circle cx="0.1" cy="0.8" r="0.035" fill="#888" opacity="0.3" />
@@ -1280,11 +1217,11 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
   <line x1="1" y1="0" x2="1" y2="1" stroke="#888" stroke-opacity="0.3" stroke-width="0.06" />
   <line x1="0" y1="1" x2="1" y2="1" stroke="#888" stroke-opacity="0.3" stroke-width="0.06" />
   </pattern>
-  ${co.map((t=>nr(t)))}
-  ${nr("ConductingEquipment")}
-  ${or}
+  ${co.map((t=>or(t)))}
+  ${or("ConductingEquipment")}
+  ${rr}
   </defs>
-`,ar={ConductingEquipment:["Bay"],Bay:["VoltageLevel"],VoltageLevel:["Substation"],PowerTransformer:["Bay","VoltageLevel","Substation"]},dr=new Set(["BAT","EFN","FAN","GEN","IFL","MOT","PMP","RRC","SAR","SMC","VTR"]);function sr(t){return new CustomEvent("oscd-edit-wizard-request",{bubbles:!0,composed:!0,detail:{element:t}})}function lr([t,e,i,n],[o,r,a,d]){return t<=o&&e<=r&&t+i>=o+a&&e+n>=r+d}function cr(t,e,i,n,o){const{pos:[r,a],dim:[d,s]}=bo(t);return lr([r,a,d,s],[e,i,n,o])}function pr(t,e,i){return t<=e&&e<=i||i<=e&&e<=t}function mr([t,e],[i,n]){return Math.abs(t-i)+Math.abs(e-n)}function hr(t,e,i){let n=e;const o=function(t,e){const i=[],n=t[0]===e[0]?1:0;let o=t[n]<e[n]?t:e;const r=o===t?e:t;for(o=o.slice(),o[n]=Math.floor(2*o[n])/2;o[n]<=r[n];)i.push(o),o=o.slice(),o[n]+=.5;return i}(e,i);return o.forEach((e=>{mr(e,t)<mr(n,t)&&(n=e)})),n}function ur(t,e,i,n){return function([t,e],[i,n],[o,r]){return t===i&&t===o&&pr(n,e,r)||e===n&&e===r&&pr(i,t,o)}(t,i,n)?t:hr(e,i,n)}function fr(t){let e=t.length-2;for(;e>0;){const[i,n]=t[e],[o,r]=t[e+1],[a,d]=t[e-1];(i===o&&n===r||i===o&&i===a||n===r&&n===d)&&t.splice(e,1),e-=1}}function gr(t){return"Bay"===t.tagName&&!go(t)}function br(t){t.preventDefault()}function xr(t,e){const i=t.cloneNode(!0),n=new Set(Array.from(t.querySelectorAll("Terminal, NeutralPoint"))),o=new Set(Array.from(t.querySelectorAll("ConnectivityNode")));n.forEach((e=>{const i=t.ownerDocument.querySelector(`ConnectivityNode[pathName="${e.getAttribute("connectivityNode")}"]`);i&&o.add(i)}));const r=new Set;return o.forEach((e=>{(Array.from(t.ownerDocument.querySelectorAll(`[connectivityNode="${e.getAttribute("pathName")}"]`)).find((t=>!n.has(t)))||go(e.closest("Bay"))&&e.closest(t.tagName)!==t)&&r.add(e)})),r.forEach((e=>{var o,r,a;e.closest(t.tagName)===t&&(go(e.closest("Bay"))?null===(r=null===(o=i.querySelector(`ConnectivityNode[pathName="${e.getAttribute("pathName")}"]`))||void 0===o?void 0:o.closest("Bay"))||void 0===r||r.remove():null===(a=i.querySelector(`ConnectivityNode[pathName="${e.getAttribute("pathName")}"]`))||void 0===a||a.remove()),n.forEach((t=>{var n;t.getAttribute("connectivityNode")===e.getAttribute("pathName")&&(null===(n=i.querySelector(`[*|uuid="${t.getAttributeNS(so,"uuid")}"]`))||void 0===n||n.remove())}))})),Array.from(i.querySelectorAll("Terminal, NeutralPoint")).forEach((t=>{const n=t.getAttributeNS(so,"uuid");if(!n)return;const o=ho();Array.from(i.querySelectorAll(`Vertex[*|uuid="${n}"`)).forEach((t=>t.setAttributeNS(so,`${e}:uuid`,o))),t.setAttributeNS(so,`${e}:uuid`,o)})),i}let vr=class extends ct{constructor(){super(...arguments),this.editCount=-1,this.gridSize=32,this.nsp="esld",this.mouseX=0,this.mouseY=0,this.mouseX2=0,this.mouseY2=0,this.coordinatesRef=new ai,this.handleKeydown=({key:t})=>{"Escape"===t&&(this.menu=void 0)},this.handleClick=t=>{this.menu&&!t.composedPath().find((t=>"id"in t&&"sld-context-menu"===t.id))&&(t.stopImmediatePropagation(),this.menu=void 0)}}positionCoordinates(t){var e;const i=null===(e=this.coordinatesRef)||void 0===e?void 0:e.value;i&&(i.style.top=`${t.clientY}px`,i.style.left=`${t.clientX+16}px`)}openMenu(t,e){this.placing||this.resizing||this.placingLabel||this.connecting||(this.menu={element:t,left:e.clientX,top:e.clientY}),e.preventDefault()}svgCoordinates(t,e){const i=new DOMPoint(t,e),{x:n,y:o}=i.matrixTransform(this.sld.getScreenCTM().inverse());return[n,o].map((t=>Math.max(0,t)))}canPlaceAt(t,e,i,n,o){if("Substation"===t.tagName)return!0;const r=Array.from(this.substation.querySelectorAll(`${t.tagName}, PowerTransformer`)).find((r=>r.closest(t.tagName)!==t&&function(t,e,i,n,o){const{pos:[r,a],dim:[d,s]}=bo(t);return function([t,e,i,n],[o,r,a,d]){return!(t>=o+a||o>=t+i||e>=r+d||r>=e+n)}([r,a,d,s],[e,i,n,o])}(r,e,i,n,o)&&!go(r)));if(r&&!go(t))return!1;return!!("VoltageLevel"===t.tagName?cr(this.substation,e,i,n,o):Array.from(this.substation.querySelectorAll(ar[t.tagName].join(","))).find((t=>!go(t)&&cr(t,e,i,n,o))))}canResizeTo(t,e,i){const{pos:[n,o],dim:[r,a]}=bo(t);if(!this.canPlaceAt(t,n,o,e,i)&&this.canPlaceAt(t,n,o,r,a))return!1;const d=Array.from(t.children).find((r=>{var a;if(!(null===(a=ar[r.tagName])||void 0===a?void 0:a.includes(t.tagName)))return!1;const{pos:[d,s],dim:[l,c]}=bo(r);return!lr([n,o,e,i],[d,s,l,c])}));return!d}renderedLabelPosition(t){let{label:[e,i]}=bo(t);if(this.placing&&t.closest(this.placing.tagName)===this.placing){const{pos:[t,n]}=bo(this.placing);e+=this.mouseX-t,i+=this.mouseY-n}return this.placingLabel===t&&(e=this.mouseX2-.5,i=this.mouseY2+.5),[e,i]}renderedPosition(t){let{pos:[e,i]}=bo(t);if(this.placing&&t.closest(this.placing.tagName)===this.placing){const{pos:[t,n]}=bo(this.placing);e+=this.mouseX-t,i+=this.mouseY-n}return[e,i]}connectedCallback(){super.connectedCallback(),window.addEventListener("keydown",this.handleKeydown),window.addEventListener("click",this.handleClick,!0),window.addEventListener("click",this.positionCoordinates)}disconnectedCallback(){super.disconnectedCallback(),window.removeEventListener("keydown",this.handleKeydown),window.removeEventListener("click",this.handleClick),window.removeEventListener("click",this.positionCoordinates)}nearestOpenTerminal(t){if(!t)return;const e=t.querySelector('Terminal[name="T1"]'),i=t.querySelector('Terminal:not([name="T1"])'),n=dr.has(t.getAttribute("type"));if(e&&i)return;if(n&&(e||i))return;if(n)return"T1";if(e)return"T2";if(i)return"T1";const[o,r]=[this.mouseX2,this.mouseY2],{rot:a,pos:[d,s]}=bo(t);return 0===a&&r>=s+.5||1===a&&o<=d+.5||2===a&&r<=s+.5||3===a&&o>=d+.5?"T2":"T1"}groundTerminal(t,e){const i=t.closest("Bay"),n=[];let o=i.querySelector(':scope > ConnectivityNode[name="grounded"]'),r=null==o?void 0:o.getAttribute("pathName");r||(r=xo(t.closest("Bay"),"grounded"),o=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"ConnectivityNode"),o.setAttribute("name","grounded"),o.setAttribute("pathName",r),n.push({parent:i,node:o,reference:te(i,"ConnectivityNode")}));const a=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"Terminal");a.setAttribute("name",e),a.setAttribute("cNodeName","grounded");const d=t.closest("Substation").getAttribute("name");d&&a.setAttribute("substationName",d);const s=t.closest("VoltageLevel").getAttribute("name");s&&a.setAttribute("voltageLevelName",s);const l=t.closest("Bay").getAttribute("name");l&&a.setAttribute("bayName",l),a.setAttribute("connectivityNode",r),n.push({parent:t,node:a,reference:te(t,"Terminal")}),this.dispatchEvent(St(n))}flipElement(t){const{flip:e}=bo(t);this.dispatchEvent(St({element:t,attributes:{[`${this.nsp}:flip`]:{namespaceURI:so,value:e?null:"true"}}}))}equipmentMenuItems(t){const e=[{content:U`<mwc-list-item graphic="icon">
+`,dr={ConductingEquipment:["Bay"],Bay:["VoltageLevel"],VoltageLevel:["Substation"],PowerTransformer:["Bay","VoltageLevel","Substation"]};function sr(t){return new CustomEvent("oscd-edit-wizard-request",{bubbles:!0,composed:!0,detail:{element:t}})}function lr([t,e,i,n],[o,r,a,d]){return t<=o&&e<=r&&t+i>=o+a&&e+n>=r+d}function cr(t,e,i,n,o){const{pos:[r,a],dim:[d,s]}=xo(t);return lr([r,a,d,s],[e,i,n,o])}function pr(t,e,i){return t<=e&&e<=i||i<=e&&e<=t}function mr([t,e],[i,n]){return Math.abs(t-i)+Math.abs(e-n)}function hr(t,e,i){let n=e;const o=function(t,e){const i=[],n=t[0]===e[0]?1:0;let o=t[n]<e[n]?t:e;const r=o===t?e:t;for(o=o.slice(),o[n]=Math.floor(2*o[n])/2;o[n]<=r[n];)i.push(o),o=o.slice(),o[n]+=.5;return i}(e,i);return o.forEach((e=>{mr(e,t)<mr(n,t)&&(n=e)})),n}function ur(t,e,i,n){return function([t,e],[i,n],[o,r]){return t===i&&t===o&&pr(n,e,r)||e===n&&e===r&&pr(i,t,o)}(t,i,n)?t:hr(e,i,n)}function fr(t){let e=t.length-2;for(;e>0;){const[i,n]=t[e],[o,r]=t[e+1],[a,d]=t[e-1];(i===o&&n===r||i===o&&i===a||n===r&&n===d)&&t.splice(e,1),e-=1}}function gr(t){return"Bay"===t.tagName&&!bo(t)}function br(t){t.preventDefault()}function xr(t,e){const i=t.cloneNode(!0),n=new Set(Array.from(t.querySelectorAll("Terminal, NeutralPoint"))),o=new Set(Array.from(t.querySelectorAll("ConnectivityNode")));n.forEach((e=>{const i=t.ownerDocument.querySelector(`ConnectivityNode[pathName="${e.getAttribute("connectivityNode")}"]`);i&&o.add(i)}));const r=new Set;return o.forEach((e=>{(Array.from(t.ownerDocument.querySelectorAll(`[connectivityNode="${e.getAttribute("pathName")}"]`)).find((t=>!n.has(t)))||bo(e.closest("Bay"))&&e.closest(t.tagName)!==t)&&r.add(e)})),r.forEach((e=>{var o,r,a;e.closest(t.tagName)===t&&(bo(e.closest("Bay"))?null===(r=null===(o=i.querySelector(`ConnectivityNode[pathName="${e.getAttribute("pathName")}"]`))||void 0===o?void 0:o.closest("Bay"))||void 0===r||r.remove():null===(a=i.querySelector(`ConnectivityNode[pathName="${e.getAttribute("pathName")}"]`))||void 0===a||a.remove()),n.forEach((t=>{var n;t.getAttribute("connectivityNode")===e.getAttribute("pathName")&&(null===(n=i.querySelector(`[*|uuid="${t.getAttributeNS(so,"uuid")}"]`))||void 0===n||n.remove())}))})),Array.from(i.querySelectorAll("Terminal, NeutralPoint")).forEach((t=>{const n=t.getAttributeNS(so,"uuid");if(!n)return;const o=uo();Array.from(i.querySelectorAll(`Vertex[*|uuid="${n}"`)).forEach((t=>t.setAttributeNS(so,`${e}:uuid`,o))),t.setAttributeNS(so,`${e}:uuid`,o)})),i}let vr=class extends ct{constructor(){super(...arguments),this.editCount=-1,this.gridSize=32,this.nsp="esld",this.mouseX=0,this.mouseY=0,this.mouseX2=0,this.mouseY2=0,this.coordinatesRef=new ai,this.handleKeydown=({key:t})=>{"Escape"===t&&(this.menu=void 0)},this.handleClick=t=>{this.menu&&!t.composedPath().find((t=>"id"in t&&"sld-context-menu"===t.id))&&(t.stopImmediatePropagation(),this.menu=void 0)}}positionCoordinates(t){var e;const i=null===(e=this.coordinatesRef)||void 0===e?void 0:e.value;i&&(i.style.top=`${t.clientY}px`,i.style.left=`${t.clientX+16}px`)}openMenu(t,e){this.placing||this.resizing||this.placingLabel||this.connecting||(this.menu={element:t,left:e.clientX,top:e.clientY}),e.preventDefault()}svgCoordinates(t,e){const i=new DOMPoint(t,e),{x:n,y:o}=i.matrixTransform(this.sld.getScreenCTM().inverse());return[n,o].map((t=>Math.max(0,t)))}canPlaceAt(t,e,i,n,o){if("Substation"===t.tagName)return!0;const r=Array.from(this.substation.querySelectorAll(`${t.tagName}, PowerTransformer`)).find((r=>r.closest(t.tagName)!==t&&function(t,e,i,n,o){const{pos:[r,a],dim:[d,s]}=xo(t);return function([t,e,i,n],[o,r,a,d]){return!(t>=o+a||o>=t+i||e>=r+d||r>=e+n)}([r,a,d,s],[e,i,n,o])}(r,e,i,n,o)&&!bo(r)));if(r&&!bo(t))return!1;return!!("VoltageLevel"===t.tagName?cr(this.substation,e,i,n,o):Array.from(this.substation.querySelectorAll(dr[t.tagName].join(","))).find((t=>!bo(t)&&cr(t,e,i,n,o))))}canResizeTo(t,e,i){const{pos:[n,o],dim:[r,a]}=xo(t);if(!this.canPlaceAt(t,n,o,e,i)&&this.canPlaceAt(t,n,o,r,a))return!1;const d=Array.from(t.children).find((r=>{var a;if(!(null===(a=dr[r.tagName])||void 0===a?void 0:a.includes(t.tagName)))return!1;const{pos:[d,s],dim:[l,c]}=xo(r);return!lr([n,o,e,i],[d,s,l,c])}));return!d}renderedLabelPosition(t){let{label:[e,i]}=xo(t);if(this.placing&&t.closest(this.placing.tagName)===this.placing){const{pos:[t,n]}=xo(this.placing);e+=this.mouseX-t,i+=this.mouseY-n}return this.placingLabel===t&&(e=this.mouseX2-.5,i=this.mouseY2+.5),[e,i]}renderedPosition(t){let{pos:[e,i]}=xo(t);if(this.placing&&t.closest(this.placing.tagName)===this.placing){const{pos:[t,n]}=xo(this.placing);e+=this.mouseX-t,i+=this.mouseY-n}return[e,i]}connectedCallback(){super.connectedCallback(),window.addEventListener("keydown",this.handleKeydown),window.addEventListener("click",this.handleClick,!0),window.addEventListener("click",this.positionCoordinates)}disconnectedCallback(){super.disconnectedCallback(),window.removeEventListener("keydown",this.handleKeydown),window.removeEventListener("click",this.handleClick),window.removeEventListener("click",this.positionCoordinates)}nearestOpenTerminal(t){if(!t)return;const e=t.querySelector('Terminal[name="T1"]'),i=t.querySelector('Terminal:not([name="T1"])'),n=ho.has(t.getAttribute("type"));if(e&&i)return;if(n&&(e||i))return;if(n)return"T1";if(e)return"T2";if(i)return"T1";const[o,r]=[this.mouseX2,this.mouseY2],{rot:a,pos:[d,s]}=xo(t);return 0===a&&r>=s+.5||1===a&&o<=d+.5||2===a&&r<=s+.5||3===a&&o>=d+.5?"T2":"T1"}groundTerminal(t,e){const i=t.closest("Bay"),n=[];let o=i.querySelector(':scope > ConnectivityNode[name="grounded"]'),r=null==o?void 0:o.getAttribute("pathName");r||(r=vo(t.closest("Bay"),"grounded"),o=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"ConnectivityNode"),o.setAttribute("name","grounded"),o.setAttribute("pathName",r),n.push({parent:i,node:o,reference:te(i,"ConnectivityNode")}));const a=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"Terminal");a.setAttribute("name",e),a.setAttribute("cNodeName","grounded");const d=t.closest("Substation").getAttribute("name");d&&a.setAttribute("substationName",d);const s=t.closest("VoltageLevel").getAttribute("name");s&&a.setAttribute("voltageLevelName",s);const l=t.closest("Bay").getAttribute("name");l&&a.setAttribute("bayName",l),a.setAttribute("connectivityNode",r),n.push({parent:t,node:a,reference:te(t,"Terminal")}),this.dispatchEvent(St(n))}flipElement(t){const{flip:e}=xo(t);this.dispatchEvent(St({element:t,attributes:{[`${this.nsp}:flip`]:{namespaceURI:so,value:e?null:"true"}}}))}equipmentMenuItems(t){const e=[{content:U`<mwc-list-item graphic="icon">
           <span>Mirror</span>
           <mwc-icon slot="graphic">flip</mwc-icon>
         </mwc-list-item>`,handler:()=>this.flipElement(t)},{content:U`<mwc-list-item graphic="icon">
@@ -1293,7 +1230,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
         </mwc-list-item>`,handler:()=>{this.dispatchEvent(ko(t))}},{content:U`<mwc-list-item graphic="icon">
           <span>Copy</span>
           <mwc-icon slot="graphic">copy_all</mwc-icon>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent(No(xr(t,this.nsp)))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent(Io(xr(t,this.nsp)))},{content:U`<mwc-list-item graphic="icon">
           <span>Move</span>
           <svg
             xmlns="${lo}"
@@ -1302,21 +1239,21 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             slot="graphic"
             viewBox="0 96 960 960"
           >
-            ${Ro}
+            ${Do}
           </svg>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent(No(t))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent(Io(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Move Label</span>
           <mwc-icon slot="graphic">text_rotation_none</mwc-icon>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent(Io(t))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent(To(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Edit</span>
           <mwc-icon slot="graphic">edit</mwc-icon>
         </mwc-list-item>`,handler:()=>this.dispatchEvent(sr(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Delete</span>
           <mwc-icon slot="graphic">delete</mwc-icon>
-        </mwc-list-item>`,handler:()=>{const e=[];Array.from(t.querySelectorAll("Terminal")).forEach((t=>e.push(...Eo(t)))),e.push({node:t}),this.dispatchEvent(St(e))}}],{rot:i}=bo(t),n={connect:["north","east","south","west"],ground:["expand_less","chevron_right","expand_more","chevron_left"],disconnect:["arrow_drop_up","arrow_right","arrow_drop_down","arrow_left"]},o={connect:["Connect top","Connect right","Connect bottom","Connect left"],ground:["Ground top","Ground right","Ground bottom","Ground left"],disconnect:["Detach top","Detach right","Detach bottom","Detach left"]},r=(t,e)=>U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>{const e=[];Array.from(t.querySelectorAll("Terminal")).forEach((t=>e.push(...So(t)))),e.push({node:t}),this.dispatchEvent(St(e))}}],{rot:i}=xo(t),n={connect:["north","east","south","west"],ground:["expand_less","chevron_right","expand_more","chevron_left"],disconnect:["arrow_drop_up","arrow_right","arrow_drop_down","arrow_left"]},o={connect:["Connect top","Connect right","Connect bottom","Connect left"],ground:["Ground top","Ground right","Ground bottom","Ground left"],disconnect:["Detach top","Detach right","Detach bottom","Detach left"]},r=(t,e)=>U`<mwc-list-item graphic="icon">
         <span>${((t,e)=>o[t][e?i%4:(i+2)%4])(t,e)}</span>
         <mwc-icon slot="graphic">${((t,e)=>n[t][e?i%4:(i+2)%4])(t,e)}</mwc-icon>
-      </mwc-list-item>`,a=t.querySelector('Terminal[name="T1"]'),d=t.querySelector('Terminal:not([name="T1"])');return dr.has(t.getAttribute("type"))||(d?e.unshift({handler:()=>this.dispatchEvent(St(Eo(d))),content:r("disconnect",!1)}):e.unshift({handler:()=>this.dispatchEvent(To({from:t,fromTerminal:"T2",path:So(t).T2})),content:r("connect",!1)},{handler:()=>this.groundTerminal(t,"T2"),content:r("ground",!1)})),a?e.unshift({handler:()=>this.dispatchEvent(St(Eo(a))),content:r("disconnect",!0)}):e.unshift({handler:()=>this.dispatchEvent(To({from:t,fromTerminal:"T1",path:So(t).T1})),content:r("connect",!0)},{handler:()=>this.groundTerminal(t,"T1"),content:r("ground",!0)}),e}busBarMenuItems(t){return[{content:U`<mwc-list-item graphic="icon">
+      </mwc-list-item>`,a=t.querySelector('Terminal[name="T1"]'),d=t.querySelector('Terminal:not([name="T1"])');return ho.has(t.getAttribute("type"))||(d?e.unshift({handler:()=>this.dispatchEvent(St(So(d))),content:r("disconnect",!1)}):e.unshift({handler:()=>this.dispatchEvent(Lo({from:t,fromTerminal:"T2",path:Ao(t).T2})),content:r("connect",!1)},{handler:()=>this.groundTerminal(t,"T2"),content:r("ground",!1)})),a?e.unshift({handler:()=>this.dispatchEvent(St(So(a))),content:r("disconnect",!0)}):e.unshift({handler:()=>this.dispatchEvent(Lo({from:t,fromTerminal:"T1",path:Ao(t).T1})),content:r("connect",!0)},{handler:()=>this.groundTerminal(t,"T1"),content:r("ground",!0)}),e}busBarMenuItems(t){return[{content:U`<mwc-list-item graphic="icon">
           <span>Resize</span>
           <svg
             xmlns="${lo}"
@@ -1325,9 +1262,9 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             height="24"
             viewBox="0 96 960 960"
           >
-            ${Lo}
+            ${Ro}
           </svg>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent($o(t))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent(No(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Move</span>
           <svg
             xmlns="${lo}"
@@ -1336,18 +1273,18 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             slot="graphic"
             viewBox="0 96 960 960"
           >
-            ${Ro}
+            ${Do}
           </svg>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent(No(t))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent(Io(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Move Label</span>
           <mwc-icon slot="graphic">text_rotation_none</mwc-icon>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent(Io(t))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent(To(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Edit</span>
           <mwc-icon slot="graphic">edit</mwc-icon>
         </mwc-list-item>`,handler:()=>this.dispatchEvent(sr(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Delete</span>
           <mwc-icon slot="graphic">delete</mwc-icon>
-        </mwc-list-item>`,handler:()=>{const e=t.querySelector("ConnectivityNode");this.dispatchEvent(St([...vo(e),{node:t}]))}}]}containerMenuItems(t){return[{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>{const e=t.querySelector("ConnectivityNode");this.dispatchEvent(St([...yo(e),{node:t}]))}}]}containerMenuItems(t){return[{content:U`<mwc-list-item graphic="icon">
           <span>Resize</span>
           <svg
             xmlns="${lo}"
@@ -1356,12 +1293,12 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             height="24"
             viewBox="0 96 960 960"
           >
-            ${Lo}
+            ${Ro}
           </svg>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent($o(t))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent(No(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Copy</span>
           <mwc-icon slot="graphic">copy_all</mwc-icon>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent(No(xr(t,this.nsp)))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent(Io(xr(t,this.nsp)))},{content:U`<mwc-list-item graphic="icon">
           <span>Move</span>
           <svg
             xmlns="${lo}"
@@ -1370,18 +1307,18 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             slot="graphic"
             viewBox="0 96 960 960"
           >
-            ${Ro}
+            ${Do}
           </svg>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent(No(t))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent(Io(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Move Label</span>
           <mwc-icon slot="graphic">text_rotation_none</mwc-icon>
-        </mwc-list-item>`,handler:()=>this.dispatchEvent(Io(t))},{content:U`<mwc-list-item graphic="icon">
+        </mwc-list-item>`,handler:()=>this.dispatchEvent(To(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Edit</span>
           <mwc-icon slot="graphic">edit</mwc-icon>
         </mwc-list-item>`,handler:()=>this.dispatchEvent(sr(t))},{content:U`<mwc-list-item graphic="icon">
           <span>Delete</span>
           <mwc-icon slot="graphic">delete</mwc-icon>
-        </mwc-list-item>`,handler:()=>{const e=[];Array.from(t.getElementsByTagName("ConnectivityNode")).forEach((i=>{Array.from(this.doc.querySelectorAll(`Terminal[connectivityNode="${i.getAttribute("pathName")}"]`)).find((e=>e.closest(t.tagName)!==t))&&e.push(...vo(i))})),Array.from(t.getElementsByTagName("Terminal")).forEach((i=>{const n=this.doc.querySelector(`ConnectivityNode[pathName="${i.getAttribute("connectivityNode")}"]`);n&&n.closest(t.tagName)!==t&&e.push(...vo(n))})),e.push({node:t}),this.dispatchEvent(St(e))}}]}renderMenu(){if(!this.menu)return U``;const{element:t}=this.menu;let e=[];return"ConductingEquipment"===t.tagName?e=this.equipmentMenuItems(t):"Bay"===t.tagName&&go(t)?e=this.busBarMenuItems(t):"Bay"!==t.tagName&&"VoltageLevel"!==t.tagName||(e=this.containerMenuItems(t)),U`
+        </mwc-list-item>`,handler:()=>{const e=[];Array.from(t.getElementsByTagName("ConnectivityNode")).forEach((i=>{Array.from(this.doc.querySelectorAll(`Terminal[connectivityNode="${i.getAttribute("pathName")}"]`)).find((e=>e.closest(t.tagName)!==t))&&e.push(...yo(i))})),Array.from(t.getElementsByTagName("Terminal")).forEach((i=>{const n=this.doc.querySelector(`ConnectivityNode[pathName="${i.getAttribute("connectivityNode")}"]`);n&&n.closest(t.tagName)!==t&&e.push(...yo(n))})),e.push({node:t}),this.dispatchEvent(St(e))}}]}renderMenu(){if(!this.menu)return U``;const{element:t}=this.menu;let e=[];return"ConductingEquipment"===t.tagName?e=this.equipmentMenuItems(t):"Bay"===t.tagName&&bo(t)?e=this.busBarMenuItems(t):"Bay"!==t.tagName&&"VoltageLevel"!==t.tagName||(e=this.containerMenuItems(t)),U`
       <menu
         id="sld-context-menu"
         style="position: fixed; top: ${this.menu.top}px; left: ${this.menu.left}px; background: var(--oscd-base3, white); margin: 0px; padding: 0px; box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23); --mdc-list-vertical-padding: 0px; overflow-y: auto;"
@@ -1392,7 +1329,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
         >
           ${e.map((t=>t.content))}
           <li divider role="separator"></li>
-          ${function(t){const e=t.getAttribute("name");let i=t.getAttribute("desc");const n=t.getAttribute("type");n&&(i=i?U`${n} &mdash; ${i}`:n);let o=ir(null);return"ConductingEquipment"===t.tagName?o=ir(t.getAttribute("type")):"Bay"===t.tagName&&go(t)?o=U`<mwc-icon slot="graphic">horizontal_rule</mwc-icon>`:"Bay"===t.tagName?o=Zo:"VoltageLevel"===t.tagName&&(o=Yo),U`<mwc-list-item ?twoline=${i} graphic="avatar" noninteractive>
+          ${function(t){const e=t.getAttribute("name");let i=t.getAttribute("desc");const n=t.getAttribute("type");n&&(i=i?U`${n} &mdash; ${i}`:n);let o=nr(null);return"ConductingEquipment"===t.tagName?o=nr(t.getAttribute("type")):"Bay"===t.tagName&&bo(t)?o=U`<mwc-icon slot="graphic">horizontal_rule</mwc-icon>`:"Bay"===t.tagName?o=Qo:"VoltageLevel"===t.tagName&&(o=Ko),U`<mwc-list-item ?twoline=${i} graphic="avatar" noninteractive>
     <span>${e}</span>
     ${i?U`<span
           slot="secondary"
@@ -1404,18 +1341,19 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
   </mwc-list-item>`}(t)}
         </mwc-list>
       </menu>
-    `}render(){var t,e,i,n;const{dim:[o,r]}=bo(this.substation),a="VoltageLevel"===(null===(t=this.placing)||void 0===t?void 0:t.tagName)||"PowerTransformer"===(null===(e=this.placing)||void 0===e?void 0:e.tagName)?q`<rect width="100%" height="100%" fill="url(#grid)" />`:j,d=this.placingLabel?q`<rect width="100%" height="100%" fill="url(#halfgrid)"
+    `}render(){var t,e,i,n;const{dim:[o,r]}=xo(this.substation),a="VoltageLevel"===(null===(t=this.placing)||void 0===t?void 0:t.tagName)||"PowerTransformer"===(null===(e=this.placing)||void 0===e?void 0:e.tagName)?q`<rect width="100%" height="100%" fill="url(#grid)" />`:j,d=this.placingLabel?q`<rect width="100%" height="100%" fill="url(#halfgrid)"
       @click=${()=>{const t=this.placingLabel,[e,i]=this.renderedLabelPosition(t);this.dispatchEvent(new CustomEvent("oscd-sld-place-label",{bubbles:!0,composed:!0,detail:{element:t,x:e,y:i}}))}}
-      />`:j;let s=q``;this.placing&&("VoltageLevel"===this.placing.tagName||gr(this.placing)?s=this.renderContainer(this.placing,!0):"ConductingEquipment"===this.placing.tagName?s=this.renderEquipment(this.placing,{preview:!0}):"PowerTransformer"===this.placing.tagName?s=this.renderPowerTransformer(this.placing,!0):go(this.placing)&&(s=this.renderBusBar(this.placing)));let l=U``,c=!1,p=!0;if(this.placing){const{dim:[t,e]}=bo(this.placing);p=!1,c=!this.canPlaceAt(this.placing,this.mouseX,this.mouseY,t,e),l=U`${this.mouseX},${this.mouseY}`}if(this.resizing&&!go(this.resizing)){const{pos:[t,e]}=bo(this.resizing),i=Math.max(1,this.mouseX-t+1),n=Math.max(1,this.mouseY-e+1);p=!1,c=!this.canResizeTo(this.resizing,i,n),l=U`${i}&times;${n}`}const m=U`<div
+      />`:j;let s=q``;this.placing&&("VoltageLevel"===this.placing.tagName||gr(this.placing)?s=this.renderContainer(this.placing,!0):"ConductingEquipment"===this.placing.tagName?s=this.renderEquipment(this.placing,{preview:!0}):"PowerTransformer"===this.placing.tagName?s=this.renderPowerTransformer(this.placing,!0):bo(this.placing)&&(s=this.renderBusBar(this.placing)));let l=U``,c=!1,p=!0;if(this.placing){const{dim:[t,e]}=xo(this.placing);p=!1,c=!this.canPlaceAt(this.placing,this.mouseX,this.mouseY,t,e),l=U`${this.mouseX},${this.mouseY}`}if(this.resizing&&!bo(this.resizing)){const{pos:[t,e]}=xo(this.resizing),i=Math.max(1,this.mouseX-t+1),n=Math.max(1,this.mouseY-e+1);p=!1,c=!this.canResizeTo(this.resizing,i,n),l=U`${i}&times;${n}`}const m=U`<div
       ${si(this.coordinatesRef)}
       class="${Le({coordinates:!0,invalid:c,hidden:p})}"
     >
       (${l})
     </div>`,h=[];if((null===(i=this.connecting)||void 0===i?void 0:i.from.closest("Substation"))===this.substation){const{from:t,path:e,fromTerminal:i}=this.connecting;let n=0;for(;n<e.length-2;){const[t,i]=e[n],[o,r]=e[n+1];h.push(q`<line x1="${t}" y1="${i}" x2="${o}" y2="${r}"
-                stroke-linecap="square" stroke="black" />`),n+=1}const[[o,r],[a,d]]=e.slice(-2),s=o===a;let l=this.mouseX2,c=this.mouseY2;const p=Array.from(this.substation.querySelectorAll("ConductingEquipment")).filter((e=>e!==t)).find((t=>{const{pos:[e,i]}=bo(t);return e===this.mouseX&&i===this.mouseY})),m=this.nearestOpenTerminal(p);p&&m&&([[l,c]]=So(p)[m]);const u=s?a:l,f=s?c:d;h.push(q`<line x1="${o}" y1="${r}" x2="${u}" y2="${f}"
-                stroke-linecap="square" stroke="black" />`,q`<line x1="${u}" y1="${f}" x2="${l}" y2="${c}"
+                stroke-linecap="square" stroke="black" />`),n+=1}const[[o,r],[a,d]]=e.slice(-2),s=o===a;let l=this.mouseX2,c=this.mouseY2,[p,m]=[l,c];const u=Array.from(this.substation.querySelectorAll("ConductingEquipment")).filter((e=>e!==t)).find((t=>{const{pos:[e,i]}=xo(t);return e===this.mouseX&&i===this.mouseY})),f=this.nearestOpenTerminal(u);if(u&&f){const[t,e]=Ao(u)[f];[l,c]=e,[p,m]=t}const g=s?a:l,b=s?c:d;h.push(q`<line x1="${o}" y1="${r}" x2="${g}" y2="${b}"
+                stroke-linecap="square" stroke="black" />`,q`<line x1="${g}" y1="${b}" x2="${l}" y2="${c}"
+                stroke-linecap="square" stroke="black" />`,q`<line x1="${l}" y1="${c}" x2="${p}" y2="${m}"
                 stroke-linecap="square" stroke="black" />`),h.push(q`<rect width="100%" height="100%" fill="url(#grid)"
-      @click=${()=>{e[e.length-1]=[u,f],e.push([l,c]),fr(e),this.requestUpdate(),p&&m&&this.dispatchEvent(Co({from:t,fromTerminal:i,path:e,to:p,toTerminal:m}))}} />`)}const u=this.renderMenu();return U`<section>
+      @click=${()=>{e[e.length-1]=[g,b],e.push([l,c]),e.push([p,m]),fr(e),this.requestUpdate(),u&&f&&this.dispatchEvent($o({from:t,fromTerminal:i,path:e,to:u,toTerminal:f}))}} />`)}const u=this.renderMenu();return U`<section>
       <h2>
         ${this.substation.getAttribute("name")}
         <mwc-icon-button
@@ -1429,7 +1367,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             viewBox="0 96 960 960"
             opacity="0.83"
           >
-            ${Lo}
+            ${Ro}
           </svg>
         </mwc-icon-button>
       </h2>
@@ -1472,14 +1410,14 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             opacity: 0.83;
           }
         </style>
-        ${rr}
+        ${ar}
         <rect width="100%" height="100%" fill="white" />
         ${a}
         ${Array.from(this.substation.children).filter((t=>"VoltageLevel"===t.tagName)).map((t=>q`${this.renderContainer(t)}`))}
         ${h}
         ${(null===(n=this.connecting)||void 0===n?void 0:n.from.closest("Substation"))===this.substation?Array.from(this.substation.querySelectorAll("ConductingEquipment")).map((t=>this.renderEquipment(t,{connect:!0}))):j}
-        ${Array.from(this.substation.querySelectorAll("ConnectivityNode")).filter((t=>!("grounded"===t.getAttribute("name")||this.placing&&t.closest(this.placing.tagName)===this.placing||go(t.parentElement)))).map((t=>this.renderConnectivityNode(t)))}
-        ${Array.from(this.substation.querySelectorAll("ConnectivityNode")).filter((t=>"grounded"!==t.getAttribute("name")&&!(this.placing&&t.closest(this.placing.tagName)===this.placing)&&go(t.parentElement))).map((t=>this.renderConnectivityNode(t)))}
+        ${Array.from(this.substation.querySelectorAll("ConnectivityNode")).filter((t=>!("grounded"===t.getAttribute("name")||this.placing&&t.closest(this.placing.tagName)===this.placing||bo(t.parentElement)))).map((t=>this.renderConnectivityNode(t)))}
+        ${Array.from(this.substation.querySelectorAll("ConnectivityNode")).filter((t=>"grounded"!==t.getAttribute("name")&&!(this.placing&&t.closest(this.placing.tagName)===this.placing)&&bo(t.parentElement))).map((t=>this.renderConnectivityNode(t)))}
         ${Array.from(this.substation.querySelectorAll("PowerTransformer")).map((t=>this.renderPowerTransformer(t)))}
         ${Array.from(this.substation.querySelectorAll("VoltageLevel, Bay, ConductingEquipment")).filter((t=>!this.placing||t.closest(this.placing.tagName)!==this.placing)).map((t=>this.renderLabel(t)))}
         ${d} ${s}
@@ -1499,7 +1437,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             value="${o}"
             dialogInitialFocus
             autoValidate
-            .validityTransform=${(t,e)=>{const{dim:[i,n]}=bo(this.substation);return e.valid&&!this.canResizeTo(this.substation,parseInt(t,10),n)?{valid:!1,rangeUnderflow:!0}:{}}}
+            .validityTransform=${(t,e)=>{const{dim:[i,n]}=xo(this.substation);return e.valid&&!this.canResizeTo(this.substation,parseInt(t,10),n)?{valid:!1,rangeUnderflow:!0}:{}}}
           ></mwc-textfield>
           <mwc-textfield
             id="substationHeightUI"
@@ -1509,19 +1447,19 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             label="Height"
             value="${r}"
             autoValidate
-            .validityTransform=${(t,e)=>{const{dim:[i,n]}=bo(this.substation);return e.valid&&!this.canResizeTo(this.substation,i,parseInt(t,10))?{valid:!1,rangeUnderflow:!0}:{}}}
+            .validityTransform=${(t,e)=>{const{dim:[i,n]}=xo(this.substation);return e.valid&&!this.canResizeTo(this.substation,i,parseInt(t,10))?{valid:!1,rangeUnderflow:!0}:{}}}
           ></mwc-textfield>
         </div>
         <mwc-button
           slot="primaryAction"
-          @click=${()=>{if(!Array.from(this.resizeSubstationUI.querySelectorAll("mwc-textfield")).every((t=>t.checkValidity())))return;const{dim:[t,e]}=bo(this.substation),[i,n]=[this.substationWidthUI,this.substationHeightUI].map((t=>{var e;return parseInt(null!==(e=t.value)&&void 0!==e?e:"1",10).toString()}));this.resizeSubstationUI.close(),i===t.toString()&&n===e.toString()||this.dispatchEvent(St({element:this.substation,attributes:{[`${this.nsp}:w`]:{namespaceURI:so,value:i},[`${this.nsp}:h`]:{namespaceURI:so,value:n}}}))}}
+          @click=${()=>{if(!Array.from(this.resizeSubstationUI.querySelectorAll("mwc-textfield")).every((t=>t.checkValidity())))return;const{dim:[t,e]}=xo(this.substation),[i,n]=[this.substationWidthUI,this.substationHeightUI].map((t=>{var e;return parseInt(null!==(e=t.value)&&void 0!==e?e:"1",10).toString()}));this.resizeSubstationUI.close(),i===t.toString()&&n===e.toString()||this.dispatchEvent(St({element:this.substation,attributes:{[`${this.nsp}:w`]:{namespaceURI:so,value:i},[`${this.nsp}:h`]:{namespaceURI:so,value:n}}}))}}
           >resize</mwc-button
         >
         <mwc-button dialogAction="close" slot="secondaryAction"
           >cancel</mwc-button
         >
       </mwc-dialog>
-    </section>`}renderLabel(t){const[e,i]=this.renderedLabelPosition(t),n=t.getAttribute("name"),o="ConductingEquipment"===t.tagName?.45:.6;let r="none",a=j;this.placing||this.resizing||this.connecting||this.placingLabel||(r="all",a=()=>this.dispatchEvent(Io(t)));const d=t.closest("Substation")===this.substation?se(t):j;return q`<g class="label" id="label:${d}">
+    </section>`}renderLabel(t){const[e,i]=this.renderedLabelPosition(t),n=t.getAttribute("name"),o="ConductingEquipment"===t.tagName?.45:.6;let r="none",a=j;this.placing||this.resizing||this.connecting||this.placingLabel||(r="all",a=()=>this.dispatchEvent(To(t)));const d=t.closest("Substation")===this.substation?se(t):j;return q`<g class="label" id="label:${d}">
         <text x="${e+.1}" y="${i-.2}"
           @mousedown=${br}
           @auxclick=${e=>{1===e.button&&(this.dispatchEvent(sr(t)),e.preventDefault())}}
@@ -1531,20 +1469,20 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
           style="font: ${o}px sans-serif; cursor: default;">
           ${n}
         </text>
-      </g>`}renderContainer(t,e=!1){var i,n,o;const r="VoltageLevel"===t.tagName;if(this.placing===t&&!e)return q``;const[a,d]=this.renderedPosition(t);let s,{dim:[l,c]}=bo(t),p=!1;if(this.resizing===t&&(l=Math.max(1,this.mouseX-a+1),c=Math.max(1,this.mouseY-d+1),this.canResizeTo(t,l,c)?s=()=>{this.dispatchEvent(new CustomEvent("oscd-sld-resize",{bubbles:!0,composed:!0,detail:{w:l,h:c,element:t}}))}:p=!0),this.placing===t){let e;e=r?this.substation:Array.from(this.substation.querySelectorAll(":root > Substation > VoltageLevel")).find((t=>cr(t,a,d,l,c))),e&&this.canPlaceAt(t,a,d,l,c)?s=()=>{this.dispatchEvent(Ao({x:a,y:d,element:t,parent:e}))}:p=!0}let m=q``,h=q``,u=q``,f=q``;return(r&&"Bay"===(null===(i=this.placing)||void 0===i?void 0:i.tagName)||!r&&"ConductingEquipment"===(null===(n=this.placing)||void 0===n?void 0:n.tagName))&&(u=q`<rect x="${a}" y="${d}" width="${l}" height="${c}"
-        @click=${s||j} fill="url(#grid)" />`),(this.resizing===t||(null===(o=this.resizing)||void 0===o?void 0:o.parentElement)===t&&go(this.resizing))&&(f=q`<rect x="${a}" y="${d}" width="${l}" height="${c}"
+      </g>`}renderContainer(t,e=!1){var i,n,o;const r="VoltageLevel"===t.tagName;if(this.placing===t&&!e)return q``;const[a,d]=this.renderedPosition(t);let s,{dim:[l,c]}=xo(t),p=!1;if(this.resizing===t&&(l=Math.max(1,this.mouseX-a+1),c=Math.max(1,this.mouseY-d+1),this.canResizeTo(t,l,c)?s=()=>{this.dispatchEvent(new CustomEvent("oscd-sld-resize",{bubbles:!0,composed:!0,detail:{w:l,h:c,element:t}}))}:p=!0),this.placing===t){let e;e=r?this.substation:Array.from(this.substation.querySelectorAll(":root > Substation > VoltageLevel")).find((t=>cr(t,a,d,l,c))),e&&this.canPlaceAt(t,a,d,l,c)?s=()=>{this.dispatchEvent(Co({x:a,y:d,element:t,parent:e}))}:p=!0}let m=q``,h=q``,u=q``,f=q``;return(r&&"Bay"===(null===(i=this.placing)||void 0===i?void 0:i.tagName)||!r&&"ConductingEquipment"===(null===(n=this.placing)||void 0===n?void 0:n.tagName))&&(u=q`<rect x="${a}" y="${d}" width="${l}" height="${c}"
+        @click=${s||j} fill="url(#grid)" />`),(this.resizing===t||(null===(o=this.resizing)||void 0===o?void 0:o.parentElement)===t&&bo(this.resizing))&&(f=q`<rect x="${a}" y="${d}" width="${l}" height="${c}"
         @click=${s||j} fill="url(#grid)" />`),this.placing||this.resizing||this.connecting||this.placingLabel||(m=q`<svg class="handle" xmlns="${lo}" height="1" width="1"
           fill="black" opacity="0.83" viewBox="0 96 960 960" 
-          @click=${e=>this.dispatchEvent(No(e.shiftKey?xr(t,this.nsp):t))}
+          @click=${e=>this.dispatchEvent(Io(e.shiftKey?xr(t,this.nsp):t))}
           x="${a}" y="${d}">
         <rect fill="white" x="28.8" y="124.8" width="902.4" height="902.4" />
-        ${Ro}
+        ${Do}
       </svg>`,h=q`<svg class="handle" xmlns="${lo}" height="1" width="1"
           fill="black" opacity="0.83" viewBox="0 96 960 960" 
-          @click=${()=>this.dispatchEvent($o(t))}
+          @click=${()=>this.dispatchEvent(No(t))}
           x="${l+a-1}" y="${c+d-1}">
         <rect fill="white" x="28.8" y="124.8" width="902.4" height="902.4" />
-        ${Lo}
+        ${Ro}
       </svg>`),q`<g id="${t.closest("Substation")===this.substation?se(t):j}" class=${Le({voltagelevel:r,bay:!r,preview:e})} tabindex="0" pointer-events="all" style="outline: none;">
       <rect x="${a}" y="${d}" width="${l}" height="${c}"
         @contextmenu=${e=>this.openMenu(t,e)}
@@ -1559,32 +1497,32 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
       ${e?Array.from(t.querySelectorAll("Bay, ConductingEquipment")).concat(t).map((t=>this.renderLabel(t))):j}
       ${h}
       ${f}
-    </g>`}windingMeasures(t){const e=t.parentElement,i=Array.from(e.children).filter((t=>"TransformerWinding"===t.tagName)).sort(((t,e)=>t.getAttribute("name").localeCompare(e.getAttribute("name")))),[n,o]=this.renderedPosition(e).map((t=>t+.5));let r=[n,o];const a=.7;let d,s,l,c;const p=Array.from(t.children).filter((t=>"Terminal"===t.tagName)),m=p.find((t=>"T1"===t.getAttribute("name"))),h=p.find((t=>"T1"!==t.getAttribute("name"))),u=Array.from(t.children).find((t=>"NeutralPoint"===t.tagName)),f=i.indexOf(t),{rot:g,kind:b}=bo(e);return 1===i.length&&"auto"===b?(u||(l=[[n-a,o],[n,o-a],[n+a,o],[n,o+a]][g],c=[[n+a,o],[n,o+a],[n-a,o],[n,o-a]][g]),m||(d=[[n,o-a],[n+a,o],[n,o+a],[n-a,o]][g]),h||(s=[[n,o+a],[n-a,o],[n,o-a],[n+a,o]][g])):1===i.length&&"earthing"===b?(u||(l=[[n,o+a],[n-a,o],[n,o-a],[n+a,o]][g]),m||h||(d=[[n,o-a],[n+a,o],[n,o+a],[n-a,o]][g])):2===i.length&&"auto"===b?1!==f?(u||(l=[[n-a,o-1],[n+1,o-a],[n+a,o+1],[n-1,o+a]][g],c=[[n+a,o-1],[n+1,o+a],[n-a,o+1],[n-1,o-a]][g]),m||h||(d=[[n,o-1-a],[n+1+a,o],[n,o+1+a],[n-1-a,o]][g]),r=[[n,o-1],[n+1,o],[n,o+1],[n-1,o]][g]):(m||(d=[[n+a,o],[n,o+a],[n-a,o],[n,o-a]][g]),h||(s=[[n-a,o],[n,o-a],[n+a,o],[n,o+a]][g]),u||(l=[[n,o+a],[n-a,o],[n,o-a],[n+a,o]][g])):2===i.length&&"earthing"===b?1!==f?(m||h||(d=[[n,o-1-a],[n+1+a,o],[n,o+1+a],[n-1-a,o]][g]),r=[[n,o-1],[n+1,o],[n,o+1],[n-1,o]][g]):(m||h||(d=[[n-a,o],[n,o-a],[n+a,o],[n,o+a]][g]),u||(l=[[n+a,o],[n,o+a],[n-a,o],[n,o-a]][g])):2===i.length&&"default"===b?1!==f?(u||(l=[[n-a,o-1],[n+1,o-a],[n+a,o+1],[n-1,o+a]][g],c=[[n+a,o-1],[n+1,o+a],[n-a,o+1],[n-1,o-a]][g]),m||h||(d=[[n,o-1-a],[n+1+a,o],[n,o+1+a],[n-1-a,o]][g]),r=[[n,o-1],[n+1,o],[n,o+1],[n-1,o]][g]):(u||(l=[[n+a,o],[n,o+a],[n-a,o],[n,o-a]][g],c=[[n-a,o],[n,o-a],[n+a,o],[n,o+a]][g]),m||h||(d=[[n,o+a],[n-a,o],[n,o-a],[n+a,o]][g])):3===i.length&&"default"===b&&(0===f?(r=[n,o],m||h||(d=[[n,o-a],[n+a,o],[n,o+a],[n-a,o]][g]),u||(l=[[n-a,o],[n,o-a],[n+a,o],[n,o+a]][g],c=[[n+a,o],[n,o+a],[n-a,o],[n,o-a]][g])):1===f?(r=[[n+.5,o+1],[n-1,o+.5],[n-.5,o-1],[n+1,o-.5]][g],m||h||(d=[[n+.5+a,o+1],[n-1,o+.5+a],[n-.5-a,o-1],[n+1,o-.5-a]][g]),u||(l=[[n+.5,o+1+a],[n-1-a,o+.5],[n-.5,o-1-a],[n+1+a,o-.5]][g])):2===f&&(r=[[n-.5,o+1],[n-1,o-.5],[n+.5,o-1],[n+1,o+.5]][g],m||h||(d=[[n-.5-a,o+1],[n-1,o-.5-a],[n+.5+a,o-1],[n+1,o+.5+a]][g]),u||(l=[[n-.5,o+1+a],[n-1-a,o-.5],[n+.5,o-1-a],[n+1+a,o+.5]][g]))),{center:r,size:a,terminals:{T1:d,T2:s,N1:l,N2:c}}}renderTransformerWinding(t){const{size:e,center:[i,n],terminals:o}=this.windingMeasures(t),r=[];return Object.entries(o).forEach((([e,i])=>{if(!i)return;const[n,o]=i,a=Number.isInteger(2*n)?n:n+1,d=Number.isInteger(2*o)?o:o+1;r.push(q`<circle cx="${n}" cy="${o}" r="0.2" opacity="0.4"
-              @click=${i=>{i.stopImmediatePropagation(),this.dispatchEvent(To({from:t,fromTerminal:e,path:[[n,o],[a,d]]}))}}
+    </g>`}windingMeasures(t){const e=t.parentElement,i=Array.from(e.children).filter((t=>"TransformerWinding"===t.tagName)).sort(((t,e)=>t.getAttribute("name").localeCompare(e.getAttribute("name")))),[n,o]=this.renderedPosition(e).map((t=>t+.5));let r=[n,o];const a=.7;let d,s,l,c;const p=Array.from(t.children).filter((t=>"Terminal"===t.tagName)),m=p.find((t=>"T1"===t.getAttribute("name"))),h=p.find((t=>"T1"!==t.getAttribute("name"))),u=Array.from(t.children).find((t=>"NeutralPoint"===t.tagName)),f=i.indexOf(t),{rot:g,kind:b}=xo(e);return 1===i.length&&"auto"===b?(u||(l=[[n-a,o],[n,o-a],[n+a,o],[n,o+a]][g],c=[[n+a,o],[n,o+a],[n-a,o],[n,o-a]][g]),m||(d=[[n,o-a],[n+a,o],[n,o+a],[n-a,o]][g]),h||(s=[[n,o+a],[n-a,o],[n,o-a],[n+a,o]][g])):1===i.length&&"earthing"===b?(u||(l=[[n,o+a],[n-a,o],[n,o-a],[n+a,o]][g]),m||h||(d=[[n,o-a],[n+a,o],[n,o+a],[n-a,o]][g])):2===i.length&&"auto"===b?1!==f?(u||(l=[[n-a,o-1],[n+1,o-a],[n+a,o+1],[n-1,o+a]][g],c=[[n+a,o-1],[n+1,o+a],[n-a,o+1],[n-1,o-a]][g]),m||h||(d=[[n,o-1-a],[n+1+a,o],[n,o+1+a],[n-1-a,o]][g]),r=[[n,o-1],[n+1,o],[n,o+1],[n-1,o]][g]):(m||(d=[[n+a,o],[n,o+a],[n-a,o],[n,o-a]][g]),h||(s=[[n-a,o],[n,o-a],[n+a,o],[n,o+a]][g]),u||(l=[[n,o+a],[n-a,o],[n,o-a],[n+a,o]][g])):2===i.length&&"earthing"===b?1!==f?(m||h||(d=[[n,o-1-a],[n+1+a,o],[n,o+1+a],[n-1-a,o]][g]),r=[[n,o-1],[n+1,o],[n,o+1],[n-1,o]][g]):(m||h||(d=[[n-a,o],[n,o-a],[n+a,o],[n,o+a]][g]),u||(l=[[n+a,o],[n,o+a],[n-a,o],[n,o-a]][g])):2===i.length&&"default"===b?1!==f?(u||(l=[[n-a,o-1],[n+1,o-a],[n+a,o+1],[n-1,o+a]][g],c=[[n+a,o-1],[n+1,o+a],[n-a,o+1],[n-1,o-a]][g]),m||h||(d=[[n,o-1-a],[n+1+a,o],[n,o+1+a],[n-1-a,o]][g]),r=[[n,o-1],[n+1,o],[n,o+1],[n-1,o]][g]):(u||(l=[[n+a,o],[n,o+a],[n-a,o],[n,o-a]][g],c=[[n-a,o],[n,o-a],[n+a,o],[n,o+a]][g]),m||h||(d=[[n,o+a],[n-a,o],[n,o-a],[n+a,o]][g])):3===i.length&&"default"===b&&(0===f?(r=[n,o],m||h||(d=[[n,o-a],[n+a,o],[n,o+a],[n-a,o]][g]),u||(l=[[n-a,o],[n,o-a],[n+a,o],[n,o+a]][g],c=[[n+a,o],[n,o+a],[n-a,o],[n,o-a]][g])):1===f?(r=[[n+.5,o+1],[n-1,o+.5],[n-.5,o-1],[n+1,o-.5]][g],m||h||(d=[[n+.5+a,o+1],[n-1,o+.5+a],[n-.5-a,o-1],[n+1,o-.5-a]][g]),u||(l=[[n+.5,o+1+a],[n-1-a,o+.5],[n-.5,o-1-a],[n+1+a,o-.5]][g])):2===f&&(r=[[n-.5,o+1],[n-1,o-.5],[n+.5,o-1],[n+1,o+.5]][g],m||h||(d=[[n-.5-a,o+1],[n-1,o-.5-a],[n+.5+a,o-1],[n+1,o+.5+a]][g]),u||(l=[[n-.5,o+1+a],[n-1-a,o-.5],[n+.5,o-1-a],[n+1+a,o+.5]][g]))),{center:r,size:a,terminals:{T1:d,T2:s,N1:l,N2:c}}}renderTransformerWinding(t){const{size:e,center:[i,n],terminals:o}=this.windingMeasures(t),r=[];return Object.entries(o).forEach((([e,i])=>{if(!i)return;const[n,o]=i,a=Number.isInteger(2*n)?n:n+1,d=Number.isInteger(2*o)?o:o+1;r.push(q`<circle cx="${n}" cy="${o}" r="0.2" opacity="0.4"
+              @click=${i=>{i.stopImmediatePropagation(),this.dispatchEvent(Lo({from:t,fromTerminal:e,path:[[n,o],[a,d]]}))}}
       fill="#${e.startsWith("T")?"BB1326":"12579B"}" stroke="#F5E214" />`)})),q`<circle cx="${i}" cy="${n}" r="${e}" stroke="black" stroke-width="0.06" />${r}`}renderPowerTransformer(t,e=!1){if(this.placing===t&&!e)return q``;const i=Array.from(t.children).filter((t=>"TransformerWinding"===t.tagName)),[n,o]=this.renderedPosition(t);return q`<g class="${Le({transformer:!0,preview:e})}"
         pointer-events="all"
         @mousedown=${br}
         @auxclick=${e=>{1===e.button&&(this.dispatchEvent(ko(t)),e.preventDefault())}}
-        @click=${()=>{const e=Array.from(this.substation.querySelectorAll(":scope > VoltageLevel > Bay")).concat(Array.from(this.substation.querySelectorAll(":scope > VoltageLevel"))).find((t=>cr(t,n,o,1,1)))||this.substation;this.dispatchEvent(this.placing===t?Ao({element:t,parent:e,x:n,y:o}):No(t))}}>
+        @click=${()=>{const e=Array.from(this.substation.querySelectorAll(":scope > VoltageLevel > Bay")).concat(Array.from(this.substation.querySelectorAll(":scope > VoltageLevel"))).find((t=>cr(t,n,o,1,1)))||this.substation;this.dispatchEvent(this.placing===t?Co({element:t,parent:e,x:n,y:o}):Io(t))}}>
     ${i.map((t=>this.renderTransformerWinding(t)))}
-      </g>`}renderEquipment(t,{preview:e=!1,connect:i=!1}={}){var n;if(this.placing===t&&!e)return q``;if((null===(n=this.connecting)||void 0===n?void 0:n.from.closest("Substation"))===this.substation&&!i)return q``;const[o,r]=this.renderedPosition(t),{flip:a,rot:d}=bo(t),s=90*d,l=t.getAttribute("type"),c=mo.has(l),p=po(l)?l:"ConductingEquipment",m=c?q`<svg
+      </g>`}renderEquipment(t,{preview:e=!1,connect:i=!1}={}){var n;if(this.placing===t&&!e)return q``;if((null===(n=this.connecting)||void 0===n?void 0:n.from.closest("Substation"))===this.substation&&!i)return q``;const[o,r]=this.renderedPosition(t),{flip:a,rot:d}=xo(t),s=90*d,l=t.getAttribute("type"),c=mo.has(l),p=po(l)?l:"ConductingEquipment",m=c?q`<svg
     viewBox="0 0 25 25"
     width="1"
     height="1"
   >
-    ${Jo}
+    ${tr}
   </svg>`:q`<use href="#${p}" xlink:href="#${p}"
-              pointer-events="none" />`;let h=e=>{let i=t;e.shiftKey&&(i=xr(t,this.nsp)),this.dispatchEvent(No(i))};if(this.placing===t){const e=Array.from(this.substation.querySelectorAll(":root > Substation > VoltageLevel > Bay")).find((t=>!go(t)&&cr(t,o,r,1,1)));e&&this.canPlaceAt(t,o,r,1,1)&&(h=()=>{this.dispatchEvent(Ao({x:o,y:r,element:t,parent:e}))})}const u=Array.from(t.children).filter((t=>"Terminal"===t.tagName)),f=u.find((t=>"T1"===t.getAttribute("name"))),g=u.find((t=>"T1"!==t.getAttribute("name"))),b=f||this.placing||this.resizing||this.connecting?j:q`<circle cx="0.5" cy="0" r="0.2" opacity="0.4"
+              pointer-events="none" />`;let h=e=>{let i=t;e.shiftKey&&(i=xr(t,this.nsp)),this.dispatchEvent(Io(i))};if(this.placing===t){const e=Array.from(this.substation.querySelectorAll(":root > Substation > VoltageLevel > Bay")).find((t=>!bo(t)&&cr(t,o,r,1,1)));e&&this.canPlaceAt(t,o,r,1,1)&&(h=()=>{this.dispatchEvent(Co({x:o,y:r,element:t,parent:e}))})}const u=Array.from(t.children).filter((t=>"Terminal"===t.tagName)),f=u.find((t=>"T1"===t.getAttribute("name"))),g=u.find((t=>"T1"!==t.getAttribute("name"))),b=f||this.placing||this.resizing||this.connecting?j:q`<circle cx="0.5" cy="0" r="0.2" opacity="0.4"
       fill="#BB1326" stroke="#F5E214"
-    @click=${()=>this.dispatchEvent(To({from:t,fromTerminal:"T1",path:So(t).T1}))}
+    @click=${()=>this.dispatchEvent(Lo({from:t,fromTerminal:"T1",path:Ao(t).T1}))}
     @contextmenu=${e=>{e.preventDefault(),this.groundTerminal(t,"T1")}}
       />`,x=!this.connecting||this.connecting.from===t||this.connecting&&this.mouseX===o&&this.mouseY===r&&"T1"===this.nearestOpenTerminal(t)||f?j:q`<polygon points="0.3,0 0.7,0 0.5,0.4" 
-                fill="#12579B" opacity="0.4" />`,v="grounded"===(null==f?void 0:f.getAttribute("cNodeName"))?q`<line x1="0.5" y1="-0.1" x2="0.5" y2="0" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`:j,y=g||this.placing||this.resizing||this.connecting||dr.has(l)?j:q`<circle cx="0.5" cy="1" r="0.2" opacity="0.4"
+                fill="#12579B" opacity="0.4" />`,v="grounded"===(null==f?void 0:f.getAttribute("cNodeName"))?q`<line x1="0.5" y1="-0.1" x2="0.5" y2="0.16" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`:j,y=g||this.placing||this.resizing||this.connecting||ho.has(l)?j:q`<circle cx="0.5" cy="1" r="0.2" opacity="0.4"
       fill="#BB1326" stroke="#F5E214"
-    @click=${()=>this.dispatchEvent(To({from:t,fromTerminal:"T2",path:So(t).T2}))}
+    @click=${()=>this.dispatchEvent(Lo({from:t,fromTerminal:"T2",path:Ao(t).T2}))}
     @contextmenu=${e=>{e.preventDefault(),this.groundTerminal(t,"T2")}}
-      />`,_=!this.connecting||this.connecting.from===t||this.connecting&&this.mouseX===o&&this.mouseY===r&&"T2"===this.nearestOpenTerminal(t)||g||dr.has(l)?j:q`<polygon points="0.3,1 0.7,1 0.5,0.6" 
-                fill="#12579B" opacity="0.4" />`,w="grounded"===(null==g?void 0:g.getAttribute("cNodeName"))?q`<line x1="0.5" y1="1.1" x2="0.5" y2="1" stroke="black"
+      />`,_=!this.connecting||this.connecting.from===t||this.connecting&&this.mouseX===o&&this.mouseY===r&&"T2"===this.nearestOpenTerminal(t)||g||ho.has(l)?j:q`<polygon points="0.3,1 0.7,1 0.5,0.6" 
+                fill="#12579B" opacity="0.4" />`,w="grounded"===(null==g?void 0:g.getAttribute("cNodeName"))?q`<line x1="0.5" y1="1.1" x2="0.5" y2="0.84" stroke="black"
                 stroke-width="0.06" marker-start="url(#grounded)" />`:j;return q`<g class="${Le({equipment:!0,preview:this.placing===t})}"
     id="${t.closest("Substation")===this.substation?se(t):j}"
     transform="translate(${o} ${r}) rotate(${s} 0.5 0.5)${a?" scale(-1,1) translate(-1 0)":""}">
@@ -1605,17 +1543,17 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
       ${_}
       ${w}
     </g>
-    <g class="preview">${e?this.renderLabel(t):j}</g>`}renderBusBar(t){const[e,i]=this.renderedPosition(t),{dim:[n,o]}=bo(t);let r=q``;return r=q`<rect x="${e}" y="${i}" width="1" height="1"
+    <g class="preview">${e?this.renderLabel(t):j}</g>`}renderBusBar(t){const[e,i]=this.renderedPosition(t),{dim:[n,o]}=xo(t);let r=q``;return r=q`<rect x="${e}" y="${i}" width="1" height="1"
           pointer-events="all" fill="none" 
-          @click=${()=>{const r=Array.from(this.substation.querySelectorAll(":root > Substation > VoltageLevel")).find((t=>cr(t,e,i,n,o)));r&&this.dispatchEvent(Ao({x:e,y:i,element:t,parent:r}))}}
+          @click=${()=>{const r=Array.from(this.substation.querySelectorAll(":root > Substation > VoltageLevel")).find((t=>cr(t,e,i,n,o)));r&&this.dispatchEvent(Co({x:e,y:i,element:t,parent:r}))}}
         />`,q`<g class="bus preview" id="${t.closest("Substation")===this.substation?se(t):j}">
       <title>${t.getAttribute("name")}</title>
       ${this.renderLabel(t)}
       ${this.renderConnectivityNode(t.querySelector("ConnectivityNode"))}
       ${r}
-    </g>`}renderConnectivityNode(t){const e=t.querySelector(`Private[type="${ao}"]`);if(!e)return j;const i=[],n=Object.entries(Array.from(e.querySelectorAll("Vertex")).reduce(((t,e)=>{const i=t,n=JSON.stringify(this.renderedPosition(e));return i[n]?i[n].push(e):i[n]=[e],i}),{})).filter((([t,e])=>e.length>2||2===e.length&&e.find((t=>t.hasAttributeNS(so,"uuid"))))).map((([t,[e]])=>this.renderedPosition(e)));n.forEach((([t,e])=>i.push(q`<circle fill="black" cx="${t}" cy="${e}" r="0.15" />`)));const o=[],r=Array.from(e.getElementsByTagNameNS(so,"Section")),a=t.closest("Bay"),d=.5,s=!this.resizing||go(this.resizing)?"all":"none";r.forEach((e=>{const n=fo(e.getAttribute("bus")),l=Array.from(e.getElementsByTagNameNS(so,"Vertex"));let c=0;for(;c<l.length-1;){const[p,m]=this.renderedPosition(l[c]);let[h,u]=this.renderedPosition(l[c+1]),f=j,g=j,b=j;if(n&&a&&(f=()=>this.dispatchEvent(No(a)),g=({button:t})=>{1===t&&this.dispatchEvent($o(a))},b=t=>this.openMenu(a,t)),n&&this.resizing===a){if(e!==r.find((t=>fo(t.getAttribute("bus")))))return;i.length=0;const{pos:[t,n],dim:[d,g]}=bo(a.parentElement),b=t+d-.5,x=n+g-.5;if(0===c){Math.max(this.mouseX-p,0)>Math.max(this.mouseY-m,0)?(h=Math.max(p,Math.min(b,this.mouseX+.5)),u=m):(u=Math.max(m,Math.min(x,this.mouseY+.5)),h=p),p===h&&m===u&&(h>=b?u+=1:h+=1)}f=()=>{this.dispatchEvent(Ao({parent:e,element:l[l.length-1],x:h,y:u}))},o.push(q`<rect x="${this.mouseX}" y="${this.mouseY}"
+    </g>`}renderConnectivityNode(t){const e=t.querySelector(`Private[type="${ao}"]`);if(!e)return j;const i=[],n=Object.entries(Array.from(e.querySelectorAll("Vertex")).reduce(((t,e)=>{const i=t,n=JSON.stringify(this.renderedPosition(e));return i[n]?i[n].push(e):i[n]=[e],i}),{})).filter((([t,e])=>e.length>2||2===e.length&&e.find((t=>t.hasAttributeNS(so,"uuid"))))).map((([t,[e]])=>this.renderedPosition(e)));n.forEach((([t,e])=>i.push(q`<circle fill="black" cx="${t}" cy="${e}" r="0.15" />`)));const o=[],r=Array.from(e.getElementsByTagNameNS(so,"Section")),a=t.closest("Bay"),d=.5,s=!this.resizing||bo(this.resizing)?"all":"none";r.forEach((e=>{const n=go(e.getAttribute("bus")),l=Array.from(e.getElementsByTagNameNS(so,"Vertex"));let c=0;for(;c<l.length-1;){const[p,m]=this.renderedPosition(l[c]);let[h,u]=this.renderedPosition(l[c+1]),f=j,g=j,b=j;if(n&&a&&(f=()=>this.dispatchEvent(Io(a)),g=({button:t})=>{1===t&&this.dispatchEvent(No(a))},b=t=>this.openMenu(a,t)),n&&this.resizing===a){if(e!==r.find((t=>go(t.getAttribute("bus")))))return;i.length=0;const{pos:[t,n],dim:[d,g]}=xo(a.parentElement),b=t+d-.5,x=n+g-.5;if(0===c){Math.max(this.mouseX-p,0)>Math.max(this.mouseY-m,0)?(h=Math.max(p,Math.min(b,this.mouseX+.5)),u=m):(u=Math.max(m,Math.min(x,this.mouseY+.5)),h=p),p===h&&m===u&&(h>=b?u+=1:h+=1)}f=()=>{this.dispatchEvent(Co({parent:e,element:l[l.length-1],x:h,y:u}))},o.push(q`<rect x="${this.mouseX}" y="${this.mouseY}"
               width="1" height="1" fill="none" pointer-events="${s}"
-              @click=${f} />`)}this.connecting&&(f=()=>{const{from:e,path:i,fromTerminal:n}=this.connecting;if(e.closest("ConductingEquipment, PowerTransformer").querySelector(`[connectivityNode="${t.getAttribute("pathName")}"]`))return;const[[o,r],[a,d]]=i.slice(-2),s=o===a;let l=this.mouseX2,c=this.mouseY2,f=s?a:l,g=s?c:d;[l,c]=ur([f,g],[l,c],[p,m],[h,u]),f=s?a:l,g=s?c:d,i[i.length-1]=[f,g],i.push([l,c]),fr(i),this.dispatchEvent(Co({from:e,fromTerminal:n,path:i,to:t}))}),o.push(q`<line x1="${p}" y1="${m}" x2="${h}" y2="${u}"
+              @click=${f} />`)}this.connecting&&(f=()=>{const{from:e,path:i,fromTerminal:n}=this.connecting;if(e.closest("ConductingEquipment, PowerTransformer").querySelector(`[connectivityNode="${t.getAttribute("pathName")}"]`))return;const[[o,r],[a,d]]=i.slice(-2),s=o===a;let l=this.mouseX2,c=this.mouseY2,f=s?a:l,g=s?c:d;[l,c]=ur([f,g],[l,c],[p,m],[h,u]),f=s?a:l,g=s?c:d,i[i.length-1]=[f,g],i.push([l,c]),fr(i),this.dispatchEvent($o({from:e,fromTerminal:n,path:i,to:t}))}),o.push(q`<line x1="${p}" y1="${m}" x2="${h}" y2="${u}"
                 pointer-events="${s}"
                 stroke-width="${n?.12:j}" stroke="black" 
                 stroke-linecap="${n?"round":"square"}" />`),o.push(q`<line x1="${p}" y1="${m}" x2="${h}" y2="${u}"
@@ -1666,7 +1604,7 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     * {
       user-select: none;
     }
-  `,n([ft()],vr.prototype,"doc",void 0),n([ft()],vr.prototype,"substation",void 0),n([ft()],vr.prototype,"editCount",void 0),n([ft()],vr.prototype,"gridSize",void 0),n([ft()],vr.prototype,"nsp",void 0),n([ft()],vr.prototype,"resizing",void 0),n([ft()],vr.prototype,"placing",void 0),n([ft()],vr.prototype,"placingLabel",void 0),n([ft()],vr.prototype,"connecting",void 0),n([vt("#resizeSubstationUI")],vr.prototype,"resizeSubstationUI",void 0),n([vt("#substationWidthUI")],vr.prototype,"substationWidthUI",void 0),n([vt("#substationHeightUI")],vr.prototype,"substationHeightUI",void 0),n([vt("svg#sld")],vr.prototype,"sld",void 0),n([gt()],vr.prototype,"mouseX",void 0),n([gt()],vr.prototype,"mouseY",void 0),n([gt()],vr.prototype,"mouseX2",void 0),n([gt()],vr.prototype,"mouseY2",void 0),n([gt()],vr.prototype,"menu",void 0),vr=n([mt("sld-editor")],vr);class _r extends ct{constructor(){super(...arguments),this._editCount=-1,this.gridSize=32,this.nsp="esld",this.templateElements={},this.handleKeydown=({key:t})=>{"Escape"===t&&this.reset()}}get editCount(){return this._editCount}set editCount(t){var e,i;this.connecting=void 0,(null===(e=this.resizing)||void 0===e?void 0:e.parentElement)||(this.resizing=void 0),(null===(i=this.placingLabel)||void 0===i?void 0:i.parentElement)||(this.placingLabel=void 0),this._editCount=t}zoomIn(t=4){this.gridSize+=t}zoomOut(t=4){this.gridSize-=t,this.gridSize<4&&(this.gridSize=4)}startResizing(t){this.reset(),this.resizing=t}startPlacing(t){this.reset(),this.placing=t}startPlacingLabel(t){this.reset(),this.placingLabel=t}startConnecting(t){this.reset(),this.connecting=t}reset(){this.resizing=void 0,this.placing=void 0,this.placingLabel=void 0,this.connecting=void 0}connectedCallback(){super.connectedCallback(),window.addEventListener("keydown",this.handleKeydown)}disconnectedCallback(){super.disconnectedCallback(),window.removeEventListener("keydown",this.handleKeydown)}updated(t){if(!t.has("doc"))return;const e=this.doc.documentElement.lookupPrefix(so);e?this.nsp=e:(this.doc.documentElement.setAttributeNS("http://www.w3.org/2000/xmlns/","xmlns:esld",so),this.nsp="esld"),["Substation","VoltageLevel","Bay","ConductingEquipment","PowerTransformer","TransformerWinding"].forEach((t=>{this.templateElements[t]=this.doc.createElementNS(this.doc.documentElement.namespaceURI,t)})),this.templateElements.BusBar=function(t,e){const i=t.createElementNS(t.documentElement.namespaceURI,"Bay");i.setAttribute("name","BB1"),i.setAttributeNS(so,`${e}:w`,"2");const n=t.createElementNS(t.documentElement.namespaceURI,"ConnectivityNode");n.setAttribute("name","L");const o=t.createElementNS(t.documentElement.namespaceURI,"Private");o.setAttribute("type",ao);const r=t.createElementNS(so,`${e}:Section`);r.setAttribute("bus","true");const a=t.createElementNS(so,`${e}:Vertex`);a.setAttributeNS(so,`${e}:x`,"0.5"),a.setAttributeNS(so,`${e}:y`,"0.5"),r.appendChild(a);const d=t.createElementNS(so,`${e}:Vertex`);return d.setAttributeNS(so,`${e}:x`,"1.5"),d.setAttributeNS(so,`${e}:y`,"0.5"),r.appendChild(d),o.appendChild(r),n.appendChild(o),i.appendChild(n),i}(this.doc,this.nsp)}rotateElement(t){const{rot:e}=bo(t),i=[{element:t,attributes:{[`${this.nsp}:rot`]:{namespaceURI:so,value:((e+1)%4).toString()}}}];"ConductingEquipment"!==t.tagName&&"PowerTransformer"!==t.tagName||Array.from(t.querySelectorAll("Terminal, NeutralPoint")).filter((t=>"grounded"!==t.getAttribute("cNodeName"))).forEach((t=>i.push(...Eo(t)))),this.dispatchEvent(St(i))}placeLabel(t,e,i){this.dispatchEvent(St({element:t,attributes:{lx:{namespaceURI:so,value:e.toString()},ly:{namespaceURI:so,value:i.toString()}}})),this.reset()}placeElement(t,e,i,n){const o=[];t.parentElement!==e&&o.push(...wo(t,e));const{pos:[r,a],label:[d,s],rot:l}=bo(t),c=i-r,p=n-a;if("Vertex"!==t.localName){let e=d,r=s;"ConductingEquipment"!==t.tagName||t.hasAttributeNS(so,"lx")||l%2!=0||(e+=1,r+=1),o.push({element:t,attributes:{x:{namespaceURI:so,value:i.toString()},y:{namespaceURI:so,value:n.toString()},lx:{namespaceURI:so,value:(e+c).toString()},ly:{namespaceURI:so,value:(r+p).toString()}}})}if(Array.from(t.querySelectorAll("Bay, ConductingEquipment, PowerTransformer, Vertex")).forEach((t=>{const{pos:[e,i],label:[n,r]}=bo(t),a={x:{namespaceURI:so,value:(e+c).toString()},y:{namespaceURI:so,value:(i+p).toString()}};"Vertex"!==t.localName&&(a.lx={namespaceURI:so,value:(n+c).toString()},a.ly={namespaceURI:so,value:(r+p).toString()}),o.push({element:t,attributes:a})})),"ConductingEquipment"===t.tagName||"PowerTransformer"===t.tagName){Array.from(t.querySelectorAll("Terminal, NeutralPoint")).filter((t=>"grounded"!==t.getAttribute("cNodeName"))).forEach((t=>o.push(...Eo(t))));const i=Array.from(t.querySelectorAll("Terminal, NeutralPoint")).filter((t=>"grounded"===t.getAttribute("cNodeName")));if(i.length>0){let t=e.querySelector('ConnectivityNode[name="grounded"]');t||(t=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"ConnectivityNode"),t.setAttribute("name","grounded"),t.setAttribute("pathName",xo(e,"grounded")),o.push({node:t,parent:e,reference:te(e,"ConnectivityNode")}));const n=e.closest("Bay").getAttribute("name"),r=e.closest("VoltageLevel").getAttribute("name"),a=e.closest("Substation").getAttribute("name"),d=t.getAttribute("pathName");i.forEach((t=>{o.push({element:t,attributes:{connectivityNode:d,bayName:n,voltageLevelName:r,substationName:a}})}))}}else t.getRootNode()===this.doc&&(Array.from(t.getElementsByTagName("ConnectivityNode")).forEach((e=>{Array.from(this.doc.querySelectorAll(`Terminal[connectivityNode="${e.getAttribute("pathName")}"],\n                 NeutralPoint[connectivityNode="${e.getAttribute("pathName")}"]`)).find((e=>e.closest(t.tagName)!==t))&&o.push(...vo(e))})),Array.from(t.querySelectorAll("Terminal, NeutralPoint")).forEach((e=>{const i=this.doc.querySelector(`ConnectivityNode[pathName="${e.getAttribute("connectivityNode")}"]`);i&&i.closest(t.tagName)!==t&&o.push(...vo(i))})));if("Vertex"===t.localName){const e=t.closest("Bay"),r=Array.from(e.querySelectorAll("Section[bus]")),a=r[0],d=a.querySelector("Vertex"),s=r[r.length-1].querySelector("Vertex:last-of-type"),{pos:[l,c]}=bo(d),p=i-l+1,m=n-c+1;go(e)&&(o.push(...vo(a.closest("ConnectivityNode"))),o.push({element:s,attributes:{x:{namespaceURI:so,value:i.toString()},y:{namespaceURI:so,value:n.toString()}}}),o.push({element:e,attributes:{w:{namespaceURI:so,value:p.toString()},h:{namespaceURI:so,value:m.toString()}}}))}this.dispatchEvent(St(o)),!["Bay","VoltageLevel"].includes(t.tagName)||t.hasAttributeNS(so,"w")&&t.hasAttributeNS(so,"h")?this.reset():this.startResizing(t)}connectEquipment({from:t,fromTerminal:e,to:i,toTerminal:n,path:o}){var r,a;if("TransformerWinding"===t.tagName&&"TransformerWinding"===i.tagName)return;const d=[];let s,l,c,p;if("ConnectivityNode"!==i.tagName){s=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"ConnectivityNode"),s.setAttribute("name","L1");const e=t.closest("Bay")||i.closest("Bay");d.push(...wo(s,e)),l=d.find((t=>"attributes"in t&&"pathName"in t.attributes)).attributes.pathName,c=null!==(a=null===(r=d.find((t=>"attributes"in t&&"name"in t.attributes)))||void 0===r?void 0:r.attributes.name)&&void 0!==a?a:s.getAttribute("name"),p=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"Private"),p.setAttribute("type",ao),d.push({parent:s,node:p,reference:te(s,"Private")})}else s=i,l=s.getAttribute("pathName"),c=s.getAttribute("name"),p=s.querySelector(`Private[type="${ao}"]`);const m=this.doc.createElementNS(so,`${this.nsp}:Section`);d.push({parent:p,node:m,reference:null});const h=ho(),u=ho();if(o.forEach((([t,e],n)=>{const r=this.doc.createElementNS(so,`${this.nsp}:Vertex`);r.setAttributeNS(so,`${this.nsp}:x`,t.toString()),r.setAttributeNS(so,`${this.nsp}:y`,e.toString()),0===n?r.setAttributeNS(so,`${this.nsp}:uuid`,h):n===o.length-1&&"ConnectivityNode"!==i.tagName&&r.setAttributeNS(so,`${this.nsp}:uuid`,u),d.push({parent:m,node:r,reference:null})})),"ConnectivityNode"===i.tagName){const[t,e]=o[o.length-1];Array.from(p.getElementsByTagNameNS(so,"Section")).find((i=>{const n=Array.from(i.getElementsByTagNameNS(so,"Vertex")).map((t=>bo(t).pos));for(let o=0;o<n.length-1;o+=1){const[r,a]=n[o],[s,l]=n[o+1];if(a===e&&e===l&&(r<t&&t<s||s<t&&t<r)||r===t&&t===s&&(a<e&&e<l||l<e&&e<a)||a===e&&r===t)return d.push(yr(i,o,[t,e],this.nsp)),!0}return!1}))}const[f,g,b]=l.split("/",3),x=e.startsWith("T")?"Terminal":"NeutralPoint",v=this.doc.createElementNS(this.doc.documentElement.namespaceURI,x);if(v.setAttributeNS(so,`${this.nsp}:uuid`,h),v.setAttribute("name",e),v.setAttribute("connectivityNode",l),v.setAttribute("substationName",f),v.setAttribute("voltageLevelName",g),v.setAttribute("bayName",b),v.setAttribute("cNodeName",c),d.push({node:v,parent:t,reference:te(t,x)}),"ConductingEquipment"===i.tagName){const t=n.startsWith("T")?"Terminal":"NeutralPoint",e=this.doc.createElementNS(this.doc.documentElement.namespaceURI,t);e.setAttributeNS(so,`${this.nsp}:uuid`,u),e.setAttribute("name",n),e.setAttribute("connectivityNode",l),e.setAttribute("substationName",f),e.setAttribute("voltageLevelName",g),e.setAttribute("bayName",b),e.setAttribute("cNodeName",c),d.push({node:e,parent:i,reference:te(i,t)})}this.reset(),this.dispatchEvent(St(d))}render(){return this.doc?U`<main>
+  `,n([ft()],vr.prototype,"doc",void 0),n([ft()],vr.prototype,"substation",void 0),n([ft()],vr.prototype,"editCount",void 0),n([ft()],vr.prototype,"gridSize",void 0),n([ft()],vr.prototype,"nsp",void 0),n([ft()],vr.prototype,"resizing",void 0),n([ft()],vr.prototype,"placing",void 0),n([ft()],vr.prototype,"placingLabel",void 0),n([ft()],vr.prototype,"connecting",void 0),n([vt("#resizeSubstationUI")],vr.prototype,"resizeSubstationUI",void 0),n([vt("#substationWidthUI")],vr.prototype,"substationWidthUI",void 0),n([vt("#substationHeightUI")],vr.prototype,"substationHeightUI",void 0),n([vt("svg#sld")],vr.prototype,"sld",void 0),n([gt()],vr.prototype,"mouseX",void 0),n([gt()],vr.prototype,"mouseY",void 0),n([gt()],vr.prototype,"mouseX2",void 0),n([gt()],vr.prototype,"mouseY2",void 0),n([gt()],vr.prototype,"menu",void 0),vr=n([mt("sld-editor")],vr);class _r extends ct{constructor(){super(...arguments),this._editCount=-1,this.gridSize=32,this.nsp="esld",this.templateElements={},this.handleKeydown=({key:t})=>{"Escape"===t&&this.reset()}}get editCount(){return this._editCount}set editCount(t){var e,i;this.connecting=void 0,(null===(e=this.resizing)||void 0===e?void 0:e.parentElement)||(this.resizing=void 0),(null===(i=this.placingLabel)||void 0===i?void 0:i.parentElement)||(this.placingLabel=void 0),this._editCount=t}zoomIn(t=4){this.gridSize+=t}zoomOut(t=4){this.gridSize-=t,this.gridSize<4&&(this.gridSize=4)}startResizing(t){this.reset(),this.resizing=t}startPlacing(t){this.reset(),this.placing=t}startPlacingLabel(t){this.reset(),this.placingLabel=t}startConnecting(t){this.reset(),this.connecting=t}reset(){this.resizing=void 0,this.placing=void 0,this.placingLabel=void 0,this.connecting=void 0}connectedCallback(){super.connectedCallback(),window.addEventListener("keydown",this.handleKeydown)}disconnectedCallback(){super.disconnectedCallback(),window.removeEventListener("keydown",this.handleKeydown)}updated(t){if(!t.has("doc"))return;const e=this.doc.documentElement.lookupPrefix(so);e?this.nsp=e:(this.doc.documentElement.setAttributeNS("http://www.w3.org/2000/xmlns/","xmlns:esld",so),this.nsp="esld"),["Substation","VoltageLevel","Bay","ConductingEquipment","PowerTransformer","TransformerWinding"].forEach((t=>{this.templateElements[t]=this.doc.createElementNS(this.doc.documentElement.namespaceURI,t)})),this.templateElements.BusBar=function(t,e){const i=t.createElementNS(t.documentElement.namespaceURI,"Bay");i.setAttribute("name","BB1"),i.setAttributeNS(so,`${e}:w`,"2");const n=t.createElementNS(t.documentElement.namespaceURI,"ConnectivityNode");n.setAttribute("name","L");const o=t.createElementNS(t.documentElement.namespaceURI,"Private");o.setAttribute("type",ao);const r=t.createElementNS(so,`${e}:Section`);r.setAttribute("bus","true");const a=t.createElementNS(so,`${e}:Vertex`);a.setAttributeNS(so,`${e}:x`,"0.5"),a.setAttributeNS(so,`${e}:y`,"0.5"),r.appendChild(a);const d=t.createElementNS(so,`${e}:Vertex`);return d.setAttributeNS(so,`${e}:x`,"1.5"),d.setAttributeNS(so,`${e}:y`,"0.5"),r.appendChild(d),o.appendChild(r),n.appendChild(o),i.appendChild(n),i}(this.doc,this.nsp)}rotateElement(t){const{rot:e}=xo(t),i=[{element:t,attributes:{[`${this.nsp}:rot`]:{namespaceURI:so,value:((e+1)%4).toString()}}}];"ConductingEquipment"!==t.tagName&&"PowerTransformer"!==t.tagName||Array.from(t.querySelectorAll("Terminal, NeutralPoint")).filter((t=>"grounded"!==t.getAttribute("cNodeName"))).forEach((t=>i.push(...So(t)))),this.dispatchEvent(St(i))}placeLabel(t,e,i){this.dispatchEvent(St({element:t,attributes:{lx:{namespaceURI:so,value:e.toString()},ly:{namespaceURI:so,value:i.toString()}}})),this.reset()}placeElement(t,e,i,n){const o=[];t.parentElement!==e&&o.push(...Eo(t,e));const{pos:[r,a],label:[d,s],rot:l}=xo(t),c=i-r,p=n-a;if("Vertex"!==t.localName){let e=d,r=s;"ConductingEquipment"!==t.tagName||t.hasAttributeNS(so,"lx")||l%2!=0||(e+=1,r+=1),o.push({element:t,attributes:{x:{namespaceURI:so,value:i.toString()},y:{namespaceURI:so,value:n.toString()},lx:{namespaceURI:so,value:(e+c).toString()},ly:{namespaceURI:so,value:(r+p).toString()}}})}if(Array.from(t.querySelectorAll("Bay, ConductingEquipment, PowerTransformer, Vertex")).forEach((t=>{const{pos:[e,i],label:[n,r]}=xo(t),a={x:{namespaceURI:so,value:(e+c).toString()},y:{namespaceURI:so,value:(i+p).toString()}};"Vertex"!==t.localName&&(a.lx={namespaceURI:so,value:(n+c).toString()},a.ly={namespaceURI:so,value:(r+p).toString()}),o.push({element:t,attributes:a})})),"ConductingEquipment"===t.tagName||"PowerTransformer"===t.tagName){Array.from(t.querySelectorAll("Terminal, NeutralPoint")).filter((t=>"grounded"!==t.getAttribute("cNodeName"))).forEach((t=>o.push(...So(t))));const i=Array.from(t.querySelectorAll("Terminal, NeutralPoint")).filter((t=>"grounded"===t.getAttribute("cNodeName")));if(i.length>0){let t=e.querySelector('ConnectivityNode[name="grounded"]');t||(t=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"ConnectivityNode"),t.setAttribute("name","grounded"),t.setAttribute("pathName",vo(e,"grounded")),o.push({node:t,parent:e,reference:te(e,"ConnectivityNode")}));const n=e.closest("Bay").getAttribute("name"),r=e.closest("VoltageLevel").getAttribute("name"),a=e.closest("Substation").getAttribute("name"),d=t.getAttribute("pathName");i.forEach((t=>{o.push({element:t,attributes:{connectivityNode:d,bayName:n,voltageLevelName:r,substationName:a}})}))}}else t.getRootNode()===this.doc&&(Array.from(t.getElementsByTagName("ConnectivityNode")).forEach((e=>{Array.from(this.doc.querySelectorAll(`Terminal[connectivityNode="${e.getAttribute("pathName")}"],\n                 NeutralPoint[connectivityNode="${e.getAttribute("pathName")}"]`)).find((e=>e.closest(t.tagName)!==t))&&o.push(...yo(e))})),Array.from(t.querySelectorAll("Terminal, NeutralPoint")).forEach((e=>{const i=this.doc.querySelector(`ConnectivityNode[pathName="${e.getAttribute("connectivityNode")}"]`);i&&i.closest(t.tagName)!==t&&o.push(...yo(i))})));if("Vertex"===t.localName){const e=t.closest("Bay"),r=Array.from(e.querySelectorAll("Section[bus]")),a=r[0],d=a.querySelector("Vertex"),s=r[r.length-1].querySelector("Vertex:last-of-type"),{pos:[l,c]}=xo(d),p=i-l+1,m=n-c+1;bo(e)&&(o.push(...yo(a.closest("ConnectivityNode"))),o.push({element:s,attributes:{x:{namespaceURI:so,value:i.toString()},y:{namespaceURI:so,value:n.toString()}}}),o.push({element:e,attributes:{w:{namespaceURI:so,value:p.toString()},h:{namespaceURI:so,value:m.toString()}}}))}this.dispatchEvent(St(o)),!["Bay","VoltageLevel"].includes(t.tagName)||t.hasAttributeNS(so,"w")&&t.hasAttributeNS(so,"h")?this.reset():this.startResizing(t)}connectEquipment({from:t,fromTerminal:e,to:i,toTerminal:n,path:o}){var r,a;if("TransformerWinding"===t.tagName&&"TransformerWinding"===i.tagName)return;const d=[];let s,l,c,p;if("ConnectivityNode"!==i.tagName){s=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"ConnectivityNode"),s.setAttribute("name","L1");const e=t.closest("Bay")||i.closest("Bay");d.push(...Eo(s,e)),l=d.find((t=>"attributes"in t&&"pathName"in t.attributes)).attributes.pathName,c=null!==(a=null===(r=d.find((t=>"attributes"in t&&"name"in t.attributes)))||void 0===r?void 0:r.attributes.name)&&void 0!==a?a:s.getAttribute("name"),p=this.doc.createElementNS(this.doc.documentElement.namespaceURI,"Private"),p.setAttribute("type",ao),d.push({parent:s,node:p,reference:te(s,"Private")})}else s=i,l=s.getAttribute("pathName"),c=s.getAttribute("name"),p=s.querySelector(`Private[type="${ao}"]`);const m=this.doc.createElementNS(so,`${this.nsp}:Section`);d.push({parent:p,node:m,reference:null});const h=uo(),u=uo();if(o.forEach((([t,e],n)=>{const r=this.doc.createElementNS(so,`${this.nsp}:Vertex`);r.setAttributeNS(so,`${this.nsp}:x`,t.toString()),r.setAttributeNS(so,`${this.nsp}:y`,e.toString()),0===n?r.setAttributeNS(so,`${this.nsp}:uuid`,h):n===o.length-1&&"ConnectivityNode"!==i.tagName&&r.setAttributeNS(so,`${this.nsp}:uuid`,u),d.push({parent:m,node:r,reference:null})})),"ConnectivityNode"===i.tagName){const[t,e]=o[o.length-1];Array.from(p.getElementsByTagNameNS(so,"Section")).find((i=>{const n=Array.from(i.getElementsByTagNameNS(so,"Vertex")).map((t=>xo(t).pos));for(let o=0;o<n.length-1;o+=1){const[r,a]=n[o],[s,l]=n[o+1];if(a===e&&e===l&&(r<t&&t<s||s<t&&t<r)||r===t&&t===s&&(a<e&&e<l||l<e&&e<a)||a===e&&r===t)return d.push(yr(i,o,[t,e],this.nsp)),!0}return!1}))}const[f,g,b]=l.split("/",3),x=e.startsWith("T")?"Terminal":"NeutralPoint",v=this.doc.createElementNS(this.doc.documentElement.namespaceURI,x);if(v.setAttributeNS(so,`${this.nsp}:uuid`,h),v.setAttribute("name",e),v.setAttribute("connectivityNode",l),v.setAttribute("substationName",f),v.setAttribute("voltageLevelName",g),v.setAttribute("bayName",b),v.setAttribute("cNodeName",c),d.push({node:v,parent:t,reference:te(t,x)}),"ConductingEquipment"===i.tagName){const t=n.startsWith("T")?"Terminal":"NeutralPoint",e=this.doc.createElementNS(this.doc.documentElement.namespaceURI,t);e.setAttributeNS(so,`${this.nsp}:uuid`,u),e.setAttribute("name",n),e.setAttribute("connectivityNode",l),e.setAttribute("substationName",f),e.setAttribute("voltageLevelName",g),e.setAttribute("bayName",b),e.setAttribute("cNodeName",c),d.push({node:e,parent:i,reference:te(i,t)})}this.reset(),this.dispatchEvent(St(d))}render(){return this.doc?U`<main>
       ${Array.from(this.doc.querySelectorAll(":root > Substation")).map((t=>U`<sld-editor
             .doc=${this.doc}
             .editCount=${this.editCount}
@@ -1687,14 +1625,32 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
             @oscd-sld-rotate=${({detail:t})=>this.rotateElement(t)}
           ></sld-editor>`))}
       <nav>
-        ${Array.from(this.doc.documentElement.children).find((t=>"Substation"===t.tagName))?U``:j}${Array.from(this.doc.querySelectorAll(":root > Substation > VoltageLevel > Bay")).find((t=>!go(t)))?co.map((t=>{return U`<mwc-fab
+        ${Array.from(this.doc.documentElement.children).find((t=>"Substation"===t.tagName))?U``:j}${Array.from(this.doc.querySelectorAll(":root > Substation > VoltageLevel > Bay")).find((t=>!bo(t)))?co.map((t=>{return U`<mwc-fab
                   mini
                   label="Add ${t}"
                   @click=${()=>{const e=this.templateElements.ConductingEquipment.cloneNode();e.setAttribute("type",t),this.startPlacing(e)}}
                   style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
                   >${e=t,U`<svg viewBox="0 0 25 25" width="24" height="24" slot="icon">
-    ${er(e)}
-    ${mo.has(e)?Jo:j}
+    <line
+      x1="12.5"
+      y1="0"
+      x2="12.5"
+      y2="4"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+    />
+    ${ho.has(e)?j:q`<line
+      x1="12.5"
+      y1="21"
+      x2="12.5"
+      y2="25"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+    />`}
+    ${ir(e)}
+    ${mo.has(e)?tr:j}
   </svg>`}</mwc-fab
                 >`;var e})).concat():j}${this.doc.querySelector(":root > Substation > VoltageLevel")?U`<mwc-fab
                 mini
@@ -1710,14 +1666,14 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
                 @click=${()=>{const t=this.templateElements.Bay.cloneNode();this.startPlacing(t)}}
                 style="--mdc-theme-secondary: #12579B;"
               >
-                ${Ko}
+                ${Zo}
               </mwc-fab>`:j}${Array.from(this.doc.documentElement.children).find((t=>"Substation"===t.tagName))?U`<mwc-fab
               mini
               label="Add VoltageLevel"
               @click=${()=>{const t=this.templateElements.VoltageLevel.cloneNode();this.startPlacing(t)}}
               style="--mdc-theme-secondary: #F5E214; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83);"
             >
-              ${Xo}
+              ${Yo}
             </mwc-fab>`:j}<mwc-fab
           mini
           icon="margin"
@@ -1731,37 +1687,37 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
                 label="Add Three Winding Transformer"
                 @click=${()=>{const t=this.templateElements.PowerTransformer.cloneNode();t.setAttribute("type","PTR");const e=[];for(let t=1;t<=3;t+=1){const i=this.templateElements.TransformerWinding.cloneNode();i.setAttribute("type","PTW"),i.setAttribute("name",`W${t}`),e.push(i)}t.append(...e),this.startPlacing(t)}}
                 style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
-                >${Wo}</mwc-fab
+                >${Xo}</mwc-fab
               ><mwc-fab
                 mini
                 label="Add Two Winding Earthing Transformer"
                 @click=${()=>{const t=this.templateElements.PowerTransformer.cloneNode();t.setAttribute("type","PTR"),t.setAttributeNS(so,"kind","earthing");const e=[];for(let t=1;t<=2;t+=1){const i=this.templateElements.TransformerWinding.cloneNode();i.setAttribute("type","PTW"),i.setAttribute("name",`W${t}`),e.push(i)}t.append(...e),this.startPlacing(t)}}
                 style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
-                >${jo}</mwc-fab
+                >${Wo}</mwc-fab
               ><mwc-fab
                 mini
                 label="Add Two Winding Auto Transformer"
                 @click=${()=>{const t=this.templateElements.PowerTransformer.cloneNode();t.setAttribute("type","PTR"),t.setAttributeNS(so,"kind","auto");const e=[];for(let t=1;t<=2;t+=1){const i=this.templateElements.TransformerWinding.cloneNode();i.setAttribute("type","PTW"),i.setAttribute("name",`W${t}`),e.push(i)}t.append(...e),this.startPlacing(t)}}
                 style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
-                >${Go}</mwc-fab
+                >${jo}</mwc-fab
               ><mwc-fab
                 mini
                 label="Add Two Winding Transformer"
                 @click=${()=>{const t=this.templateElements.PowerTransformer.cloneNode();t.setAttribute("type","PTR");const e=[];for(let t=1;t<=2;t+=1){const i=this.templateElements.TransformerWinding.cloneNode();i.setAttribute("type","PTW"),i.setAttribute("name",`W${t}`),e.push(i)}t.append(...e),this.startPlacing(t)}}
                 style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
-                >${qo}</mwc-fab
+                >${Go}</mwc-fab
               ><mwc-fab
                 mini
                 label="Add Single Winding Earthing Transformer"
                 @click=${()=>{const t=this.templateElements.PowerTransformer.cloneNode();t.setAttribute("type","PTR"),t.setAttributeNS(so,"kind","earthing");const e=this.templateElements.TransformerWinding.cloneNode();e.setAttribute("type","PTW"),e.setAttribute("name","W1"),t.appendChild(e),this.startPlacing(t)}}
                 style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
-                >${Vo}</mwc-fab
+                >${Uo}</mwc-fab
               ><mwc-fab
                 mini
                 label="Add Single Winding Auto Transformer"
                 @click=${()=>{const t=this.templateElements.PowerTransformer.cloneNode();t.setAttribute("type","PTR"),t.setAttributeNS(so,"kind","auto");const e=this.templateElements.TransformerWinding.cloneNode();e.setAttribute("type","PTW"),e.setAttribute("name","W1"),t.appendChild(e),this.startPlacing(t)}}
                 style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
-                >${Uo}</mwc-fab
+                >${qo}</mwc-fab
               >`:j}<mwc-icon-button
           icon="zoom_in"
           label="Zoom In"

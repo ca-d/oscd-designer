@@ -11,26 +11,13 @@ import '@material/mwc-list/mwc-list-item.js';
 import '@material/mwc-textfield';
 import { getReference, identity } from '@openscd/oscd-scl';
 import { bayGraphic, eqRingPath, equipmentGraphic, movePath, resizePath, symbols, voltageLevelGraphic, } from './icons.js';
-import { attributes, connectionStartPoints, elementPath, isBusBar, isEqType, newConnectEvent, newPlaceEvent, newPlaceLabelEvent, newResizeEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartPlaceLabelEvent, newStartResizeEvent, privType, removeNode, removeTerminal, ringedEqTypes, sldNs, svgNs, uuid, xlinkNs, xmlBoolean, } from './util.js';
+import { attributes, connectionStartPoints, elementPath, isBusBar, isEqType, newConnectEvent, newPlaceEvent, newPlaceLabelEvent, newResizeEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartPlaceLabelEvent, newStartResizeEvent, privType, removeNode, removeTerminal, ringedEqTypes, singleTerminal, sldNs, svgNs, uuid, xlinkNs, xmlBoolean, } from './util.js';
 const parentTags = {
     ConductingEquipment: ['Bay'],
     Bay: ['VoltageLevel'],
     VoltageLevel: ['Substation'],
     PowerTransformer: ['Bay', 'VoltageLevel', 'Substation'],
 };
-const singleTerminal = new Set([
-    'BAT',
-    'EFN',
-    'FAN',
-    'GEN',
-    'IFL',
-    'MOT',
-    'PMP',
-    'RRC',
-    'SAR',
-    'SMC',
-    'VTR',
-]);
 function newEditWizardEvent(element) {
     return new CustomEvent('oscd-edit-wizard-request', {
         bubbles: true,
@@ -770,6 +757,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             const vertical = x1 === oldX2;
             let x3 = this.mouseX2;
             let y3 = this.mouseY2;
+            let [x4, y4] = [x3, y3];
             const targetEq = Array.from(this.substation.querySelectorAll('ConductingEquipment'))
                 .filter(eq => eq !== from)
                 .find(eq => {
@@ -778,17 +766,21 @@ let SLDEditor = class SLDEditor extends LitElement {
             });
             const toTerminal = this.nearestOpenTerminal(targetEq);
             if (targetEq && toTerminal) {
-                [[x3, y3]] = connectionStartPoints(targetEq)[toTerminal];
+                const [close, far] = connectionStartPoints(targetEq)[toTerminal];
+                [x3, y3] = far;
+                [x4, y4] = close;
             }
             const x2 = vertical ? oldX2 : x3;
             const y2 = vertical ? y3 : oldY2;
             connectionPreview.push(svg `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
                 stroke-linecap="square" stroke="black" />`, svg `<line x1="${x2}" y1="${y2}" x2="${x3}" y2="${y3}"
+                stroke-linecap="square" stroke="black" />`, svg `<line x1="${x3}" y1="${y3}" x2="${x4}" y2="${y4}"
                 stroke-linecap="square" stroke="black" />`);
             connectionPreview.push(svg `<rect width="100%" height="100%" fill="url(#grid)"
       @click=${() => {
                 path[path.length - 1] = [x2, y2];
                 path.push([x3, y3]);
+                path.push([x4, y4]);
                 cleanPath(path);
                 this.requestUpdate();
                 if (targetEq && toTerminal)
@@ -1525,7 +1517,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             : svg `<polygon points="0.3,0 0.7,0 0.5,0.4" 
                 fill="#12579B" opacity="0.4" />`;
         const topGrounded = (topTerminal === null || topTerminal === void 0 ? void 0 : topTerminal.getAttribute('cNodeName')) === 'grounded'
-            ? svg `<line x1="0.5" y1="-0.1" x2="0.5" y2="0" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`
+            ? svg `<line x1="0.5" y1="-0.1" x2="0.5" y2="0.16" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`
             : nothing;
         const bottomConnector = bottomTerminal ||
             this.placing ||
@@ -1557,7 +1549,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             : svg `<polygon points="0.3,1 0.7,1 0.5,0.6" 
                 fill="#12579B" opacity="0.4" />`;
         const bottomGrounded = (bottomTerminal === null || bottomTerminal === void 0 ? void 0 : bottomTerminal.getAttribute('cNodeName')) === 'grounded'
-            ? svg `<line x1="0.5" y1="1.1" x2="0.5" y2="1" stroke="black"
+            ? svg `<line x1="0.5" y1="1.1" x2="0.5" y2="0.84" stroke="black"
                 stroke-width="0.06" marker-start="url(#grounded)" />`
             : nothing;
         return svg `<g class="${classMap({
