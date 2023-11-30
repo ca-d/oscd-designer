@@ -1705,13 +1705,16 @@ let SLDEditor = class SLDEditor extends LitElement {
                             .closest('ConductingEquipment, PowerTransformer')
                             .querySelector(`[connectivityNode="${cNode.getAttribute('pathName')}"]`))
                             return;
-                        const [[oldX1, _y], [oldX2, oldY2]] = path.slice(-2);
+                        const [[oldX1, oldY1], [oldX2, oldY2]] = path.slice(-2);
                         const vertical = oldX1 === oldX2;
                         let x3 = this.mouseX2;
                         let y3 = this.mouseY2;
                         let newX2 = vertical ? oldX2 : x3;
                         let newY2 = vertical ? y3 : oldY2;
-                        [x3, y3] = findIntersection([newX2, newY2], [x3, y3], [x1, y1], [x2, y2]);
+                        const start = newX2 === x3 && newY2 === y3
+                            ? [oldX1, oldY1]
+                            : [newX2, newY2];
+                        [x3, y3] = findIntersection(start, [x3, y3], [x1, y1], [x2, y2]);
                         newX2 = vertical ? oldX2 : x3;
                         newY2 = vertical ? y3 : oldY2;
                         path[path.length - 1] = [newX2, newY2];
