@@ -841,7 +841,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         <mwc-list
           @selected=${({ detail: { index } }) => {
             var _a, _b;
-            (_b = (_a = items[index]) === null || _a === void 0 ? void 0 : _a.handler) === null || _b === void 0 ? void 0 : _b.call(_a);
+            (_b = (_a = items.filter(item => item.handler)[index]) === null || _a === void 0 ? void 0 : _a.handler) === null || _b === void 0 ? void 0 : _b.call(_a);
             this.menu = undefined;
         }}
         >
@@ -853,8 +853,10 @@ let SLDEditor = class SLDEditor extends LitElement {
     render() {
         var _a, _b, _c, _d;
         const { dim: [w, h], } = attributes(this.substation);
-        const placingTarget = ((_a = this.placing) === null || _a === void 0 ? void 0 : _a.tagName) === 'VoltageLevel' ||
-            ((_b = this.placing) === null || _b === void 0 ? void 0 : _b.tagName) === 'PowerTransformer'
+        const placingTarget = ((_a = this.placing) === null || _a === void 0 ? void 0 : _a.tagName) === 'VoltageLevel'
+            ? svg `<rect width="100%" height="100%" fill="url(#grid)" />`
+            : nothing;
+        const transformerPlacingTarget = ((_b = this.placing) === null || _b === void 0 ? void 0 : _b.tagName) === 'PowerTransformer'
             ? svg `<rect width="100%" height="100%" fill="url(#grid)" />`
             : nothing;
         const placingLabelTarget = this.placingLabel
@@ -1042,7 +1044,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         ${Array.from(this.substation.querySelectorAll('VoltageLevel, Bay, ConductingEquipment, PowerTransformer'))
             .filter(e => !this.placing || e.closest(this.placing.tagName) !== this.placing)
             .map(element => this.renderLabel(element))}
-        ${placingLabelTarget} ${placingElement}
+        ${transformerPlacingTarget} ${placingLabelTarget} ${placingElement}
       </svg>
       ${menu} ${coordinateTooltip}
       <mwc-dialog

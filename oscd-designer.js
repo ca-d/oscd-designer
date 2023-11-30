@@ -1374,24 +1374,24 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
         ${si((async t=>{if(!(t instanceof HTMLElement))return;const e=this.parentElement.getRootNode().querySelector("nav").offsetHeight+8;await this.updateComplete;const{bottom:i,right:n}=t.getBoundingClientRect();i>window.innerHeight-e&&(t.style.removeProperty("top"),t.style.bottom=`${e}px`,t.style.maxHeight=`calc(100vh - ${e+68}px)`),n>window.innerWidth&&(t.style.removeProperty("left"),t.style.right="0px")}))}
       >
         <mwc-list
-          @selected=${({detail:{index:t}})=>{var i,n;null===(n=null===(i=e[t])||void 0===i?void 0:i.handler)||void 0===n||n.call(i),this.menu=void 0}}
+          @selected=${({detail:{index:t}})=>{var i,n;null===(n=null===(i=e.filter((t=>t.handler))[t])||void 0===i?void 0:i.handler)||void 0===n||n.call(i),this.menu=void 0}}
         >
           ${e.map((t=>t.content))}
         </mwc-list>
       </menu>
-    `}render(){var t,e,i,n;const{dim:[o,r]}=vo(this.substation),a="VoltageLevel"===(null===(t=this.placing)||void 0===t?void 0:t.tagName)||"PowerTransformer"===(null===(e=this.placing)||void 0===e?void 0:e.tagName)?q`<rect width="100%" height="100%" fill="url(#grid)" />`:j,d=this.placingLabel?q`<rect width="100%" height="100%" fill="url(#halfgrid)"
+    `}render(){var t,e,i,n;const{dim:[o,r]}=vo(this.substation),a="VoltageLevel"===(null===(t=this.placing)||void 0===t?void 0:t.tagName)?q`<rect width="100%" height="100%" fill="url(#grid)" />`:j,d="PowerTransformer"===(null===(e=this.placing)||void 0===e?void 0:e.tagName)?q`<rect width="100%" height="100%" fill="url(#grid)" />`:j,s=this.placingLabel?q`<rect width="100%" height="100%" fill="url(#halfgrid)"
       @click=${()=>{const t=this.placingLabel,[e,i]=this.renderedLabelPosition(t);this.dispatchEvent(new CustomEvent("oscd-sld-place-label",{bubbles:!0,composed:!0,detail:{element:t,x:e,y:i}}))}}
-      />`:j;let s=q``;this.placing&&("VoltageLevel"===this.placing.tagName||br(this.placing)?s=this.renderContainer(this.placing,!0):"ConductingEquipment"===this.placing.tagName?s=this.renderEquipment(this.placing,{preview:!0}):"PowerTransformer"===this.placing.tagName?s=this.renderPowerTransformer(this.placing,!0):bo(this.placing)&&(s=this.renderBusBar(this.placing)));let l=U``,c=!1,p=!0;if(this.placing){const{dim:[t,e]}=vo(this.placing);p=!1,c=!this.canPlaceAt(this.placing,this.mouseX,this.mouseY,t,e),l=U`${this.mouseX},${this.mouseY}`}if(this.resizing&&!bo(this.resizing)){const{pos:[t,e]}=vo(this.resizing),i=Math.max(1,this.mouseX-t+1),n=Math.max(1,this.mouseY-e+1);p=!1,c=!this.canResizeTo(this.resizing,i,n),l=U`${i}&times;${n}`}const m=U`<div
+      />`:j;let l=q``;this.placing&&("VoltageLevel"===this.placing.tagName||br(this.placing)?l=this.renderContainer(this.placing,!0):"ConductingEquipment"===this.placing.tagName?l=this.renderEquipment(this.placing,{preview:!0}):"PowerTransformer"===this.placing.tagName?l=this.renderPowerTransformer(this.placing,!0):bo(this.placing)&&(l=this.renderBusBar(this.placing)));let c=U``,p=!1,m=!0;if(this.placing){const{dim:[t,e]}=vo(this.placing);m=!1,p=!this.canPlaceAt(this.placing,this.mouseX,this.mouseY,t,e),c=U`${this.mouseX},${this.mouseY}`}if(this.resizing&&!bo(this.resizing)){const{pos:[t,e]}=vo(this.resizing),i=Math.max(1,this.mouseX-t+1),n=Math.max(1,this.mouseY-e+1);m=!1,p=!this.canResizeTo(this.resizing,i,n),c=U`${i}&times;${n}`}const h=U`<div
       ${si(this.coordinatesRef)}
-      class="${Le({coordinates:!0,invalid:c,hidden:p})}"
+      class="${Le({coordinates:!0,invalid:p,hidden:m})}"
     >
-      (${l})
-    </div>`,h=[];if((null===(i=this.connecting)||void 0===i?void 0:i.from.closest("Substation"))===this.substation){const{from:t,path:e,fromTerminal:i}=this.connecting;let n=0;for(;n<e.length-2;){const[t,i]=e[n],[o,r]=e[n+1];h.push(q`<line x1="${t}" y1="${i}" x2="${o}" y2="${r}"
-                stroke-linecap="square" stroke="black" />`),n+=1}const[[o,r],[a,d]]=e.slice(-2),s=o===a;let l=this.mouseX2,c=this.mouseY2,[p,m]=[l,c];const u=Array.from(this.substation.querySelectorAll("ConductingEquipment")).filter((e=>e!==t)).find((t=>{const{pos:[e,i]}=vo(t);return e===this.mouseX&&i===this.mouseY})),f=this.nearestOpenTerminal(u);if(u&&f){const[t,e]=Co(u)[f];[l,c]=e,[p,m]=t}const g=s?a:l,b=s?c:d;h.push(q`<line x1="${o}" y1="${r}" x2="${g}" y2="${b}"
+      (${c})
+    </div>`,u=[];if((null===(i=this.connecting)||void 0===i?void 0:i.from.closest("Substation"))===this.substation){const{from:t,path:e,fromTerminal:i}=this.connecting;let n=0;for(;n<e.length-2;){const[t,i]=e[n],[o,r]=e[n+1];u.push(q`<line x1="${t}" y1="${i}" x2="${o}" y2="${r}"
+                stroke-linecap="square" stroke="black" />`),n+=1}const[[o,r],[a,d]]=e.slice(-2),s=o===a;let l=this.mouseX2,c=this.mouseY2,[p,m]=[l,c];const h=Array.from(this.substation.querySelectorAll("ConductingEquipment")).filter((e=>e!==t)).find((t=>{const{pos:[e,i]}=vo(t);return e===this.mouseX&&i===this.mouseY})),f=this.nearestOpenTerminal(h);if(h&&f){const[t,e]=Co(h)[f];[l,c]=e,[p,m]=t}const g=s?a:l,b=s?c:d;u.push(q`<line x1="${o}" y1="${r}" x2="${g}" y2="${b}"
                 stroke-linecap="square" stroke="black" />`,q`<line x1="${g}" y1="${b}" x2="${l}" y2="${c}"
                 stroke-linecap="square" stroke="black" />`,q`<line x1="${l}" y1="${c}" x2="${p}" y2="${m}"
-                stroke-linecap="square" stroke="black" />`),h.push(q`<rect width="100%" height="100%" fill="url(#grid)"
-      @click=${()=>{e[e.length-1]=[g,b],e.push([l,c]),e.push([p,m]),gr(e),this.requestUpdate(),u&&f&&this.dispatchEvent(No({from:t,fromTerminal:i,path:e,to:u,toTerminal:f}))}} />`)}const u=this.renderMenu();return U`<section>
+                stroke-linecap="square" stroke="black" />`),u.push(q`<rect width="100%" height="100%" fill="url(#grid)"
+      @click=${()=>{e[e.length-1]=[g,b],e.push([l,c]),e.push([p,m]),gr(e),this.requestUpdate(),h&&f&&this.dispatchEvent(No({from:t,fromTerminal:i,path:e,to:h,toTerminal:f}))}} />`)}const f=this.renderMenu();return U`<section>
       <h2>
         ${this.substation.getAttribute("name")}
         <mwc-icon-button
@@ -1452,15 +1452,15 @@ const oo=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
         <rect width="100%" height="100%" fill="white" />
         ${a}
         ${Array.from(this.substation.children).filter((t=>"VoltageLevel"===t.tagName)).map((t=>q`${this.renderContainer(t)}`))}
-        ${h}
+        ${u}
         ${(null===(n=this.connecting)||void 0===n?void 0:n.from.closest("Substation"))===this.substation?Array.from(this.substation.querySelectorAll("ConductingEquipment")).map((t=>this.renderEquipment(t,{connect:!0}))):j}
         ${Array.from(this.substation.querySelectorAll("ConnectivityNode")).filter((t=>!("grounded"===t.getAttribute("name")||this.placing&&t.closest(this.placing.tagName)===this.placing||bo(t.parentElement)))).map((t=>this.renderConnectivityNode(t)))}
         ${Array.from(this.substation.querySelectorAll("ConnectivityNode")).filter((t=>"grounded"!==t.getAttribute("name")&&!(this.placing&&t.closest(this.placing.tagName)===this.placing)&&bo(t.parentElement))).map((t=>this.renderConnectivityNode(t)))}
         ${Array.from(this.substation.querySelectorAll("PowerTransformer")).map((t=>this.renderPowerTransformer(t)))}
         ${Array.from(this.substation.querySelectorAll("VoltageLevel, Bay, ConductingEquipment, PowerTransformer")).filter((t=>!this.placing||t.closest(this.placing.tagName)!==this.placing)).map((t=>this.renderLabel(t)))}
-        ${d} ${s}
+        ${d} ${s} ${l}
       </svg>
-      ${u} ${m}
+      ${f} ${h}
       <mwc-dialog
         id="resizeSubstationUI"
         heading="Resize ${this.substation.getAttribute("name")}"
