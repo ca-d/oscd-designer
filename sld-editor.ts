@@ -155,6 +155,8 @@ function closestPointOnLine(p: Point, p1: Point, p2: Point): Point {
 
 function findIntersection(p1: Point, p2: Point, lp1: Point, lp2: Point): Point {
   if (liesOn(p1, lp1, lp2)) return p1;
+  if (liesOn(lp1, p1, p2)) return lp1;
+  if (liesOn(lp2, p1, p2)) return lp2;
   return closestPointOnLine(p2, lp1, lp2);
 }
 
@@ -1901,10 +1903,15 @@ export class SLDEditor extends LitElement {
     const bottomTerminal = terminals.find(t => t.getAttribute('name') !== 'T1');
 
     const topConnector =
-      topTerminal || this.placing || this.resizing || this.connecting
+      topTerminal ||
+      this.resizing ||
+      this.connecting ||
+      (this.placing && this.placing !== equipment)
         ? nothing
         : svg`<circle cx="0.5" cy="0" r="0.2" opacity="0.4"
-      fill="#BB1326" stroke="#F5E214"
+      fill="#BB1326" stroke="#F5E214" pointer-events="${
+        this.placing ? 'none' : nothing
+      }"
     @click=${() =>
       this.dispatchEvent(
         newStartConnectEvent({
@@ -1929,7 +1936,7 @@ export class SLDEditor extends LitElement {
       topTerminal
         ? nothing
         : svg`<polygon points="0.3,0 0.7,0 0.5,0.4" 
-                fill="#12579B" opacity="0.4" />`;
+                fill="#BB1326" opacity="0.4" />`;
 
     const topGrounded =
       topTerminal?.getAttribute('cNodeName') === 'grounded'
@@ -1938,13 +1945,15 @@ export class SLDEditor extends LitElement {
 
     const bottomConnector =
       bottomTerminal ||
-      this.placing ||
       this.resizing ||
       this.connecting ||
+      (this.placing && this.placing !== equipment) ||
       singleTerminal.has(eqType)
         ? nothing
         : svg`<circle cx="0.5" cy="1" r="0.2" opacity="0.4"
-      fill="#BB1326" stroke="#F5E214"
+      fill="#BB1326" stroke="#F5E214" pointer-events="${
+        this.placing ? 'none' : nothing
+      }"
     @click=${() =>
       this.dispatchEvent(
         newStartConnectEvent({
@@ -1970,7 +1979,7 @@ export class SLDEditor extends LitElement {
       singleTerminal.has(eqType)
         ? nothing
         : svg`<polygon points="0.3,1 0.7,1 0.5,0.6" 
-                fill="#12579B" opacity="0.4" />`;
+                fill="#BB1326" opacity="0.4" />`;
 
     const bottomGrounded =
       bottomTerminal?.getAttribute('cNodeName') === 'grounded'
