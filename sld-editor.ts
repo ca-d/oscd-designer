@@ -1205,8 +1205,8 @@ export class SLDEditor extends LitElement {
         )}
         ${Array.from(
           this.substation.querySelectorAll(
-            'VoltageLevel, Bay, ConductingEquipment',
-          ),
+            'VoltageLevel, Bay, ConductingEquipment, PowerTransformer'
+          )
         )
           .filter(
             e =>

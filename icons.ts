@@ -87,69 +87,34 @@ const bayPath = svg`<path
     stroke-linecap="round"
   />`;
 
-const oneWindingAutoPTRPath = svg`
-<line x1="20" y1="0" x2="20" y2="10" stroke-width="1.5" stroke="currentColor" />
-<line x1="20" y1="30" x2="20" y2="40" stroke-width="1.5" stroke="currentColor" />
-<circle cx="20" cy="20" r="10" fill="none"
-    stroke="currentColor" stroke-width="1.5" />`;
-
-const oneWindingEarthingPTRPath = svg`
-<line x1="20" y1="0" x2="20" y2="10" stroke-width="1.5" stroke="currentColor" />
-<circle cx="20" cy="20" r="10" fill="none"
+const oneWindingPTRPath = svg`
+<circle cx="15" cy="15" r="9" fill="none"
     stroke="currentColor" stroke-width="1.5" />`;
 
 const twoWindingPTRPath = svg`
-<line x1="20" y1="0" x2="20" y2="5" stroke-width="1.5" stroke="currentColor" />
-<line x1="20" y1="35" x2="20" y2="40" stroke-width="1.5" stroke="currentColor" />
-<circle cx="20" cy="15" r="10" fill="none"
+<circle cx="15" cy="10" r="9" fill="none"
     stroke="currentColor" stroke-width="1.5" />
-  <circle cx="20" cy="25" r="10" fill="none"
+  <circle cx="15" cy="20" r="9" fill="none"
     stroke="currentColor" stroke-width="1.5" />`;
 
-const twoWindingAutoPTRPath = svg`
-<line x1="20" y1="0" x2="20" y2="5" stroke-width="1.5" stroke="currentColor" />
-<line x1="0" y1="25" x2="10" y2="25" stroke-width="1.5" stroke="currentColor" />
-<line x1="30" y1="25" x2="40" y2="25" stroke-width="1.5" stroke="currentColor" />
-<circle cx="20" cy="15" r="10" fill="none"
+const threeWindingPTRPath = svg`<circle cx="15" cy="10" r="9" fill="none"
     stroke="currentColor" stroke-width="1.5" />
-  <circle cx="20" cy="25" r="10" fill="none"
+  <circle cx="10" cy="20" r="9" fill="none"
+    stroke="currentColor" stroke-width="1.5" />
+  <circle cx="20" cy="20" r="9" fill="none"
     stroke="currentColor" stroke-width="1.5" />`;
 
-const twoWindingEarthingPTRPath = svg`
-<line x1="20" y1="0" x2="20" y2="5" stroke-width="1.5" stroke="currentColor" />
-<line x1="0" y1="25" x2="10" y2="25" stroke-width="1.5" stroke="currentColor" />
-<circle cx="20" cy="15" r="10" fill="none"
-    stroke="currentColor" stroke-width="1.5" />
-  <circle cx="20" cy="25" r="10" fill="none"
-    stroke="currentColor" stroke-width="1.5" />`;
-
-const threeWindingPTRPath = svg`<circle cx="20" cy="15" r="10" fill="none"
-    stroke="currentColor" stroke-width="1.5" />
-  <circle cx="15" cy="25" r="10" fill="none"
-    stroke="currentColor" stroke-width="1.5" />
-  <circle cx="25" cy="25" r="10" fill="none"
-    stroke="currentColor" stroke-width="1.5" />`;
-
-export const oneWindingEarthingPTRIcon = html`<svg
-  viewBox="0 0 40 40"
+export const oneWindingPTRIcon = html`<svg
+  viewBox="0 0 30 30"
   width="24"
   height="24"
   slot="icon"
 >
-  ${oneWindingEarthingPTRPath}
-</svg>`;
-
-export const oneWindingAutoPTRIcon = html`<svg
-  viewBox="0 0 40 40"
-  width="24"
-  height="24"
-  slot="icon"
->
-  ${oneWindingAutoPTRPath}
+  ${oneWindingPTRPath}
 </svg>`;
 
 export const twoWindingPTRIcon = html`<svg
-  viewBox="0 0 40 40"
+  viewBox="0 0 30 30"
   width="24"
   height="24"
   slot="icon"
@@ -157,26 +122,18 @@ export const twoWindingPTRIcon = html`<svg
   ${twoWindingPTRPath}
 </svg>`;
 
-export const twoWindingAutoPTRIcon = html`<svg
-  viewBox="0 0 40 40"
+export const twoWindingPTRIconHorizontal = html`<svg
+  viewBox="0 0 30 30"
   width="24"
   height="24"
+  transform="rotate(-90)"
   slot="icon"
 >
-  ${twoWindingAutoPTRPath}
-</svg>`;
-
-export const twoWindingEarthingPTRIcon = html`<svg
-  viewBox="0 0 40 40"
-  width="24"
-  height="24"
-  slot="icon"
->
-  ${twoWindingEarthingPTRPath}
+  ${twoWindingPTRPath}
 </svg>`;
 
 export const threeWindingPTRIcon = html`<svg
-  viewBox="0 0 40 40"
+  viewBox="0 0 30 30"
   width="24"
   height="24"
   slot="icon"
