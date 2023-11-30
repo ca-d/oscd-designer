@@ -1127,7 +1127,7 @@ export class SLDEditor extends LitElement {
       >
         <mwc-list
           @selected=${({ detail: { index } }: SingleSelectedEvent) => {
-            items[index]?.handler?.();
+            items.filter(item => item.handler)[index]?.handler?.();
             this.menu = undefined;
           }}
         >
@@ -1143,7 +1143,11 @@ export class SLDEditor extends LitElement {
     } = attributes(this.substation);
 
     const placingTarget =
-      this.placing?.tagName === 'VoltageLevel' ||
+      this.placing?.tagName === 'VoltageLevel'
+        ? svg`<rect width="100%" height="100%" fill="url(#grid)" />`
+        : nothing;
+
+    const transformerPlacingTarget =
       this.placing?.tagName === 'PowerTransformer'
         ? svg`<rect width="100%" height="100%" fill="url(#grid)" />`
         : nothing;
@@ -1392,7 +1396,7 @@ export class SLDEditor extends LitElement {
               !this.placing || e.closest(this.placing.tagName) !== this.placing,
           )
           .map(element => this.renderLabel(element))}
-        ${placingLabelTarget} ${placingElement}
+        ${transformerPlacingTarget} ${placingLabelTarget} ${placingElement}
       </svg>
       ${menu} ${coordinateTooltip}
       <mwc-dialog
@@ -1920,10 +1924,24 @@ export class SLDEditor extends LitElement {
                 if (terminal) return;
                 e.preventDefault();
                 e.stopImmediatePropagation();
+                if (
+                  this.placing ||
+                  this.connecting ||
+                  this.resizing ||
+                  this.placingLabel
+                )
+                  return;
                 this.groundTerminal(winding, name as 'T1' | 'T2' | 'N1' | 'N2');
               }}
               @click=${(e: MouseEvent) => {
                 e.stopImmediatePropagation();
+                if (
+                  this.placing ||
+                  this.connecting ||
+                  this.resizing ||
+                  this.placingLabel
+                )
+                  return;
                 this.dispatchEvent(
                   newStartConnectEvent({
                     from: winding,
