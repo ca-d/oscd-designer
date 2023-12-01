@@ -253,7 +253,8 @@ let SLDEditor = class SLDEditor extends LitElement {
         if (overlappingSibling && !isBusBar(element)) {
             return false;
         }
-        const containingParent = element.tagName === 'VoltageLevel'
+        const containingParent = element.tagName === 'VoltageLevel' ||
+            element.tagName === 'PowerTransformer'
             ? containsRect(this.substation, x, y, w, h)
             : Array.from(this.substation.querySelectorAll(parentTags[element.tagName].join(','))).find(parent => !isBusBar(parent) && containsRect(parent, x, y, w, h));
         if (containingParent)
@@ -411,6 +412,7 @@ let SLDEditor = class SLDEditor extends LitElement {
                 handler: () => {
                     const node = this.doc.createElementNS(this.doc.documentElement.namespaceURI, 'TapChanger');
                     node.setAttribute('name', 'LTC');
+                    node.setAttribute('type', 'LTC');
                     node.setAttribute('name', uniqueName(node, winding));
                     this.dispatchEvent(newEditEvent({
                         parent: winding,
@@ -1584,12 +1586,15 @@ let SLDEditor = class SLDEditor extends LitElement {
                     y,
                 }));
             }
-            else {
-                let placing = transformer;
-                if (e.shiftKey)
-                    placing = copy(transformer, this.nsp);
-                this.dispatchEvent(newStartPlaceEvent(placing));
-            }
+            if (this.placing ||
+                this.connecting ||
+                this.resizing ||
+                this.placingLabel)
+                return;
+            let placing = transformer;
+            if (e.shiftKey)
+                placing = copy(transformer, this.nsp);
+            this.dispatchEvent(newStartPlaceEvent(placing));
         }}>
         ${windings.map(w => this.renderTransformerWinding(w))}
       </g>
