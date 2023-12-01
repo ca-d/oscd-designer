@@ -149,7 +149,7 @@ function copy(element, nsp) {
     });
     return clone;
 }
-function renderMenuFooter(element) {
+function renderMenuHeader(element) {
     const name = element.getAttribute('name');
     let detail = element.getAttribute('desc');
     const type = element.getAttribute('type');
@@ -397,18 +397,32 @@ let SLDEditor = class SLDEditor extends LitElement {
         }));
     }
     transformerWindingMenuItems(winding) {
-        const items = [];
+        const items = [
+            {
+                content: html `<mwc-list-item graphic="icon">
+          <span>Edit</span>
+          <mwc-icon slot="graphic">edit</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.dispatchEvent(newEditWizardEvent(winding)),
+            },
+        ];
         const tapChanger = winding.querySelector('TapChanger');
         if (tapChanger)
-            items.push({
+            items.unshift({
                 handler: () => this.dispatchEvent(newEditEvent({ node: tapChanger })),
                 content: html `<mwc-list-item graphic="icon">
-          <span>Remove Tap Changer</span>
-          <mwc-icon slot="graphic">remove</mwc-icon>
-        </mwc-list-item>`,
+            <span>Remove Tap Changer</span>
+            <mwc-icon slot="graphic">remove</mwc-icon>
+          </mwc-list-item>`,
+            }, {
+                content: html `<mwc-list-item graphic="icon">
+            <span>Edit Tap Changer</span>
+            <mwc-icon slot="graphic">edit</mwc-icon>
+          </mwc-list-item>`,
+                handler: () => this.dispatchEvent(newEditWizardEvent(tapChanger)),
             });
         else
-            items.push({
+            items.unshift({
                 handler: () => {
                     const node = this.doc.createElementNS(this.doc.documentElement.namespaceURI, 'TapChanger');
                     node.setAttribute('name', 'LTC');
@@ -794,30 +808,31 @@ let SLDEditor = class SLDEditor extends LitElement {
         if (!this.menu)
             return html ``;
         const { element } = this.menu;
-        let items = [];
+        const items = [
+            { content: renderMenuHeader(element) },
+            { content: html `<li divider role="separator"></li>` },
+        ];
         if (element.tagName === 'ConductingEquipment')
-            items = this.equipmentMenuItems(element);
+            items.push(...this.equipmentMenuItems(element));
         else if (element.tagName === 'PowerTransformer')
-            items = this.transformerMenuItems(element);
+            items.push(...this.transformerMenuItems(element));
         else if (element.tagName === 'TransformerWinding')
-            items = this.transformerWindingMenuItems(element);
+            items.push(...this.transformerWindingMenuItems(element));
         else if (element.tagName === 'Bay' && isBusBar(element))
-            items = this.busBarMenuItems(element);
+            items.push(...this.busBarMenuItems(element));
         else if (element.tagName === 'Bay' || element.tagName === 'VoltageLevel')
-            items = this.containerMenuItems(element);
-        items.push({ content: html `<li divider role="separator"></li>` });
-        items.push({ content: renderMenuFooter(element) });
+            items.push(...this.containerMenuItems(element));
         if (element.tagName === 'TransformerWinding') {
             const transformer = element.parentElement;
             items.push({ content: html `<li divider role="separator"></li>` });
-            items.push(...this.transformerMenuItems(transformer));
+            items.push({ content: renderMenuHeader(transformer) });
             items.push({ content: html `<li divider role="separator"></li>` });
-            items.push({ content: renderMenuFooter(transformer) });
+            items.push(...this.transformerMenuItems(transformer));
         }
         return html `
       <menu
         id="sld-context-menu"
-        style="position: fixed; top: ${this.menu.top}px; left: ${this.menu
+        style="position: fixed; top: ${this.menu.top - 73}px; left: ${this.menu
             .left}px; background: var(--oscd-base3, white); margin: 0px; padding: 0px; box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23); --mdc-list-vertical-padding: 0px; overflow-y: auto;"
         ${ref(async (menu) => {
             if (!(menu instanceof HTMLElement))
@@ -1264,9 +1279,7 @@ let SLDEditor = class SLDEditor extends LitElement {
     }
     windingMeasures(winding) {
         const transformer = winding.parentElement;
-        const windings = Array.from(transformer.children)
-            .filter(c => c.tagName === 'TransformerWinding')
-            .sort((a, b) => a.getAttribute('name').localeCompare(b.getAttribute('name')));
+        const windings = Array.from(transformer.children).filter(c => c.tagName === 'TransformerWinding');
         const [x, y] = this.renderedPosition(transformer).map(c => c + 0.5);
         let center = [x, y];
         const size = 0.7;

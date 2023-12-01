@@ -268,6 +268,7 @@ export function removeTerminal(terminal) {
     }
     if (cNode && otherTerminals.length <= 1) {
         edits.push(...removeNode(cNode));
+        return edits;
     }
     const priv = cNode === null || cNode === void 0 ? void 0 : cNode.querySelector(`Private[type="${privType}"]`);
     const vertex = priv === null || priv === void 0 ? void 0 : priv.querySelector(`Vertex[*|uuid="${terminal.getAttributeNS(sldNs, 'uuid')}"]`);
