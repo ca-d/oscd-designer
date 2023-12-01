@@ -385,28 +385,38 @@ let SLDEditor = class SLDEditor extends LitElement {
         this.dispatchEvent(newEditEvent(edits));
     }
     flipElement(element) {
-        const { flip } = attributes(element);
-        this.dispatchEvent(newEditEvent({
-            element,
-            attributes: {
-                [`${this.nsp}:flip`]: {
-                    namespaceURI: sldNs,
-                    value: flip ? null : 'true',
+        const { flip, kind } = attributes(element);
+        const edits = [
+            {
+                element,
+                attributes: {
+                    [`${this.nsp}:flip`]: {
+                        namespaceURI: sldNs,
+                        value: flip ? null : 'true',
+                    },
                 },
             },
-        }));
+        ];
+        if (element.tagName === 'PowerTransformer') {
+            const winding = element.querySelector('TransformerWinding');
+            Array.from(winding.querySelectorAll('Terminal')).forEach(terminal => edits.push(...removeTerminal(terminal)));
+            if (kind === 'earthing') {
+                Array.from(winding.querySelectorAll('NeutralPoint')).forEach(np => edits.push(...removeTerminal(np)));
+            }
+        }
+        this.dispatchEvent(newEditEvent(edits));
     }
     transformerWindingMenuItems(winding) {
+        const tapChanger = winding.querySelector('TapChanger');
         const items = [
             {
                 content: html `<mwc-list-item graphic="icon">
-          <span>Edit</span>
+          <span>Edit${tapChanger ? ' Winding' : nothing}</span>
           <mwc-icon slot="graphic">edit</mwc-icon>
         </mwc-list-item>`,
                 handler: () => this.dispatchEvent(newEditWizardEvent(winding)),
             },
         ];
-        const tapChanger = winding.querySelector('TapChanger');
         if (tapChanger)
             items.unshift({
                 handler: () => this.dispatchEvent(newEditEvent({ node: tapChanger })),
@@ -1291,7 +1301,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         const terminal2 = terminalElements.find(t => t.getAttribute('name') !== 'T1');
         const neutral = Array.from(winding.children).find(c => c.tagName === 'NeutralPoint');
         const windingIndex = windings.indexOf(winding);
-        const { rot, kind } = attributes(transformer);
+        const { rot, kind, flip } = attributes(transformer);
         function shift(point, coord, amount) {
             const shifted = point.slice();
             if (coord === 0)
@@ -1315,10 +1325,11 @@ let SLDEditor = class SLDEditor extends LitElement {
                 }
             }
             else {
+                const sgn = flip ? -1 : 1;
                 const n1 = shift(center, 0, -size);
                 const n2 = shift(center, 0, size);
-                const t1 = shift(center, 1, -size - 0.5);
-                const t2 = shift(center, 1, size);
+                const t1 = shift(center, 1, (-size - 0.5) * sgn);
+                const t2 = shift(center, 1, size * sgn);
                 if (!neutral) {
                     terminals.N1 = n1;
                     terminals.N2 = n2;
@@ -1335,9 +1346,9 @@ let SLDEditor = class SLDEditor extends LitElement {
                 }
                 arc = {
                     from: n2,
-                    fromCtl: shift(n2, 1, -1),
+                    fromCtl: shift(n2, 1, -sgn),
                     to: t1,
-                    toCtl: shift(shift(t1, 0, 0.2), 1, 0.1),
+                    toCtl: shift(shift(t1, 0, 0.2), 1, 0.1 * sgn),
                 };
                 if (!terminal1) {
                     terminals.T1 = t1;
@@ -1374,14 +1385,15 @@ let SLDEditor = class SLDEditor extends LitElement {
                     }
                 }
                 else {
-                    const t1 = shift(center, 0, size);
-                    const t2 = shift(center, 0, -size - 0.5);
+                    const sgn = flip ? -1 : 1;
+                    const t1 = shift(center, 0, size * sgn);
+                    const t2 = shift(center, 0, (-size - 0.5) * sgn);
                     const n1 = shift(center, 1, -size);
                     arc = {
                         from: n1,
-                        fromCtl: shift(n1, 0, -1),
+                        fromCtl: shift(n1, 0, -sgn),
                         to: t2,
-                        toCtl: shift(shift(t2, 1, -0.2), 0, 0.1),
+                        toCtl: shift(shift(t2, 1, -0.2), 0, 0.1 * sgn),
                     };
                     if (!terminal1)
                         terminals.T1 = t1;
@@ -1403,14 +1415,15 @@ let SLDEditor = class SLDEditor extends LitElement {
                     }
                 }
                 else {
+                    const sgn = flip ? -1 : 1;
                     if (!terminal1 && !terminal2)
-                        terminals.T1 = shift(center, 0, -size);
-                    const n1 = shift(center, 0, size);
+                        terminals.T1 = shift(center, 0, -size * sgn);
+                    const n1 = shift(center, 0, size * sgn);
                     if (!neutral) {
                         terminals.N1 = n1;
                     }
                     else if (neutral.getAttribute('cNodeName') === 'grounded') {
-                        const n1p = shift(n1, 0, 0.2);
+                        const n1p = shift(n1, 0, 0.2 * sgn);
                         grounded.N1 = [n1p, n1];
                     }
                 }
@@ -1558,19 +1571,25 @@ let SLDEditor = class SLDEditor extends LitElement {
                 }}
       fill="#${terminal ? 'BB1326' : '12579B'}" stroke="#F5E214" />`);
             });
+        let longArrow = false;
         let arcPath = svg ``;
         if (arc) {
             const { from: [xf, yf], fromCtl: [xfc, yfc], to: [xt, yt], toCtl: [xtc, ytc], } = arc;
+            const { flip } = attributes(winding.parentElement);
+            if (!flip && yfc < yf)
+                longArrow = true;
+            if (flip && xfc > xf)
+                longArrow = true;
             arcPath = svg `<path d="M ${xf} ${yf} C ${xfc} ${yfc}, ${xtc} ${ytc}, ${xt} ${yt}" stroke="black" stroke-width="0.06" />`;
         }
-        const { rot } = attributes(winding.parentElement);
-        const tapChanger = winding.querySelector('TapChanger')
-            ? svg `<line x1="${cx - 0.8}" y1="${cy + 0.8}" x2="${cx + 0.8}" y2="${cy - (arc && rot === 1 ? 1 : 0.8)}"
+        const tapChanger = winding.querySelector('TapChanger');
+        const ltcArrow = tapChanger
+            ? svg `<line x1="${cx - 0.8}" y1="${cy + 0.8}" x2="${cx + 0.8}" y2="${cy - (longArrow ? 1 : 0.8)}"
               stroke="black" stroke-width="0.06" marker-end="url(#arrow)" />`
             : nothing;
         return svg `<g class="winding"
         @contextmenu=${(e) => this.openMenu(winding, e)}
-    ><circle cx="${cx}" cy="${cy}" r="${size}" stroke="black" stroke-width="0.06" />${arcPath}${tapChanger}${ports}</g>`;
+    ><circle cx="${cx}" cy="${cy}" r="${size}" stroke="black" stroke-width="0.06" />${arcPath}${ltcArrow}${ports}</g>`;
     }
     renderPowerTransformer(transformer, preview = false) {
         if (this.placing === transformer && !preview)

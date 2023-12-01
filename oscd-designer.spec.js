@@ -266,7 +266,7 @@ describe('Designer', () => {
             }).dispatchEvent(new PointerEvent('contextmenu'));
             await element.updateComplete;
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
-            const item = sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(1)');
+            const item = sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(2)');
             item.selected = true;
             await element.updateComplete;
             expect(element)
@@ -286,7 +286,7 @@ describe('Designer', () => {
             }).dispatchEvent(new PointerEvent('contextmenu'));
             await element.updateComplete;
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
-            const item = sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(5)');
+            const item = sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(4)');
             item.selected = true;
             await element.updateComplete;
             expect(element)
@@ -306,7 +306,7 @@ describe('Designer', () => {
             }).dispatchEvent(new PointerEvent('contextmenu'));
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
             await element.updateComplete;
-            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(3)').selected = true;
+            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(2)').selected = true;
             await sldEditor.updateComplete;
             expect(lastCalledWizard).to.equal(element.doc.querySelector('VoltageLevel'));
         });
@@ -317,7 +317,7 @@ describe('Designer', () => {
             }).dispatchEvent(new PointerEvent('contextmenu'));
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
             await element.updateComplete;
-            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(4)').selected = true;
+            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(3)').selected = true;
             await sldEditor.updateComplete;
             expect(element)
                 .property('placingLabel')
@@ -427,7 +427,7 @@ describe('Designer', () => {
             }).dispatchEvent(new PointerEvent('contextmenu'));
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
             await element.updateComplete;
-            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(3)').selected = true;
+            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(2)').selected = true;
             await sldEditor.updateComplete;
             expect(lastCalledWizard).to.equal(element.doc.querySelector('Bay'));
         });
@@ -596,7 +596,7 @@ describe('Designer', () => {
             }).dispatchEvent(new PointerEvent('contextmenu'));
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
             await element.updateComplete;
-            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(3)').selected = true;
+            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(2)').selected = true;
             await sldEditor.updateComplete;
             expect(lastCalledWizard).to.equal(element.doc.querySelector('[type="SMC"]'));
         });
@@ -607,7 +607,7 @@ describe('Designer', () => {
             }).dispatchEvent(new PointerEvent('contextmenu'));
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
             await element.updateComplete;
-            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(4)').selected = true;
+            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(3)').selected = true;
             await sldEditor.updateComplete;
             expect(element)
                 .property('placingLabel')
@@ -672,7 +672,7 @@ describe('Designer', () => {
                 .querySelector('rect');
             eqClickTarget.dispatchEvent(new PointerEvent('contextmenu'));
             await element.updateComplete;
-            let item = sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(5)');
+            let item = sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(6)');
             expect(equipment).to.not.have.attribute('esld:flip');
             item.selected = true;
             await element.updateComplete;
@@ -683,7 +683,7 @@ describe('Designer', () => {
                 .querySelector('rect');
             eqClickTarget.dispatchEvent(new PointerEvent('contextmenu'));
             await element.updateComplete;
-            item = sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(5)');
+            item = sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(6)');
             item.selected = true;
             await element.updateComplete;
             expect(equipment).to.not.have.attribute('esld:flip');
@@ -697,7 +697,7 @@ describe('Designer', () => {
                 .querySelector('rect');
             eqClickTarget.dispatchEvent(new PointerEvent('contextmenu'));
             await element.updateComplete;
-            const item = sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(6)');
+            const item = sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(7)');
             expect(equipment).to.have.attribute('esld:rot', '1');
             item.selected = true;
             await element.updateComplete;
@@ -712,7 +712,7 @@ describe('Designer', () => {
                 .querySelector('rect');
             eqClickTarget.dispatchEvent(new PointerEvent('contextmenu'));
             await element.updateComplete;
-            const item = sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(5)');
+            const item = sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(4)');
             item.selected = true;
             await element.updateComplete;
             expect(equipment).to.have.attribute('esld:x', '4');
@@ -749,13 +749,13 @@ describe('Designer', () => {
             queryUI({ scl: 'ConductingEquipment', ui: 'rect' }).dispatchEvent(new PointerEvent('contextmenu'));
             await element.updateComplete;
             expect(equipment.querySelector('Terminal[name="T1"][cNodeName="grounded"]')).to.not.exist;
-            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(2)').selected = true;
+            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(3)').selected = true;
             await element.updateComplete;
             expect(equipment.querySelector('Terminal[name="T1"][cNodeName="grounded"]')).to.exist;
             queryUI({ scl: 'ConductingEquipment', ui: 'rect' }).dispatchEvent(new PointerEvent('contextmenu'));
             await element.updateComplete;
             expect(equipment.querySelector('Terminal[name="T2"][cNodeName="grounded"]')).to.not.exist;
-            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(3)').selected = true;
+            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(4)').selected = true;
             await element.updateComplete;
             expect(equipment.querySelector('Terminal[name="T2"][cNodeName="grounded"]')).to.exist;
         });
@@ -783,7 +783,7 @@ describe('Designer', () => {
             let equipment = element.doc.querySelector('ConductingEquipment');
             queryUI({ scl: 'ConductingEquipment', ui: 'rect' }).dispatchEvent(new PointerEvent('contextmenu'));
             await element.updateComplete;
-            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(1)').selected = true;
+            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(2)').selected = true;
             expect(equipment.querySelector('Terminal[name="T1"]')).to.not.exist;
             let position = middleOf(queryUI({ scl: '[type="VTR"]', ui: 'rect' }));
             position[1] -= 1;
@@ -791,7 +791,7 @@ describe('Designer', () => {
             expect(equipment.querySelector('Terminal[name="T1"]')).to.exist;
             queryUI({ scl: 'ConductingEquipment', ui: 'rect' }).dispatchEvent(new PointerEvent('contextmenu'));
             await element.updateComplete;
-            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(2)').selected = true;
+            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(3)').selected = true;
             expect(equipment.querySelector('Terminal[name="T2"]')).to.not.exist;
             position = middleOf(queryUI({ scl: '[type="NEW"]', ui: 'rect' }));
             position[1] -= 1;
@@ -800,14 +800,14 @@ describe('Designer', () => {
             equipment = element.doc.querySelector('[type="DIS"]');
             queryUI({ scl: '[type="DIS"]', ui: 'rect' }).dispatchEvent(new PointerEvent('contextmenu'));
             await element.updateComplete;
-            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(1)').selected = true;
+            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(2)').selected = true;
             expect(equipment.querySelector('Terminal[name="T1"]')).to.not.exist;
             position = middleOf(queryUI({ scl: '[type="CTR"]', ui: 'rect' }));
             await sendMouse({ type: 'click', position });
             expect(equipment.querySelector('Terminal[name="T1"]')).to.exist;
             queryUI({ scl: '[type="DIS"]', ui: 'rect' }).dispatchEvent(new PointerEvent('contextmenu'));
             await element.updateComplete;
-            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(2)').selected = true;
+            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(3)').selected = true;
             expect(equipment.querySelector('Terminal[name="T2"]')).to.not.exist;
             position = middleOf(queryUI({ scl: '[name="DIS2"]', ui: 'rect' }));
             position[1] += 1;
@@ -822,7 +822,7 @@ describe('Designer', () => {
             const equipment = element.doc.querySelector('ConductingEquipment');
             const eqClickTarget = sldEditor
                 .shadowRoot.getElementById(identity(equipment))
-                .querySelector('circle:nth-of-type(2)');
+                .querySelector('circle:nth-of-type(1)');
             eqClickTarget.dispatchEvent(new PointerEvent('click'));
             await element.updateComplete;
             const eq2ClickTarget = sldEditor.shadowRoot.getElementById(identity(equipment));
@@ -988,13 +988,13 @@ describe('Designer', () => {
                     queryUI({ scl: '[type="CTR"]', ui: 'rect' }).dispatchEvent(new PointerEvent('contextmenu'));
                     await element.updateComplete;
                     expect(equipment.querySelector('Terminal[name="T1"]')).to.exist;
-                    sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(1)').selected = true;
+                    sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(2)').selected = true;
                     await element.updateComplete;
                     expect(equipment.querySelector('Terminal[name="T1"]')).to.not.exist;
                     queryUI({ scl: '[type="CTR"]', ui: 'rect' }).dispatchEvent(new PointerEvent('contextmenu'));
                     await sldEditor.updateComplete;
                     expect(equipment.querySelector('Terminal[name="T2"]')).to.exist;
-                    sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(3)').selected = true;
+                    sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(4)').selected = true;
                     await element.updateComplete;
                     expect(equipment.querySelector('Terminal[name="T2"]')).to.not.exist;
                 });
@@ -1092,7 +1092,7 @@ describe('Designer', () => {
                     queryUI({ scl: '[type="CTR"]', ui: 'rect' }).dispatchEvent(new PointerEvent('contextmenu'));
                     await element.updateComplete;
                     expect(equipment.querySelector('Terminal[name="T1"]')).to.exist;
-                    sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(2)').selected = true;
+                    sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(1)').selected = true;
                     await element.updateComplete;
                     expect(equipment.parentElement).to.not.exist;
                     await expect(element.doc.documentElement).dom.to.equalSnapshot({
@@ -1105,7 +1105,7 @@ describe('Designer', () => {
                     queryUI({ scl: 'Bay', ui: 'rect' }).dispatchEvent(new PointerEvent('contextmenu'));
                     await element.updateComplete;
                     expect(bay.querySelector('Terminal[name="T1"]')).to.exist;
-                    sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(2)').selected = true;
+                    sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(1)').selected = true;
                     await element.updateComplete;
                     expect(bay.parentElement).to.not.exist;
                     await expect(element.doc.documentElement).dom.to.equalSnapshot({
@@ -1118,7 +1118,7 @@ describe('Designer', () => {
                     queryUI({ scl: '[name="V2"]', ui: 'rect' }).dispatchEvent(new PointerEvent('contextmenu'));
                     await element.updateComplete;
                     expect(bay.querySelector('Terminal[name="T1"]')).to.exist;
-                    sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(2)').selected = true;
+                    sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(1)').selected = true;
                     await element.updateComplete;
                     expect(bay.parentElement).to.not.exist;
                     await expect(element.doc.documentElement).dom.to.equalSnapshot({
@@ -1190,7 +1190,7 @@ describe('Designer', () => {
                         }).dispatchEvent(new PointerEvent('contextmenu'));
                         await element.updateComplete;
                         const sldEditor = element.shadowRoot.querySelector('sld-editor');
-                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(1)').selected = true;
+                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(2)').selected = true;
                         const bus = element.doc.querySelector('[name="BB1"]');
                         expect(bus).to.have.attribute('h', '3');
                         await sendMouse({ type: 'click', position: [450, 150] });
@@ -1206,7 +1206,7 @@ describe('Designer', () => {
                         }).dispatchEvent(new PointerEvent('contextmenu'));
                         await element.updateComplete;
                         const sldEditor = element.shadowRoot.querySelector('sld-editor');
-                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(6)').selected = true;
+                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(5)').selected = true;
                         expect(element.doc.querySelector('ConductingEquipment[*|x="3"][*|y="3"]')).to.not.exist;
                         expect(element.doc.querySelector('ConductingEquipment')).to.have.attribute('esld:x', '4');
                         expect(element.doc.querySelector('ConductingEquipment')).to.have.attribute('esld:y', '4');
@@ -1224,7 +1224,7 @@ describe('Designer', () => {
                         }).dispatchEvent(new PointerEvent('contextmenu'));
                         await element.updateComplete;
                         const sldEditor = element.shadowRoot.querySelector('sld-editor');
-                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(2)').selected = true;
+                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-of-type(3)').selected = true;
                         const bus = element.doc.querySelector('[name="BB1"]');
                         expect(bus).to.have.attribute('y', '2');
                         await sendMouse({ type: 'click', position: [430, 400] });
@@ -1240,7 +1240,7 @@ describe('Designer', () => {
                         }).dispatchEvent(new PointerEvent('contextmenu'));
                         const sldEditor = element.shadowRoot.querySelector('sld-editor');
                         await element.updateComplete;
-                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(4)').selected = true;
+                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(3)').selected = true;
                         await sldEditor.updateComplete;
                         expect(element)
                             .property('placingLabel')
@@ -1256,7 +1256,7 @@ describe('Designer', () => {
                         }).dispatchEvent(new PointerEvent('contextmenu'));
                         const sldEditor = element.shadowRoot.querySelector('sld-editor');
                         await element.updateComplete;
-                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(3)').selected = true;
+                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(2)').selected = true;
                         await sldEditor.updateComplete;
                         expect(lastCalledWizard).to.equal(element.doc.querySelector('[name="BB1"]'));
                     });
@@ -1268,7 +1268,7 @@ describe('Designer', () => {
                         await element.updateComplete;
                         expect(element.doc.querySelector('[name="BB1"]')).to.exist;
                         const sldEditor = element.shadowRoot.querySelector('sld-editor');
-                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(2)').selected = true;
+                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(1)').selected = true;
                         await sldEditor.updateComplete;
                         expect(element.doc.querySelector('[name="BB1"]')).to.not.exist;
                         await expect(element.doc.documentElement).dom.to.equalSnapshot({
@@ -1282,7 +1282,7 @@ describe('Designer', () => {
                         }).dispatchEvent(new PointerEvent('contextmenu'));
                         await element.updateComplete;
                         const sldEditor = element.shadowRoot.querySelector('sld-editor');
-                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(6)').selected = true;
+                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(5)').selected = true;
                         expect(element.doc.querySelector('[name="V1"] [name="B2"]')).not.to
                             .exist;
                         await sendMouse({ type: 'click', position: [280, 350] });
