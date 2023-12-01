@@ -380,7 +380,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         edits.push({
             parent: equipment,
             node: terminal,
-            reference: getReference(equipment, 'Terminal'),
+            reference: getReference(equipment, tagName),
         });
         this.dispatchEvent(newEditEvent(edits));
     }
@@ -985,12 +985,6 @@ let SLDEditor = class SLDEditor extends LitElement {
       <h2>
         ${this.substation.getAttribute('name')}
         <mwc-icon-button
-          label="Edit Substation"
-          @click=${() => this.dispatchEvent(newEditWizardEvent(this.substation))}
-          icon="edit"
-        >
-        </mwc-icon-button>
-        <mwc-icon-button
           label="Resize Substation"
           @click=${() => this.resizeSubstationUI.show()}
         >
@@ -1003,12 +997,6 @@ let SLDEditor = class SLDEditor extends LitElement {
           >
             ${resizePath}
           </svg>
-        </mwc-icon-button>
-        <mwc-icon-button
-          label="Delete Substation"
-          @click=${() => this.dispatchEvent(newEditEvent({ node: this.substation }))}
-          icon="delete"
-        >
         </mwc-icon-button>
       </h2>
       <svg
@@ -1961,7 +1949,6 @@ SLDEditor.styles = css `
       font-weight: 300;
       font-size: 24px;
       margin-bottom: 4px;
-      color: rgba(0, 0, 0, 0.83);
       --mdc-icon-button-size: 28px;
       --mdc-icon-size: 24px;
     }
