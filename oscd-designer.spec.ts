@@ -160,18 +160,6 @@ describe('Designer', () => {
     expect(name1).not.to.equal(name2);
   });
 
-  it('zooms in on zoom in button click', async () => {
-    const initial = element.gridSize;
-    element.shadowRoot!.querySelector<IconButton>('[icon="zoom_in"]')?.click();
-    expect(element.gridSize).to.be.greaterThan(initial);
-  });
-
-  it('zooms out on zoom out button click', async () => {
-    const initial = element.gridSize;
-    element.shadowRoot!.querySelector<IconButton>('[icon="zoom_out"]')?.click();
-    expect(element.gridSize).to.be.lessThan(initial);
-  });
-
   it('does not zoom out past a positive minimum value', async () => {
     for (let i = 0; i < 20; i += 1)
       element
@@ -186,6 +174,22 @@ describe('Designer', () => {
         .shadowRoot!.querySelector<Button>('[label="Add Substation"]')
         ?.click();
       await element.updateComplete;
+    });
+
+    it('zooms in on zoom in button click', async () => {
+      const initial = element.gridSize;
+      element
+        .shadowRoot!.querySelector<IconButton>('[icon="zoom_in"]')
+        ?.click();
+      expect(element.gridSize).to.be.greaterThan(initial);
+    });
+
+    it('zooms out on zoom out button click', async () => {
+      const initial = element.gridSize;
+      element
+        .shadowRoot!.querySelector<IconButton>('[icon="zoom_out"]')
+        ?.click();
+      expect(element.gridSize).to.be.lessThan(initial);
     });
 
     it('allows resizing substations', async () => {
