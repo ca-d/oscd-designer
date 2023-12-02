@@ -365,7 +365,11 @@ export function removeTerminal(terminal: Element): Edit[] {
       .closest('Bay');
     if (newParent) edits.push(...reparentElement(cNode, newParent));
   }
-  if (cNode && otherTerminals.length <= 1) {
+  if (
+    cNode &&
+    otherTerminals.length <= 1 &&
+    cNode.getAttribute('name') !== 'grounded'
+  ) {
     edits.push(...removeNode(cNode));
     return edits;
   }
