@@ -366,6 +366,9 @@ export class SLDEditor extends LitElement {
     fromTerminal: 'T1' | 'T2' | 'N1' | 'N2';
   };
 
+  @property()
+  showLabels?: boolean;
+
   @state()
   get idle(): boolean {
     return !(
@@ -1641,6 +1644,8 @@ export class SLDEditor extends LitElement {
   }
 
   renderLabel(element: Element) {
+    if (!this.showLabels) return nothing;
+
     const [x, y] = this.renderedLabelPosition(element);
     const name = element.getAttribute('name');
     const fontSize = element.tagName === 'ConductingEquipment' ? 0.45 : 0.6;
