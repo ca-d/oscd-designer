@@ -984,7 +984,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             const newW = Math.max(1, x + resW - this.mouseX);
             const newH = Math.max(1, y + resH - this.mouseY);
             hidden = false;
-            invalid = !this.canResizeTo(this.resizingTL, newW, newH);
+            invalid = !this.canResizeToTL(this.resizingTL, this.mouseX, this.mouseY, newW, newH);
             coordinates = html `${newW}&times;${newH}`;
         }
         const coordinateTooltip = html `<div
