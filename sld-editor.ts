@@ -49,10 +49,12 @@ import {
   newStartResizeBREvent,
   newStartResizeTLEvent,
   Point,
+  prettyPrint,
   privType,
   removeNode,
   removeTerminal,
   ringedEqTypes,
+  robotoDataURL,
   singleTerminal,
   sldNs,
   svgNs,
@@ -119,6 +121,26 @@ function overlapsRect(
     dim: [w, h],
   } = attributes(element);
   return overlaps([x, y, w, h], [x0, y0, w0, h0]);
+}
+
+function cleanXML(element: Element) {
+  if (
+    element.classList.contains('handle') ||
+    element.classList.contains('preview') ||
+    element.classList.contains('port')
+  ) {
+    element.remove();
+    return;
+  }
+  if (
+    element.classList.contains('voltagelevel') ||
+    element.classList.contains('bay')
+  )
+    element.querySelector('rect')?.remove();
+  Array.from(element.childNodes).forEach(child => {
+    if (child.nodeType === 8) element.removeChild(child);
+    if (child.nodeType === 1) cleanXML(child as Element);
+  });
 }
 
 function between(a: number, x: number, b: number): boolean {
@@ -557,6 +579,26 @@ export class SLDEditor extends LitElement {
     window.removeEventListener('keydown', this.handleKeydown);
     window.removeEventListener('click', this.handleClick);
     window.removeEventListener('click', this.positionCoordinates);
+  }
+
+  saveSVG() {
+    const sld = this.sld.cloneNode(true) as Element;
+    cleanXML(sld);
+    const blob = new Blob([prettyPrint(sld)], {
+      type: 'application/xml',
+    });
+
+    const a = document.createElement('a');
+    a.download = `${this.substation.getAttribute('name')}.svg`;
+    a.href = URL.createObjectURL(blob);
+    a.dataset.downloadurl = ['application/xml', a.download, a.href].join(':');
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => {
+      URL.revokeObjectURL(a.href);
+    }, 5000);
   }
 
   nearestOpenTerminal(equipment?: Element): 'T1' | 'T2' | undefined {
@@ -1404,6 +1446,12 @@ export class SLDEditor extends LitElement {
           icon="delete"
         >
         </mwc-icon-button>
+        <mwc-icon-button
+          label="Export Single Line Diagram"
+          @click=${() => this.saveSVG()}
+          icon="file_download"
+        >
+        </mwc-icon-button>
       </h2>
       <svg
         xmlns="${svgNs}"
@@ -1426,6 +1474,12 @@ export class SLDEditor extends LitElement {
         }}
       >
         <style>
+          @font-face {
+            font-family: 'Roboto';
+            font-style: normal;
+            font-weight: 400;
+            src: url(${robotoDataURL}) format('woff');
+          }
           .handle {
             visibility: hidden;
           }
@@ -1612,7 +1666,7 @@ export class SLDEditor extends LitElement {
           @click=${handleClick}
           @contextmenu=${(e: MouseEvent) => this.openMenu(element, e)}
           pointer-events="${events}" fill="#000000" fill-opacity="0.83"
-          style="font: ${fontSize}px sans-serif; cursor: default;">
+          style="font: ${fontSize}px Roboto, sans-serif; cursor: default;">
           ${name}
         </text>
       </g>`;
@@ -2059,7 +2113,7 @@ export class SLDEditor extends LitElement {
         const x1 = Number.isInteger(x * 2) ? x : x + 1;
         const y1 = Number.isInteger(y * 2) ? y : y + 1;
         const terminal = name.startsWith('T');
-        ports.push(svg`<circle cx="${x}" cy="${y}" r="0.2" opacity="0.4"
+        ports.push(svg`<circle class="port" cx="${x}" cy="${y}" r="0.2" opacity="0.4"
               @contextmenu=${(e: MouseEvent) => {
                 if (terminal) return;
                 e.preventDefault();
@@ -2231,7 +2285,7 @@ export class SLDEditor extends LitElement {
       this.placingLabel ||
       (this.placing && this.placing !== equipment)
         ? nothing
-        : svg`<circle cx="0.5" cy="0" r="0.2" opacity="0.4"
+        : svg`<circle class="port" cx="0.5" cy="0" r="0.2" opacity="0.4"
       fill="#BB1326" stroke="#F5E214" pointer-events="${
         this.placing ? 'none' : nothing
       }"
@@ -2276,7 +2330,7 @@ export class SLDEditor extends LitElement {
       (this.placing && this.placing !== equipment) ||
       singleTerminal.has(eqType)
         ? nothing
-        : svg`<circle cx="0.5" cy="1" r="0.2" opacity="0.4"
+        : svg`<circle class="port" cx="0.5" cy="1" r="0.2" opacity="0.4"
       fill="#BB1326" stroke="#F5E214" pointer-events="${
         this.placing ? 'none' : nothing
       }"
