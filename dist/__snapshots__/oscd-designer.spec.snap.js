@@ -825,17 +825,17 @@ snapshots["Designer given conducting equipment with established connectivity uni
               >
               </Vertex>
               <Vertex
-                esld:x="18"
+                esld:x="17"
                 esld:y="4.5"
               >
               </Vertex>
               <Vertex
-                esld:x="18"
+                esld:x="17"
                 esld:y="5.5"
               >
               </Vertex>
               <Vertex
-                esld:x="17.84"
+                esld:x="17.16"
                 esld:y="5.5"
               >
               </Vertex>
@@ -894,7 +894,7 @@ snapshots["Designer given conducting equipment with established connectivity uni
             bayName="B1"
             cNodeName="L2"
             connectivityNode="S1/V1/B1/L2"
-            name="T2"
+            name="T1"
             substationName="S1"
             voltageLevelName="V1"
           >

@@ -544,7 +544,6 @@ export class SLDEditor extends LitElement {
       rot,
       pos: [x, y],
     } = attributes(equipment);
-    console.log(`${mx},${my}`, `${x},${y}`);
     if (rot === 0 && my >= y + 0.5) return 'T2';
     if (rot === 1 && mx < x + 0.5) return 'T2';
     if (rot === 2 && my < y + 0.5) return 'T2';
