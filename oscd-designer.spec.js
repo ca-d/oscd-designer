@@ -229,7 +229,7 @@ describe('Designer', () => {
             expect(element)
                 .property('resizing')
                 .to.exist.and.to.have.property('tagName', 'VoltageLevel');
-            const voltageLevel = element.resizing;
+            const voltageLevel = element.resizingBR;
             expect(voltageLevel).to.have.attribute('smth:w', '48');
             expect(voltageLevel).to.have.attribute('smth:h', '23');
             await sendMouse({ type: 'click', position: [300, 300] });
@@ -272,7 +272,7 @@ describe('Designer', () => {
             expect(element)
                 .property('resizing')
                 .to.exist.and.to.have.property('tagName', 'VoltageLevel');
-            const voltageLevel = element.resizing;
+            const voltageLevel = element.resizingBR;
             expect(voltageLevel).to.have.attribute('smth:w', '48');
             expect(voltageLevel).to.have.attribute('smth:h', '23');
             await sendMouse({ type: 'click', position: [300, 300] });
@@ -405,7 +405,7 @@ describe('Designer', () => {
             expect(element)
                 .property('resizing')
                 .to.exist.and.to.have.property('tagName', 'Bay');
-            const bay = element.resizing;
+            const bay = element.resizingBR;
             expect(bay).to.have.attribute('esld:w', '3');
             expect(bay).to.have.attribute('esld:h', '3');
             await sendMouse({ type: 'click', position: [400, 400] });
@@ -438,7 +438,7 @@ describe('Designer', () => {
             expect(element)
                 .property('resizing')
                 .to.exist.and.to.have.property('tagName', 'Bay');
-            const bay = element.resizing;
+            const bay = element.resizingBR;
             expect(bay).to.have.attribute('esld:w', '3');
             expect(bay).to.have.attribute('esld:h', '3');
             await sendMouse({ type: 'click', position: [600, 400] });
@@ -452,7 +452,7 @@ describe('Designer', () => {
             expect(element)
                 .property('resizing')
                 .to.exist.and.to.have.property('tagName', 'VoltageLevel');
-            const voltageLevel = element.resizing;
+            const voltageLevel = element.resizingBR;
             expect(voltageLevel).to.have.attribute('esld:w', '13');
             expect(voltageLevel).to.have.attribute('esld:h', '13');
             await sendMouse({ type: 'click', position: [100, 100] });
@@ -551,7 +551,7 @@ describe('Designer', () => {
                 expect(element)
                     .property('resizing')
                     .to.exist.and.to.have.property('tagName', 'Bay');
-                const bay = element.resizing;
+                const bay = element.resizingBR;
                 expect(bay).to.have.attribute('esld:w', '3');
                 expect(bay).to.have.attribute('esld:h', '3');
                 await sendMouse({ type: 'click', position: [400, 400] });

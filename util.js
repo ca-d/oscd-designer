@@ -322,6 +322,13 @@ export function newResizeEvent(detail) {
         detail,
     });
 }
+export function newResizeTLEvent(detail) {
+    return new CustomEvent('oscd-sld-resize-tl', {
+        bubbles: true,
+        composed: true,
+        detail,
+    });
+}
 export function newPlaceEvent(detail) {
     return new CustomEvent('oscd-sld-place', {
         bubbles: true,
@@ -350,8 +357,15 @@ export function newRotateEvent(detail) {
         detail,
     });
 }
-export function newStartResizeEvent(detail) {
-    return new CustomEvent('oscd-sld-start-resize', {
+export function newStartResizeTLEvent(detail) {
+    return new CustomEvent('oscd-sld-start-resize-tl', {
+        bubbles: true,
+        composed: true,
+        detail,
+    });
+}
+export function newStartResizeBREvent(detail) {
+    return new CustomEvent('oscd-sld-start-resize-br', {
         bubbles: true,
         composed: true,
         detail,
