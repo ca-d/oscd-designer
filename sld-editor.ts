@@ -369,6 +369,12 @@ export class SLDEditor extends LitElement {
   mouseY2 = 0;
 
   @state()
+  mouseX2f = 0;
+
+  @state()
+  mouseY2f = 0;
+
+  @state()
   menu?: { element: Element; top: number; left: number };
 
   coordinatesRef: Ref<HTMLElement> = createRef();
@@ -533,14 +539,15 @@ export class SLDEditor extends LitElement {
     if (topTerminal) return 'T2';
     if (bottomTerminal) return 'T1';
 
-    const [mx, my] = [this.mouseX2, this.mouseY2];
+    const [mx, my] = [this.mouseX2f, this.mouseY2f];
     const {
       rot,
       pos: [x, y],
     } = attributes(equipment);
+    console.log(`${mx},${my}`, `${x},${y}`);
     if (rot === 0 && my >= y + 0.5) return 'T2';
-    if (rot === 1 && mx <= x + 0.5) return 'T2';
-    if (rot === 2 && my <= y + 0.5) return 'T2';
+    if (rot === 1 && mx < x + 0.5) return 'T2';
+    if (rot === 2 && my < y + 0.5) return 'T2';
     if (rot === 3 && mx >= x + 0.5) return 'T2';
     return 'T1';
   }
@@ -1350,6 +1357,8 @@ export class SLDEditor extends LitElement {
           this.mouseY = Math.floor(y);
           this.mouseX2 = Math.round(x * 2) / 2;
           this.mouseY2 = Math.round(y * 2) / 2;
+          this.mouseX2f = Math.floor(x * 2) / 2;
+          this.mouseY2f = Math.floor(y * 2) / 2;
           this.positionCoordinates(e);
         }}
       >
