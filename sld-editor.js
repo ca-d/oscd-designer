@@ -1050,12 +1050,14 @@ let SLDEditor = class SLDEditor extends LitElement {
         ${this.substation.getAttribute('name')}
         <mwc-icon-button
           label="Edit Substation"
+          title="Edit Substation"
           @click=${() => this.dispatchEvent(newEditWizardEvent(this.substation))}
           icon="edit"
         >
         </mwc-icon-button>
         <mwc-icon-button
           label="Resize Substation"
+          title="Resize Substation"
           @click=${() => this.resizeSubstationUI.show()}
         >
           <svg
@@ -1070,12 +1072,14 @@ let SLDEditor = class SLDEditor extends LitElement {
         </mwc-icon-button>
         <mwc-icon-button
           label="Delete Substation"
+          title="Delete Substation"
           @click=${() => this.dispatchEvent(newEditEvent({ node: this.substation }))}
           icon="delete"
         >
         </mwc-icon-button>
         <mwc-icon-button
-          label="Export Single Line Diagram"
+          label="Export Single Line Diagram SVG"
+          title="Export Single Line Diagram SVG"
           @click=${() => this.saveSVG()}
           icon="file_download"
         >
