@@ -119,18 +119,6 @@ describe('Designer', () => {
         const [name1, name2] = Array.from(element.doc.querySelectorAll('Substation')).map(substation => substation.getAttribute('name'));
         expect(name1).not.to.equal(name2);
     });
-    it('zooms in on zoom in button click', async () => {
-        var _a;
-        const initial = element.gridSize;
-        (_a = element.shadowRoot.querySelector('[icon="zoom_in"]')) === null || _a === void 0 ? void 0 : _a.click();
-        expect(element.gridSize).to.be.greaterThan(initial);
-    });
-    it('zooms out on zoom out button click', async () => {
-        var _a;
-        const initial = element.gridSize;
-        (_a = element.shadowRoot.querySelector('[icon="zoom_out"]')) === null || _a === void 0 ? void 0 : _a.click();
-        expect(element.gridSize).to.be.lessThan(initial);
-    });
     it('does not zoom out past a positive minimum value', async () => {
         var _a;
         for (let i = 0; i < 20; i += 1)
@@ -144,6 +132,20 @@ describe('Designer', () => {
             (_a = element
                 .shadowRoot.querySelector('[label="Add Substation"]')) === null || _a === void 0 ? void 0 : _a.click();
             await element.updateComplete;
+        });
+        it('zooms in on zoom in button click', async () => {
+            var _a;
+            const initial = element.gridSize;
+            (_a = element
+                .shadowRoot.querySelector('[icon="zoom_in"]')) === null || _a === void 0 ? void 0 : _a.click();
+            expect(element.gridSize).to.be.greaterThan(initial);
+        });
+        it('zooms out on zoom out button click', async () => {
+            var _a;
+            const initial = element.gridSize;
+            (_a = element
+                .shadowRoot.querySelector('[icon="zoom_out"]')) === null || _a === void 0 ? void 0 : _a.click();
+            expect(element.gridSize).to.be.lessThan(initial);
         });
         it('allows resizing substations', async () => {
             var _a, _b, _c, _d, _e, _f;
