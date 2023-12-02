@@ -169,10 +169,10 @@ describe('Designer', () => {
             await sendMouse({ type: 'click', position: [200, 200] });
             expect(element).to.have.property('placing', undefined);
             expect(element)
-                .property('resizing')
+                .property('resizingBR')
                 .to.have.property('tagName', 'VoltageLevel');
             await sendMouse({ type: 'click', position: [400, 400] });
-            expect(element).to.have.property('resizing', undefined);
+            expect(element).to.have.property('resizingBR', undefined);
             expect(element.doc.querySelector('VoltageLevel')).to.exist;
             expect(element.doc.querySelector('VoltageLevel')).to.have.attribute('x', '5');
             expect(element.doc.querySelector('VoltageLevel')).to.have.attribute('y', '3');
@@ -227,7 +227,7 @@ describe('Designer', () => {
             const moveHandle = sldEditor.shadowRoot.querySelectorAll('.handle')[1];
             moveHandle.dispatchEvent(new PointerEvent('click'));
             expect(element)
-                .property('resizing')
+                .property('resizingBR')
                 .to.exist.and.to.have.property('tagName', 'VoltageLevel');
             const voltageLevel = element.resizingBR;
             expect(voltageLevel).to.have.attribute('smth:w', '48');
@@ -237,9 +237,7 @@ describe('Designer', () => {
             expect(voltageLevel).to.have.attribute('smth:h', '7');
         });
         it('moves voltage levels on move handle click', async () => {
-            const sldEditor = element.shadowRoot.querySelector('sld-editor');
-            const moveHandle = sldEditor.shadowRoot.querySelector('.handle');
-            moveHandle.dispatchEvent(new PointerEvent('click'));
+            queryUI({ scl: 'VoltageLevel', ui: 'rect' }).dispatchEvent(new PointerEvent('click'));
             expect(element)
                 .property('placing')
                 .to.exist.and.to.have.property('tagName', 'VoltageLevel');
@@ -270,7 +268,7 @@ describe('Designer', () => {
             item.selected = true;
             await element.updateComplete;
             expect(element)
-                .property('resizing')
+                .property('resizingBR')
                 .to.exist.and.to.have.property('tagName', 'VoltageLevel');
             const voltageLevel = element.resizingBR;
             expect(voltageLevel).to.have.attribute('smth:w', '48');
@@ -327,9 +325,10 @@ describe('Designer', () => {
             expect(element.doc.querySelector('VoltageLevel')).to.have.attribute('smth:ly', '4.5');
         });
         it('forbids moving voltage levels out of bounds', async () => {
-            const sldEditor = element.shadowRoot.querySelector('sld-editor');
-            const moveHandle = sldEditor.shadowRoot.querySelector('.handle');
-            moveHandle.dispatchEvent(new PointerEvent('click'));
+            queryUI({
+                scl: 'VoltageLevel',
+                ui: 'rect',
+            }).dispatchEvent(new PointerEvent('click'));
             expect(element)
                 .property('placing')
                 .to.exist.and.to.have.property('tagName', 'VoltageLevel');
@@ -360,9 +359,9 @@ describe('Designer', () => {
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
             await sendMouse({ type: 'click', position: [200, 200] });
             expect(element).to.have.property('placing', undefined);
-            expect(element).property('resizing').to.have.property('tagName', 'Bay');
+            expect(element).property('resizingBR').to.have.property('tagName', 'Bay');
             await sendMouse({ type: 'click', position: [400, 400] });
-            expect(sldEditor).to.have.property('resizing', undefined);
+            expect(sldEditor).to.have.property('resizingBR', undefined);
             const bay = element.doc.querySelector('Bay');
             expect(bay).to.exist;
             expect(bay).to.have.attribute('x', '5');
@@ -378,9 +377,9 @@ describe('Designer', () => {
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
             await sendMouse({ type: 'click', position: [200, 200] });
             expect(element).to.have.property('placing', undefined);
-            expect(element).property('resizing').to.have.property('tagName', 'Bay');
+            expect(element).property('resizingBR').to.have.property('tagName', 'Bay');
             await sendMouse({ type: 'click', position: [400, 400] });
-            expect(sldEditor).to.have.property('resizing', undefined);
+            expect(sldEditor).to.have.property('resizingBR', undefined);
             const bus = element.doc.querySelector('Bay');
             expect(bus).to.exist;
             expect(bus).to.have.attribute('x', '5');
@@ -403,7 +402,7 @@ describe('Designer', () => {
             const moveHandle = sldEditor.shadowRoot.querySelectorAll('g.bay .handle')[1];
             moveHandle.dispatchEvent(new PointerEvent('click'));
             expect(element)
-                .property('resizing')
+                .property('resizingBR')
                 .to.exist.and.to.have.property('tagName', 'Bay');
             const bay = element.resizingBR;
             expect(bay).to.have.attribute('esld:w', '3');
@@ -436,7 +435,7 @@ describe('Designer', () => {
             const moveHandle = sldEditor.shadowRoot.querySelectorAll('g.bay .handle')[1];
             moveHandle.dispatchEvent(new PointerEvent('click'));
             expect(element)
-                .property('resizing')
+                .property('resizingBR')
                 .to.exist.and.to.have.property('tagName', 'Bay');
             const bay = element.resizingBR;
             expect(bay).to.have.attribute('esld:w', '3');
@@ -450,7 +449,7 @@ describe('Designer', () => {
             const moveHandle = sldEditor.shadowRoot.querySelectorAll('g.voltagelevel > .handle')[1];
             moveHandle.dispatchEvent(new PointerEvent('click'));
             expect(element)
-                .property('resizing')
+                .property('resizingBR')
                 .to.exist.and.to.have.property('tagName', 'VoltageLevel');
             const voltageLevel = element.resizingBR;
             expect(voltageLevel).to.have.attribute('esld:w', '13');
@@ -460,10 +459,7 @@ describe('Designer', () => {
             expect(voltageLevel).to.have.attribute('esld:h', '13');
         });
         it('moves bays on move handle click', async () => {
-            const sldEditor = element.shadowRoot.querySelector('sld-editor');
-            sldEditor
-                .shadowRoot.querySelector('g.bay .handle')
-                .dispatchEvent(new PointerEvent('click'));
+            queryUI({ scl: 'Bay', ui: 'rect' }).dispatchEvent(new PointerEvent('click'));
             expect(element)
                 .property('placing')
                 .to.exist.and.to.have.property('tagName', 'Bay');
@@ -473,10 +469,7 @@ describe('Designer', () => {
             expect(bay).to.have.attribute('esld:y', '3');
         });
         it('renames reparented bays if necessary', async () => {
-            const sldEditor = element.shadowRoot.querySelector('sld-editor');
-            sldEditor
-                .shadowRoot.querySelector('g.bay .handle')
-                .dispatchEvent(new PointerEvent('click'));
+            queryUI({ scl: 'Bay', ui: 'rect' }).dispatchEvent(new PointerEvent('click'));
             const bay = element.placing;
             expect(bay.parentElement).to.have.attribute('name', 'V1');
             expect(bay).to.have.attribute('name', 'B1');
@@ -486,9 +479,7 @@ describe('Designer', () => {
             expect(bay).to.have.attribute('esld:y', '3');
             expect(bay.parentElement).to.have.attribute('name', 'V2');
             expect(bay).to.have.attribute('name', 'B2');
-            sldEditor
-                .shadowRoot.querySelector('g.bay .handle')
-                .dispatchEvent(new PointerEvent('click'));
+            queryUI({ scl: 'Bay', ui: 'rect' }).dispatchEvent(new PointerEvent('click'));
             await sendMouse({ type: 'click', position: [200, 200] });
             expect(bay).to.have.attribute('esld:x', '5');
             expect(bay).to.have.attribute('esld:y', '3');
@@ -496,10 +487,7 @@ describe('Designer', () => {
             expect(bay).to.have.attribute('name', 'B2');
         });
         it("updates reparented bays' connectivity node paths", async () => {
-            const sldEditor = element.shadowRoot.querySelector('sld-editor');
-            sldEditor
-                .shadowRoot.querySelector('g.bay .handle')
-                .dispatchEvent(new PointerEvent('click'));
+            queryUI({ scl: 'Bay', ui: 'rect' }).dispatchEvent(new PointerEvent('click'));
             const bay = element.placing;
             const cNode = bay.querySelector('ConnectivityNode');
             expect(cNode).to.have.attribute('pathName', 'S1/V1/B1/L1');
@@ -511,10 +499,7 @@ describe('Designer', () => {
             });
         });
         it('moves a bay when its parent voltage level is moved', async () => {
-            const sldEditor = element.shadowRoot.querySelector('sld-editor');
-            sldEditor
-                .shadowRoot.querySelector('g.voltagelevel .handle')
-                .dispatchEvent(new PointerEvent('click'));
+            queryUI({ scl: 'VoltageLevel', ui: 'rect' }).dispatchEvent(new PointerEvent('click'));
             const bay = element.placing.querySelector('Bay');
             expect(bay).to.have.attribute('esld:x', '2');
             expect(bay).to.have.attribute('esld:y', '2');
@@ -530,7 +515,7 @@ describe('Designer', () => {
                 .to.have.property('tagName', 'ConductingEquipment');
             await sendMouse({ type: 'click', position: [150, 180] });
             expect(element).to.have.property('placing', undefined);
-            expect(element).to.have.property('resizing', undefined);
+            expect(element).to.have.property('resizingBR', undefined);
             const equipment = element.doc.querySelector('ConductingEquipment');
             expect(equipment).to.exist;
             expect(equipment).to.have.attribute('x', '3');
@@ -549,7 +534,7 @@ describe('Designer', () => {
                 const moveHandle = sldEditor.shadowRoot.querySelectorAll('g.bay .handle')[1];
                 moveHandle.dispatchEvent(new PointerEvent('click'));
                 expect(element)
-                    .property('resizing')
+                    .property('resizingBR')
                     .to.exist.and.to.have.property('tagName', 'Bay');
                 const bay = element.resizingBR;
                 expect(bay).to.have.attribute('esld:w', '3');
@@ -1057,14 +1042,14 @@ describe('Designer', () => {
                     });
                 });
                 it('removes contained connectivity nodes when moving containers', async () => {
-                    queryUI({ ui: '.handle' }).dispatchEvent(new PointerEvent('click'));
+                    queryUI({ scl: 'VoltageLevel', ui: 'rect' }).dispatchEvent(new PointerEvent('click'));
                     await sendMouse({ type: 'click', position: [100, 150] });
                     expect(element.doc.querySelectorAll('ConnectivityNode')).to.have.lengthOf(1);
                 });
                 it('removes connected connectivity nodes when moving containers', async () => {
                     queryUI({
                         scl: '[name="V2"]',
-                        ui: '.handle',
+                        ui: 'rect',
                     }).dispatchEvent(new PointerEvent('click'));
                     expect(element.doc.querySelectorAll('ConnectivityNode')).to.have.lengthOf(2);
                     await sendMouse({ type: 'click', position: [500, 150] });
@@ -1076,7 +1061,10 @@ describe('Designer', () => {
                         scl: '[name="V2"]',
                         ui: '.handle',
                     }));
-                    await sendMouse({ position, type: 'click' });
+                    queryUI({
+                        scl: '[name="V2"]',
+                        ui: 'rect',
+                    }).dispatchEvent(new PointerEvent('click'));
                     (_a = element
                         .shadowRoot.querySelector('[label="Add Substation"]')) === null || _a === void 0 ? void 0 : _a.click();
                     expect(element.doc.querySelectorAll('ConnectivityNode')).to.have.lengthOf(2);
@@ -1151,7 +1139,10 @@ describe('Designer', () => {
                         }));
                         expect((_a = element.doc
                             .querySelector('[name="L"]')) === null || _a === void 0 ? void 0 : _a.querySelectorAll('Section')).to.have.lengthOf(3);
-                        await sendMouse({ position, type: 'click' });
+                        queryUI({
+                            scl: '[name="V2"] > [name="B1"]',
+                            ui: 'rect',
+                        }).dispatchEvent(new PointerEvent('click'));
                         position[1] -= 40;
                         await sendMouse({ position, type: 'click' });
                         expect((_b = element.doc
@@ -1296,7 +1287,7 @@ describe('Designer', () => {
                         var _a;
                         queryUI({
                             scl: '[name="V1"]',
-                            ui: '.handle',
+                            ui: 'rect',
                         }).dispatchEvent(new PointerEvent('click', { shiftKey: true }));
                         expect(element.doc.querySelector('[name="V1"] [name="B2"]')).not.to
                             .exist;

@@ -11,7 +11,7 @@ import '@material/mwc-list/mwc-list-item.js';
 import '@material/mwc-textfield';
 import { getReference, identity } from '@openscd/oscd-scl';
 import { bayGraphic, eqRingPath, equipmentGraphic, movePath, oneWindingPTRGraphic, resizeBRPath, resizePath, resizeTLPath, symbols, threeWindingPTRGraphic, twoWindingPTRGraphic, twoWindingPTRGraphicHorizontal, voltageLevelGraphic, } from './icons.js';
-import { attributes, connectionStartPoints, elementPath, isBusBar, isEqType, newConnectEvent, newPlaceEvent, newPlaceLabelEvent, newResizeEvent, newResizeTLEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartPlaceLabelEvent, newStartResizeBREvent, newStartResizeTLEvent, privType, removeNode, removeTerminal, ringedEqTypes, singleTerminal, sldNs, svgNs, uniqueName, uuid, xlinkNs, xmlBoolean, } from './util.js';
+import { attributes, connectionStartPoints, elementPath, isBusBar, isEqType, newConnectEvent, newPlaceEvent, newPlaceLabelEvent, newResizeEvent, newResizeTLEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartPlaceLabelEvent, newStartResizeBREvent, newStartResizeTLEvent, prettyPrint, privType, removeNode, removeTerminal, ringedEqTypes, robotoDataURL, singleTerminal, sldNs, svgNs, uniqueName, uuid, xlinkNs, xmlBoolean, } from './util.js';
 const parentTags = {
     ConductingEquipment: ['Bay'],
     Bay: ['VoltageLevel'],
@@ -42,6 +42,24 @@ function containsRect(element, x0, y0, w0, h0) {
 function overlapsRect(element, x0, y0, w0, h0) {
     const { pos: [x, y], dim: [w, h], } = attributes(element);
     return overlaps([x, y, w, h], [x0, y0, w0, h0]);
+}
+function cleanXML(element) {
+    var _a;
+    if (element.classList.contains('handle') ||
+        element.classList.contains('preview') ||
+        element.classList.contains('port')) {
+        element.remove();
+        return;
+    }
+    if (element.classList.contains('voltagelevel') ||
+        element.classList.contains('bay'))
+        (_a = element.querySelector('rect')) === null || _a === void 0 ? void 0 : _a.remove();
+    Array.from(element.childNodes).forEach(child => {
+        if (child.nodeType === 8)
+            element.removeChild(child);
+        if (child.nodeType === 1)
+            cleanXML(child);
+    });
 }
 function between(a, x, b) {
     return (a <= x && x <= b) || (b <= x && x <= a);
@@ -334,6 +352,24 @@ let SLDEditor = class SLDEditor extends LitElement {
         window.removeEventListener('click', this.handleClick);
         window.removeEventListener('click', this.positionCoordinates);
     }
+    saveSVG() {
+        const sld = this.sld.cloneNode(true);
+        cleanXML(sld);
+        const blob = new Blob([prettyPrint(sld)], {
+            type: 'application/xml',
+        });
+        const a = document.createElement('a');
+        a.download = `${this.substation.getAttribute('name')}.svg`;
+        a.href = URL.createObjectURL(blob);
+        a.dataset.downloadurl = ['application/xml', a.download, a.href].join(':');
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => {
+            URL.revokeObjectURL(a.href);
+        }, 5000);
+    }
     nearestOpenTerminal(equipment) {
         if (!equipment)
             return undefined;
@@ -352,7 +388,6 @@ let SLDEditor = class SLDEditor extends LitElement {
             return 'T1';
         const [mx, my] = [this.mouseX2f, this.mouseY2f];
         const { rot, pos: [x, y], } = attributes(equipment);
-        console.log(`${mx},${my}`, `${x},${y}`);
         if (rot === 0 && my >= y + 0.5)
             return 'T2';
         if (rot === 1 && mx < x + 0.5)
@@ -1039,6 +1074,12 @@ let SLDEditor = class SLDEditor extends LitElement {
           icon="delete"
         >
         </mwc-icon-button>
+        <mwc-icon-button
+          label="Export Single Line Diagram"
+          @click=${() => this.saveSVG()}
+          icon="file_download"
+        >
+        </mwc-icon-button>
       </h2>
       <svg
         xmlns="${svgNs}"
@@ -1061,6 +1102,12 @@ let SLDEditor = class SLDEditor extends LitElement {
         }}
       >
         <style>
+          @font-face {
+            font-family: 'Roboto';
+            font-style: normal;
+            font-weight: 400;
+            src: url(${robotoDataURL}) format('woff');
+          }
           .handle {
             visibility: hidden;
           }
@@ -1187,6 +1234,8 @@ let SLDEditor = class SLDEditor extends LitElement {
     </section>`;
     }
     renderLabel(element) {
+        if (!this.showLabels)
+            return nothing;
         const [x, y] = this.renderedLabelPosition(element);
         const name = element.getAttribute('name');
         const fontSize = element.tagName === 'ConductingEquipment' ? 0.45 : 0.6;
@@ -1212,7 +1261,7 @@ let SLDEditor = class SLDEditor extends LitElement {
           @click=${handleClick}
           @contextmenu=${(e) => this.openMenu(element, e)}
           pointer-events="${events}" fill="#000000" fill-opacity="0.83"
-          style="font: ${fontSize}px sans-serif; cursor: default;">
+          style="font: ${fontSize}px Roboto, sans-serif; cursor: default;">
           ${name}
         </text>
       </g>`;
@@ -1598,7 +1647,7 @@ let SLDEditor = class SLDEditor extends LitElement {
                 const x1 = Number.isInteger(x * 2) ? x : x + 1;
                 const y1 = Number.isInteger(y * 2) ? y : y + 1;
                 const terminal = name.startsWith('T');
-                ports.push(svg `<circle cx="${x}" cy="${y}" r="0.2" opacity="0.4"
+                ports.push(svg `<circle class="port" cx="${x}" cy="${y}" r="0.2" opacity="0.4"
               @contextmenu=${(e) => {
                     if (terminal)
                         return;
@@ -1732,7 +1781,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             this.placingLabel ||
             (this.placing && this.placing !== equipment)
             ? nothing
-            : svg `<circle cx="0.5" cy="0" r="0.2" opacity="0.4"
+            : svg `<circle class="port" cx="0.5" cy="0" r="0.2" opacity="0.4"
       fill="#BB1326" stroke="#F5E214" pointer-events="${this.placing ? 'none' : nothing}"
     @click=${() => this.dispatchEvent(newStartConnectEvent({
                 from: equipment,
@@ -1766,7 +1815,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             (this.placing && this.placing !== equipment) ||
             singleTerminal.has(eqType)
             ? nothing
-            : svg `<circle cx="0.5" cy="1" r="0.2" opacity="0.4"
+            : svg `<circle class="port" cx="0.5" cy="1" r="0.2" opacity="0.4"
       fill="#BB1326" stroke="#F5E214" pointer-events="${this.placing ? 'none' : nothing}"
     @click=${() => this.dispatchEvent(newStartConnectEvent({
                 from: equipment,
@@ -2074,6 +2123,9 @@ __decorate([
 __decorate([
     property()
 ], SLDEditor.prototype, "connecting", void 0);
+__decorate([
+    property()
+], SLDEditor.prototype, "showLabels", void 0);
 __decorate([
     state()
 ], SLDEditor.prototype, "idle", null);

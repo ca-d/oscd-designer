@@ -825,17 +825,17 @@ snapshots["Designer given conducting equipment with established connectivity uni
               >
               </Vertex>
               <Vertex
-                esld:x="18"
+                esld:x="17"
                 esld:y="4.5"
               >
               </Vertex>
               <Vertex
-                esld:x="18"
+                esld:x="17"
                 esld:y="5.5"
               >
               </Vertex>
               <Vertex
-                esld:x="17.84"
+                esld:x="17.16"
                 esld:y="5.5"
               >
               </Vertex>
@@ -894,7 +894,7 @@ snapshots["Designer given conducting equipment with established connectivity uni
             bayName="B1"
             cNodeName="L2"
             connectivityNode="S1/V1/B1/L2"
-            name="T2"
+            name="T1"
             substationName="S1"
             voltageLevelName="V1"
           >
@@ -3051,28 +3051,28 @@ snapshots["Designer given conducting equipment with established connectivity bet
   >
     <VoltageLevel
       esld:h="23"
-      esld:lx="15"
-      esld:ly="1"
+      esld:lx="16"
+      esld:ly="2"
       esld:w="23"
-      esld:x="15"
-      esld:y="1"
+      esld:x="16"
+      esld:y="2"
       name="V2"
     >
       <Bay
         esld:h="6"
-        esld:lx="16"
-        esld:ly="2"
+        esld:lx="17"
+        esld:ly="3"
         esld:w="6"
-        esld:x="16"
-        esld:y="2"
+        esld:x="17"
+        esld:y="3"
         name="B1"
       >
         <ConductingEquipment
-          esld:lx="17"
-          esld:ly="7.5"
+          esld:lx="18"
+          esld:ly="8.5"
           esld:rot="3"
-          esld:x="17"
-          esld:y="5"
+          esld:x="18"
+          esld:y="6"
           name="CTR1"
           type="CTR"
         >
@@ -3087,51 +3087,51 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
-          esld:lx="17"
-          esld:ly="4.5"
+          esld:lx="18"
+          esld:ly="5.5"
           esld:rot="1"
-          esld:x="18"
-          esld:y="4"
+          esld:x="19"
+          esld:y="5"
           name="DIS1"
           type="DIS"
         >
         </ConductingEquipment>
         <ConductingEquipment
-          esld:lx="20"
-          esld:ly="3.5"
+          esld:lx="21"
+          esld:ly="4.5"
           esld:rot="2"
-          esld:x="19"
-          esld:y="3"
+          esld:x="20"
+          esld:y="4"
           name="NEW1"
           type="NEW"
         >
         </ConductingEquipment>
         <ConductingEquipment
-          esld:lx="17"
-          esld:ly="3"
+          esld:lx="18"
+          esld:ly="4"
           esld:rot="3"
-          esld:x="17"
-          esld:y="3"
+          esld:x="18"
+          esld:y="4"
           name="VTR1"
           type="VTR"
         >
         </ConductingEquipment>
         <ConductingEquipment
-          esld:lx="21"
-          esld:ly="5"
+          esld:lx="22"
+          esld:ly="6"
           esld:rot="0"
-          esld:x="20"
-          esld:y="4"
+          esld:x="21"
+          esld:y="5"
           name="DIS2"
           type="DIS"
         >
         </ConductingEquipment>
         <ConductingEquipment
-          esld:lx="19"
-          esld:ly="7"
+          esld:lx="20"
+          esld:ly="8"
           esld:rot="3"
-          esld:x="19"
-          esld:y="7"
+          esld:x="20"
+          esld:y="8"
           name="BAT1"
           type="BAT"
         >
@@ -3148,11 +3148,11 @@ snapshots["Designer given conducting equipment with established connectivity bet
           </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
-          esld:lx="22"
-          esld:ly="8"
+          esld:lx="23"
+          esld:ly="9"
           esld:rot="3"
-          esld:x="21"
-          esld:y="7"
+          esld:x="22"
+          esld:y="8"
           name="SMC1"
           type="SMC"
         >
@@ -3164,23 +3164,23 @@ snapshots["Designer given conducting equipment with established connectivity bet
           <Private type="Transpower-SLD-Vertices">
             <Section>
               <Vertex
-                esld:x="19.16"
-                esld:y="7.5"
+                esld:x="20.16"
+                esld:y="8.5"
               >
               </Vertex>
               <Vertex
-                esld:x="18"
-                esld:y="7.5"
+                esld:x="19"
+                esld:y="8.5"
               >
               </Vertex>
               <Vertex
-                esld:x="18"
-                esld:y="5.5"
+                esld:x="19"
+                esld:y="6.5"
               >
               </Vertex>
               <Vertex
-                esld:x="17.84"
-                esld:y="5.5"
+                esld:x="18.84"
+                esld:y="6.5"
               >
               </Vertex>
             </Section>
