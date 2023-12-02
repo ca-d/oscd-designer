@@ -1,13 +1,15 @@
 import { LitElement, html, css, nothing } from 'lit';
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-import { property, state } from 'lit/decorators.js';
+import { property, query, state } from 'lit/decorators.js';
 
 import { Edit, newEditEvent, Update } from '@openscd/open-scd-core';
 import { getReference } from '@openscd/oscd-scl';
 
+import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
 import '@material/mwc-button';
 import '@material/mwc-fab';
 import '@material/mwc-icon-button';
+import '@material/mwc-icon-button-toggle';
 import '@material/mwc-icon';
 
 import './sld-editor.js';
@@ -164,6 +166,15 @@ export default class Designer extends LitElement {
     path: Point[];
     fromTerminal: 'T1' | 'T2' | 'N1' | 'N2';
   };
+
+  @state()
+  get showLabels(): boolean {
+    if (this.labelToggle) return this.labelToggle.on;
+    return true;
+  }
+
+  @query('#labels')
+  labelToggle?: IconButtonToggle;
 
   zoomIn(step = 4) {
     this.gridSize += step;
@@ -637,6 +648,7 @@ export default class Designer extends LitElement {
             .placing=${this.placing}
             .placingLabel=${this.placingLabel}
             .connecting=${this.connecting}
+            .showLabels=${this.showLabels}
             @oscd-sld-start-resize-br=${({ detail }: StartEvent) => {
               this.startResizingBottomRight(detail);
             }}
@@ -705,73 +717,73 @@ export default class Designer extends LitElement {
           ></sld-editor>`
       )}
       <nav>
-        ${Array.from(this.doc.documentElement.children).find(
-          c => c.tagName === 'Substation'
-        )
-          ? html``
-          : nothing}${Array.from(
-          this.doc.querySelectorAll(':root > Substation > VoltageLevel > Bay')
-        ).find(bay => !isBusBar(bay))
-          ? eqTypes
-              .map(
-                eqType => html`<mwc-fab
-                  mini
-                  label="Add ${eqType}"
-                  @click=${() => {
-                    const element =
-                      this.templateElements.ConductingEquipment!.cloneNode() as Element;
-                    element.setAttribute('type', eqType);
-                    this.startPlacing(element);
-                  }}
-                  style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
-                  >${equipmentIcon(eqType)}</mwc-fab
-                >`
-              )
-              .concat()
-          : nothing}${this.doc.querySelector(
-          ':root > Substation > VoltageLevel'
-        )
-          ? html`<mwc-fab
-                mini
-                icon="horizontal_rule"
-                @click=${() => {
-                  const element = this.templateElements.BusBar!.cloneNode(
-                    true
-                  ) as Element;
-                  this.startPlacing(element);
-                }}
-                label="Add Bus Bar"
-                style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
-              >
-              </mwc-fab
-              ><mwc-fab
-                mini
-                label="Add Bay"
-                @click=${() => {
-                  const element =
-                    this.templateElements.Bay!.cloneNode() as Element;
-                  this.startPlacing(element);
-                }}
-                style="--mdc-theme-secondary: #12579B;"
-              >
-                ${bayIcon}
-              </mwc-fab>`
-          : nothing}${Array.from(this.doc.documentElement.children).find(
-          c => c.tagName === 'Substation'
-        )
-          ? html`<mwc-fab
+        ${
+          Array.from(
+            this.doc.querySelectorAll(':root > Substation > VoltageLevel > Bay')
+          ).find(bay => !isBusBar(bay))
+            ? eqTypes
+                .map(
+                  eqType => html`<mwc-fab
+                    mini
+                    label="Add ${eqType}"
+                    @click=${() => {
+                      const element =
+                        this.templateElements.ConductingEquipment!.cloneNode() as Element;
+                      element.setAttribute('type', eqType);
+                      this.startPlacing(element);
+                    }}
+                    style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
+                    >${equipmentIcon(eqType)}</mwc-fab
+                  >`
+                )
+                .concat()
+            : nothing
+        }${
+      this.doc.querySelector(':root > Substation > VoltageLevel')
+        ? html`<mwc-fab
               mini
-              label="Add VoltageLevel"
+              icon="horizontal_rule"
               @click=${() => {
-                const element =
-                  this.templateElements.VoltageLevel!.cloneNode() as Element;
+                const element = this.templateElements.BusBar!.cloneNode(
+                  true
+                ) as Element;
                 this.startPlacing(element);
               }}
-              style="--mdc-theme-secondary: #F5E214; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83);"
+              label="Add Bus Bar"
+              style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
             >
-              ${voltageLevelIcon}
+            </mwc-fab
+            ><mwc-fab
+              mini
+              label="Add Bay"
+              @click=${() => {
+                const element =
+                  this.templateElements.Bay!.cloneNode() as Element;
+                this.startPlacing(element);
+              }}
+              style="--mdc-theme-secondary: #12579B;"
+            >
+              ${bayIcon}
             </mwc-fab>`
-          : nothing}<mwc-fab
+        : nothing
+    }${
+      Array.from(this.doc.documentElement.children).find(
+        c => c.tagName === 'Substation'
+      )
+        ? html`<mwc-fab
+            mini
+            label="Add VoltageLevel"
+            @click=${() => {
+              const element =
+                this.templateElements.VoltageLevel!.cloneNode() as Element;
+              this.startPlacing(element);
+            }}
+            style="--mdc-theme-secondary: #F5E214; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83);"
+          >
+            ${voltageLevelIcon}
+          </mwc-fab>`
+        : nothing
+    }<mwc-fab
           mini
           icon="margin"
           @click=${() => this.insertSubstation()}
@@ -779,152 +791,170 @@ export default class Designer extends LitElement {
           style="--mdc-theme-secondary: #BB1326;"
         >
         </mwc-fab
-        >${Array.from(this.doc.documentElement.children).find(
-          c => c.tagName === 'Substation'
-        )
-          ? html`<mwc-fab
-                mini
-                label="Add Single Winding Auto Transformer"
-                @click=${() => {
-                  const element =
-                    this.templateElements.PowerTransformer!.cloneNode() as Element;
-                  element.setAttribute('type', 'PTR');
-                  element.setAttributeNS(sldNs, 'kind', 'auto');
-                  const winding =
-                    this.templateElements.TransformerWinding!.cloneNode() as Element;
-                  winding.setAttribute('type', 'PTW');
-                  winding.setAttribute('name', 'W1');
-                  element.appendChild(winding);
-                  this.startPlacing(element);
-                }}
-                style="--mdc-theme-secondary: #F5E214; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83);"
-                >${oneWindingPTRIcon}</mwc-fab
-              ><mwc-fab
-                mini
-                label="Add Two Winding Auto Transformer"
-                @click=${() => {
-                  const element =
-                    this.templateElements.PowerTransformer!.cloneNode() as Element;
-                  element.setAttribute('type', 'PTR');
-                  element.setAttributeNS(sldNs, 'kind', 'auto');
-                  element.setAttributeNS(sldNs, 'rot', '1');
-                  const windings = [];
-                  for (let i = 1; i <= 2; i += 1) {
+        >${
+          Array.from(this.doc.documentElement.children).find(
+            c => c.tagName === 'Substation'
+          )
+            ? html`<mwc-fab
+                  mini
+                  label="Add Single Winding Auto Transformer"
+                  @click=${() => {
+                    const element =
+                      this.templateElements.PowerTransformer!.cloneNode() as Element;
+                    element.setAttribute('type', 'PTR');
+                    element.setAttributeNS(sldNs, 'kind', 'auto');
                     const winding =
                       this.templateElements.TransformerWinding!.cloneNode() as Element;
                     winding.setAttribute('type', 'PTW');
-                    winding.setAttribute('name', `W${i}`);
-                    windings.push(winding);
-                  }
-                  element.append(...windings);
-                  this.startPlacing(element);
-                }}
-                style="--mdc-theme-secondary: #F5E214; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83);"
-                >${twoWindingPTRIconHorizontal}</mwc-fab
-              ><mwc-fab
-                mini
-                label="Add Two Winding Transformer"
-                @click=${() => {
-                  const element =
-                    this.templateElements.PowerTransformer!.cloneNode() as Element;
-                  element.setAttribute('type', 'PTR');
-                  const windings = [];
-                  for (let i = 1; i <= 2; i += 1) {
+                    winding.setAttribute('name', 'W1');
+                    element.appendChild(winding);
+                    this.startPlacing(element);
+                  }}
+                  style="--mdc-theme-secondary: #F5E214; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83);"
+                  >${oneWindingPTRIcon}</mwc-fab
+                ><mwc-fab
+                  mini
+                  label="Add Two Winding Auto Transformer"
+                  @click=${() => {
+                    const element =
+                      this.templateElements.PowerTransformer!.cloneNode() as Element;
+                    element.setAttribute('type', 'PTR');
+                    element.setAttributeNS(sldNs, 'kind', 'auto');
+                    element.setAttributeNS(sldNs, 'rot', '1');
+                    const windings = [];
+                    for (let i = 1; i <= 2; i += 1) {
+                      const winding =
+                        this.templateElements.TransformerWinding!.cloneNode() as Element;
+                      winding.setAttribute('type', 'PTW');
+                      winding.setAttribute('name', `W${i}`);
+                      windings.push(winding);
+                    }
+                    element.append(...windings);
+                    this.startPlacing(element);
+                  }}
+                  style="--mdc-theme-secondary: #F5E214; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83);"
+                  >${twoWindingPTRIconHorizontal}</mwc-fab
+                ><mwc-fab
+                  mini
+                  label="Add Two Winding Transformer"
+                  @click=${() => {
+                    const element =
+                      this.templateElements.PowerTransformer!.cloneNode() as Element;
+                    element.setAttribute('type', 'PTR');
+                    const windings = [];
+                    for (let i = 1; i <= 2; i += 1) {
+                      const winding =
+                        this.templateElements.TransformerWinding!.cloneNode() as Element;
+                      winding.setAttribute('type', 'PTW');
+                      winding.setAttribute('name', `W${i}`);
+                      windings.push(winding);
+                    }
+                    element.append(...windings);
+                    this.startPlacing(element);
+                  }}
+                  style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
+                  >${twoWindingPTRIcon}</mwc-fab
+                ><mwc-fab
+                  mini
+                  label="Add Three Winding Transformer"
+                  @click=${() => {
+                    const element =
+                      this.templateElements.PowerTransformer!.cloneNode() as Element;
+                    element.setAttribute('type', 'PTR');
+                    const windings = [];
+                    for (let i = 1; i <= 3; i += 1) {
+                      const winding =
+                        this.templateElements.TransformerWinding!.cloneNode() as Element;
+                      winding.setAttribute('type', 'PTW');
+                      winding.setAttribute('name', `W${i}`);
+                      windings.push(winding);
+                    }
+                    element.append(...windings);
+                    this.startPlacing(element);
+                  }}
+                  style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
+                  >${threeWindingPTRIcon}</mwc-fab
+                ><mwc-fab
+                  mini
+                  label="Add Single Winding Earthing Transformer"
+                  @click=${() => {
+                    const element =
+                      this.templateElements.PowerTransformer!.cloneNode() as Element;
+                    element.setAttribute('type', 'PTR');
+                    element.setAttributeNS(sldNs, 'kind', 'earthing');
                     const winding =
                       this.templateElements.TransformerWinding!.cloneNode() as Element;
                     winding.setAttribute('type', 'PTW');
-                    winding.setAttribute('name', `W${i}`);
-                    windings.push(winding);
-                  }
-                  element.append(...windings);
-                  this.startPlacing(element);
-                }}
-                style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
-                >${twoWindingPTRIcon}</mwc-fab
-              ><mwc-fab
-                mini
-                label="Add Three Winding Transformer"
-                @click=${() => {
-                  const element =
-                    this.templateElements.PowerTransformer!.cloneNode() as Element;
-                  element.setAttribute('type', 'PTR');
-                  const windings = [];
-                  for (let i = 1; i <= 3; i += 1) {
-                    const winding =
-                      this.templateElements.TransformerWinding!.cloneNode() as Element;
-                    winding.setAttribute('type', 'PTW');
-                    winding.setAttribute('name', `W${i}`);
-                    windings.push(winding);
-                  }
-                  element.append(...windings);
-                  this.startPlacing(element);
-                }}
-                style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
-                >${threeWindingPTRIcon}</mwc-fab
-              ><mwc-fab
-                mini
-                label="Add Single Winding Earthing Transformer"
-                @click=${() => {
-                  const element =
-                    this.templateElements.PowerTransformer!.cloneNode() as Element;
-                  element.setAttribute('type', 'PTR');
-                  element.setAttributeNS(sldNs, 'kind', 'earthing');
-                  const winding =
-                    this.templateElements.TransformerWinding!.cloneNode() as Element;
-                  winding.setAttribute('type', 'PTW');
-                  winding.setAttribute('name', 'W1');
-                  element.appendChild(winding);
-                  this.startPlacing(element);
-                }}
-                style="--mdc-theme-secondary: #12579B;"
-                >${oneWindingPTRIcon}</mwc-fab
-              ><mwc-fab
-                mini
-                label="Add Two Winding Earthing Transformer"
-                @click=${() => {
-                  const element =
-                    this.templateElements.PowerTransformer!.cloneNode() as Element;
-                  element.setAttribute('type', 'PTR');
-                  element.setAttributeNS(sldNs, 'kind', 'earthing');
-                  element.setAttributeNS(sldNs, 'rot', '1');
-                  const windings = [];
-                  for (let i = 1; i <= 2; i += 1) {
-                    const winding =
-                      this.templateElements.TransformerWinding!.cloneNode() as Element;
-                    winding.setAttribute('type', 'PTW');
-                    winding.setAttribute('name', `W${i}`);
-                    windings.push(winding);
-                  }
-                  element.append(...windings);
-                  this.startPlacing(element);
-                }}
-                style="--mdc-theme-secondary: #12579B;"
-                >${twoWindingPTRIconHorizontal}</mwc-fab
-              >`
-          : nothing}<mwc-icon-button
-          icon="zoom_in"
-          label="Zoom In"
-          @click=${() => this.zoomIn()}
-        >
-        </mwc-icon-button
-        ><mwc-icon-button
-          icon="zoom_out"
-          label="Zoom Out"
-          @click=${() => this.zoomOut()}
-        >
-        </mwc-icon-button
-        >${this.placing ||
-        this.resizingBR ||
-        this.resizingTL ||
-        this.connecting ||
-        this.placingLabel
-          ? html`<mwc-icon-button
-              icon="close"
-              label="Cancel action"
-              @click=${() => this.reset()}
+                    winding.setAttribute('name', 'W1');
+                    element.appendChild(winding);
+                    this.startPlacing(element);
+                  }}
+                  style="--mdc-theme-secondary: #12579B;"
+                  >${oneWindingPTRIcon}</mwc-fab
+                ><mwc-fab
+                  mini
+                  label="Add Two Winding Earthing Transformer"
+                  @click=${() => {
+                    const element =
+                      this.templateElements.PowerTransformer!.cloneNode() as Element;
+                    element.setAttribute('type', 'PTR');
+                    element.setAttributeNS(sldNs, 'kind', 'earthing');
+                    element.setAttributeNS(sldNs, 'rot', '1');
+                    const windings = [];
+                    for (let i = 1; i <= 2; i += 1) {
+                      const winding =
+                        this.templateElements.TransformerWinding!.cloneNode() as Element;
+                      winding.setAttribute('type', 'PTW');
+                      winding.setAttribute('name', `W${i}`);
+                      windings.push(winding);
+                    }
+                    element.append(...windings);
+                    this.startPlacing(element);
+                  }}
+                  style="--mdc-theme-secondary: #12579B;"
+                  >${twoWindingPTRIconHorizontal}</mwc-fab
+                >`
+            : nothing
+        }${
+      this.doc.querySelector('VoltageLevel, PowerTransformer')
+        ? html`<mwc-icon-button-toggle
+            id="labels"
+            on
+            onIcon="font_download"
+            offIcon="font_download_off"
+            @click=${() => this.requestUpdate()}
+          ></mwc-icon-button-toggle>`
+        : nothing
+    }${
+      this.doc.querySelector('Substation')
+        ? html`<mwc-icon-button
+              icon="zoom_in"
+              label="Zoom In"
+              @click=${() => this.zoomIn()}
             >
-            </mwc-icon-button>`
-          : nothing}
+            </mwc-icon-button
+            ><mwc-icon-button
+              icon="zoom_out"
+              label="Zoom Out"
+              @click=${() => this.zoomOut()}
+            ></mwc-icon-button>`
+        : nothing
+    }
+        </mwc-icon-button
+        >${
+          this.placing ||
+          this.resizingBR ||
+          this.resizingTL ||
+          this.connecting ||
+          this.placingLabel
+            ? html`<mwc-icon-button
+                icon="close"
+                label="Cancel action"
+                @click=${() => this.reset()}
+              >
+              </mwc-icon-button>`
+            : nothing
+        }
       </nav>
     </main>`;
   }
