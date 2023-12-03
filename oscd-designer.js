@@ -1884,7 +1884,7 @@ const ao=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
       max-width: calc(100vw - 32px);
       background: #fffd;
       border-radius: 24px;
-      z-index: 0;
+      z-index: 1;
     }
   `,n([ft()],Ir.prototype,"doc",void 0),n([ft()],Ir.prototype,"editCount",null),n([gt()],Ir.prototype,"_editCount",void 0),n([gt()],Ir.prototype,"gridSize",void 0),n([gt()],Ir.prototype,"nsp",void 0),n([gt()],Ir.prototype,"templateElements",void 0),n([gt()],Ir.prototype,"resizingBR",void 0),n([gt()],Ir.prototype,"resizingTL",void 0),n([gt()],Ir.prototype,"placing",void 0),n([gt()],Ir.prototype,"placingLabel",void 0),n([gt()],Ir.prototype,"connecting",void 0),n([gt()],Ir.prototype,"showLabels",null),n([xt("#labels")],Ir.prototype,"labelToggle",void 0);export{Ir as default};
 //# sourceMappingURL=oscd-designer.js.map
