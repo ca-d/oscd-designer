@@ -317,12 +317,16 @@ let SLDEditor = class SLDEditor extends LitElement {
     }
     renderedLabelPosition(element) {
         let { label: [x, y], } = attributes(element);
-        if ((this.placing &&
-            element.closest(this.placing.tagName) === this.placing) ||
-            this.resizingTL === element) {
-            const { pos: [parentX, parentY], } = attributes(this.placing || this.resizingTL);
+        if (this.placing &&
+            element.closest(this.placing.tagName) === this.placing) {
+            const { pos: [parentX, parentY], } = attributes(this.placing);
             x += this.mouseX - parentX;
             y += this.mouseY - parentY;
+        }
+        if (this.resizingTL === element) {
+            const { pos: [resX, resY], dim: [resW, resH], } = attributes(this.resizingTL);
+            x += Math.min(this.mouseX, resX + resW - 1) - resX;
+            y += Math.min(this.mouseY, resY + resH - 1) - resY;
         }
         if (this.placingLabel === element) {
             x = this.mouseX2 - 0.5;
@@ -983,8 +987,10 @@ let SLDEditor = class SLDEditor extends LitElement {
             const { pos: [x, y], dim: [resW, resH], } = attributes(this.resizingTL);
             const newW = Math.max(1, x + resW - this.mouseX);
             const newH = Math.max(1, y + resH - this.mouseY);
+            const newX = Math.min(this.mouseX, x + resH - 1);
+            const newY = Math.min(this.mouseY, y + resW - 1);
             hidden = false;
-            invalid = !this.canResizeToTL(this.resizingTL, this.mouseX, this.mouseY, newW, newH);
+            invalid = !this.canResizeToTL(this.resizingTL, newX, newY, newW, newH);
             coordinates = html `${newW}&times;${newH}`;
         }
         const coordinateTooltip = html `<div
@@ -1295,10 +1301,12 @@ let SLDEditor = class SLDEditor extends LitElement {
                 invalid = true;
         }
         if (this.resizingTL === bayOrVL) {
+            const right = x + w - 1;
+            const bottom = y + h - 1;
             w = Math.max(1, x + w - this.mouseX);
             h = Math.max(1, y + h - this.mouseY);
-            x = this.mouseX;
-            y = this.mouseY;
+            x = Math.min(this.mouseX, right);
+            y = Math.min(this.mouseY, bottom);
             if (this.canResizeToTL(bayOrVL, x, y, w, h))
                 handleClick = () => this.dispatchEvent(newResizeTLEvent({
                     x,
