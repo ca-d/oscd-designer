@@ -1502,7 +1502,7 @@ const ao=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
         ${(null===(n=this.connecting)||void 0===n?void 0:n.from.closest("Substation"))===this.substation?Array.from(this.substation.querySelectorAll("ConductingEquipment")).map((t=>this.renderEquipment(t,{connect:!0}))):j}
         ${Array.from(this.substation.querySelectorAll("ConnectivityNode")).filter((t=>!("grounded"===t.getAttribute("name")||this.placing&&t.closest(this.placing.tagName)===this.placing||xo(t.parentElement)))).map((t=>this.renderConnectivityNode(t)))}
         ${Array.from(this.substation.querySelectorAll("ConnectivityNode")).filter((t=>"grounded"!==t.getAttribute("name")&&!(this.placing&&t.closest(this.placing.tagName)===this.placing)&&xo(t.parentElement))).map((t=>this.renderConnectivityNode(t)))}
-        ${Array.from(this.substation.querySelectorAll("PowerTransformer")).map((t=>this.renderPowerTransformer(t)))}
+        ${Array.from(this.substation.querySelectorAll(":scope > PowerTransformer")).map((t=>this.renderPowerTransformer(t)))}
         ${Array.from(this.substation.querySelectorAll("VoltageLevel, Bay, ConductingEquipment, PowerTransformer")).filter((t=>!this.placing||t.closest(this.placing.tagName)!==this.placing)).map((t=>this.renderLabel(t)))}
         ${d} ${s} ${l}
       </svg>
@@ -1576,8 +1576,9 @@ const ao=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
         stroke="${p?"#BB1326":r?"#F5E214":"#12579B"}" />
       ${Array.from(t.children).filter(Er).map((t=>this.renderContainer(t)))}
       ${Array.from(t.children).filter((t=>"ConductingEquipment"===t.tagName)).map((t=>this.renderEquipment(t)))}
+      ${Array.from(t.children).filter((t=>"PowerTransformer"===t.tagName)).map((t=>this.renderPowerTransformer(t)))}
       ${e?Array.from(t.querySelectorAll("ConnectivityNode")).filter((t=>"grounded"!==t.getAttribute("name"))).map((t=>this.renderConnectivityNode(t))):j}
-      ${e?Array.from(t.querySelectorAll("Bay, ConductingEquipment")).concat(t).map((t=>this.renderLabel(t))):j}
+      ${e?Array.from(t.querySelectorAll("Bay, ConductingEquipment, PowerTransformer")).concat(t).map((t=>this.renderLabel(t))):j}
       ${f}
       ${u}
       ${m}
