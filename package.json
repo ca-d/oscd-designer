@@ -27,6 +27,7 @@
     "@material/mwc-icon-button-toggle": "^0.27.0",
     "@material/mwc-list": "^0.27.0",
     "@material/mwc-menu": "^0.27.0",
+    "@material/mwc-snackbar": "^0.27.0",
     "@material/mwc-textfield": "^0.27.0",
     "@openscd/open-scd-core": "^0.0.2",
     "@openscd/oscd-scl": "^0.0.2",

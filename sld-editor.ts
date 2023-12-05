@@ -8,11 +8,13 @@ import { Edit, newEditEvent } from '@openscd/open-scd-core';
 
 import type { Dialog } from '@material/mwc-dialog';
 import type { SingleSelectedEvent } from '@material/mwc-list';
+import type { Snackbar } from '@material/mwc-snackbar';
 import type { TextField } from '@material/mwc-textfield';
 
 import '@material/mwc-dialog';
 import '@material/mwc-list';
 import '@material/mwc-list/mwc-list-item.js';
+import '@material/mwc-snackbar';
 import '@material/mwc-textfield';
 
 import { getReference, identity } from '@openscd/oscd-scl';
@@ -392,6 +394,9 @@ export class SLDEditor extends LitElement {
   @query('svg#sld')
   sld!: SVGGraphicsElement;
 
+  @query('mwc-snackbar')
+  groundHint!: Snackbar;
+
   @state()
   mouseX = 0;
 
@@ -630,13 +635,11 @@ export class SLDEditor extends LitElement {
 
   groundTerminal(equipment: Element, name: 'T1' | 'T2' | 'N1' | 'N2') {
     const neutralPoint = name.startsWith('N');
-    const bay =
-      equipment.closest('Bay') ||
-      Array.from(
-        equipment.closest('VoltageLevel')?.querySelectorAll('Bay') ||
-          equipment.closest('Substation')!.querySelectorAll('Bay')
-      ).find(b => !isBusBar(b));
-    if (!bay) return;
+    const bay = equipment.closest('Bay');
+    if (!bay) {
+      this.groundHint.show();
+      return;
+    }
     const edits: Edit[] = [];
     let grounded = bay.querySelector(
       ':scope > ConnectivityNode[name="grounded"]'
@@ -1644,6 +1647,11 @@ export class SLDEditor extends LitElement {
           >cancel</mwc-button
         >
       </mwc-dialog>
+      <mwc-snackbar
+        labelText="Only transformers within a bay may be grounded directly."
+      >
+        <mwc-icon-button icon="close" slot="dismiss"></mwc-icon-button>
+      </mwc-snackbar>
     </section>`;
   }
 
@@ -2115,6 +2123,7 @@ export class SLDEditor extends LitElement {
         svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`
       );
     });
+    const groundable = winding.closest('Bay');
     if (
       !(
         this.connecting ||
@@ -2130,6 +2139,7 @@ export class SLDEditor extends LitElement {
         const x1 = Number.isInteger(x * 2) ? x : x + 1;
         const y1 = Number.isInteger(y * 2) ? y : y + 1;
         const terminal = name.startsWith('T');
+        const fill = terminal ? 'BB1326' : '12579B';
         ports.push(svg`<circle class="port" cx="${x}" cy="${y}" r="0.2" opacity="0.4"
               @contextmenu=${(e: MouseEvent) => {
                 if (terminal) return;
@@ -2152,7 +2162,8 @@ export class SLDEditor extends LitElement {
                   })
                 );
               }}
-      fill="#${terminal ? 'BB1326' : '12579B'}" stroke="#F5E214" />`);
+              fill="#${fill}"
+              stroke="${groundable && !terminal ? '#000' : fill}" />`);
       });
     let longArrow = false;
     let arcPath = svg``;
@@ -2303,7 +2314,7 @@ export class SLDEditor extends LitElement {
       (this.placing && this.placing !== equipment)
         ? nothing
         : svg`<circle class="port" cx="0.5" cy="0" r="0.2" opacity="0.4"
-      fill="#BB1326" stroke="#F5E214" pointer-events="${
+      fill="#BB1326" stroke="#000" pointer-events="${
         this.placing ? 'none' : nothing
       }"
     @click=${() =>
@@ -2348,7 +2359,7 @@ export class SLDEditor extends LitElement {
       singleTerminal.has(eqType)
         ? nothing
         : svg`<circle class="port" cx="0.5" cy="1" r="0.2" opacity="0.4"
-      fill="#BB1326" stroke="#F5E214" pointer-events="${
+      fill="#BB1326" stroke="#000" pointer-events="${
         this.placing ? 'none' : nothing
       }"
     @click=${() =>
