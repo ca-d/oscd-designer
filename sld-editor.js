@@ -121,7 +121,8 @@ function isBay(element) {
     return element.tagName === 'Bay' && !isBusBar(element);
 }
 function preventDefault(e) {
-    e.preventDefault();
+    if (e.button === 1)
+        e.preventDefault();
 }
 function copy(element, nsp) {
     const clone = element.cloneNode(true);
@@ -1384,7 +1385,9 @@ let SLDEditor = class SLDEditor extends LitElement {
       <rect x="${x}" y="${y}" width="${w}" height="${h}"
         @contextmenu=${(e) => this.openMenu(bayOrVL, e)}
         @click=${handleClick || nothing} @mousedown=${preventDefault}
-        @auxclick=${({ clientX, clientY }) => {
+        @auxclick=${({ clientX, clientY, button }) => {
+            if (button !== 1)
+                return;
             const mouse = this.svgCoordinates(clientX, clientY);
             if (distance(mouse, [x, y]) < distance(mouse, [right, bottom]))
                 this.dispatchEvent(newStartResizeTLEvent(bayOrVL));
