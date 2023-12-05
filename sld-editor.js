@@ -325,9 +325,11 @@ let SLDEditor = class SLDEditor extends LitElement {
             y += this.mouseY - parentY;
         }
         if (this.resizingTL === element) {
-            const { pos: [resX, resY], dim: [resW, resH], } = attributes(this.resizingTL);
-            x += Math.min(this.mouseX, resX + resW - 1) - resX;
-            y += Math.min(this.mouseY, resY + resH - 1) - resY;
+            const { pos: [resX, resY], dim: [resW, resH], } = attributes(element);
+            if (resX === x && resY === y) {
+                x += Math.min(this.mouseX, resX + resW - 1) - resX;
+                y += Math.min(this.mouseY, resY + resH - 1) - resY;
+            }
         }
         if (this.placingLabel === element) {
             x = this.mouseX2 - 0.5;
