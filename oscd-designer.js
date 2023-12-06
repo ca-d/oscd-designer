@@ -1326,6 +1326,9 @@ const Co=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
           <span>Move Label</span>
           <mwc-icon slot="graphic">text_rotation_none</mwc-icon>
         </mwc-list-item>`,handler:()=>this.dispatchEvent(Qo(t))},{content:U`<mwc-list-item graphic="icon">
+          <span>Add Text</span>
+          <mwc-icon slot="graphic">title</mwc-icon>
+        </mwc-list-item>`,handler:()=>this.addTextTo(t)},{content:U`<mwc-list-item graphic="icon">
           <span>Edit</span>
           <mwc-icon slot="graphic">edit</mwc-icon>
         </mwc-list-item>`,handler:()=>this.dispatchEvent(zr(t))},{content:U`<mwc-list-item graphic="icon">
@@ -1358,6 +1361,9 @@ const Co=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
           <span>Move Label</span>
           <mwc-icon slot="graphic">text_rotation_none</mwc-icon>
         </mwc-list-item>`,handler:()=>this.dispatchEvent(Qo(t))},{content:U`<mwc-list-item graphic="icon">
+          <span>Add Text</span>
+          <mwc-icon slot="graphic">title</mwc-icon>
+        </mwc-list-item>`,handler:()=>this.addTextTo(t)},{content:U`<mwc-list-item graphic="icon">
           <span>Edit</span>
           <mwc-icon slot="graphic">edit</mwc-icon>
         </mwc-list-item>`,handler:()=>this.dispatchEvent(zr(t))},{content:U`<mwc-list-item graphic="icon">
@@ -1392,6 +1398,9 @@ const Co=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
           <span>Move Label</span>
           <mwc-icon slot="graphic">text_rotation_none</mwc-icon>
         </mwc-list-item>`,handler:()=>this.dispatchEvent(Qo(t))},{content:U`<mwc-list-item graphic="icon">
+          <span>Add Text</span>
+          <mwc-icon slot="graphic">title</mwc-icon>
+        </mwc-list-item>`,handler:()=>this.addTextTo(t)},{content:U`<mwc-list-item graphic="icon">
           <span>Edit</span>
           <mwc-icon slot="graphic">edit</mwc-icon>
         </mwc-list-item>`,handler:()=>this.dispatchEvent(zr(t))},{content:U`<mwc-list-item graphic="icon">
@@ -1636,15 +1645,15 @@ const Co=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
       >
         <mwc-icon-button icon="close" slot="dismiss"></mwc-icon-button>
       </mwc-snackbar>
-    </section>`}renderLabel(t){var e;if(!this.showLabels)return j;let i=0,n=t.getAttribute("name"),o=400,r="black";const[a,d]=this.renderedLabelPosition(t);"Text"===t.tagName&&(({weight:o,color:r}=$o(t)),i=90*$o(t).rot,t.textContent?n=null===(e=t.textContent)||void 0===e?void 0:e.split(/\r?\n/).map(((t,e)=>G`<tspan x="${a}" dy="${0===e?j:"1.19em"}">${t}&nbsp;</tspan>`)):(n="<Middle click to edit>",r="#aaa",o=500));const s="ConductingEquipment"===t.tagName?.45:.6;let l="none",c=j;this.idle&&(l="all",c=()=>this.dispatchEvent(Qo(t)));const p=t.closest("Substation")===this.substation?le(t):j;return G`<g class="label" id="label:${p}" transform="rotate(${i} ${a+.1+s/2} ${d-.2-s/2})">
+    </section>`}renderLabel(t){var e;if(!this.showLabels)return j;let i=0,n=t.getAttribute("name"),o=400,r="black";const[a,d]=this.renderedLabelPosition(t);"Text"===t.tagName&&(({weight:o,color:r}=$o(t)),i=90*$o(t).rot,t.textContent?n=null===(e=t.textContent)||void 0===e?void 0:e.split(/\r?\n/).map(((t,e)=>G`<tspan x="${a}" dy="${0===e?j:"1.19em"}" visibility="${t?j:"hidden"}">${t||"."}</tspan>`)):(n="<Middle click to edit>",r="#aaa",o=500));const s="ConductingEquipment"===t.tagName?.45:.6;let l="none",c=j;this.idle&&(l="all",c=()=>this.dispatchEvent(Qo(t)));const p=t.closest("Substation")===this.substation&&"Text"!==t.tagName?le(t):j;return G`<g class="label" id="label:${p}" transform="rotate(${i} ${a+.1+s/2} ${d-.2-s/2})">
         <text x="${a+.1}" y="${d-.2}"
           @mousedown=${qr}
           @auxclick=${e=>{1===e.button&&(this.dispatchEvent(zr(t)),e.preventDefault())}}
           @click=${c}
           @contextmenu=${e=>this.openMenu(t,e)}
-          pointer-events="${l}" fill="${r}" fill-opacity="0.83"
-          font-weight="${o}" font-size="${s}px"
-          font-family="Roboto, sans-serif" style="cursor: default;">
+          pointer-events="${l}" fill="${r}" font-weight="${o}"
+          font-size="${s}px" font-family="Roboto, sans-serif"
+          style="cursor: default;">
           ${n}
         </text>
       </g>`}renderContainer(t,e=!1){var i,n,o;const r="VoltageLevel"===t.tagName;if(this.placing===t&&!e)return G``;let[a,d]=this.renderedPosition(t);const s=[this.mouseX-a,this.mouseY-d];let{dim:[l,c]}=$o(t),p=e=>{this.idle&&this.dispatchEvent(tr(e.shiftKey?jr(t,this.nsp):t,s))},m=!1;this.resizingBR===t&&(l=Math.max(1,this.mouseX-a+1),c=Math.max(1,this.mouseY-d+1),this.canResizeTo(t,l,c)?p=()=>this.dispatchEvent(new CustomEvent("oscd-sld-resize",{bubbles:!0,composed:!0,detail:{w:l,h:c,element:t}})):m=!0);const h=a+l-1,u=d+c-1;if(this.resizingTL===t&&(l=Math.max(1,a+l-this.mouseX),c=Math.max(1,d+c-this.mouseY),a=Math.min(this.mouseX,h),d=Math.min(this.mouseY,u),this.canResizeToTL(t,a,d,l,c)?p=()=>this.dispatchEvent(new CustomEvent("oscd-sld-resize-tl",{bubbles:!0,composed:!0,detail:{x:a,y:d,w:l,h:c,element:t}})):m=!0),this.placing===t){let e;e=r?this.substation:Array.from(this.substation.querySelectorAll(":root > Substation > VoltageLevel")).find((t=>Fr(t,a,d,l,c))),e&&this.canPlaceAt(t,a,d,l,c)?p=()=>this.dispatchEvent(Yo({x:a,y:d,element:t,parent:e})):m=!0}let f=G``,g=G``;(r&&"Bay"===(null===(i=this.placing)||void 0===i?void 0:i.tagName)||!r&&"ConductingEquipment"===(null===(n=this.placing)||void 0===n?void 0:n.tagName))&&(f=G`<rect x="${a}" y="${d}" width="${l}" height="${c}"

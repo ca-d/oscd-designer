@@ -594,7 +594,7 @@ describe('Designer', () => {
             }).dispatchEvent(new PointerEvent('contextmenu'));
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
             await element.updateComplete;
-            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(3)').selected = true;
+            sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(4)').selected = true;
             await sldEditor.updateComplete;
             expect(element)
                 .property('placingLabel')
@@ -699,7 +699,7 @@ describe('Designer', () => {
                 .querySelector('rect');
             eqClickTarget.dispatchEvent(new PointerEvent('contextmenu'));
             await element.updateComplete;
-            const item = sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(4)');
+            const item = sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(5)');
             item.selected = true;
             await element.updateComplete;
             expect(equipment).to.have.attribute('esld:x', '4');
@@ -1199,7 +1199,7 @@ describe('Designer', () => {
                         }).dispatchEvent(new PointerEvent('contextmenu'));
                         await element.updateComplete;
                         const sldEditor = element.shadowRoot.querySelector('sld-editor');
-                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(5)').selected = true;
+                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(6)').selected = true;
                         expect(element.doc.querySelector('ConductingEquipment[*|x="3"][*|y="3"]')).to.not.exist;
                         expect(element.doc.querySelector('ConductingEquipment')).to.have.attribute('esld:x', '4');
                         expect(element.doc.querySelector('ConductingEquipment')).to.have.attribute('esld:y', '4');
@@ -1233,7 +1233,7 @@ describe('Designer', () => {
                         }).dispatchEvent(new PointerEvent('contextmenu'));
                         const sldEditor = element.shadowRoot.querySelector('sld-editor');
                         await element.updateComplete;
-                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(3)').selected = true;
+                        sldEditor.shadowRoot.querySelector('mwc-list-item:nth-last-of-type(4)').selected = true;
                         await sldEditor.updateComplete;
                         expect(element)
                             .property('placingLabel')

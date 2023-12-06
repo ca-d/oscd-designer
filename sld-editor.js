@@ -595,6 +595,13 @@ let SLDEditor = class SLDEditor extends LitElement {
             },
             {
                 content: html `<mwc-list-item graphic="icon">
+          <span>Add Text</span>
+          <mwc-icon slot="graphic">title</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.addTextTo(transformer),
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
           <span>Edit</span>
           <mwc-icon slot="graphic">edit</mwc-icon>
         </mwc-list-item>`,
@@ -671,6 +678,13 @@ let SLDEditor = class SLDEditor extends LitElement {
           <mwc-icon slot="graphic">text_rotation_none</mwc-icon>
         </mwc-list-item>`,
                 handler: () => this.dispatchEvent(newStartPlaceLabelEvent(equipment)),
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
+          <span>Add Text</span>
+          <mwc-icon slot="graphic">title</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.addTextTo(equipment),
             },
             {
                 content: html `<mwc-list-item graphic="icon">
@@ -803,6 +817,13 @@ let SLDEditor = class SLDEditor extends LitElement {
           <mwc-icon slot="graphic">text_rotation_none</mwc-icon>
         </mwc-list-item>`,
                 handler: () => this.dispatchEvent(newStartPlaceLabelEvent(busBar)),
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
+          <span>Add Text</span>
+          <mwc-icon slot="graphic">title</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.addTextTo(busBar),
             },
             {
                 content: html `<mwc-list-item graphic="icon">
@@ -1440,7 +1461,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             ({ weight, color } = attributes(element));
             deg = attributes(element).rot * 90;
             if (element.textContent)
-                text = (_a = element.textContent) === null || _a === void 0 ? void 0 : _a.split(/\r?\n/).map((line, i) => svg `<tspan x="${x}" dy="${i === 0 ? nothing : '1.19em'}">${line}&nbsp;</tspan>`);
+                text = (_a = element.textContent) === null || _a === void 0 ? void 0 : _a.split(/\r?\n/).map((line, i) => svg `<tspan x="${x}" dy="${i === 0 ? nothing : '1.19em'}" visibility="${line ? nothing : 'hidden'}">${line || '.'}</tspan>`);
             else {
                 text = '<Middle click to edit>';
                 color = '#aaa';
@@ -1454,7 +1475,8 @@ let SLDEditor = class SLDEditor extends LitElement {
             events = 'all';
             handleClick = () => this.dispatchEvent(newStartPlaceLabelEvent(element));
         }
-        const id = element.closest('Substation') === this.substation
+        const id = element.closest('Substation') === this.substation &&
+            element.tagName !== 'Text'
             ? identity(element)
             : nothing;
         return svg `<g class="label" id="label:${id}" transform="rotate(${deg} ${x + 0.1 + fontSize / 2} ${y - 0.2 - fontSize / 2})">
@@ -1469,9 +1491,9 @@ let SLDEditor = class SLDEditor extends LitElement {
         }}
           @click=${handleClick}
           @contextmenu=${(e) => this.openMenu(element, e)}
-          pointer-events="${events}" fill="${color}" fill-opacity="0.83"
-          font-weight="${weight}" font-size="${fontSize}px"
-          font-family="Roboto, sans-serif" style="cursor: default;">
+          pointer-events="${events}" fill="${color}" font-weight="${weight}"
+          font-size="${fontSize}px" font-family="Roboto, sans-serif"
+          style="cursor: default;">
           ${text}
         </text>
       </g>`;
