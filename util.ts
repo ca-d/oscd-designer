@@ -66,6 +66,8 @@ export type Attrs = {
   flip: boolean;
   rot: 0 | 1 | 2 | 3;
   bus: boolean;
+  weight: number;
+  color: string;
   kind: TransformerKind;
 };
 
@@ -96,6 +98,7 @@ export function attributes(element: Element): Attrs {
     'lx',
     'ly',
   ].map(name => parseFloat(element.getAttributeNS(sldNs, name) ?? '0'));
+  const weight = parseInt(element.getAttributeNS(sldNs, 'weight') ?? '300', 10);
   const pos = [x, y].map(d => Math.max(0, d)) as Point;
   const dim = [w, h].map(d => Math.max(1, d)) as Point;
   const label = [labelX, labelY].map(d => Math.max(0, d)) as Point;
@@ -104,10 +107,11 @@ export function attributes(element: Element): Attrs {
   const flip = xmlBoolean(element.getAttributeNS(sldNs, 'flip'));
   const kindVal = element.getAttributeNS(sldNs, 'kind');
   const kind = isTransformerKind(kindVal) ? kindVal : 'default';
+  const color = element.getAttributeNS(sldNs, 'color') || '#000';
 
   const rot = (((rotVal % 4) + 4) % 4) as 0 | 1 | 2 | 3;
 
-  return { pos, dim, label, flip, rot, bus, kind };
+  return { pos, dim, label, flip, rot, bus, weight, color, kind };
 }
 
 function pathString(...args: string[]) {
