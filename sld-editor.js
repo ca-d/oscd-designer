@@ -170,7 +170,7 @@ function copy(element, nsp) {
     return clone;
 }
 function renderMenuHeader(element) {
-    const name = element.getAttribute('name');
+    const name = element.getAttribute('name') || element.tagName;
     let detail = element.getAttribute('desc');
     const type = element.getAttribute('type');
     if (type) {
@@ -205,6 +205,10 @@ function renderMenuHeader(element) {
         footerGraphic = bayGraphic;
     else if (element.tagName === 'VoltageLevel')
         footerGraphic = voltageLevelGraphic;
+    else if (element.tagName === 'Text') {
+        footerGraphic = html `<mwc-icon slot="graphic">title</mwc-icon>`;
+        detail = element.textContent;
+    }
     return html `<mwc-list-item ?twoline=${detail} graphic="avatar" noninteractive>
     <span>${name}</span>
     ${detail
@@ -472,6 +476,18 @@ let SLDEditor = class SLDEditor extends LitElement {
             }
         }
         this.dispatchEvent(newEditEvent(edits));
+    }
+    addTextTo(element) {
+        const { pos: [x, y], } = attributes(element);
+        const text = this.doc.createElementNS(this.doc.documentElement.namespaceURI, 'Text');
+        text.textContent = '... middle click to edit';
+        text.setAttributeNS(sldNs, `${this.nsp}:lx`, x.toString());
+        text.setAttributeNS(sldNs, `${this.nsp}:ly`, (y < 2 ? y + 1 : y - 1).toString());
+        this.dispatchEvent(newEditEvent({
+            node: text,
+            parent: element,
+            reference: getReference(element, 'Text'),
+        }));
     }
     transformerWindingMenuItems(winding) {
         const tapChanger = winding.querySelector('TapChanger');
@@ -859,6 +875,13 @@ let SLDEditor = class SLDEditor extends LitElement {
             },
             {
                 content: html `<mwc-list-item graphic="icon">
+          <span>Add Text</span>
+          <mwc-icon slot="graphic">title</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.addTextTo(bayOrVL),
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
           <span>Edit</span>
           <mwc-icon slot="graphic">edit</mwc-icon>
         </mwc-list-item>`,
@@ -887,6 +910,51 @@ let SLDEditor = class SLDEditor extends LitElement {
         ];
         return items;
     }
+    textMenuItems(text) {
+        const items = [
+            {
+                content: html `<mwc-list-item graphic="icon">
+          <span>Rotate</span>
+          <mwc-icon slot="graphic">rotate_90_degrees_cw</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => {
+                    this.dispatchEvent(newRotateEvent(text));
+                },
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
+          <span>Move</span>
+          <svg
+            xmlns="${svgNs}"
+            height="24"
+            width="24"
+            slot="graphic"
+            viewBox="0 96 960 960"
+          >
+            ${movePath}
+          </svg>
+        </mwc-list-item>`,
+                handler: () => this.dispatchEvent(newStartPlaceLabelEvent(text)),
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
+          <span>Edit</span>
+          <mwc-icon slot="graphic">edit</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => this.dispatchEvent(newEditWizardEvent(text)),
+            },
+            {
+                content: html `<mwc-list-item graphic="icon">
+          <span>Delete</span>
+          <mwc-icon slot="graphic">delete</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => {
+                    this.dispatchEvent(newEditEvent({ node: text }));
+                },
+            },
+        ];
+        return items;
+    }
     renderMenu() {
         if (!this.menu)
             return html ``;
@@ -905,6 +973,8 @@ let SLDEditor = class SLDEditor extends LitElement {
             items.push(...this.busBarMenuItems(element));
         else if (element.tagName === 'Bay' || element.tagName === 'VoltageLevel')
             items.push(...this.containerMenuItems(element));
+        else if (element.tagName === 'Text')
+            items.push(...this.textMenuItems(element));
         if (element.tagName === 'TransformerWinding') {
             const transformer = element.parentElement;
             items.push({ content: html `<li divider role="separator"></li>` });
@@ -1181,7 +1251,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             isBusBar(node.parentElement))
             .map(cNode => this.renderConnectivityNode(cNode))}
         ${Array.from(this.substation.querySelectorAll(':scope > PowerTransformer')).map(transformer => this.renderPowerTransformer(transformer))}
-        ${Array.from(this.substation.querySelectorAll('VoltageLevel, Bay, ConductingEquipment, PowerTransformer'))
+        ${Array.from(this.substation.querySelectorAll('VoltageLevel, Bay, ConductingEquipment, PowerTransformer, Text'))
             .filter(e => !this.placing || e.closest(this.placing.tagName) !== this.placing)
             .map(element => this.renderLabel(element))}
         ${transformerPlacingTarget} ${placingLabelTarget} ${placingElement}
@@ -1266,8 +1336,13 @@ let SLDEditor = class SLDEditor extends LitElement {
     renderLabel(element) {
         if (!this.showLabels)
             return nothing;
+        let deg = 0;
+        let text = element.getAttribute('name');
+        if (element.tagName === 'Text') {
+            deg = attributes(element).rot * 90;
+            text = element.textContent;
+        }
         const [x, y] = this.renderedLabelPosition(element);
-        const name = element.getAttribute('name');
         const fontSize = element.tagName === 'ConductingEquipment' ? 0.45 : 0.6;
         let events = 'none';
         let handleClick = nothing;
@@ -1278,7 +1353,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         const id = element.closest('Substation') === this.substation
             ? identity(element)
             : nothing;
-        return svg `<g class="label" id="label:${id}">
+        return svg `<g class="label" id="label:${id}" transform="rotate(${deg} ${x + 0.1 + fontSize / 2} ${y - 0.2 - fontSize / 2})">
         <text x="${x + 0.1}" y="${y - 0.2}"
           @mousedown=${preventDefault}
           @auxclick=${(e) => {
@@ -1292,7 +1367,7 @@ let SLDEditor = class SLDEditor extends LitElement {
           @contextmenu=${(e) => this.openMenu(element, e)}
           pointer-events="${events}" fill="#000000" fill-opacity="0.83"
           style="font: ${fontSize}px Roboto, sans-serif; cursor: default;">
-          ${name}
+          ${text}
         </text>
       </g>`;
     }
@@ -1426,7 +1501,7 @@ let SLDEditor = class SLDEditor extends LitElement {
                 .map(cNode => this.renderConnectivityNode(cNode))
             : nothing}
       ${preview
-            ? Array.from(bayOrVL.querySelectorAll('Bay, ConductingEquipment, PowerTransformer'))
+            ? Array.from(bayOrVL.querySelectorAll('Bay, ConductingEquipment, PowerTransformer, Text'))
                 .concat(bayOrVL)
                 .map(element => this.renderLabel(element))
             : nothing}
@@ -1781,7 +1856,12 @@ let SLDEditor = class SLDEditor extends LitElement {
         ${windings.map(w => this.renderTransformerWinding(w))}
         ${clickTarget}
       </g>
-      <g class="preview">${preview ? this.renderLabel(transformer) : nothing}</g>`;
+      <g class="preview">${preview
+            ? [
+                this.renderLabel(transformer),
+                ...Array.from(transformer.querySelectorAll('Text')).map(text => this.renderLabel(text)),
+            ]
+            : nothing}</g>`;
     }
     renderEquipment(equipment, { preview = false, connect = false } = {}) {
         var _a;
@@ -1929,7 +2009,12 @@ let SLDEditor = class SLDEditor extends LitElement {
       ${bottomIndicator}
       ${bottomGrounded}
     </g>
-    <g class="preview">${preview ? this.renderLabel(equipment) : nothing}</g>`;
+    <g class="preview">${preview
+            ? [
+                this.renderLabel(equipment),
+                ...Array.from(equipment.querySelectorAll('Text')).map(text => this.renderLabel(text)),
+            ]
+            : nothing}</g>`;
     }
     renderBusBar(busBar) {
         const [x, y] = this.renderedPosition(busBar);
@@ -1953,6 +2038,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             : nothing}">
       <title>${busBar.getAttribute('name')}</title>
       ${this.renderLabel(busBar)}
+      ${Array.from(busBar.querySelectorAll('Text')).map(text => this.renderLabel(text))}
       ${this.renderConnectivityNode(busBar.querySelector('ConnectivityNode'))}
       ${placingTarget}
     </g>`;
