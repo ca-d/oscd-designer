@@ -480,7 +480,6 @@ let SLDEditor = class SLDEditor extends LitElement {
     addTextTo(element) {
         const { pos: [x, y], } = attributes(element);
         const text = this.doc.createElementNS(this.doc.documentElement.namespaceURI, 'Text');
-        text.textContent = '... middle click to edit';
         text.setAttributeNS(sldNs, `${this.nsp}:lx`, x.toString());
         text.setAttributeNS(sldNs, `${this.nsp}:ly`, (y < 2 ? y + 1 : y - 1).toString());
         this.dispatchEvent(newEditEvent({
@@ -911,6 +910,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         return items;
     }
     textMenuItems(text) {
+        const { weight, color } = attributes(text);
         const items = [
             {
                 content: html `<mwc-list-item graphic="icon">
@@ -953,6 +953,96 @@ let SLDEditor = class SLDEditor extends LitElement {
                 },
             },
         ];
+        if (weight !== 500)
+            items.unshift({
+                content: html `<mwc-list-item graphic="icon">
+          <span>Bold</span>
+          <mwc-icon slot="graphic">format_bold</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => {
+                    this.dispatchEvent(newEditEvent({
+                        element: text,
+                        attributes: {
+                            [`${this.nsp}:weight`]: { namespaceURI: sldNs, value: '500' },
+                        },
+                    }));
+                },
+            });
+        if (weight !== 300)
+            items.unshift({
+                content: html `<mwc-list-item graphic="icon">
+          <span>Remove Formatting</span>
+          <mwc-icon slot="graphic">format_clear</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => {
+                    this.dispatchEvent(newEditEvent({
+                        element: text,
+                        attributes: {
+                            [`${this.nsp}:weight`]: { namespaceURI: sldNs, value: null },
+                        },
+                    }));
+                },
+            });
+        if (color.toUpperCase() !== '#BB1326')
+            items.unshift({
+                content: html `<mwc-list-item
+          graphic="icon"
+          style="--mdc-theme-text-primary-on-background: #BB1326; --mdc-theme-text-icon-on-background: #BB1326;"
+        >
+          <span>Red</span>
+          <mwc-icon slot="graphic">format_color_text</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => {
+                    this.dispatchEvent(newEditEvent({
+                        element: text,
+                        attributes: {
+                            [`${this.nsp}:color`]: {
+                                namespaceURI: sldNs,
+                                value: '#BB1326',
+                            },
+                        },
+                    }));
+                },
+            });
+        if (color.toUpperCase() !== '#12579B')
+            items.unshift({
+                content: html `<mwc-list-item
+          graphic="icon"
+          style="--mdc-theme-text-primary-on-background: #12579B; --mdc-theme-text-icon-on-background: #12579B;"
+        >
+          <span>Blue</span>
+          <mwc-icon slot="graphic">format_color_text</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => {
+                    this.dispatchEvent(newEditEvent({
+                        element: text,
+                        attributes: {
+                            [`${this.nsp}:color`]: {
+                                namespaceURI: sldNs,
+                                value: '#12579B',
+                            },
+                        },
+                    }));
+                },
+            });
+        if (color !== '#000')
+            items.unshift({
+                content: html `<mwc-list-item graphic="icon">
+          <span>Reset Color</span>
+          <mwc-icon slot="graphic">format_color_reset</mwc-icon>
+        </mwc-list-item>`,
+                handler: () => {
+                    this.dispatchEvent(newEditEvent({
+                        element: text,
+                        attributes: {
+                            [`${this.nsp}:color`]: {
+                                namespaceURI: sldNs,
+                                value: null,
+                            },
+                        },
+                    }));
+                },
+            });
         return items;
     }
     renderMenu() {
@@ -967,20 +1057,24 @@ let SLDEditor = class SLDEditor extends LitElement {
             items.push(...this.equipmentMenuItems(element));
         else if (element.tagName === 'PowerTransformer')
             items.push(...this.transformerMenuItems(element));
-        else if (element.tagName === 'TransformerWinding')
-            items.push(...this.transformerWindingMenuItems(element));
         else if (element.tagName === 'Bay' && isBusBar(element))
             items.push(...this.busBarMenuItems(element));
         else if (element.tagName === 'Bay' || element.tagName === 'VoltageLevel')
             items.push(...this.containerMenuItems(element));
-        else if (element.tagName === 'Text')
-            items.push(...this.textMenuItems(element));
-        if (element.tagName === 'TransformerWinding') {
+        else if (element.tagName === 'TransformerWinding') {
+            items.push(...this.transformerWindingMenuItems(element));
             const transformer = element.parentElement;
             items.push({ content: html `<li divider role="separator"></li>` });
             items.push({ content: renderMenuHeader(transformer) });
             items.push({ content: html `<li divider role="separator"></li>` });
             items.push(...this.transformerMenuItems(transformer));
+        }
+        else if (element.tagName === 'Text') {
+            items.push(...this.textMenuItems(element));
+            items.push({ content: html `<li divider role="separator"></li>` });
+            items.push({
+                content: renderMenuHeader(element.parentElement),
+            });
         }
         const headerHeight = element.hasAttribute('desc') || element.hasAttribute('type') ? 73 : 57;
         return html `
@@ -1334,15 +1428,25 @@ let SLDEditor = class SLDEditor extends LitElement {
     </section>`;
     }
     renderLabel(element) {
+        var _a;
         if (!this.showLabels)
             return nothing;
         let deg = 0;
         let text = element.getAttribute('name');
-        if (element.tagName === 'Text') {
-            deg = attributes(element).rot * 90;
-            text = element.textContent;
-        }
+        let weight = 400;
+        let color = 'black';
         const [x, y] = this.renderedLabelPosition(element);
+        if (element.tagName === 'Text') {
+            ({ weight, color } = attributes(element));
+            deg = attributes(element).rot * 90;
+            if (element.textContent)
+                text = (_a = element.textContent) === null || _a === void 0 ? void 0 : _a.split(/\r?\n/).map((line, i) => svg `<tspan x="${x}" dy="${i === 0 ? nothing : '1.19em'}">${line}&nbsp;</tspan>`);
+            else {
+                text = '<Middle click to edit>';
+                color = '#aaa';
+                weight = 500;
+            }
+        }
         const fontSize = element.tagName === 'ConductingEquipment' ? 0.45 : 0.6;
         let events = 'none';
         let handleClick = nothing;
@@ -1365,8 +1469,9 @@ let SLDEditor = class SLDEditor extends LitElement {
         }}
           @click=${handleClick}
           @contextmenu=${(e) => this.openMenu(element, e)}
-          pointer-events="${events}" fill="#000000" fill-opacity="0.83"
-          style="font: ${fontSize}px Roboto, sans-serif; cursor: default;">
+          pointer-events="${events}" fill="${color}" fill-opacity="0.83"
+          font-weight="${weight}" font-size="${fontSize}px"
+          font-family="Roboto, sans-serif" style="cursor: default;">
           ${text}
         </text>
       </g>`;

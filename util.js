@@ -66,6 +66,7 @@ export function isBusBar(element) {
         xmlBoolean((_a = element.querySelector('Section[bus]')) === null || _a === void 0 ? void 0 : _a.getAttribute('bus')));
 }
 export function attributes(element) {
+    var _a;
     const [x, y, w, h, rotVal, labelX, labelY] = [
         'x',
         'y',
@@ -75,6 +76,7 @@ export function attributes(element) {
         'lx',
         'ly',
     ].map(name => { var _a; return parseFloat((_a = element.getAttributeNS(sldNs, name)) !== null && _a !== void 0 ? _a : '0'); });
+    const weight = parseInt((_a = element.getAttributeNS(sldNs, 'weight')) !== null && _a !== void 0 ? _a : '300', 10);
     const pos = [x, y].map(d => Math.max(0, d));
     const dim = [w, h].map(d => Math.max(1, d));
     const label = [labelX, labelY].map(d => Math.max(0, d));
@@ -82,8 +84,9 @@ export function attributes(element) {
     const flip = xmlBoolean(element.getAttributeNS(sldNs, 'flip'));
     const kindVal = element.getAttributeNS(sldNs, 'kind');
     const kind = isTransformerKind(kindVal) ? kindVal : 'default';
+    const color = element.getAttributeNS(sldNs, 'color') || '#000';
     const rot = (((rotVal % 4) + 4) % 4);
-    return { pos, dim, label, flip, rot, bus, kind };
+    return { pos, dim, label, flip, rot, bus, weight, color, kind };
 }
 function pathString(...args) {
     return args.join('/');
