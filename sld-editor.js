@@ -224,6 +224,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         this.editCount = -1;
         this.gridSize = 32;
         this.nsp = 'esld';
+        this.placingOffset = [0, 0];
         this.mouseX = 0;
         this.mouseY = 0;
         this.mouseX2 = 0;
@@ -322,8 +323,9 @@ let SLDEditor = class SLDEditor extends LitElement {
         if (this.placing &&
             element.closest(this.placing.tagName) === this.placing) {
             const { pos: [parentX, parentY], } = attributes(this.placing);
-            x += this.mouseX - parentX;
-            y += this.mouseY - parentY;
+            const [offsetX, offsetY] = this.placingOffset;
+            x += this.mouseX - parentX - offsetX;
+            y += this.mouseY - parentY - offsetY;
         }
         if (this.resizingTL === element) {
             const { pos: [resX, resY], dim: [resW, resH], } = attributes(element);
@@ -343,8 +345,9 @@ let SLDEditor = class SLDEditor extends LitElement {
         if (this.placing &&
             element.closest(this.placing.tagName) === this.placing) {
             const { pos: [parentX, parentY], } = attributes(this.placing);
-            x += this.mouseX - parentX;
-            y += this.mouseY - parentY;
+            const [offsetX, offsetY] = this.placingOffset;
+            x += this.mouseX - parentX - offsetX;
+            y += this.mouseY - parentY - offsetY;
         }
         return [x, y];
     }
@@ -534,6 +537,8 @@ let SLDEditor = class SLDEditor extends LitElement {
         return items;
     }
     transformerMenuItems(transformer) {
+        const { pos: [x, y], } = attributes(transformer);
+        const offset = [this.mouseX - x, this.mouseY - y];
         const items = [
             {
                 content: html `<mwc-list-item graphic="icon">
@@ -549,7 +554,7 @@ let SLDEditor = class SLDEditor extends LitElement {
           <span>Copy</span>
           <mwc-icon slot="graphic">copy_all</mwc-icon>
         </mwc-list-item>`,
-                handler: () => this.dispatchEvent(newStartPlaceEvent(copy(transformer, this.nsp))),
+                handler: () => this.dispatchEvent(newStartPlaceEvent(copy(transformer, this.nsp), offset)),
             },
             {
                 content: html `<mwc-list-item graphic="icon">
@@ -564,7 +569,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             ${movePath}
           </svg>
         </mwc-list-item>`,
-                handler: () => this.dispatchEvent(newStartPlaceEvent(transformer)),
+                handler: () => this.dispatchEvent(newStartPlaceEvent(transformer, offset)),
             },
             {
                 content: html `<mwc-list-item graphic="icon">
@@ -744,6 +749,8 @@ let SLDEditor = class SLDEditor extends LitElement {
         return items;
     }
     busBarMenuItems(busBar) {
+        const { pos: [x, y], } = attributes(busBar);
+        const offset = [this.mouseX - x, this.mouseY - y];
         const items = [
             {
                 content: html `<mwc-list-item graphic="icon">
@@ -773,7 +780,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             ${movePath}
           </svg>
         </mwc-list-item>`,
-                handler: () => this.dispatchEvent(newStartPlaceEvent(busBar)),
+                handler: () => this.dispatchEvent(newStartPlaceEvent(busBar, offset)),
             },
             {
                 content: html `<mwc-list-item graphic="icon">
@@ -803,6 +810,8 @@ let SLDEditor = class SLDEditor extends LitElement {
         return items;
     }
     containerMenuItems(bayOrVL) {
+        const { pos: [x, y], } = attributes(bayOrVL);
+        const offset = [this.mouseX - x, this.mouseY - y];
         const items = [
             {
                 content: html `<mwc-list-item graphic="icon">
@@ -824,7 +833,7 @@ let SLDEditor = class SLDEditor extends LitElement {
           <span>Copy</span>
           <mwc-icon slot="graphic">copy_all</mwc-icon>
         </mwc-list-item>`,
-                handler: () => this.dispatchEvent(newStartPlaceEvent(copy(bayOrVL, this.nsp))),
+                handler: () => this.dispatchEvent(newStartPlaceEvent(copy(bayOrVL, this.nsp), offset)),
             },
             {
                 content: html `<mwc-list-item graphic="icon">
@@ -839,7 +848,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             ${movePath}
           </svg>
         </mwc-list-item>`,
-                handler: () => this.dispatchEvent(newStartPlaceEvent(bayOrVL)),
+                handler: () => this.dispatchEvent(newStartPlaceEvent(bayOrVL, offset)),
             },
             {
                 content: html `<mwc-list-item graphic="icon">
@@ -975,8 +984,11 @@ let SLDEditor = class SLDEditor extends LitElement {
         if (this.placing) {
             const { dim: [w0, h0], } = attributes(this.placing);
             hidden = false;
-            invalid = !this.canPlaceAt(this.placing, this.mouseX, this.mouseY, w0, h0);
-            coordinates = html `${this.mouseX},${this.mouseY}`;
+            const [offsetX, offsetY] = this.placingOffset;
+            const x = this.mouseX - offsetX;
+            const y = this.mouseY - offsetY;
+            invalid = !this.canPlaceAt(this.placing, x, y, w0, h0);
+            coordinates = html `${x},${y}`;
         }
         if (this.resizingBR && !isBusBar(this.resizingBR)) {
             const { pos: [x, y], } = attributes(this.resizingBR);
@@ -1290,10 +1302,11 @@ let SLDEditor = class SLDEditor extends LitElement {
         if (this.placing === bayOrVL && !preview)
             return svg ``;
         let [x, y] = this.renderedPosition(bayOrVL);
+        const offset = [this.mouseX - x, this.mouseY - y];
         let { dim: [w, h], } = attributes(bayOrVL);
         let handleClick = (e) => {
             if (this.idle)
-                this.dispatchEvent(newStartPlaceEvent(e.shiftKey ? copy(bayOrVL, this.nsp) : bayOrVL));
+                this.dispatchEvent(newStartPlaceEvent(e.shiftKey ? copy(bayOrVL, this.nsp) : bayOrVL, offset));
         };
         let invalid = false;
         if (this.resizingBR === bayOrVL) {
@@ -1731,6 +1744,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             return svg ``;
         const windings = Array.from(transformer.children).filter(c => c.tagName === 'TransformerWinding');
         const [x, y] = this.renderedPosition(transformer);
+        const offset = [this.mouseX - x, this.mouseY - y];
         return svg `<g class="${classMap({ transformer: true, preview })}"
         pointer-events="all"
         @mousedown=${preventDefault}
@@ -1758,7 +1772,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             let placing = transformer;
             if (e.shiftKey)
                 placing = copy(transformer, this.nsp);
-            this.dispatchEvent(newStartPlaceEvent(placing));
+            this.dispatchEvent(newStartPlaceEvent(placing, offset));
         }}>
         ${windings.map(w => this.renderTransformerWinding(w))}
       </g>
@@ -1916,7 +1930,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         const [x, y] = this.renderedPosition(busBar);
         const { dim: [w, h], } = attributes(busBar);
         let placingTarget = svg ``;
-        placingTarget = svg `<rect x="${x}" y="${y}" width="1" height="1"
+        placingTarget = svg `<rect x="${x}" y="${y}" width="${w}" height="${h}"
           pointer-events="all" fill="none" 
           @click=${() => {
             const parent = Array.from(this.substation.querySelectorAll(':root > Substation > VoltageLevel')).find(vl => containsRect(vl, x, y, w, h));
@@ -1975,7 +1989,9 @@ let SLDEditor = class SLDEditor extends LitElement {
                 let handleAuxClick = nothing;
                 let handleContextMenu = nothing;
                 if (busBar && bay) {
-                    handleClick = () => this.dispatchEvent(newStartPlaceEvent(bay));
+                    const { pos: [x, y], } = attributes(bay);
+                    const offset = [this.mouseX - x, this.mouseY - y];
+                    handleClick = () => this.dispatchEvent(newStartPlaceEvent(bay, offset));
                     handleAuxClick = ({ button }) => {
                         if (button === 1)
                             this.dispatchEvent(newStartResizeBREvent(bay));
@@ -2151,6 +2167,9 @@ __decorate([
 __decorate([
     property()
 ], SLDEditor.prototype, "placing", void 0);
+__decorate([
+    property()
+], SLDEditor.prototype, "placingOffset", void 0);
 __decorate([
     property()
 ], SLDEditor.prototype, "placingLabel", void 0);
