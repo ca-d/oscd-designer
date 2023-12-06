@@ -342,6 +342,26 @@ export default class Designer extends LitElement {
       });
     }
 
+    Array.from(element.querySelectorAll('Text')).forEach(text => {
+      const {
+        label: [textLX, textLY],
+      } = attributes(text);
+      const newAttributes = {
+        lx: {
+          namespaceURI: sldNs,
+          value: (textLX + dx).toString(),
+        },
+        ly: {
+          namespaceURI: sldNs,
+          value: (textLY + dy).toString(),
+        },
+      };
+      edits.push({
+        element: text,
+        attributes: newAttributes,
+      });
+    });
+
     Array.from(
       element.querySelectorAll(
         'Bay, ConductingEquipment, PowerTransformer, Vertex'
