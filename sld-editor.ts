@@ -864,6 +864,13 @@ export class SLDEditor extends LitElement {
       },
       {
         content: html`<mwc-list-item graphic="icon">
+          <span>Add Text</span>
+          <mwc-icon slot="graphic">title</mwc-icon>
+        </mwc-list-item>`,
+        handler: () => this.addTextTo(transformer),
+      },
+      {
+        content: html`<mwc-list-item graphic="icon">
           <span>Edit</span>
           <mwc-icon slot="graphic">edit</mwc-icon>
         </mwc-list-item>`,
@@ -948,6 +955,13 @@ export class SLDEditor extends LitElement {
           <mwc-icon slot="graphic">text_rotation_none</mwc-icon>
         </mwc-list-item>`,
         handler: () => this.dispatchEvent(newStartPlaceLabelEvent(equipment)),
+      },
+      {
+        content: html`<mwc-list-item graphic="icon">
+          <span>Add Text</span>
+          <mwc-icon slot="graphic">title</mwc-icon>
+        </mwc-list-item>`,
+        handler: () => this.addTextTo(equipment),
       },
       {
         content: html`<mwc-list-item graphic="icon">
@@ -1101,6 +1115,13 @@ export class SLDEditor extends LitElement {
           <mwc-icon slot="graphic">text_rotation_none</mwc-icon>
         </mwc-list-item>`,
         handler: () => this.dispatchEvent(newStartPlaceLabelEvent(busBar)),
+      },
+      {
+        content: html`<mwc-list-item graphic="icon">
+          <span>Add Text</span>
+          <mwc-icon slot="graphic">title</mwc-icon>
+        </mwc-list-item>`,
+        handler: () => this.addTextTo(busBar),
       },
       {
         content: html`<mwc-list-item graphic="icon">
@@ -1866,7 +1887,9 @@ export class SLDEditor extends LitElement {
             (line, i) =>
               svg`<tspan x="${x}" dy="${
                 i === 0 ? nothing : '1.19em'
-              }">${line}&nbsp;</tspan>`
+              }" visibility="${line ? nothing : 'hidden'}">${
+                line || '.'
+              }</tspan>`
           );
       else {
         text = '<Middle click to edit>';
@@ -1883,7 +1906,8 @@ export class SLDEditor extends LitElement {
       handleClick = () => this.dispatchEvent(newStartPlaceLabelEvent(element));
     }
     const id =
-      element.closest('Substation') === this.substation
+      element.closest('Substation') === this.substation &&
+      element.tagName !== 'Text'
         ? identity(element)
         : nothing;
     const classes = classMap({
@@ -1906,9 +1930,9 @@ export class SLDEditor extends LitElement {
           }}
           @click=${handleClick}
           @contextmenu=${(e: MouseEvent) => this.openMenu(element, e)}
-          pointer-events="${events}" fill="${color}" fill-opacity="0.83"
-          font-weight="${weight}" font-size="${fontSize}px"
-          font-family="Roboto, sans-serif" style="cursor: default;">
+          pointer-events="${events}" fill="${color}" font-weight="${weight}"
+          font-size="${fontSize}px" font-family="Roboto, sans-serif"
+          style="cursor: default;">
           ${text}
         </text>
       </g>`;

@@ -5192,6 +5192,17 @@ snapshots["Designer given conducting equipment opens a menu on equipment right c
       mwc-list-item=""
     >
       <span>
+        Add Text
+      </span>
+      <mwc-icon slot="graphic">
+        title
+      </mwc-icon>
+    </mwc-list-item>
+    <mwc-list-item
+      graphic="icon"
+      mwc-list-item=""
+    >
+      <span>
         Edit
       </span>
       <mwc-icon slot="graphic">

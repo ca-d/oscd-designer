@@ -773,7 +773,7 @@ describe('Designer', () => {
         element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
       await element.updateComplete;
       sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-last-of-type(3)'
+        'mwc-list-item:nth-last-of-type(4)'
       )!.selected = true;
       await sldEditor.updateComplete;
       expect(element)
@@ -909,7 +909,7 @@ describe('Designer', () => {
       eqClickTarget.dispatchEvent(new PointerEvent('contextmenu'));
       await element.updateComplete;
       const item = sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-last-of-type(4)'
+        'mwc-list-item:nth-last-of-type(5)'
       )!;
       item.selected = true;
       await element.updateComplete;
@@ -1628,7 +1628,7 @@ describe('Designer', () => {
             const sldEditor =
               element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
             sldEditor.shadowRoot!.querySelector<ListItem>(
-              'mwc-list-item:nth-last-of-type(5)'
+              'mwc-list-item:nth-last-of-type(6)'
             )!.selected = true;
             expect(
               element.doc.querySelector('ConductingEquipment[*|x="3"][*|y="3"]')
@@ -1680,7 +1680,7 @@ describe('Designer', () => {
               element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
             await element.updateComplete;
             sldEditor.shadowRoot!.querySelector<ListItem>(
-              'mwc-list-item:nth-last-of-type(3)'
+              'mwc-list-item:nth-last-of-type(4)'
             )!.selected = true;
             await sldEditor.updateComplete;
             expect(element)
