@@ -1639,12 +1639,14 @@ const Co=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
               stroke="${s&&!l?"#000":c}" />`)}));let l=!1,c=G``;if(a){const{from:[e,i],fromCtl:[n,o],to:[r,d],toCtl:[s,p]}=a,{flip:m}=$o(t.parentElement);!m&&o<i&&(l=!0),m&&n>e&&(l=!0),c=G`<path d="M ${e} ${i} C ${n} ${o}, ${s} ${p}, ${r} ${d}" stroke="black" stroke-width="0.06" />`}const p=t.querySelector("TapChanger")?G`<line x1="${i-.8}" y1="${n+.8}" x2="${i+.8}" y2="${n-(l?1:.8)}"
               stroke="black" stroke-width="0.06" marker-end="url(#arrow)" />`:j;return G`<g class="winding"
         @contextmenu=${e=>this.openMenu(t,e)}
-    ><circle cx="${i}" cy="${n}" r="${e}" stroke="black" stroke-width="0.06" />${c}${p}${d}</g>`}renderPowerTransformer(t,e=!1){if(this.placing===t&&!e)return G``;const i=Array.from(t.children).filter((t=>"TransformerWinding"===t.tagName)),[n,o]=this.renderedPosition(t),r=[this.mouseX-n,this.mouseY-o];return G`<g class="${Oe({transformer:!0,preview:e})}"
+    ><circle cx="${i}" cy="${n}" r="${e}" stroke="black" stroke-width="0.06" />${c}${p}${d}</g>`}renderPowerTransformer(t,e=!1){if(this.placing===t&&!e)return G``;const i=Array.from(t.children).filter((t=>"TransformerWinding"===t.tagName)),[n,o]=this.renderedPosition(t),r=[this.mouseX-n,this.mouseY-o],a=this.placing===t?G`<rect width="1" height="1" fill="none"
+              x="${this.mouseX}" y="${this.mouseY}" />`:j;return G`<g class="${Oe({transformer:!0,preview:e})}"
         pointer-events="all"
         @mousedown=${qr}
         @auxclick=${e=>{1===e.button&&(this.dispatchEvent(Ko(t)),e.preventDefault())}}
         @click=${e=>{if(this.placing===t){const e=Array.from(this.substation.querySelectorAll(":scope > VoltageLevel > Bay")).concat(Array.from(this.substation.querySelectorAll(":scope > VoltageLevel"))).find((t=>Fr(t,n,o,1,1)))||this.substation;this.dispatchEvent(Yo({element:t,parent:e,x:n,y:o}))}if(!this.idle)return;let i=t;e.shiftKey&&(i=jr(t,this.nsp)),this.dispatchEvent(tr(i,r))}}>
         ${i.map((t=>this.renderTransformerWinding(t)))}
+        ${a}
       </g>
       <g class="preview">${e?this.renderLabel(t):j}</g>`}renderEquipment(t,{preview:e=!1,connect:i=!1}={}){var n;if(this.placing===t&&!e)return G``;if((null===(n=this.connecting)||void 0===n?void 0:n.from.closest("Substation"))===this.substation&&!i)return G``;const[o,r]=this.renderedPosition(t),{flip:a,rot:d}=$o(t),s=90*d,l=t.getAttribute("type"),c=Oo.has(l),p=Ro(l)?l:"ConductingEquipment",m=c?G`<svg
     viewBox="0 0 25 25"
