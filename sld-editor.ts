@@ -1919,7 +1919,7 @@ export class SLDEditor extends LitElement {
     return svg`<g class="${classes}" id="label:${id}" transform="rotate(${deg} ${
       x + 0.1 + fontSize / 2
     } ${y - 0.2 - fontSize / 2})">
-        <text x="${x + 0.1}" y="${y - 0.2}"
+        <text x="${x + (1 - fontSize) / 4}" y="${y - 0.56 + fontSize / 2}"
           @mousedown=${preventDefault}
           @auxclick=${(e: MouseEvent) => {
             if (e.button === 1) {
