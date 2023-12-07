@@ -1677,7 +1677,7 @@ const Io=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
               @contextmenu=${i=>{d||(i.preventDefault(),i.stopImmediatePropagation(),this.idle&&this.groundTerminal(t,e))}}
               @click=${i=>{i.stopImmediatePropagation(),this.idle&&this.dispatchEvent(rr({from:t,fromTerminal:e,path:[[n,o],[r,a]]}))}}
               fill="#${c}"
-              stroke="${l&&!d?"#000":c}" />`)}));let c=!1,p=G``;const{flip:m,rot:h}=Uo(t.parentElement);if(a){const{from:[t,e],fromCtl:[i,n],to:[o,r],toCtl:[d,s]}=a;!m&&n<e&&(c=!0),m&&i>t&&(c=!0),p=G`<path d="M ${t} ${e} C ${i} ${n}, ${d} ${s}, ${o} ${r}" stroke="black" stroke-width="0.06" />`}const u=t.querySelector("TapChanger")?G`<line x1="${i-.8}" y1="${n+.8}" x2="${i+.8}" y2="${n-(c?1:.8)}"
+              stroke="${l&&!d?"#F5E214":c}" />`)}));let c=!1,p=G``;const{flip:m,rot:h}=Uo(t.parentElement);if(a){const{from:[t,e],fromCtl:[i,n],to:[o,r],toCtl:[d,s]}=a;!m&&n<e&&(c=!0),m&&i>t&&(c=!0),p=G`<path d="M ${t} ${e} C ${i} ${n}, ${d} ${s}, ${o} ${r}" stroke="black" stroke-width="0.06" />`}const u=t.querySelector("TapChanger")?G`<line x1="${i-.8}" y1="${n+.8}" x2="${i+.8}" y2="${n-(c?1:.8)}"
               stroke="black" stroke-width="0.06" marker-end="url(#arrow)" />`:j,f=void 0===d?j:G`<g stroke="black" transform="rotate(${90*h} ${i} ${n}) translate(${i-1.5} ${n-1.5}) ${d}">${yr}</g>`;return G`<g class="winding"
         @contextmenu=${e=>this.openMenu(t,e)}
     ><circle cx="${i}" cy="${n}" r="${e}" stroke="black" stroke-width="0.06" />${p}${f}${u}${s}</g>`}renderPowerTransformer(t,e=!1){if(this.placing===t&&!e)return G``;const i=Array.from(t.children).filter((t=>"TransformerWinding"===t.tagName)),[n,o]=this.renderedPosition(t),r=[this.mouseX-n,this.mouseY-o],a=this.placing===t?G`<rect width="1" height="1" fill="none"
@@ -1697,13 +1697,13 @@ const Io=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
     ${Nr}
   </svg>`:G`<use href="#${p}" xlink:href="#${p}"
               pointer-events="none" />`;let h=e=>{let i=t;e.shiftKey&&(i=Yr(t,this.nsp)),this.dispatchEvent(or(i))};if(this.placing===t){const e=Array.from(this.substation.querySelectorAll(":root > Substation > VoltageLevel > Bay")).find((t=>!Vo(t)&&$r(t,o,r,1,1)));e&&this.canPlaceAt(t,o,r,1,1)&&(h=()=>{this.dispatchEvent(Jo({x:o,y:r,element:t,parent:e}))})}const u=Array.from(t.children).filter((t=>"Terminal"===t.tagName)),f=u.find((t=>"T1"===t.getAttribute("name"))),g=u.find((t=>"T1"!==t.getAttribute("name"))),b=f||this.resizingBR||this.resizingTL||this.connecting||this.placingLabel||this.placing&&this.placing!==t?j:G`<circle class="port" cx="0.5" cy="0" r="0.2" opacity="0.4"
-      fill="#BB1326" stroke="#000" pointer-events="${this.placing?"none":j}"
+      fill="#BB1326" stroke="#F5E214" pointer-events="${this.placing?"none":j}"
     @click=${()=>this.dispatchEvent(rr({from:t,fromTerminal:"T1",path:Zo(t).T1}))}
     @contextmenu=${e=>{e.preventDefault(),this.groundTerminal(t,"T1")}}
       />`,v=!this.connecting||this.connecting.from===t||this.connecting&&this.mouseX===o&&this.mouseY===r&&"T1"===this.nearestOpenTerminal(t)||f?j:G`<polygon points="0.3,0 0.7,0 0.5,0.4" 
                 fill="#BB1326" opacity="0.4" />`,x="grounded"===(null==f?void 0:f.getAttribute("cNodeName"))?G`<line x1="0.5" y1="-0.1" x2="0.5" y2="0.16" stroke="black"
                 stroke-width="0.06" marker-start="url(#grounded)" />`:j,y=g||this.resizingBR||this.resizingTL||this.connecting||this.placingLabel||this.placing&&this.placing!==t||Mo.has(l)?j:G`<circle class="port" cx="0.5" cy="1" r="0.2" opacity="0.4"
-      fill="#BB1326" stroke="#000" pointer-events="${this.placing?"none":j}"
+      fill="#BB1326" stroke="#F5E214" pointer-events="${this.placing?"none":j}"
     @click=${()=>this.dispatchEvent(rr({from:t,fromTerminal:"T2",path:Zo(t).T2}))}
     @contextmenu=${e=>{e.preventDefault(),this.groundTerminal(t,"T2")}}
       />`,_=!this.connecting||this.connecting.from===t||this.connecting&&this.mouseX===o&&this.mouseY===r&&"T2"===this.nearestOpenTerminal(t)||g||Mo.has(l)?j:G`<polygon points="0.3,1 0.7,1 0.5,0.6" 

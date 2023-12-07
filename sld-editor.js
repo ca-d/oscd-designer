@@ -1968,7 +1968,7 @@ let SLDEditor = class SLDEditor extends LitElement {
                     }));
                 }}
               fill="#${fill}"
-              stroke="${groundable && !terminal ? '#000' : fill}" />`);
+              stroke="${groundable && !terminal ? '#F5E214' : fill}" />`);
             });
         let longArrow = false;
         let arcPath = svg ``;
@@ -2094,7 +2094,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             (this.placing && this.placing !== equipment)
             ? nothing
             : svg `<circle class="port" cx="0.5" cy="0" r="0.2" opacity="0.4"
-      fill="#BB1326" stroke="#000" pointer-events="${this.placing ? 'none' : nothing}"
+      fill="#BB1326" stroke="#F5E214" pointer-events="${this.placing ? 'none' : nothing}"
     @click=${() => this.dispatchEvent(newStartConnectEvent({
                 from: equipment,
                 fromTerminal: 'T1',
@@ -2128,7 +2128,7 @@ let SLDEditor = class SLDEditor extends LitElement {
             singleTerminal.has(eqType)
             ? nothing
             : svg `<circle class="port" cx="0.5" cy="1" r="0.2" opacity="0.4"
-      fill="#BB1326" stroke="#000" pointer-events="${this.placing ? 'none' : nothing}"
+      fill="#BB1326" stroke="#F5E214" pointer-events="${this.placing ? 'none' : nothing}"
     @click=${() => this.dispatchEvent(newStartConnectEvent({
                 from: equipment,
                 fromTerminal: 'T2',
