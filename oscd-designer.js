@@ -1651,7 +1651,7 @@ const Io=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
         <mwc-icon-button icon="close" slot="dismiss"></mwc-icon-button>
       </mwc-snackbar>
     </section>`}renderLabel(t){var e;if(!this.showLabels)return j;let i=0,n=t.getAttribute("name"),o=400,r="black";const[a,d]=this.renderedLabelPosition(t);"Text"===t.tagName&&(({weight:o,color:r}=Uo(t)),i=90*Uo(t).rot,t.textContent?n=null===(e=t.textContent)||void 0===e?void 0:e.split(/\r?\n/).map(((t,e)=>G`<tspan x="${a}" dy="${0===e?j:"1.19em"}" visibility="${t?j:"hidden"}">${t||"."}</tspan>`)):(n="<Middle click to edit>",r="#aaa",o=500));const s="ConductingEquipment"===t.tagName?.45:.6;let l="none",c=j;this.idle&&(l="all",c=()=>this.dispatchEvent(nr(t)));const p=t.closest("Substation")===this.substation&&"Text"!==t.tagName?he(t):j,m=Fe({label:!0,container:"Bay"===t.tagName&&!Vo(t)||"VoltageLevel"===t.tagName});return G`<g class="${m}" id="label:${p}" transform="rotate(${i} ${a+.1+s/2} ${d-.2-s/2})">
-        <text x="${a+.1}" y="${d-.2}"
+        <text x="${a+(1-s)/4}" y="${d-.56+s/2}"
           @mousedown=${Xr}
           @auxclick=${e=>{1===e.button&&(this.dispatchEvent($r(t)),e.preventDefault())}}
           @click=${c}
