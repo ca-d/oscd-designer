@@ -553,6 +553,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         return items;
     }
     transformerMenuItems(transformer) {
+        const text = transformer.querySelector(':scope > Text');
         const { pos: [x, y], } = attributes(transformer);
         const offset = [this.mouseX - x, this.mouseY - y];
         const items = [
@@ -594,13 +595,21 @@ let SLDEditor = class SLDEditor extends LitElement {
         </mwc-list-item>`,
                 handler: () => this.dispatchEvent(newStartPlaceLabelEvent(transformer)),
             },
-            {
-                content: html `<mwc-list-item graphic="icon">
-          <span>Add Text</span>
-          <mwc-icon slot="graphic">title</mwc-icon>
-        </mwc-list-item>`,
-                handler: () => this.addTextTo(transformer),
-            },
+            text
+                ? {
+                    content: html `<mwc-list-item graphic="icon">
+              <span>Delete Text</span>
+              <mwc-icon slot="graphic">format_strikethrough</mwc-icon>
+            </mwc-list-item>`,
+                    handler: () => this.dispatchEvent(newEditEvent({ node: text })),
+                }
+                : {
+                    content: html `<mwc-list-item graphic="icon">
+              <span>Add Text</span>
+              <mwc-icon slot="graphic">title</mwc-icon>
+            </mwc-list-item>`,
+                    handler: () => this.addTextTo(transformer),
+                },
             {
                 content: html `<mwc-list-item graphic="icon">
           <span>Edit</span>
@@ -634,6 +643,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         return items;
     }
     equipmentMenuItems(equipment) {
+        const textElement = equipment.querySelector(':scope > Text');
         const items = [
             {
                 content: html `<mwc-list-item graphic="icon">
@@ -680,13 +690,21 @@ let SLDEditor = class SLDEditor extends LitElement {
         </mwc-list-item>`,
                 handler: () => this.dispatchEvent(newStartPlaceLabelEvent(equipment)),
             },
-            {
-                content: html `<mwc-list-item graphic="icon">
-          <span>Add Text</span>
-          <mwc-icon slot="graphic">title</mwc-icon>
-        </mwc-list-item>`,
-                handler: () => this.addTextTo(equipment),
-            },
+            textElement
+                ? {
+                    content: html `<mwc-list-item graphic="icon">
+              <span>Remove Text</span>
+              <mwc-icon slot="graphic">format_strikethrough</mwc-icon>
+            </mwc-list-item>`,
+                    handler: () => this.dispatchEvent(newEditEvent({ node: textElement })),
+                }
+                : {
+                    content: html `<mwc-list-item graphic="icon">
+              <span>Add Text</span>
+              <mwc-icon slot="graphic">title</mwc-icon>
+            </mwc-list-item>`,
+                    handler: () => this.addTextTo(equipment),
+                },
             {
                 content: html `<mwc-list-item graphic="icon">
           <span>Edit</span>
@@ -779,6 +797,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         return items;
     }
     busBarMenuItems(busBar) {
+        const text = busBar.querySelector(':scope > Text');
         const { pos: [x, y], } = attributes(busBar);
         const offset = [this.mouseX - x, this.mouseY - y];
         const items = [
@@ -819,13 +838,21 @@ let SLDEditor = class SLDEditor extends LitElement {
         </mwc-list-item>`,
                 handler: () => this.dispatchEvent(newStartPlaceLabelEvent(busBar)),
             },
-            {
-                content: html `<mwc-list-item graphic="icon">
-          <span>Add Text</span>
-          <mwc-icon slot="graphic">title</mwc-icon>
-        </mwc-list-item>`,
-                handler: () => this.addTextTo(busBar),
-            },
+            text
+                ? {
+                    content: html `<mwc-list-item graphic="icon">
+              <span>Remove Text</span>
+              <mwc-icon slot="graphic">format_strikethrough</mwc-icon>
+            </mwc-list-item>`,
+                    handler: () => this.dispatchEvent(newEditEvent({ node: text })),
+                }
+                : {
+                    content: html `<mwc-list-item graphic="icon">
+              <span>Add Text</span>
+              <mwc-icon slot="graphic">title</mwc-icon>
+            </mwc-list-item>`,
+                    handler: () => this.addTextTo(busBar),
+                },
             {
                 content: html `<mwc-list-item graphic="icon">
           <span>Edit</span>
@@ -847,6 +874,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         return items;
     }
     containerMenuItems(bayOrVL) {
+        const text = bayOrVL.querySelector(':scope > Text');
         const { pos: [x, y], } = attributes(bayOrVL);
         const offset = [this.mouseX - x, this.mouseY - y];
         const items = [
@@ -894,13 +922,21 @@ let SLDEditor = class SLDEditor extends LitElement {
         </mwc-list-item>`,
                 handler: () => this.dispatchEvent(newStartPlaceLabelEvent(bayOrVL)),
             },
-            {
-                content: html `<mwc-list-item graphic="icon">
-          <span>Add Text</span>
-          <mwc-icon slot="graphic">title</mwc-icon>
-        </mwc-list-item>`,
-                handler: () => this.addTextTo(bayOrVL),
-            },
+            text
+                ? {
+                    content: html `<mwc-list-item graphic="icon">
+              <span>Remove Text</span>
+              <mwc-icon slot="graphic">format_strikethrough</mwc-icon>
+            </mwc-list-item>`,
+                    handler: () => this.dispatchEvent(newEditEvent({ node: text })),
+                }
+                : {
+                    content: html `<mwc-list-item graphic="icon">
+              <span>Add Text</span>
+              <mwc-icon slot="graphic">title</mwc-icon>
+            </mwc-list-item>`,
+                    handler: () => this.addTextTo(bayOrVL),
+                },
             {
                 content: html `<mwc-list-item graphic="icon">
           <span>Edit</span>
