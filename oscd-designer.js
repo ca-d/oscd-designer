@@ -1267,10 +1267,10 @@ const Io=l`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
 `,Fr=G`
   <defs>
   <pattern id="halfgrid" patternUnits="userSpaceOnUse" width="1" height="1" viewBox="0 0 1 1">
-  <circle cx="0.1" cy="0.8" r="0.035" fill="#888" opacity="0.3" />
-  <circle cx="0.6" cy="0.3" r="0.035" fill="#888" opacity="0.3" />
-  <circle cx="0.1" cy="0.3" r="0.035" fill="#888" opacity="0.3" />
-  <circle cx="0.6" cy="0.8" r="0.035" fill="#888" opacity="0.3" />
+  <circle cx="0.1" cy="0.25" r="0.035" fill="#888" opacity="0.3" />
+  <circle cx="0.6" cy="0.25" r="0.035" fill="#888" opacity="0.3" />
+  <circle cx="0.1" cy="0.75" r="0.035" fill="#888" opacity="0.3" />
+  <circle cx="0.6" cy="0.75" r="0.035" fill="#888" opacity="0.3" />
   </pattern>
   <pattern id="grid" patternUnits="userSpaceOnUse" width="1" height="1" viewBox="0 0 1 1">
   <line x1="0" y1="0" x2="0" y2="1" stroke="#888" stroke-opacity="0.3" stroke-width="0.06" />
@@ -1662,8 +1662,14 @@ const Io=l`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
       >
         <mwc-icon-button icon="close" slot="dismiss"></mwc-icon-button>
       </mwc-snackbar>
-    </section>`}renderLabel(t){var e;if(!this.showLabels)return j;let i=0,n=t.getAttribute("name"),o=400,r="black";const[a,d]=this.renderedLabelPosition(t);"Text"===t.tagName&&(({weight:o,color:r}=Uo(t)),i=90*Uo(t).rot,t.textContent?n=null===(e=t.textContent)||void 0===e?void 0:e.split(/\r?\n/).map(((t,e)=>G`<tspan x="${a}" dy="${0===e?j:"1.19em"}" visibility="${t?j:"hidden"}">${t||"."}</tspan>`)):(n="<Middle click to edit>",r="#aaa",o=500));const s="ConductingEquipment"===t.tagName?.45:.6;let c="none",l=j;this.idle&&(c="all",l=()=>this.dispatchEvent(nr(t)));const p=t.closest("Substation")===this.substation&&"Text"!==t.tagName?he(t):j,m=Fe({label:!0,container:"Bay"===t.tagName&&!Vo(t)||"VoltageLevel"===t.tagName});return G`<g class="${m}" id="label:${p}" transform="rotate(${i} ${a+.1+s/2} ${d-.2-s/2})">
-        <text x="${a+(1-s)/4}" y="${d-.56+s/2}"
+    </section>`}renderLabel(t){var e;if(!this.showLabels)return j;let i=0,n=t.getAttribute("name"),o=400,r="black";const[a,d]=this.renderedLabelPosition(t);"Text"===t.tagName&&(({weight:o,color:r}=Uo(t)),i=90*Uo(t).rot,t.textContent?n=null===(e=t.textContent)||void 0===e?void 0:e.split(/\r?\n/).map(((t,e)=>G`<tspan alignment-baseline="central"
+                  x="${a+.1}" dy="${0===e?j:"1.19em"}"
+                  visibility="${t?j:"hidden"}">
+                  ${t||"."}
+                </tspan>`)):(n="<Middle click to edit>",r="#aaa",o=500));const s="ConductingEquipment"===t.tagName?.45:.6;let c="none",l=j;this.idle&&(c="all",l=()=>this.dispatchEvent(nr(t)));const p=t.closest("Substation")===this.substation&&"Text"!==t.tagName?he(t):j,m=Fe({label:!0,container:"Bay"===t.tagName&&!Vo(t)||"VoltageLevel"===t.tagName});return G`<g class="${m}" id="label:${p}"
+                 transform="rotate(${i} ${a+.5} ${d-.5})">
+        <text x="${a+.1}" y="${d-.5}"
+          alignment-baseline="central"
           @mousedown=${Xr}
           @auxclick=${e=>{1===e.button&&(this.dispatchEvent($r(t)),e.preventDefault())}}
           @click=${l}

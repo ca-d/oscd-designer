@@ -1498,7 +1498,11 @@ let SLDEditor = class SLDEditor extends LitElement {
             ({ weight, color } = attributes(element));
             deg = attributes(element).rot * 90;
             if (element.textContent)
-                text = (_a = element.textContent) === null || _a === void 0 ? void 0 : _a.split(/\r?\n/).map((line, i) => svg `<tspan x="${x}" dy="${i === 0 ? nothing : '1.19em'}" visibility="${line ? nothing : 'hidden'}">${line || '.'}</tspan>`);
+                text = (_a = element.textContent) === null || _a === void 0 ? void 0 : _a.split(/\r?\n/).map((line, i) => svg `<tspan alignment-baseline="central"
+                  x="${x + 0.1}" dy="${i === 0 ? nothing : '1.19em'}"
+                  visibility="${line ? nothing : 'hidden'}">
+                  ${line || '.'}
+                </tspan>`);
             else {
                 text = '<Middle click to edit>';
                 color = '#aaa';
@@ -1521,8 +1525,10 @@ let SLDEditor = class SLDEditor extends LitElement {
             container: (element.tagName === 'Bay' && !isBusBar(element)) ||
                 element.tagName === 'VoltageLevel',
         });
-        return svg `<g class="${classes}" id="label:${id}" transform="rotate(${deg} ${x + 0.1 + fontSize / 2} ${y - 0.2 - fontSize / 2})">
-        <text x="${x + (1 - fontSize) / 4}" y="${y - 0.56 + fontSize / 2}"
+        return svg `<g class="${classes}" id="label:${id}"
+                 transform="rotate(${deg} ${x + 0.5} ${y - 0.5})">
+        <text x="${x + 0.1}" y="${y - 0.5}"
+          alignment-baseline="central"
           @mousedown=${preventDefault}
           @auxclick=${(e) => {
             if (e.button === 1) {
