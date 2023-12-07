@@ -89,86 +89,68 @@ const bayPath = svg `<path
     stroke-linejoin="round"
     stroke-linecap="round"
   />`;
-const oneWindingPTRPath = svg `
-<circle cx="15" cy="15" r="9" fill="none"
-    stroke="currentColor" stroke-width="1.5" />`;
-const twoWindingPTRPath = svg `
-<circle cx="15" cy="10" r="9" fill="none"
-    stroke="currentColor" stroke-width="1.5" />
-  <circle cx="15" cy="20" r="9" fill="none"
-    stroke="currentColor" stroke-width="1.5" />`;
-const threeWindingPTRPath = svg `<circle cx="15" cy="10" r="9" fill="none"
-    stroke="currentColor" stroke-width="1.5" />
-  <circle cx="10" cy="20" r="9" fill="none"
-    stroke="currentColor" stroke-width="1.5" />
-  <circle cx="20" cy="20" r="9" fill="none"
-    stroke="currentColor" stroke-width="1.5" />`;
-export const oneWindingPTRIcon = html `<svg
-  viewBox="0 0 30 30"
-  width="24"
-  height="24"
-  slot="icon"
->
-  ${oneWindingPTRPath}
-</svg>`;
-export const twoWindingPTRIcon = html `<svg
-  viewBox="0 0 30 30"
-  width="24"
-  height="24"
-  slot="icon"
->
-  ${twoWindingPTRPath}
-</svg>`;
-export const twoWindingPTRIconHorizontal = html `<svg
-  viewBox="0 0 30 30"
-  width="24"
-  height="24"
-  transform="rotate(-90)"
-  slot="icon"
->
-  ${twoWindingPTRPath}
-</svg>`;
-export const threeWindingPTRIcon = html `<svg
-  viewBox="0 0 30 30"
-  width="24"
-  height="24"
-  slot="icon"
->
-  ${threeWindingPTRPath}
-</svg>`;
-export const oneWindingPTRGraphic = html `<svg
-  viewBox="0 0 30 30"
-  width="24"
-  height="24"
-  slot="graphic"
->
-  ${oneWindingPTRPath}
-</svg>`;
-export const twoWindingPTRGraphic = html `<svg
-  viewBox="0 0 30 30"
-  width="24"
-  height="24"
-  slot="graphic"
->
-  ${twoWindingPTRPath}
-</svg>`;
-export const twoWindingPTRGraphicHorizontal = html `<svg
-  viewBox="0 0 30 30"
-  width="24"
-  height="24"
-  transform="rotate(-90)"
-  slot="graphic"
->
-  ${twoWindingPTRPath}
-</svg>`;
-export const threeWindingPTRGraphic = html `<svg
-  viewBox="-2 -1 34 34"
-  width="24"
-  height="24"
-  slot="graphic"
->
-  ${threeWindingPTRPath}
-</svg>`;
+const ptr1WAPath = svg `
+  <circle fill="none" cx="1.5" cy="1.5" r="0.7"/>
+  <path fill="none" d="M 1.5 0.8 C 0.5 0.8, 0.4 1.3, 0.3 1.5"/>
+`;
+const ptr2WAPath = svg `
+  <circle fill="none" cx="1.5" cy="1.5" r="0.7"/>
+  <path fill="none" d="M 1.5 0.8 C 0.5 0.8, 0.4 1.3, 0.3 1.5"/>
+  <circle fill="none" cx="1.5" cy="2.5" r="0.7"/>
+`;
+const ptr1WPath = svg `
+  <circle fill="none" cx="1.5" cy="1.5" r="0.7"/>
+`;
+const ptr2WPath = svg `
+  <circle fill="none" cx="1.5" cy="1.5" r="0.7"/>
+  <circle fill="none" cx="1.5" cy="2.5" r="0.7"/>
+`;
+const ptr3WPath = svg `
+  <circle fill="none" cx="1.5" cy="1.5" r="0.7"/>
+  <circle fill="none" cx="2" cy="2.5" r="0.7"/>
+  <circle fill="none" cx="1" cy="2.5" r="0.7"/>
+`;
+const zigPath = svg `
+  <line x1="1.5" y1="1.5" x2="1.5" y2="1.25" />
+  <line transform="rotate(240 1.5 1.25)" x1="1.5" y1="1.5" x2="1.5" y2="1.25" />
+`;
+export const zigZagPath = svg `
+<g>${zigPath}</g>
+<g transform="rotate(120 1.5 1.5)">${zigPath}</g>
+<g transform="rotate(240 1.5 1.5)">${zigPath}</g>
+`;
+export const zigZag2WTransform = 'matrix(0.8, 0, 0, 0.8, 0.3, 0.3) translate(0 -0.1) rotate(-20 1.5 1.5)';
+export function ptrIcon(windings, { slot = 'icon', kind = 'default', } = {}) {
+    let path = svg ``;
+    if (windings === 3)
+        path = ptr3WPath;
+    else if (windings === 2) {
+        if (kind === 'auto')
+            path = ptr2WAPath;
+        else
+            path = ptr2WPath;
+    }
+    else if (windings === 1) {
+        if (kind === 'auto')
+            path = ptr1WAPath;
+        else
+            path = ptr1WPath;
+    }
+    const zigZag = kind === 'earthing'
+        ? svg `<g transform="${windings > 1 ? zigZag2WTransform : nothing}">${zigZagPath}</g>`
+        : nothing;
+    return html `<svg
+    viewBox="0.3 0.5 2.4 ${windings > 1 ? 3 : 2}"
+    width="24"
+    height="24"
+    stroke="currentColor"
+    stroke-width="${windings > 1 ? 0.14 : 0.11}"
+    stroke-linecap="round"
+    slot="${slot}"
+  >
+    ${path} ${zigZag}
+  </svg>`;
+}
 export const voltageLevelIcon = html `<svg
   viewBox="0 0 25 25"
   width="24"

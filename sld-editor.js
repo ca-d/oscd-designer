@@ -11,7 +11,7 @@ import '@material/mwc-list/mwc-list-item.js';
 import '@material/mwc-snackbar';
 import '@material/mwc-textfield';
 import { getReference, identity } from '@openscd/oscd-scl';
-import { bayGraphic, eqRingPath, equipmentGraphic, movePath, oneWindingPTRGraphic, resizeBRPath, resizePath, resizeTLPath, symbols, threeWindingPTRGraphic, twoWindingPTRGraphic, twoWindingPTRGraphicHorizontal, voltageLevelGraphic, } from './icons.js';
+import { bayGraphic, eqRingPath, equipmentGraphic, movePath, ptrIcon, resizeBRPath, resizePath, resizeTLPath, symbols, voltageLevelGraphic, zigZag2WTransform, zigZagPath, } from './icons.js';
 import { attributes, connectionStartPoints, elementPath, isBusBar, isEqType, newConnectEvent, newPlaceEvent, newPlaceLabelEvent, newResizeEvent, newResizeTLEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartPlaceLabelEvent, newStartResizeBREvent, newStartResizeTLEvent, prettyPrint, privType, removeNode, removeTerminal, ringedEqTypes, robotoDataURL, singleTerminal, sldNs, svgNs, uniqueName, uuid, xlinkNs, xmlBoolean, } from './util.js';
 const parentTags = {
     ConductingEquipment: ['Bay'],
@@ -183,21 +183,19 @@ function renderMenuHeader(element) {
     let footerGraphic = equipmentGraphic(null);
     if (element.tagName === 'PowerTransformer') {
         const windings = element.querySelectorAll('TransformerWinding').length;
-        const kind = element.getAttributeNS(sldNs, 'kind');
+        const { kind } = attributes(element);
         if (windings === 3) {
-            footerGraphic = threeWindingPTRGraphic;
+            footerGraphic = ptrIcon(3, { slot: 'graphic' });
         }
         else if (windings === 2) {
-            footerGraphic = ['auto', 'earthing'].includes(kind !== null && kind !== void 0 ? kind : 'default')
-                ? twoWindingPTRGraphicHorizontal
-                : twoWindingPTRGraphic;
+            footerGraphic = ptrIcon(2, { slot: 'graphic', kind });
         }
         else {
-            footerGraphic = oneWindingPTRGraphic;
+            footerGraphic = ptrIcon(1, { slot: 'graphic', kind });
         }
     }
     else if (element.tagName === 'TransformerWinding')
-        footerGraphic = oneWindingPTRGraphic;
+        footerGraphic = ptrIcon(1, { slot: 'graphic' });
     else if (element.tagName === 'ConductingEquipment')
         footerGraphic = equipmentGraphic(type);
     else if (element.tagName === 'Bay' && isBusBar(element))
@@ -1695,6 +1693,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         const grounded = {};
         const terminals = {};
         let arc;
+        let zigZagTransform;
         const terminalElements = Array.from(winding.children).filter(c => c.tagName === 'Terminal');
         const terminal1 = terminalElements.find(t => t.getAttribute('name') === 'T1');
         const terminal2 = terminalElements.find(t => t.getAttribute('name') !== 'T1');
@@ -1711,6 +1710,7 @@ let SLDEditor = class SLDEditor extends LitElement {
         }
         if (windings.length === 1) {
             if (kind === 'earthing') {
+                zigZagTransform = '';
                 const n1 = shift(center, 1, size);
                 if (!neutral) {
                     terminals.N1 = n1;
@@ -1814,6 +1814,7 @@ let SLDEditor = class SLDEditor extends LitElement {
                     }
                 }
                 else {
+                    zigZagTransform = zigZag2WTransform;
                     const sgn = flip ? -1 : 1;
                     if (!terminal1 && !terminal2)
                         terminals.T1 = shift(center, 0, -size * sgn);
@@ -1921,10 +1922,10 @@ let SLDEditor = class SLDEditor extends LitElement {
                 }
             }
         }
-        return { center, size, terminals, grounded, arc };
+        return { center, size, terminals, grounded, arc, zigZagTransform };
     }
     renderTransformerWinding(winding) {
-        const { size, center: [cx, cy], terminals, grounded, arc, } = this.windingMeasures(winding);
+        const { size, center: [cx, cy], terminals, grounded, arc, zigZagTransform, } = this.windingMeasures(winding);
         const ports = [];
         Object.entries(grounded).forEach(([_, [[x1, y1], [x2, y2]]]) => {
             ports.push(svg `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`);
@@ -1971,9 +1972,9 @@ let SLDEditor = class SLDEditor extends LitElement {
             });
         let longArrow = false;
         let arcPath = svg ``;
+        const { flip, rot } = attributes(winding.parentElement);
         if (arc) {
             const { from: [xf, yf], fromCtl: [xfc, yfc], to: [xt, yt], toCtl: [xtc, ytc], } = arc;
-            const { flip } = attributes(winding.parentElement);
             if (!flip && yfc < yf)
                 longArrow = true;
             if (flip && xfc > xf)
@@ -1985,9 +1986,12 @@ let SLDEditor = class SLDEditor extends LitElement {
             ? svg `<line x1="${cx - 0.8}" y1="${cy + 0.8}" x2="${cx + 0.8}" y2="${cy - (longArrow ? 1 : 0.8)}"
               stroke="black" stroke-width="0.06" marker-end="url(#arrow)" />`
             : nothing;
+        const zigZag = zigZagTransform === undefined
+            ? nothing
+            : svg `<g stroke="black" transform="rotate(${rot * 90} ${cx} ${cy}) translate(${cx - 1.5} ${cy - 1.5}) ${zigZagTransform}">${zigZagPath}</g>`;
         return svg `<g class="winding"
         @contextmenu=${(e) => this.openMenu(winding, e)}
-    ><circle cx="${cx}" cy="${cy}" r="${size}" stroke="black" stroke-width="0.06" />${arcPath}${ltcArrow}${ports}</g>`;
+    ><circle cx="${cx}" cy="${cy}" r="${size}" stroke="black" stroke-width="0.06" />${arcPath}${zigZag}${ltcArrow}${ports}</g>`;
     }
     renderPowerTransformer(transformer, preview = false) {
         if (this.placing === transformer && !preview)
