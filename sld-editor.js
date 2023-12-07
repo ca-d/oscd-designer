@@ -46,14 +46,15 @@ function overlapsRect(element, x0, y0, w0, h0) {
 }
 function cleanXML(element) {
     var _a;
-    if (element.classList.contains('handle') ||
-        element.classList.contains('preview') ||
-        element.classList.contains('port')) {
+    const cl = element.classList;
+    if (cl.contains('handle') ||
+        cl.contains('preview') ||
+        cl.contains('port') ||
+        (cl.contains('label') && cl.contains('container'))) {
         element.remove();
         return;
     }
-    if (element.classList.contains('voltagelevel') ||
-        element.classList.contains('bay'))
+    if (cl.contains('voltagelevel') || cl.contains('bay'))
         (_a = element.querySelector('rect')) === null || _a === void 0 ? void 0 : _a.remove();
     Array.from(element.childNodes).forEach(child => {
         if (child.nodeType === 8)
@@ -1479,7 +1480,12 @@ let SLDEditor = class SLDEditor extends LitElement {
             element.tagName !== 'Text'
             ? identity(element)
             : nothing;
-        return svg `<g class="label" id="label:${id}" transform="rotate(${deg} ${x + 0.1 + fontSize / 2} ${y - 0.2 - fontSize / 2})">
+        const classes = classMap({
+            label: true,
+            container: (element.tagName === 'Bay' && !isBusBar(element)) ||
+                element.tagName === 'VoltageLevel',
+        });
+        return svg `<g class="${classes}" id="label:${id}" transform="rotate(${deg} ${x + 0.1 + fontSize / 2} ${y - 0.2 - fontSize / 2})">
         <text x="${x + 0.1}" y="${y - 0.2}"
           @mousedown=${preventDefault}
           @auxclick=${(e) => {
