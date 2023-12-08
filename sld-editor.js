@@ -12,7 +12,7 @@ import '@material/mwc-snackbar';
 import '@material/mwc-textfield';
 import { getReference, identity } from '@openscd/oscd-scl';
 import { bayGraphic, eqRingPath, equipmentGraphic, movePath, ptrIcon, resizeBRPath, resizePath, resizeTLPath, symbols, voltageLevelGraphic, zigZag2WTransform, zigZagPath, } from './icons.js';
-import { attributes, connectionStartPoints, elementPath, isBusBar, isEqType, newConnectEvent, newPlaceEvent, newPlaceLabelEvent, newResizeEvent, newResizeTLEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartPlaceLabelEvent, newStartResizeBREvent, newStartResizeTLEvent, privType, removeNode, removeTerminal, ringedEqTypes, robotoDataURL, singleTerminal, sldNs, svgNs, uniqueName, uuid, xlinkNs, xmlBoolean, } from './util.js';
+import { attributes, connectionStartPoints, elementPath, isBusBar, isEqType, newConnectEvent, newPlaceEvent, newPlaceLabelEvent, newResizeEvent, newResizeTLEvent, newRotateEvent, newStartConnectEvent, newStartPlaceEvent, newStartPlaceLabelEvent, newStartResizeBREvent, newStartResizeTLEvent, prettyPrint, privType, removeNode, removeTerminal, ringedEqTypes, robotoDataURL, singleTerminal, sldNs, svgNs, uniqueName, uuid, xlinkNs, xmlBoolean, } from './util.js';
 const parentTags = {
     ConductingEquipment: ['Bay'],
     Bay: ['VoltageLevel'],
@@ -369,7 +369,7 @@ let SLDEditor = class SLDEditor extends LitElement {
     saveSVG() {
         const sld = this.sld.cloneNode(true);
         cleanXML(sld);
-        const blob = new Blob([new XMLSerializer().serializeToString(sld)], {
+        const blob = new Blob([prettyPrint(sld)], {
             type: 'application/xml',
         });
         const a = document.createElement('a');
