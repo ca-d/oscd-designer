@@ -1993,7 +1993,10 @@ let SLDEditor = class SLDEditor extends LitElement {
             : nothing;
         const zigZag = zigZagTransform === undefined
             ? nothing
-            : svg `<g stroke="black" transform="rotate(${rot * 90} ${cx} ${cy}) translate(${cx - 1.5} ${cy - 1.5}) ${zigZagTransform}">${zigZagPath}</g>`;
+            : svg `<g stroke="black" stroke-linecap="round"
+                transform="rotate(${rot * 90} ${cx} ${cy})
+                translate(${cx - 1.5} ${cy - 1.5})
+                ${zigZagTransform}">${zigZagPath}</g>`;
         return svg `<g class="winding"
         @contextmenu=${(e) => this.openMenu(winding, e)}
     ><circle cx="${cx}" cy="${cy}" r="${size}" stroke="black" stroke-width="0.06" />${arcPath}${zigZag}${ltcArrow}${ports}</g>`;
@@ -2250,7 +2253,8 @@ let SLDEditor = class SLDEditor extends LitElement {
         const sections = Array.from(priv.getElementsByTagNameNS(sldNs, 'Section'));
         const bay = cNode.closest('Bay');
         const targetSize = 0.5;
-        const pointerEvents = !this.resizingBR || (this.resizingBR === bay && isBusBar(this.resizingBR))
+        const pointerEvents = !this.placing &&
+            (!this.resizingBR || (this.resizingBR === bay && isBusBar(bay)))
             ? 'all'
             : 'none';
         sections.forEach(section => {
