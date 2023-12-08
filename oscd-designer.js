@@ -1917,12 +1917,13 @@ const Io=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
               @click=${()=>this.zoomIn()}
             >
             </mwc-icon-button
-            >${this.gridSize>3?U`<mwc-icon-button
-                  icon="zoom_out"
-                  label="Zoom Out"
-                  title="Zoom Out (${Math.round(100*(this.gridSize-3)/32)}%)"
-                  @click=${()=>this.zoomOut()}
-                ></mwc-icon-button>`:j}`:j}
+            ><mwc-icon-button
+              icon="zoom_out"
+              label="Zoom Out"
+              ?disabled=${this.gridSize<4}
+              title="Zoom Out (${Math.round(100*(this.gridSize-3)/32)}%)"
+              @click=${()=>this.zoomOut()}
+            ></mwc-icon-button>`:j}
         </mwc-icon-button
         >${this.placing||this.resizingBR||this.resizingTL||this.connecting||this.placingLabel?U`<mwc-icon-button
                 icon="close"
@@ -1988,6 +1989,11 @@ const Io=c`.mdc-floating-label{-moz-osx-font-smoothing:grayscale;-webkit-font-sm
       z-index: 1;
     }
 
+    mwc-icon-button,
+    mwc-icon-button-toggle {
+      --mdc-theme-text-disabled-on-light: #aaa;
+      color: rgb(0, 0, 0 / 0.83);
+    }
     mwc-fab {
       --mdc-theme-secondary: #fff;
       --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83);
