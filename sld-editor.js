@@ -1132,7 +1132,11 @@ let SLDEditor = class SLDEditor extends LitElement {
                 content: renderMenuHeader(element.parentElement),
             });
         }
-        const headerHeight = element.hasAttribute('desc') || element.hasAttribute('type') ? 73 : 57;
+        const headerHeight = element.hasAttribute('desc') ||
+            element.hasAttribute('type') ||
+            (element.tagName === 'Text' && element.textContent)
+            ? 73
+            : 57;
         return html `
       <menu
         id="sld-context-menu"
