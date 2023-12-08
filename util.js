@@ -376,15 +376,15 @@ export function newStartResizeBREvent(detail) {
         detail,
     });
 }
-export function newStartPlaceLabelEvent(detail) {
-    return new CustomEvent('oscd-sld-start-place-label', {
-        bubbles: true,
-        composed: true,
-        detail,
-    });
-}
 export function newStartPlaceEvent(element, offset = [0, 0]) {
     return new CustomEvent('oscd-sld-start-place', {
+        bubbles: true,
+        composed: true,
+        detail: { element, offset },
+    });
+}
+export function newStartPlaceLabelEvent(element, offset = [0, 0]) {
+    return new CustomEvent('oscd-sld-start-place-label', {
         bubbles: true,
         composed: true,
         detail: { element, offset },
