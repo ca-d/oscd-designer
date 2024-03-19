@@ -2023,7 +2023,10 @@ export class SLDEditor extends LitElement {
         }"
               stroke="black" stroke-width="0.06" marker-end="url(#arrow)" />`
       : nothing;
+
+    const id = winding.closest('Substation') ? identity(winding) : nothing;
     return svg`<g class="winding"
+        id="${id}"
         @contextmenu=${(e: MouseEvent) => this.openMenu(winding, e)}
     ><circle cx="${cx}" cy="${cy}" r="${size}" stroke="black" stroke-width="0.06" />${arcPath}${ltcArrow}${ports}</g>`;
   }
@@ -2036,8 +2039,10 @@ export class SLDEditor extends LitElement {
     const windings = Array.from(transformer.children).filter(
       c => c.tagName === 'TransformerWinding'
     );
+    const id = transformer.parentElement ? identity(transformer) : nothing;
     const [x, y] = this.renderedPosition(transformer);
     return svg`<g class="${classMap({ transformer: true, preview })}"
+        id="${id}"
         pointer-events="all"
         @mousedown=${preventDefault}
         @auxclick=${(e: MouseEvent) => {

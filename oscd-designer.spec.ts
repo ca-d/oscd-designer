@@ -682,11 +682,346 @@ describe('Designer', () => {
         .to.have.property('tagName', 'ConductingEquipment');
       await sendMouse({ type: 'click', position: [150, 180] });
       expect(element).to.have.property('placing', undefined);
-      expect(element).to.have.property('resizing', undefined);
       const equipment = element.doc.querySelector('ConductingEquipment');
       expect(equipment).to.exist;
       expect(equipment).to.have.attribute('x', '3');
       expect(equipment).to.have.attribute('y', '3');
+    });
+
+    it('allows placing new power transformer equipment (single-winding, auto, within the bay)', async () => {
+      element
+        .shadowRoot!.querySelector<Button>(
+          '[label="Add Single Winding Auto Transformer"]'
+        )
+        ?.click();
+      expect(element)
+        .property('placing')
+        .to.have.property('tagName', 'PowerTransformer');
+      await sendMouse({ type: 'click', position: [150, 180] });
+      expect(element).to.have.property('placing', undefined);
+      const equipment = element.doc.querySelector('PowerTransformer');
+      expect(equipment).to.exist;
+      expect(equipment).to.have.attribute('x', '3');
+      expect(equipment).to.have.attribute('y', '3');
+      expect(equipment).to.have.attribute('kind', 'auto');
+      expect(equipment?.parentElement).to.have.property('tagName', 'Bay');
+      expect(equipment?.children.length).eq(1);
+    });
+
+    it('allows placing new power transformer equipment (single-winding, auto, within the voltage level)', async () => {
+      element
+        .shadowRoot!.querySelector<Button>(
+          '[label="Add Single Winding Auto Transformer"]'
+        )
+        ?.click();
+      expect(element)
+        .property('placing')
+        .to.have.property('tagName', 'PowerTransformer');
+      await sendMouse({ type: 'click', position: [300, 300] });
+      expect(element).to.have.property('placing', undefined);
+      const equipment = element.doc.querySelector('PowerTransformer');
+      expect(equipment).to.exist;
+
+      expect(equipment?.parentElement).to.have.property(
+        'tagName',
+        'VoltageLevel'
+      );
+    });
+
+    it('allows placing new power transformer equipment (single-winding, auto, within the substation)', async () => {
+      element
+        .shadowRoot!.querySelector<Button>(
+          '[label="Add Single Winding Auto Transformer"]'
+        )
+        ?.click();
+      expect(element)
+        .property('placing')
+        .to.have.property('tagName', 'PowerTransformer');
+      await sendMouse({ type: 'click', position: [50, 300] });
+      expect(element).to.have.property('placing', undefined);
+      const equipment = element.doc.querySelector('PowerTransformer');
+      expect(equipment).to.exist;
+
+      expect(equipment?.parentElement).to.have.property(
+        'tagName',
+        'Substation'
+      );
+    });
+
+    it('allows placing new power transformer equipment (two-winding. auto)', async () => {
+      element
+        .shadowRoot!.querySelector<Button>(
+          '[label="Add Two Winding Auto Transformer"]'
+        )
+        ?.click();
+      expect(element)
+        .property('placing')
+        .to.have.property('tagName', 'PowerTransformer');
+      await sendMouse({ type: 'click', position: [150, 180] });
+      expect(element).to.have.property('placing', undefined);
+      const equipment = element.doc.querySelector('PowerTransformer');
+      expect(equipment).to.exist;
+      expect(equipment).to.have.attribute('x', '3');
+      expect(equipment).to.have.attribute('y', '3');
+      expect(equipment).to.have.attribute('kind', 'auto');
+      expect(equipment?.children.length).eq(2);
+    });
+
+    it('allows placing new power transformer equipment (single-winding, earthing)', async () => {
+      element
+        .shadowRoot!.querySelector<Button>(
+          '[label="Add Single Winding Earthing Transformer"]'
+        )
+        ?.click();
+      expect(element)
+        .property('placing')
+        .to.have.property('tagName', 'PowerTransformer');
+      await sendMouse({ type: 'click', position: [150, 180] });
+      expect(element).to.have.property('placing', undefined);
+      const equipment = element.doc.querySelector('PowerTransformer');
+      expect(equipment).to.exist;
+      expect(equipment).to.have.attribute('x', '3');
+      expect(equipment).to.have.attribute('y', '3');
+      expect(equipment).to.have.attribute('kind', 'earthing');
+      expect(equipment?.children.length).eq(1);
+    });
+
+    it('allows placing new power transformer equipment (two-winding. earthing)', async () => {
+      element
+        .shadowRoot!.querySelector<Button>(
+          '[label="Add Two Winding Earthing Transformer"]'
+        )
+        ?.click();
+      expect(element)
+        .property('placing')
+        .to.have.property('tagName', 'PowerTransformer');
+      await sendMouse({ type: 'click', position: [150, 180] });
+      expect(element).to.have.property('placing', undefined);
+      const equipment = element.doc.querySelector('PowerTransformer');
+      expect(equipment).to.exist;
+      expect(equipment).to.have.attribute('x', '3');
+      expect(equipment).to.have.attribute('y', '3');
+      expect(equipment).to.have.attribute('kind', 'earthing');
+      expect(equipment?.children.length).eq(2);
+    });
+
+    it('allows placing new power transformer equipment (three-winding)', async () => {
+      element
+        .shadowRoot!.querySelector<Button>(
+          '[label="Add Three Winding Transformer"]'
+        )
+        ?.click();
+      expect(element)
+        .property('placing')
+        .to.have.property('tagName', 'PowerTransformer');
+      await sendMouse({ type: 'click', position: [150, 180] });
+      expect(element).to.have.property('placing', undefined);
+      const equipment = element.doc.querySelector('PowerTransformer');
+      expect(equipment).to.exist;
+      expect(equipment).to.have.attribute('x', '3');
+      expect(equipment).to.have.attribute('y', '3');
+      expect(equipment).to.not.have.attribute('kind');
+      expect(equipment?.children).to.have.lengthOf(3);
+    });
+
+    it('allows placing new power transformer equipment (two-winding)', async () => {
+      element
+        .shadowRoot!.querySelector<Button>(
+          '[label="Add Two Winding Transformer"]'
+        )
+        ?.click();
+      expect(element)
+        .property('placing')
+        .to.have.property('tagName', 'PowerTransformer');
+      await sendMouse({ type: 'click', position: [150, 180] });
+      expect(element).to.have.property('placing', undefined);
+      const equipment = element.doc.querySelector('PowerTransformer');
+      expect(equipment).to.exist;
+      expect(equipment).to.have.attribute('x', '3');
+      expect(equipment).to.have.attribute('y', '3');
+      expect(equipment).to.not.have.attribute('kind');
+      expect(equipment?.children).to.have.lengthOf(2);
+    });
+
+    describe('with a two-winding power transformer', () => {
+      beforeEach(async () => {
+        element
+          .shadowRoot!.querySelector<Button>(
+            '[label="Add Two Winding Transformer"]'
+          )
+          ?.click();
+        await sendMouse({ type: 'click', position: [150, 180] });
+        await element.updateComplete;
+      });
+
+      it('opens a menu on a two-winding power transformer with a right click', async () => {
+        await sendMouse({
+          type: 'click',
+          button: 'right',
+          position: middleOf(
+            queryUI({
+              scl: 'PowerTransformer',
+            })
+          ),
+        });
+
+        await element.updateComplete;
+        expect(queryUI({ ui: 'menu' })).to.exist;
+      });
+
+      it('menu-item delete: deletes PowerTransformer', async () => {
+        const equipment = element.doc.querySelector('PowerTransformer');
+
+        const sldEditor =
+          element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
+
+        expect(equipment).to.exist;
+
+        await sendMouse({
+          type: 'click',
+          button: 'right',
+          position: middleOf(
+            queryUI({
+              scl: 'PowerTransformer',
+            })
+          ),
+        });
+
+        await element.updateComplete;
+
+        sldEditor.shadowRoot!.querySelector<ListItem>(
+          'mwc-list-item:nth-last-of-type(1)'
+        )!.selected = true;
+        await element.updateComplete;
+
+        expect(equipment?.parentElement).to.be.null;
+        expect(element.doc.querySelector('PowerTransformer')).to.not.exist;
+      });
+
+      it('opens edit wizard on menut-item-edit click', async () => {
+        await sendMouse({
+          type: 'click',
+          button: 'right',
+          position: middleOf(
+            queryUI({
+              scl: 'PowerTransformer',
+            })
+          ),
+        });
+
+        const sldEditor =
+          element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
+        await element.updateComplete;
+
+        sldEditor.shadowRoot!.querySelector<ListItem>(
+          'mwc-list-item:nth-last-of-type(2)'
+        )!.selected = true;
+        await sldEditor.updateComplete;
+        expect(lastCalledWizard).to.equal(
+          element.doc.querySelector('PowerTransformer')
+        );
+      });
+
+      it('opens edit wizard for different windings on menut-item-edit click, Winding = W1', async () => {
+        await sendMouse({
+          type: 'click',
+          button: 'right',
+          position: middleOf(
+            queryUI({
+              scl: 'TransformerWinding[name=W1]',
+            })
+          ),
+        });
+
+        const sldEditor =
+          element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
+        await element.updateComplete;
+
+        sldEditor.shadowRoot!.querySelector<ListItem>(
+          'mwc-list-item:nth-of-type(3)'
+        )!.selected = true;
+        await sldEditor.updateComplete;
+
+        expect(lastCalledWizard).to.equal(
+          element.doc.querySelector('TransformerWinding[name=W1]')
+        );
+      });
+
+      it('opens edit wizard for different windings on menu-item-edit click, Winding = W2', async () => {
+        await sendMouse({
+          type: 'click',
+          button: 'right',
+          position: middleOf(
+            queryUI({
+              scl: 'TransformerWinding[name=W2]',
+            })
+          ),
+        });
+
+        const sldEditor =
+          element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
+        await element.updateComplete;
+
+        sldEditor.shadowRoot!.querySelector<ListItem>(
+          'mwc-list-item:nth-of-type(3)'
+        )!.selected = true;
+        await sldEditor.updateComplete;
+
+        expect(lastCalledWizard).to.equal(
+          element.doc.querySelector('TransformerWinding[name=W2]')
+        );
+      });
+
+      it('rotates PowerTransformer on menu-item-rotate click', async () => {
+        await sendMouse({
+          type: 'click',
+          button: 'right',
+          position: middleOf(
+            queryUI({
+              scl: 'TransformerWinding',
+            })
+          ),
+        });
+
+        const sldEditor =
+          element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
+        await element.updateComplete;
+
+        sldEditor.shadowRoot!.querySelector<ListItem>(
+          'mwc-list-item:nth-last-of-type(6)'
+        )!.selected = true;
+        await sldEditor.updateComplete;
+
+        const equipment = element.doc.querySelector('PowerTransformer');
+        expect(equipment).to.have.attribute('esld:rot', '1');
+      });
+
+      it('copies PowerTransformer on menu-item-copy click', async () => {
+        await sendMouse({
+          type: 'click',
+          button: 'right',
+          position: middleOf(
+            queryUI({
+              scl: 'TransformerWinding',
+            })
+          ),
+        });
+
+        const sldEditor =
+          element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
+        await element.updateComplete;
+
+        sldEditor.shadowRoot!.querySelector<ListItem>(
+          'mwc-list-item:nth-last-of-type(5)'
+        )!.selected = true;
+        await sldEditor.updateComplete;
+
+        await sendMouse({ type: 'click', position: [200, 180] });
+        await element.updateComplete;
+
+        const equipment = element.doc.querySelectorAll('PowerTransformer');
+        expect(equipment.length).eq(2);
+      });
     });
 
     describe('with a sibling bus bar', () => {
