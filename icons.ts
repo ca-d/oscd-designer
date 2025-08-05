@@ -559,7 +559,7 @@ export function equipmentPath(equipmentType: string | null): TemplateResult<2> {
 }
 
 export function equipmentGraphic(
-  equipmentType: string | null
+  equipmentType: string | null,
 ): TemplateResult<1> {
   return html`<svg
     id="${equipmentType}"

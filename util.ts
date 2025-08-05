@@ -1,4 +1,4 @@
-import { Edit } from '@openscd/open-scd-core';
+import { Edit } from '@omicronenergy/oscd-api';
 import { getReference } from '@openscd/oscd-scl';
 
 export const privType = 'Transpower-SLD-Vertices';
@@ -29,7 +29,6 @@ export function isEqType(str: string): str is EqType {
 }
 export const ringedEqTypes = new Set(['GEN', 'MOT', 'SMC']);
 
-/* eslint-disable no-bitwise */
 export function uuid() {
   const digits = new Array(36);
   for (let i = 0; i < 36; i += 1) {
@@ -41,7 +40,6 @@ export function uuid() {
   digits[19] |= 1 << 3;
   return digits.map(x => x.toString(16)).join('');
 }
-/* eslint-enable no-bitwise */
 
 export type Point = [number, number];
 export type Attrs = {
@@ -102,7 +100,7 @@ export function elementPath(element: Element, ...rest: string[]): string {
 
 function collinear(v0: Element, v1: Element, v2: Element) {
   const [[x0, y0], [x1, y1], [x2, y2]] = [v0, v1, v2].map(vertex =>
-    ['x', 'y'].map(name => vertex.getAttributeNS(sldNs, name))
+    ['x', 'y'].map(name => vertex.getAttributeNS(sldNs, name)),
   );
   return (x0 === x1 && x1 === x2) || (y0 === y1 && y1 === y2);
 }
@@ -112,7 +110,7 @@ export function removeNode(node: Element): Edit[] {
 
   if (xmlBoolean(node.querySelector(`Section[bus]`)?.getAttribute('bus'))) {
     Array.from(node.querySelectorAll('Section:not([bus])')).forEach(section =>
-      edits.push({ node: section })
+      edits.push({ node: section }),
     );
     const sections = Array.from(node.querySelectorAll('Section[bus]'));
     const busSection = sections[0];
@@ -127,8 +125,8 @@ export function removeNode(node: Element): Edit[] {
 
   Array.from(
     node.ownerDocument.querySelectorAll(
-      `Terminal[connectivityNode="${node.getAttribute('pathName')}"]`
-    )
+      `Terminal[connectivityNode="${node.getAttribute('pathName')}"]`,
+    ),
   ).forEach(terminal => edits.push({ node: terminal }));
 
   return edits;
@@ -140,7 +138,7 @@ function reverseSection(section: Element): Edit[] {
   Array.from(section.children)
     .reverse()
     .forEach(vertex =>
-      edits.push({ parent: section, node: vertex, reference: null })
+      edits.push({ parent: section, node: vertex, reference: null }),
     );
 
   return edits;
@@ -155,7 +153,7 @@ function healSectionCut(cut: Element): Edit[] {
     vertex.getAttributeNS(sldNs, 'y') === y;
 
   const cutVertices = Array.from(
-    cut.closest('Private')!.getElementsByTagNameNS(sldNs, 'Section')
+    cut.closest('Private')!.getElementsByTagNameNS(sldNs, 'Section'),
   ).flatMap(section => Array.from(section.children).filter(isCut));
   const cutSections = cutVertices.map(v => v.parentElement) as Element[];
 
@@ -163,7 +161,7 @@ function healSectionCut(cut: Element): Edit[] {
   if (cutSections.length < 2)
     return removeNode(cut.closest('ConnectivityNode')!);
   const [busA, busB] = cutSections.map(section =>
-    xmlBoolean(section.getAttribute('bus'))
+    xmlBoolean(section.getAttribute('bus')),
   );
   if (busA !== busB) return [];
 
@@ -195,13 +193,14 @@ function healSectionCut(cut: Element): Edit[] {
 }
 
 function updateTerminals(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   parent: Element,
   cNode: Element,
   substationName: string,
   voltageLevelName: string,
   bayName: string,
   cNodeName: string,
-  connectivityNode: string
+  connectivityNode: string,
 ) {
   const updates = [] as Edit[];
 
@@ -212,8 +211,8 @@ function updateTerminals(
 
   const terminals = Array.from(
     (cNode.getRootNode() as Document | Element).querySelectorAll(
-      `Terminal[substationName="${oldSubstationName}"][voltageLevelName="${oldVoltageLevelName}"][bayName="${oldBayName}"][cNodeName="${oldCNodeName}"], Terminal[connectivityNode="${oldPathName}"]`
-    )
+      `Terminal[substationName="${oldSubstationName}"][voltageLevelName="${oldVoltageLevelName}"][bayName="${oldBayName}"][cNodeName="${oldCNodeName}"], Terminal[connectivityNode="${oldPathName}"]`,
+    ),
   );
   terminals.forEach(terminal => {
     updates.push({
@@ -233,7 +232,7 @@ function updateTerminals(
 function updateConnectivityNodes(
   element: Element,
   parent: Element,
-  name: string
+  name: string,
 ) {
   const updates = [] as Edit[];
 
@@ -268,8 +267,8 @@ function updateConnectivityNodes(
             voltageLevelName,
             bayName,
             cNodeName,
-            pathName
-          )
+            pathName,
+          ),
         );
     }
   });
@@ -318,13 +317,13 @@ export function removeTerminal(terminal: Element): Edit[] {
   edits.push({ node: terminal });
   const pathName = terminal.getAttribute('connectivityNode');
   const cNode = terminal.ownerDocument.querySelector(
-    `ConnectivityNode[pathName="${pathName}"]`
+    `ConnectivityNode[pathName="${pathName}"]`,
   );
 
   const otherTerminals = Array.from(
     terminal.ownerDocument.querySelectorAll(
-      `Terminal[connectivityNode="${pathName}"]`
-    )
+      `Terminal[connectivityNode="${pathName}"]`,
+    ),
   ).filter(t => t !== terminal);
 
   if (
@@ -342,7 +341,7 @@ export function removeTerminal(terminal: Element): Edit[] {
 
   const priv = cNode?.querySelector(`Private[type="${privType}"]`);
   const vertex = priv?.querySelector(
-    `Vertex[*|uuid="${terminal.getAttributeNS(sldNs, 'uuid')}"]`
+    `Vertex[*|uuid="${terminal.getAttributeNS(sldNs, 'uuid')}"]`,
   );
   const section = vertex?.parentElement;
   if (!section) return edits;
@@ -492,7 +491,7 @@ export type StartConnectDetail = {
 };
 export type StartConnectEvent = CustomEvent<StartConnectDetail>;
 export function newStartConnectEvent(
-  detail: StartConnectDetail
+  detail: StartConnectDetail,
 ): StartConnectEvent {
   return new CustomEvent('oscd-sld-start-connect', {
     bubbles: true,
