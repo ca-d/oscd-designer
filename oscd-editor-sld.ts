@@ -1,9 +1,10 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
-/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+
 import { property, query, state } from 'lit/decorators.js';
 
-import { Edit, newEditEvent, Update } from '@openscd/open-scd-core';
+import { Edit, Update } from '@omicronenergy/oscd-api';
+import { newEditEvent } from '@omicronenergy/oscd-api/utils.js';
 import { getReference } from '@openscd/oscd-scl';
 
 import type { Dialog } from '@material/mwc-dialog';
@@ -43,7 +44,7 @@ import {
 } from './util.js';
 
 const aboutContent = await fetch(new URL('about.html', import.meta.url)).then(
-  res => res.text()
+  res => res.text(),
 );
 
 function makeBusBar(doc: XMLDocument, nsp: string) {
@@ -52,7 +53,7 @@ function makeBusBar(doc: XMLDocument, nsp: string) {
   busBar.setAttributeNS(sldNs, `${nsp}:w`, '2');
   const cNode = doc.createElementNS(
     doc.documentElement.namespaceURI,
-    'ConnectivityNode'
+    'ConnectivityNode',
   );
   cNode.setAttribute('name', 'L');
   const priv = doc.createElementNS(doc.documentElement.namespaceURI, 'Private');
@@ -77,7 +78,7 @@ function cutSectionAt(
   section: Element,
   index: number,
   [x, y]: Point,
-  nsPrefix: string
+  nsPrefix: string,
 ): Edit[] {
   const parent = section.parentElement!;
   const edits = [] as Edit[];
@@ -85,7 +86,7 @@ function cutSectionAt(
   const vertexAtXY = vertices.find(
     ve =>
       ve.getAttributeNS(sldNs, 'x') === x.toString() &&
-      ve.getAttributeNS(sldNs, 'y') === y.toString()
+      ve.getAttributeNS(sldNs, 'y') === y.toString(),
   );
 
   if (
@@ -119,24 +120,24 @@ function cutSectionAt(
   return edits;
 }
 
-export default class Designer extends LitElement {
-  @property()
+export default class OscdEditorSLD extends LitElement {
+  @property({ type: Object })
   doc!: XMLDocument;
 
-  @property()
-  get editCount(): number {
-    return this._editCount;
+  @property({ type: Number })
+  get docVersion(): number {
+    return this._docVersion;
   }
 
-  set editCount(value: number) {
+  set docVersion(value: number) {
     this.connecting = undefined;
     if (!this.resizingBR?.parentElement) this.resizingBR = undefined;
     if (!this.placingLabel?.parentElement) this.placingLabel = undefined;
-    this._editCount = value;
+    this._docVersion = value;
   }
 
   @state()
-  private _editCount = -1;
+  private _docVersion = -1;
 
   @state()
   gridSize = 32;
@@ -239,6 +240,7 @@ export default class Designer extends LitElement {
     window.removeEventListener('keydown', this.handleKeydown);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updated(changedProperties: Map<string, any>) {
     if (!changedProperties.has('doc')) return;
     const sldNsPrefix = this.doc.documentElement.lookupPrefix(sldNs);
@@ -259,7 +261,7 @@ export default class Designer extends LitElement {
     ].forEach(tag => {
       this.templateElements[tag] = this.doc.createElementNS(
         this.doc.documentElement.namespaceURI,
-        tag
+        tag,
       );
     });
     this.templateElements.BusBar = makeBusBar(this.doc, this.nsp);
@@ -297,7 +299,7 @@ export default class Designer extends LitElement {
           lx: { namespaceURI: sldNs, value: x.toString() },
           ly: { namespaceURI: sldNs, value: y.toString() },
         },
-      })
+      }),
     );
     this.reset();
   }
@@ -371,8 +373,8 @@ export default class Designer extends LitElement {
 
     Array.from(
       element.querySelectorAll(
-        'Bay, ConductingEquipment, PowerTransformer, Vertex'
-      )
+        'Bay, ConductingEquipment, PowerTransformer, Vertex',
+      ),
     ).forEach(descendant => {
       const {
         pos: [descX, descY],
@@ -407,24 +409,24 @@ export default class Designer extends LitElement {
         .forEach(terminal => edits.push(...removeTerminal(terminal)));
 
       const groundedTerminals = Array.from(
-        element.querySelectorAll('Terminal, NeutralPoint')
+        element.querySelectorAll('Terminal, NeutralPoint'),
       ).filter(terminal => terminal.getAttribute('cNodeName') === 'grounded');
 
       if (groundedTerminals.length > 0) {
         const bayName = parent.closest('Bay')?.getAttribute('name');
         if (!bayName)
           groundedTerminals.forEach(terminal =>
-            edits.push(...removeTerminal(terminal))
+            edits.push(...removeTerminal(terminal)),
           );
 
         let newCNode = parent.querySelector(
-          `ConnectivityNode[name="grounded"]`
+          `ConnectivityNode[name="grounded"]`,
         );
 
         if (!newCNode) {
           newCNode = this.doc.createElementNS(
             this.doc.documentElement.namespaceURI,
-            'ConnectivityNode'
+            'ConnectivityNode',
           );
           newCNode.setAttribute('name', 'grounded');
           newCNode.setAttribute('pathName', elementPath(parent, 'grounded'));
@@ -464,24 +466,24 @@ export default class Designer extends LitElement {
               this.doc.querySelectorAll(
                 `Terminal[connectivityNode="${cNode.getAttribute('pathName')}"],
                  NeutralPoint[connectivityNode="${cNode.getAttribute(
-                   'pathName'
-                 )}"]`
-              )
+                   'pathName',
+                 )}"]`,
+              ),
             ).find(terminal => terminal.closest(element.tagName) !== element)
           )
             edits.push(...removeNode(cNode));
-        }
+        },
       );
       Array.from(element.querySelectorAll('Terminal, NeutralPoint')).forEach(
         terminal => {
           const cNode = this.doc.querySelector(
             `ConnectivityNode[pathName="${terminal.getAttribute(
-              'connectivityNode'
-            )}"]`
+              'connectivityNode',
+            )}"]`,
           );
           if (cNode && cNode.closest(element.tagName) !== element)
             edits.push(...removeNode(cNode));
-        }
+        },
       );
     }
 
@@ -546,13 +548,13 @@ export default class Designer extends LitElement {
     if (to.tagName !== 'ConnectivityNode') {
       cNode = this.doc.createElementNS(
         this.doc.documentElement.namespaceURI,
-        'ConnectivityNode'
+        'ConnectivityNode',
       );
       cNode.setAttribute('name', 'L1');
       const bay = from.closest('Bay') || to.closest('Bay')!;
       edits.push(...reparentElement(cNode, bay));
       connectivityNode = (edits.find(
-        e => 'attributes' in e && 'pathName' in e.attributes
+        e => 'attributes' in e && 'pathName' in e.attributes,
       ) as Update | undefined)!.attributes.pathName as string;
       cNodeName =
         ((
@@ -563,7 +565,7 @@ export default class Designer extends LitElement {
         cNode.getAttribute('name')!;
       priv = this.doc.createElementNS(
         this.doc.documentElement.namespaceURI,
-        'Private'
+        'Private',
       );
       priv.setAttribute('type', privType);
       edits.push({
@@ -595,7 +597,7 @@ export default class Designer extends LitElement {
       const [x, y] = path[path.length - 1];
       Array.from(priv.getElementsByTagNameNS(sldNs, 'Section')).find(s => {
         const sectionPath = Array.from(
-          s.getElementsByTagNameNS(sldNs, 'Vertex')
+          s.getElementsByTagNameNS(sldNs, 'Vertex'),
         ).map(v => attributes(v).pos);
         for (let i = 0; i < sectionPath.length - 1; i += 1) {
           const [x0, y0] = sectionPath[i];
@@ -618,14 +620,14 @@ export default class Designer extends LitElement {
     }
     const [substationName, voltageLevelName, bayName] = connectivityNode.split(
       '/',
-      3
+      3,
     );
     const fromTagName = fromTerminal.startsWith('T')
       ? 'Terminal'
       : 'NeutralPoint';
     const fromTermElement = this.doc.createElementNS(
       this.doc.documentElement.namespaceURI,
-      fromTagName
+      fromTagName,
     );
     fromTermElement.setAttributeNS(sldNs, `${this.nsp}:uuid`, fromTermUUID);
     fromTermElement.setAttribute('name', fromTerminal);
@@ -645,7 +647,7 @@ export default class Designer extends LitElement {
         : 'NeutralPoint';
       const toTermElement = this.doc.createElementNS(
         this.doc.documentElement.namespaceURI,
-        toTagName
+        toTagName,
       );
       toTermElement.setAttributeNS(sldNs, `${this.nsp}:uuid`, toTermUUID);
       toTermElement.setAttribute('name', toTerminal!);
@@ -670,73 +672,76 @@ export default class Designer extends LitElement {
       <nav>
         ${
           Array.from(
-            this.doc.querySelectorAll(':root > Substation > VoltageLevel > Bay')
+            this.doc.querySelectorAll(
+              ':root > Substation > VoltageLevel > Bay',
+            ),
           ).find(bay => !isBusBar(bay))
             ? eqTypes
                 .map(
-                  eqType => html`<mwc-fab
-                    mini
-                    label="Add ${eqType}"
-                    title="Add ${eqType}"
-                    @click=${() => {
-                      const element =
-                        this.templateElements.ConductingEquipment!.cloneNode() as Element;
-                      element.setAttribute('type', eqType);
-                      this.startPlacing(element);
-                    }}
-                    >${equipmentIcon(eqType)}</mwc-fab
-                  >`
+                  eqType =>
+                    html`<mwc-fab
+                      mini
+                      label="Add ${eqType}"
+                      title="Add ${eqType}"
+                      @click=${() => {
+                        const element =
+                          this.templateElements.ConductingEquipment!.cloneNode() as Element;
+                        element.setAttribute('type', eqType);
+                        this.startPlacing(element);
+                      }}
+                      >${equipmentIcon(eqType)}</mwc-fab
+                    >`,
                 )
                 .concat()
             : nothing
         }${
-      this.doc.querySelector(':root > Substation > VoltageLevel')
-        ? html`<mwc-fab
-              mini
-              icon="horizontal_rule"
-              @click=${() => {
-                const element = this.templateElements.BusBar!.cloneNode(
-                  true
-                ) as Element;
-                this.startPlacing(element);
-              }}
-              label="Add Bus Bar"
-              title="Add Bus Bar"
-            >
-            </mwc-fab
-            ><mwc-fab
-              mini
-              label="Add Bay"
-              title="Add Bay"
-              @click=${() => {
-                const element =
-                  this.templateElements.Bay!.cloneNode() as Element;
-                this.startPlacing(element);
-              }}
-              style="--mdc-theme-secondary: #12579B; --mdc-theme-on-secondary: white;"
-            >
-              ${bayIcon}
-            </mwc-fab>`
-        : nothing
-    }${
-      Array.from(this.doc.documentElement.children).find(
-        c => c.tagName === 'Substation'
-      )
-        ? html`<mwc-fab
-            mini
-            label="Add VoltageLevel"
-            title="Add VoltageLevel"
-            @click=${() => {
-              const element =
-                this.templateElements.VoltageLevel!.cloneNode() as Element;
-              this.startPlacing(element);
-            }}
-            style="--mdc-theme-secondary: #F5E214;"
-          >
-            ${voltageLevelIcon}
-          </mwc-fab>`
-        : nothing
-    }<mwc-fab
+          this.doc.querySelector(':root > Substation > VoltageLevel')
+            ? html`<mwc-fab
+                  mini
+                  icon="horizontal_rule"
+                  @click=${() => {
+                    const element = this.templateElements.BusBar!.cloneNode(
+                      true,
+                    ) as Element;
+                    this.startPlacing(element);
+                  }}
+                  label="Add Bus Bar"
+                  title="Add Bus Bar"
+                >
+                </mwc-fab
+                ><mwc-fab
+                  mini
+                  label="Add Bay"
+                  title="Add Bay"
+                  @click=${() => {
+                    const element =
+                      this.templateElements.Bay!.cloneNode() as Element;
+                    this.startPlacing(element);
+                  }}
+                  style="--mdc-theme-secondary: #12579B; --mdc-theme-on-secondary: white;"
+                >
+                  ${bayIcon}
+                </mwc-fab>`
+            : nothing
+        }${
+          Array.from(this.doc.documentElement.children).find(
+            c => c.tagName === 'Substation',
+          )
+            ? html`<mwc-fab
+                mini
+                label="Add VoltageLevel"
+                title="Add VoltageLevel"
+                @click=${() => {
+                  const element =
+                    this.templateElements.VoltageLevel!.cloneNode() as Element;
+                  this.startPlacing(element);
+                }}
+                style="--mdc-theme-secondary: #F5E214;"
+              >
+                ${voltageLevelIcon}
+              </mwc-fab>`
+            : nothing
+        }<mwc-fab
           mini
           icon="margin"
           @click=${() => this.insertSubstation()}
@@ -747,7 +752,7 @@ export default class Designer extends LitElement {
         </mwc-fab
         >${
           Array.from(this.doc.documentElement.children).find(
-            c => c.tagName === 'Substation'
+            c => c.tagName === 'Substation',
           )
             ? html`<mwc-fab
                   mini
@@ -839,7 +844,7 @@ export default class Designer extends LitElement {
                     element.setAttributeNS(
                       sldNs,
                       `${this.nsp}:kind`,
-                      'earthing'
+                      'earthing',
                     );
                     const winding =
                       this.templateElements.TransformerWinding!.cloneNode() as Element;
@@ -860,7 +865,7 @@ export default class Designer extends LitElement {
                     element.setAttributeNS(
                       sldNs,
                       `${this.nsp}:kind`,
-                      'earthing'
+                      'earthing',
                     );
                     const windings = [];
                     for (let i = 1; i <= 2; i += 1) {
@@ -877,37 +882,39 @@ export default class Designer extends LitElement {
                 >`
             : nothing
         }${
-      this.doc.querySelector('VoltageLevel, PowerTransformer')
-        ? html`<mwc-icon-button-toggle
-            id="labels"
-            label="Toggle Labels"
-            title="Toggle Labels"
-            on
-            onIcon="font_download"
-            offIcon="font_download_off"
-            @click=${() => this.requestUpdate()}
-          ></mwc-icon-button-toggle>`
-        : nothing
-    }${
-      this.doc.querySelector('Substation')
-        ? html`<mwc-icon-button
-              icon="zoom_in"
-              label="Zoom In"
-              title="Zoom In (${Math.round((100 * (this.gridSize + 3)) / 32)}%)"
-              @click=${() => this.zoomIn()}
-            >
-            </mwc-icon-button
-            ><mwc-icon-button
-              icon="zoom_out"
-              label="Zoom Out"
-              ?disabled=${this.gridSize < 4}
-              title="Zoom Out (${Math.round(
-                (100 * (this.gridSize - 3)) / 32
-              )}%)"
-              @click=${() => this.zoomOut()}
-            ></mwc-icon-button>`
-        : nothing
-    }
+          this.doc.querySelector('VoltageLevel, PowerTransformer')
+            ? html`<mwc-icon-button-toggle
+                id="labels"
+                label="Toggle Labels"
+                title="Toggle Labels"
+                on
+                onIcon="font_download"
+                offIcon="font_download_off"
+                @click=${() => this.requestUpdate()}
+              ></mwc-icon-button-toggle>`
+            : nothing
+        }${
+          this.doc.querySelector('Substation')
+            ? html`<mwc-icon-button
+                  icon="zoom_in"
+                  label="Zoom In"
+                  title="Zoom In (${Math.round(
+                    (100 * (this.gridSize + 3)) / 32,
+                  )}%)"
+                  @click=${() => this.zoomIn()}
+                >
+                </mwc-icon-button
+                ><mwc-icon-button
+                  icon="zoom_out"
+                  label="Zoom Out"
+                  ?disabled=${this.gridSize < 4}
+                  title="Zoom Out (${Math.round(
+                    (100 * (this.gridSize - 3)) / 32,
+                  )}%)"
+                  @click=${() => this.zoomOut()}
+                ></mwc-icon-button>`
+            : nothing
+        }
         </mwc-icon-button
         >${
           this.placing ||
@@ -933,7 +940,7 @@ export default class Designer extends LitElement {
         subs =>
           html`<sld-editor
             .doc=${this.doc}
-            .editCount=${this.editCount}
+            .editCount=${this.docVersion}
             .substation=${subs}
             .gridSize=${this.gridSize}
             .resizingBR=${this.resizingBR}
@@ -970,7 +977,7 @@ export default class Designer extends LitElement {
                     w: { namespaceURI: sldNs, value: w.toString() },
                     h: { namespaceURI: sldNs, value: h.toString() },
                   },
-                })
+                }),
               );
               this.reset();
             }}
@@ -998,7 +1005,7 @@ export default class Designer extends LitElement {
                     lx: { namespaceURI: sldNs, value: lx.toString() },
                     ly: { namespaceURI: sldNs, value: ly.toString() },
                   },
-                })
+                }),
               );
               this.reset();
             }}
@@ -1012,8 +1019,119 @@ export default class Designer extends LitElement {
               this.connectEquipment(detail)}
             @oscd-sld-rotate=${({ detail }: StartEvent) =>
               this.rotateElement(detail)}
-          ></sld-editor>`
+          ></sld-editor>`,
       )}
+      <nav>
+        ${
+          Array.from(this.doc.documentElement.children).find(
+            c => c.tagName === 'Substation',
+          )
+            ? html``
+            : nothing
+        }${
+          Array.from(
+            this.doc.querySelectorAll(
+              ':root > Substation > VoltageLevel > Bay',
+            ),
+          ).find(bay => !isBusBar(bay))
+            ? eqTypes
+                .map(
+                  eqType =>
+                    html`<mwc-fab
+                      mini
+                      label="Add ${eqType}"
+                      @click=${() => {
+                        const element =
+                          this.templateElements.ConductingEquipment!.cloneNode() as Element;
+                        element.setAttribute('type', eqType);
+                        this.startPlacing(element);
+                      }}
+                      style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
+                      >${equipmentIcon(eqType)}</mwc-fab
+                    >`,
+                )
+                .concat()
+            : nothing
+        }${
+          this.doc.querySelector(':root > Substation > VoltageLevel')
+            ? html`<mwc-fab
+                  mini
+                  icon="horizontal_rule"
+                  @click=${() => {
+                    const element = this.templateElements.BusBar!.cloneNode(
+                      true,
+                    ) as Element;
+                    this.startPlacing(element);
+                  }}
+                  label="Add Bus Bar"
+                  style="--mdc-theme-secondary: #fff; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83)"
+                >
+                </mwc-fab
+                ><mwc-fab
+                  mini
+                  label="Add Bay"
+                  @click=${() => {
+                    const element =
+                      this.templateElements.Bay!.cloneNode() as Element;
+                    this.startPlacing(element);
+                  }}
+                  style="--mdc-theme-secondary: #12579B;"
+                >
+                  ${bayIcon}
+                </mwc-fab>`
+            : nothing
+        }${
+          Array.from(this.doc.documentElement.children).find(
+            c => c.tagName === 'Substation',
+          )
+            ? html`<mwc-fab
+                mini
+                label="Add VoltageLevel"
+                @click=${() => {
+                  const element =
+                    this.templateElements.VoltageLevel!.cloneNode() as Element;
+                  this.startPlacing(element);
+                }}
+                style="--mdc-theme-secondary: #F5E214; --mdc-theme-on-secondary: rgb(0, 0, 0 / 0.83);"
+              >
+                ${voltageLevelIcon}
+              </mwc-fab>`
+            : nothing
+        }<mwc-fab
+          mini
+          icon="margin"
+          @click=${() => this.insertSubstation()}
+          label="Add Substation"
+          style="--mdc-theme-secondary: #BB1326;"
+        >
+        </mwc-fab
+        ><mwc-icon-button
+          icon="zoom_in"
+          label="Zoom In"
+          @click=${() => this.zoomIn()}
+        >
+        </mwc-icon-button
+        ><mwc-icon-button
+          icon="zoom_out"
+          label="Zoom Out"
+          @click=${() => this.zoomOut()}
+        >
+        </mwc-icon-button
+        >${
+          this.placing ||
+          this.resizingBR ||
+          this.resizingTL ||
+          this.connecting ||
+          this.placingLabel
+            ? html`<mwc-icon-button
+                icon="close"
+                label="Cancel action"
+                @click=${() => this.reset()}
+              >
+              </mwc-icon-button>`
+            : nothing
+        }
+      </nav>
     </main>
     ${staticHtml`<mwc-dialog id="about" heading="About">
         <div>${unsafeStatic(aboutContent)}</div>
@@ -1027,7 +1145,7 @@ export default class Designer extends LitElement {
     const parent = this.doc.documentElement;
     const node = this.doc.createElementNS(
       this.doc.documentElement.namespaceURI,
-      'Substation'
+      'Substation',
     );
     const reference = getReference(parent, 'Substation');
     let index = 1;

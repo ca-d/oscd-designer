@@ -1,10 +1,8 @@
 import { css, html, nothing, LitElement, svg, TemplateResult } from 'lit';
-/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { createRef, Ref, ref } from 'lit/directives/ref.js';
-
-import { Edit, newEditEvent } from '@openscd/open-scd-core';
 
 import type { Dialog } from '@material/mwc-dialog';
 import type { SingleSelectedEvent } from '@material/mwc-list';
@@ -64,6 +62,8 @@ import {
   xlinkNs,
   xmlBoolean,
 } from './util.js';
+import { Edit } from '@omicronenergy/oscd-api';
+import { newEditEvent } from '@omicronenergy/oscd-api/utils.js';
 
 const parentTags: Partial<Record<string, string[]>> = {
   ConductingEquipment: ['Bay'],
@@ -101,7 +101,7 @@ function containsRect(
   x0: number,
   y0: number,
   w0: number,
-  h0: number
+  h0: number,
 ): boolean {
   const {
     pos: [x, y],
@@ -115,7 +115,7 @@ function overlapsRect(
   x0: number,
   y0: number,
   w0: number,
-  h0: number
+  h0: number,
 ): boolean {
   const {
     pos: [x, y],
@@ -219,16 +219,16 @@ function preventDefault(e: MouseEvent) {
 function copy(element: Element, nsp: string): Element {
   const clone = element.cloneNode(true) as Element;
   const terminals = new Set<Element>(
-    Array.from(element.querySelectorAll('Terminal, NeutralPoint'))
+    Array.from(element.querySelectorAll('Terminal, NeutralPoint')),
   );
   const cNodes = new Set<Element>(
-    Array.from(element.querySelectorAll('ConnectivityNode'))
+    Array.from(element.querySelectorAll('ConnectivityNode')),
   );
   terminals.forEach(terminal => {
     const cNode = element.ownerDocument.querySelector(
       `ConnectivityNode[pathName="${terminal.getAttribute(
-        'connectivityNode'
-      )}"]`
+        'connectivityNode',
+      )}"]`,
     );
     if (cNode) cNodes.add(cNode);
   });
@@ -236,8 +236,8 @@ function copy(element: Element, nsp: string): Element {
   cNodes.forEach(cNode => {
     const foreignTerminal = Array.from(
       element.ownerDocument.querySelectorAll(
-        `[connectivityNode="${cNode.getAttribute('pathName')}"]`
-      )
+        `[connectivityNode="${cNode.getAttribute('pathName')}"]`,
+      ),
     ).find(terminal => !terminals.has(terminal));
     if (
       foreignTerminal ||
@@ -251,14 +251,14 @@ function copy(element: Element, nsp: string): Element {
       if (isBusBar(cNode.closest('Bay')!))
         clone
           .querySelector(
-            `ConnectivityNode[pathName="${cNode.getAttribute('pathName')}"]`
+            `ConnectivityNode[pathName="${cNode.getAttribute('pathName')}"]`,
           )
           ?.closest('Bay')
           ?.remove();
       else
         clone
           .querySelector(
-            `ConnectivityNode[pathName="${cNode.getAttribute('pathName')}"]`
+            `ConnectivityNode[pathName="${cNode.getAttribute('pathName')}"]`,
           )
           ?.remove();
     }
@@ -278,10 +278,10 @@ function copy(element: Element, nsp: string): Element {
       if (!oldUUID) return;
       const newUUID = uuid();
       Array.from(clone.querySelectorAll(`Vertex[*|uuid="${oldUUID}"`)).forEach(
-        vertex => vertex.setAttributeNS(sldNs, `${nsp}:uuid`, newUUID)
+        vertex => vertex.setAttributeNS(sldNs, `${nsp}:uuid`, newUUID),
       );
       terminal.setAttributeNS(sldNs, `${nsp}:uuid`, newUUID);
-    }
+    },
   );
   return clone;
 }
@@ -333,7 +333,6 @@ function renderMenuHeader(element: Element) {
 }
 
 @customElement('sld-editor')
-/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 export class SLDEditor extends LitElement {
   @property()
   doc!: XMLDocument;
@@ -447,12 +446,12 @@ export class SLDEditor extends LitElement {
     if (element.tagName === 'Substation') return true;
 
     const overlappingSibling = Array.from(
-      this.substation.querySelectorAll(`${element.tagName}, PowerTransformer`)
+      this.substation.querySelectorAll(`${element.tagName}, PowerTransformer`),
     ).find(
       sibling =>
         sibling.closest(element.tagName) !== element &&
         overlapsRect(sibling, x, y, w, h) &&
-        !isBusBar(sibling)
+        !isBusBar(sibling),
     );
     if (overlappingSibling && !isBusBar(element)) {
       return false;
@@ -464,10 +463,10 @@ export class SLDEditor extends LitElement {
         ? containsRect(this.substation, x, y, w, h)
         : Array.from(
             this.substation.querySelectorAll(
-              parentTags[element.tagName]!.join(',')
-            )
+              parentTags[element.tagName]!.join(','),
+            ),
           ).find(
-            parent => !isBusBar(parent) && containsRect(parent, x, y, w, h)
+            parent => !isBusBar(parent) && containsRect(parent, x, y, w, h),
           );
     if (containingParent) return true;
     return false;
@@ -648,14 +647,14 @@ export class SLDEditor extends LitElement {
     }
     const edits: Edit[] = [];
     let grounded = bay.querySelector(
-      ':scope > ConnectivityNode[name="grounded"]'
+      ':scope > ConnectivityNode[name="grounded"]',
     );
     let pathName = grounded?.getAttribute('pathName');
     if (!pathName) {
       pathName = elementPath(bay, 'grounded');
       grounded = this.doc.createElementNS(
         this.doc.documentElement.namespaceURI,
-        'ConnectivityNode'
+        'ConnectivityNode',
       );
       grounded.setAttribute('name', 'grounded');
       grounded.setAttribute('pathName', pathName);
@@ -668,7 +667,7 @@ export class SLDEditor extends LitElement {
     const tagName = neutralPoint ? 'NeutralPoint' : 'Terminal';
     const terminal = this.doc.createElementNS(
       this.doc.documentElement.namespaceURI,
-      tagName
+      tagName,
     );
     terminal.setAttribute('name', name);
     terminal.setAttribute('cNodeName', 'grounded');
@@ -703,11 +702,11 @@ export class SLDEditor extends LitElement {
     if (element.tagName === 'PowerTransformer') {
       const winding = element.querySelector('TransformerWinding')!;
       Array.from(winding.querySelectorAll('Terminal')).forEach(terminal =>
-        edits.push(...removeTerminal(terminal))
+        edits.push(...removeTerminal(terminal)),
       );
       if (kind === 'earthing') {
         Array.from(winding.querySelectorAll('NeutralPoint')).forEach(np =>
-          edits.push(...removeTerminal(np))
+          edits.push(...removeTerminal(np)),
         );
       }
     }
@@ -720,20 +719,20 @@ export class SLDEditor extends LitElement {
     } = attributes(element);
     const text = this.doc.createElementNS(
       this.doc.documentElement.namespaceURI,
-      'Text'
+      'Text',
     );
     text.setAttributeNS(sldNs, `${this.nsp}:lx`, x.toString());
     text.setAttributeNS(
       sldNs,
       `${this.nsp}:ly`,
-      (y < 2 ? y + 1 : y - 1).toString()
+      (y < 2 ? y + 1 : y - 1).toString(),
     );
     this.dispatchEvent(
       newEditEvent({
         node: text,
         parent: element,
         reference: getReference(element, 'Text'),
-      })
+      }),
     );
   }
 
@@ -765,14 +764,14 @@ export class SLDEditor extends LitElement {
             <mwc-icon slot="graphic">edit</mwc-icon>
           </mwc-list-item>`,
           handler: () => this.dispatchEvent(newEditWizardEvent(tapChanger)),
-        }
+        },
       );
     else
       items.unshift({
         handler: () => {
           const node = this.doc.createElementNS(
             this.doc.documentElement.namespaceURI,
-            'TapChanger'
+            'TapChanger',
           );
           node.setAttribute('name', 'LTC');
           node.setAttribute('type', 'LTC');
@@ -782,7 +781,7 @@ export class SLDEditor extends LitElement {
               parent: winding,
               node,
               reference: getReference(winding, 'TapChanger'),
-            })
+            }),
           );
         },
         content: html`<mwc-list-item graphic="icon">
@@ -798,8 +797,8 @@ export class SLDEditor extends LitElement {
         handler: () =>
           this.dispatchEvent(
             newEditEvent(
-              neutralPoints.map(neutralPoint => removeTerminal(neutralPoint))
-            )
+              neutralPoints.map(neutralPoint => removeTerminal(neutralPoint)),
+            ),
           ),
         content: html`<mwc-list-item graphic="icon">
           <span>Detach Neutral Point</span>
@@ -812,7 +811,7 @@ export class SLDEditor extends LitElement {
       items.unshift({
         handler: () =>
           this.dispatchEvent(
-            newEditEvent(terminals.map(terminal => removeTerminal(terminal)))
+            newEditEvent(terminals.map(terminal => removeTerminal(terminal))),
           ),
         content: html`<mwc-list-item graphic="icon">
           <span>Detach Terminal${terminals.length > 1 ? 's' : nothing}</span>
@@ -846,7 +845,7 @@ export class SLDEditor extends LitElement {
         </mwc-list-item>`,
         handler: () =>
           this.dispatchEvent(
-            newStartPlaceEvent(copy(transformer, this.nsp), offset)
+            newStartPlaceEvent(copy(transformer, this.nsp), offset),
           ),
       },
       {
@@ -902,7 +901,7 @@ export class SLDEditor extends LitElement {
         handler: () => {
           const edits: Edit[] = [];
           Array.from(
-            transformer.querySelectorAll('Terminal, NeutralPoint')
+            transformer.querySelectorAll('Terminal, NeutralPoint'),
           ).forEach(terminal => edits.push(...removeTerminal(terminal)));
           edits.push({ node: transformer });
           this.dispatchEvent(newEditEvent(edits));
@@ -1007,7 +1006,7 @@ export class SLDEditor extends LitElement {
         handler: () => {
           const edits: Edit[] = [];
           Array.from(equipment.querySelectorAll('Terminal')).forEach(terminal =>
-            edits.push(...removeTerminal(terminal))
+            edits.push(...removeTerminal(terminal)),
           );
           edits.push({ node: equipment });
           this.dispatchEvent(newEditEvent(edits));
@@ -1069,14 +1068,14 @@ export class SLDEditor extends LitElement {
                 from: equipment,
                 fromTerminal: 'T2',
                 path: connectionStartPoints(equipment).T2,
-              })
+              }),
             ),
           content: item('connect', false),
         },
         {
           handler: () => this.groundTerminal(equipment, 'T2'),
           content: item('ground', false),
-        }
+        },
       );
     }
     if (topTerminal)
@@ -1094,14 +1093,14 @@ export class SLDEditor extends LitElement {
                 from: equipment,
                 fromTerminal: 'T1',
                 path: connectionStartPoints(equipment).T1,
-              })
+              }),
             ),
           content: item('connect', true),
         },
         {
           handler: () => this.groundTerminal(equipment, 'T1'),
           content: item('ground', true),
-        }
+        },
       );
     return items;
   }
@@ -1181,7 +1180,7 @@ export class SLDEditor extends LitElement {
         handler: () => {
           const node = busBar.querySelector('ConnectivityNode')!;
           this.dispatchEvent(
-            newEditEvent([...removeNode(node), { node: busBar }])
+            newEditEvent([...removeNode(node), { node: busBar }]),
           );
         },
       },
@@ -1218,7 +1217,7 @@ export class SLDEditor extends LitElement {
         </mwc-list-item>`,
         handler: () =>
           this.dispatchEvent(
-            newStartPlaceEvent(copy(bayOrVL, this.nsp), offset)
+            newStartPlaceEvent(copy(bayOrVL, this.nsp), offset),
           ),
       },
       {
@@ -1278,22 +1277,22 @@ export class SLDEditor extends LitElement {
               if (
                 Array.from(
                   this.doc.querySelectorAll(
-                    `[connectivityNode="${cNode.getAttribute('pathName')}"]`
-                  )
+                    `[connectivityNode="${cNode.getAttribute('pathName')}"]`,
+                  ),
                 ).find(
-                  terminal => terminal.closest(bayOrVL.tagName) !== bayOrVL
+                  terminal => terminal.closest(bayOrVL.tagName) !== bayOrVL,
                 )
               )
                 edits.push(...removeNode(cNode));
-            }
+            },
           );
           Array.from(
-            bayOrVL.querySelectorAll('Terminal, NeutralPoint')
+            bayOrVL.querySelectorAll('Terminal, NeutralPoint'),
           ).forEach(terminal => {
             const cNode = this.doc.querySelector(
               `ConnectivityNode[pathName="${terminal.getAttribute(
-                'connectivityNode'
-              )}"]`
+                'connectivityNode',
+              )}"]`,
             );
             if (cNode && cNode.closest(bayOrVL.tagName) !== bayOrVL)
               edits.push(...removeNode(cNode));
@@ -1364,7 +1363,7 @@ export class SLDEditor extends LitElement {
               attributes: {
                 [`${this.nsp}:weight`]: { namespaceURI: sldNs, value: '500' },
               },
-            })
+            }),
           );
         },
       });
@@ -1382,7 +1381,7 @@ export class SLDEditor extends LitElement {
               attributes: {
                 [`${this.nsp}:weight`]: { namespaceURI: sldNs, value: null },
               },
-            })
+            }),
           );
         },
       });
@@ -1406,7 +1405,7 @@ export class SLDEditor extends LitElement {
                   value: '#BB1326',
                 },
               },
-            })
+            }),
           );
         },
       });
@@ -1430,7 +1429,7 @@ export class SLDEditor extends LitElement {
                   value: '#12579B',
                 },
               },
-            })
+            }),
           );
         },
       });
@@ -1451,7 +1450,7 @@ export class SLDEditor extends LitElement {
                   value: null,
                 },
               },
-            })
+            }),
           );
         },
       });
@@ -1508,14 +1507,14 @@ export class SLDEditor extends LitElement {
           const { bottom, right } = menu.getBoundingClientRect();
           if (bottom > window.innerHeight) {
             menu.style.removeProperty('top');
-            // eslint-disable-next-line no-param-reassign
+
             menu.style.bottom = `0px`;
-            // eslint-disable-next-line no-param-reassign
+
             menu.style.maxHeight = `calc(100vh - 68px)`;
           }
           if (right > window.innerWidth) {
             menu.style.removeProperty('left');
-            // eslint-disable-next-line no-param-reassign
+
             menu.style.right = '0px';
           }
         })}
@@ -1626,7 +1625,7 @@ export class SLDEditor extends LitElement {
         const [x2, y2] = path[i + 1];
         connectionPreview.push(
           svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
-                stroke-linecap="square" stroke="black" />`
+                stroke-linecap="square" stroke="black" />`,
         );
         i += 1;
       }
@@ -1640,7 +1639,7 @@ export class SLDEditor extends LitElement {
       let [x4, y4] = [x3, y3];
 
       const targetEq = Array.from(
-        this.substation.querySelectorAll('ConductingEquipment')
+        this.substation.querySelectorAll('ConductingEquipment'),
       )
         .filter(eq => eq !== from)
         .find(eq => {
@@ -1667,7 +1666,7 @@ export class SLDEditor extends LitElement {
         svg`<line x1="${x2}" y1="${y2}" x2="${x3}" y2="${y3}"
                 stroke-linecap="square" stroke="black" />`,
         svg`<line x1="${x3}" y1="${y3}" x2="${x4}" y2="${y4}"
-                stroke-linecap="square" stroke="black" />`
+                stroke-linecap="square" stroke="black" />`,
       );
       connectionPreview.push(
         svg`<rect width="100%" height="100%" fill="url(#grid)"
@@ -1685,9 +1684,9 @@ export class SLDEditor extends LitElement {
               path,
               to: targetEq,
               toTerminal,
-            })
+            }),
           );
-      }} />`
+      }} />`,
       );
     }
 
@@ -1796,7 +1795,7 @@ export class SLDEditor extends LitElement {
         ${connectionPreview}
         ${this.connecting?.from.closest('Substation') === this.substation
           ? Array.from(
-              this.substation.querySelectorAll('ConductingEquipment')
+              this.substation.querySelectorAll('ConductingEquipment'),
             ).map(eq => this.renderEquipment(eq, { connect: true }))
           : nothing}
         ${Array.from(this.substation.querySelectorAll('ConnectivityNode'))
@@ -1807,7 +1806,7 @@ export class SLDEditor extends LitElement {
                 this.placing &&
                 node.closest(this.placing.tagName) === this.placing
               ) &&
-              !isBusBar(node.parentElement!)
+              !isBusBar(node.parentElement!),
           )
           .map(cNode => this.renderConnectivityNode(cNode))}
         ${Array.from(this.substation.querySelectorAll('ConnectivityNode'))
@@ -1818,20 +1817,20 @@ export class SLDEditor extends LitElement {
                 this.placing &&
                 node.closest(this.placing.tagName) === this.placing
               ) &&
-              isBusBar(node.parentElement!)
+              isBusBar(node.parentElement!),
           )
           .map(cNode => this.renderConnectivityNode(cNode))}
         ${Array.from(
-          this.substation.querySelectorAll(':scope > PowerTransformer')
+          this.substation.querySelectorAll(':scope > PowerTransformer'),
         ).map(transformer => this.renderPowerTransformer(transformer))}
         ${Array.from(
           this.substation.querySelectorAll(
-            'VoltageLevel, Bay, ConductingEquipment, PowerTransformer, Text'
-          )
+            'VoltageLevel, Bay, ConductingEquipment, PowerTransformer, Text',
+          ),
         )
           .filter(
             e =>
-              !this.placing || e.closest(this.placing.tagName) !== this.placing
+              !this.placing || e.closest(this.placing.tagName) !== this.placing,
           )
           .map(element => this.renderLabel(element))}
         ${transformerPlacingTarget} ${placingLabelTarget} ${placingElement}
@@ -1890,7 +1889,7 @@ export class SLDEditor extends LitElement {
           slot="primaryAction"
           @click=${() => {
             const valid = Array.from(
-              this.resizeSubstationUI.querySelectorAll('mwc-textfield')
+              this.resizeSubstationUI.querySelectorAll('mwc-textfield'),
             ).every(textField => textField.checkValidity());
             if (!valid) return;
             const {
@@ -1909,7 +1908,7 @@ export class SLDEditor extends LitElement {
                   [`${this.nsp}:w`]: { namespaceURI: sldNs, value: newW },
                   [`${this.nsp}:h`]: { namespaceURI: sldNs, value: newH },
                 },
-              })
+              }),
             );
           }}
           >resize</mwc-button
@@ -1946,7 +1945,7 @@ export class SLDEditor extends LitElement {
                   x="${x + 0.1}" dy="${i === 0 ? nothing : '1.19em'}"
                   visibility="${line ? nothing : 'hidden'}">
                   ${line || '.'}
-                </tspan>`
+                </tspan>`,
         );
       else {
         text = '<Middle click to edit>';
@@ -2011,8 +2010,8 @@ export class SLDEditor extends LitElement {
         this.dispatchEvent(
           newStartPlaceEvent(
             e.shiftKey ? copy(bayOrVL, this.nsp) : bayOrVL,
-            offset
-          )
+            offset,
+          ),
         );
     };
     let invalid = false;
@@ -2027,7 +2026,7 @@ export class SLDEditor extends LitElement {
               w,
               h,
               element: bayOrVL,
-            })
+            }),
           );
       else invalid = true;
     }
@@ -2048,7 +2047,7 @@ export class SLDEditor extends LitElement {
               w,
               h,
               element: bayOrVL,
-            })
+            }),
           );
       else invalid = true;
     }
@@ -2058,7 +2057,7 @@ export class SLDEditor extends LitElement {
       if (isVL) parent = this.substation;
       else
         parent = Array.from(
-          this.substation.querySelectorAll(':root > Substation > VoltageLevel')
+          this.substation.querySelectorAll(':root > Substation > VoltageLevel'),
         ).find(vl => containsRect(vl, x, y, w, h));
       if (parent && this.canPlaceAt(bayOrVL, x, y, w, h))
         handleClick = () =>
@@ -2068,7 +2067,7 @@ export class SLDEditor extends LitElement {
               y,
               element: bayOrVL,
               parent: parent!,
-            })
+            }),
           );
       else invalid = true;
     }
@@ -2137,10 +2136,7 @@ export class SLDEditor extends LitElement {
           else this.dispatchEvent(newStartResizeBREvent(bayOrVL));
         }}
         fill="white" stroke-dasharray="${isVL ? nothing : '0.18'}"
-        stroke="${
-          // eslint-disable-next-line no-nested-ternary
-          invalid ? '#BB1326' : isVL ? '#F5E214' : '#12579B'
-        }" />
+        stroke="${invalid ? '#BB1326' : isVL ? '#F5E214' : '#12579B'}" />
       ${Array.from(bayOrVL.children)
         .filter(isBay)
         .map(bay => this.renderContainer(bay))}
@@ -2161,8 +2157,8 @@ export class SLDEditor extends LitElement {
         preview
           ? Array.from(
               bayOrVL.querySelectorAll(
-                'Bay, ConductingEquipment, PowerTransformer, Text'
-              )
+                'Bay, ConductingEquipment, PowerTransformer, Text',
+              ),
             )
               .concat(bayOrVL)
               .map(element => this.renderLabel(element))
@@ -2190,7 +2186,7 @@ export class SLDEditor extends LitElement {
   } {
     const transformer = winding.parentElement!;
     const windings = Array.from(transformer.children).filter(
-      c => c.tagName === 'TransformerWinding'
+      c => c.tagName === 'TransformerWinding',
     );
     const [x, y] = this.renderedPosition(transformer).map(c => c + 0.5);
     let center = [x, y] as Point;
@@ -2207,16 +2203,16 @@ export class SLDEditor extends LitElement {
       | undefined;
     let zigZagTransform: string | undefined;
     const terminalElements = Array.from(winding.children).filter(
-      c => c.tagName === 'Terminal'
+      c => c.tagName === 'Terminal',
     );
     const terminal1 = terminalElements.find(
-      t => t.getAttribute('name') === 'T1'
+      t => t.getAttribute('name') === 'T1',
     );
     const terminal2 = terminalElements.find(
-      t => t.getAttribute('name') !== 'T1'
+      t => t.getAttribute('name') !== 'T1',
     );
     const neutral = Array.from(winding.children).find(
-      c => c.tagName === 'NeutralPoint'
+      c => c.tagName === 'NeutralPoint',
     );
     const windingIndex = windings.indexOf(winding);
     const { rot, kind, flip } = attributes(transformer);
@@ -2430,7 +2426,7 @@ export class SLDEditor extends LitElement {
     const ports: TemplateResult<2>[] = [];
     Object.entries(grounded).forEach(([_, [[x1, y1], [x2, y2]]]) => {
       ports.push(
-        svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`
+        svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`,
       );
     });
     const groundable = winding.closest('Bay');
@@ -2469,7 +2465,7 @@ export class SLDEditor extends LitElement {
                       [x, y],
                       [x1, y1],
                     ],
-                  })
+                  }),
                 );
               }}
               fill="#${fill}"
@@ -2510,11 +2506,11 @@ export class SLDEditor extends LitElement {
 
   renderPowerTransformer(
     transformer: Element,
-    preview = false
+    preview = false,
   ): TemplateResult<2> {
     if (this.placing === transformer && !preview) return svg``;
     const windings = Array.from(transformer.children).filter(
-      c => c.tagName === 'TransformerWinding'
+      c => c.tagName === 'TransformerWinding',
     );
     const [x, y] = this.renderedPosition(transformer);
     const offset: Point = [this.mouseX - x, this.mouseY - y];
@@ -2539,12 +2535,12 @@ export class SLDEditor extends LitElement {
           if (this.placing === transformer) {
             const parent =
               Array.from(
-                this.substation.querySelectorAll(':scope > VoltageLevel > Bay')
+                this.substation.querySelectorAll(':scope > VoltageLevel > Bay'),
               )
                 .concat(
                   Array.from(
-                    this.substation.querySelectorAll(':scope > VoltageLevel')
-                  )
+                    this.substation.querySelectorAll(':scope > VoltageLevel'),
+                  ),
                 )
                 .find(vl => containsRect(vl, x, y, 1, 1)) || this.substation;
             this.dispatchEvent(
@@ -2553,7 +2549,7 @@ export class SLDEditor extends LitElement {
                 parent,
                 x,
                 y,
-              })
+              }),
             );
           }
 
@@ -2571,7 +2567,7 @@ export class SLDEditor extends LitElement {
           ? [
               this.renderLabel(transformer),
               ...Array.from(transformer.querySelectorAll('Text')).map(text =>
-                this.renderLabel(text)
+                this.renderLabel(text),
               ),
             ]
           : nothing
@@ -2580,7 +2576,7 @@ export class SLDEditor extends LitElement {
 
   renderEquipment(
     equipment: Element,
-    { preview = false, connect = false } = {}
+    { preview = false, connect = false } = {},
   ) {
     if (this.placing === equipment && !preview) return svg``;
     if (
@@ -2616,8 +2612,8 @@ export class SLDEditor extends LitElement {
     if (this.placing === equipment) {
       const parent = Array.from(
         this.substation.querySelectorAll(
-          ':root > Substation > VoltageLevel > Bay'
-        )
+          ':root > Substation > VoltageLevel > Bay',
+        ),
       ).find(bay => !isBusBar(bay) && containsRect(bay, x, y, 1, 1));
       if (parent && this.canPlaceAt(equipment, x, y, 1, 1))
         handleClick = () => {
@@ -2627,13 +2623,13 @@ export class SLDEditor extends LitElement {
               y,
               element: equipment,
               parent,
-            })
+            }),
           );
         };
     }
 
     const terminals = Array.from(equipment.children).filter(
-      c => c.tagName === 'Terminal'
+      c => c.tagName === 'Terminal',
     );
     const topTerminal = terminals.find(t => t.getAttribute('name') === 'T1');
     const bottomTerminal = terminals.find(t => t.getAttribute('name') !== 'T1');
@@ -2656,7 +2652,7 @@ export class SLDEditor extends LitElement {
           from: equipment,
           fromTerminal: 'T1',
           path: connectionStartPoints(equipment).T1,
-        })
+        }),
       )}
     @contextmenu=${(e: MouseEvent) => {
       e.preventDefault();
@@ -2701,7 +2697,7 @@ export class SLDEditor extends LitElement {
           from: equipment,
           fromTerminal: 'T2',
           path: connectionStartPoints(equipment).T2,
-        })
+        }),
       )}
     @contextmenu=${(e: MouseEvent) => {
       e.preventDefault();
@@ -2776,7 +2772,7 @@ export class SLDEditor extends LitElement {
         ? [
             this.renderLabel(equipment),
             ...Array.from(equipment.querySelectorAll('Text')).map(text =>
-              this.renderLabel(text)
+              this.renderLabel(text),
             ),
           ]
         : nothing
@@ -2794,8 +2790,8 @@ export class SLDEditor extends LitElement {
           @click=${() => {
             const parent = Array.from(
               this.substation.querySelectorAll(
-                ':root > Substation > VoltageLevel'
-              )
+                ':root > Substation > VoltageLevel',
+              ),
             ).find(vl => containsRect(vl, x, y, w, h));
             if (parent)
               this.dispatchEvent(
@@ -2804,7 +2800,7 @@ export class SLDEditor extends LitElement {
                   y,
                   element: busBar,
                   parent: parent!,
-                })
+                }),
               );
           }}
         />`;
@@ -2816,7 +2812,7 @@ export class SLDEditor extends LitElement {
       <title>${busBar.getAttribute('name')}</title>
       ${this.renderLabel(busBar)}
       ${Array.from(busBar.querySelectorAll('Text')).map(text =>
-        this.renderLabel(text)
+        this.renderLabel(text),
       )}
       ${this.renderConnectivityNode(busBar.querySelector('ConnectivityNode')!)}
       ${placingTarget}
@@ -2828,23 +2824,26 @@ export class SLDEditor extends LitElement {
     if (!priv) return nothing;
     const circles = [] as TemplateResult<2>[];
     const intersections = Object.entries(
-      Array.from(priv.querySelectorAll('Vertex')).reduce((record, vertex) => {
-        const ret = record;
-        const key = JSON.stringify(this.renderedPosition(vertex));
-        if (ret[key]) ret[key].push(vertex);
-        else ret[key] = [vertex];
-        return ret;
-      }, {} as Record<string, Element[]>)
+      Array.from(priv.querySelectorAll('Vertex')).reduce(
+        (record, vertex) => {
+          const ret = record;
+          const key = JSON.stringify(this.renderedPosition(vertex));
+          if (ret[key]) ret[key].push(vertex);
+          else ret[key] = [vertex];
+          return ret;
+        },
+        {} as Record<string, Element[]>,
+      ),
     )
       .filter(
         ([_, vertices]) =>
           vertices.length > 2 ||
           (vertices.length === 2 &&
-            vertices.find(v => v.hasAttributeNS(sldNs, 'uuid')))
+            vertices.find(v => v.hasAttributeNS(sldNs, 'uuid'))),
       )
       .map(([_, [vertex]]) => this.renderedPosition(vertex));
     intersections.forEach(([x, y]) =>
-      circles.push(svg`<circle fill="black" cx="${x}" cy="${y}" r="0.15" />`)
+      circles.push(svg`<circle fill="black" cx="${x}" cy="${y}" r="0.15" />`),
     );
     const lines = [] as TemplateResult<2>[];
     const sections = Array.from(priv.getElementsByTagNameNS(sldNs, 'Section'));
@@ -2858,7 +2857,7 @@ export class SLDEditor extends LitElement {
     sections.forEach(section => {
       const busBar = xmlBoolean(section.getAttribute('bus'));
       const vertices = Array.from(
-        section.getElementsByTagNameNS(sldNs, 'Vertex')
+        section.getElementsByTagNameNS(sldNs, 'Vertex'),
       );
       let i = 0;
       while (i < vertices.length - 1) {
@@ -2910,7 +2909,7 @@ export class SLDEditor extends LitElement {
                 element: vertices[vertices.length - 1],
                 x: x2,
                 y: y2,
-              })
+              }),
             );
           };
           lines.push(svg`<rect x="${this.mouseX}" y="${this.mouseY}"
@@ -2924,7 +2923,7 @@ export class SLDEditor extends LitElement {
               from
                 .closest('ConductingEquipment, PowerTransformer')!
                 .querySelector(
-                  `[connectivityNode="${cNode.getAttribute('pathName')}"]`
+                  `[connectivityNode="${cNode.getAttribute('pathName')}"]`,
                 )
             )
               return;
@@ -2956,7 +2955,7 @@ export class SLDEditor extends LitElement {
                 fromTerminal,
                 path,
                 to: cNode,
-              })
+              }),
             );
           };
 
@@ -2964,13 +2963,13 @@ export class SLDEditor extends LitElement {
           svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
                 pointer-events="${pointerEvents}"
                 stroke-width="${busBar ? 0.12 : nothing}" stroke="black" 
-                stroke-linecap="${busBar ? 'round' : 'square'}" />`
+                stroke-linecap="${busBar ? 'round' : 'square'}" />`,
         );
         lines.push(
           svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
                 pointer-events="${pointerEvents}" stroke-width="${targetSize}"
                 @contextmenu=${handleContextMenu} @mousedown=${preventDefault}
-                @click=${handleClick} @auxclick=${handleAuxClick} />`
+                @click=${handleClick} @auxclick=${handleAuxClick} />`,
         );
         if (
           busBar ||
@@ -2981,7 +2980,7 @@ export class SLDEditor extends LitElement {
                   width="${targetSize}" height="${targetSize}"
                   @click=${handleClick} @auxclick=${handleAuxClick}
                   @contextmenu=${handleContextMenu} @mousedown=${preventDefault}
-                  pointer-events="${pointerEvents}" fill="none" />`
+                  pointer-events="${pointerEvents}" fill="none" />`,
           );
         if (
           busBar ||
@@ -2992,7 +2991,7 @@ export class SLDEditor extends LitElement {
                   width="${targetSize}" height="${targetSize}"
                   @click=${handleClick} @auxclick=${handleAuxClick}
                   @contextmenu=${handleContextMenu} @mousedown=${preventDefault}
-                  pointer-events="${pointerEvents}" fill="none" />`
+                  pointer-events="${pointerEvents}" fill="none" />`,
           );
         i += 1;
       }
@@ -3024,7 +3023,9 @@ export class SLDEditor extends LitElement {
       background: var(--oscd-base3, white);
       margin: 0px;
       padding: 0px;
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+      box-shadow:
+        0 10px 20px rgba(0, 0, 0, 0.19),
+        0 6px 6px rgba(0, 0, 0, 0.23);
       --mdc-list-vertical-padding: 0px;
       overflow-y: auto;
     }

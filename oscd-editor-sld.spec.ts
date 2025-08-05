@@ -1,17 +1,18 @@
-/* eslint-disable no-unused-expressions */
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import { html } from 'lit';
 import { fixture, expect } from '@open-wc/testing';
 
 import type { Button } from '@material/mwc-button';
 
-import { EditEvent, handleEdit } from '@openscd/open-scd-core';
-
 import { IconButton } from '@material/mwc-icon-button';
 import { resetMouse, sendMouse } from '@web/test-runner-commands';
 import { identity } from '@openscd/oscd-scl';
 import { ListItem } from '@material/mwc-list/mwc-list-item.js';
-import Designer from './oscd-designer.js';
+import OscdEditorSLD from './oscd-editor-sld.js';
 import { SLDEditor } from './sld-editor.js';
+import { EditEvent } from '@omicronenergy/oscd-api';
+import { convertEdit } from '@omicronenergy/oscd-api/utils.js';
+import { XMLEditor } from '@omicronenergy/oscd-editor';
 
 function middleOf(element: Element): [number, number] {
   const { x, y, width, height } = element.getBoundingClientRect();
@@ -22,7 +23,7 @@ function middleOf(element: Element): [number, number] {
   ];
 }
 
-customElements.define('oscd-designer', Designer);
+customElements.define('oscd-editor-sld', OscdEditorSLD);
 
 export const emptyDocString = `<?xml version="1.0" encoding="UTF-8"?>
 <SCL version="2007" revision="B" xmlns="http://www.iec.ch/61850/2003/SCL">
@@ -76,8 +77,9 @@ export const equipmentDocString = `<?xml version="1.0" encoding="UTF-8"?>
 </SCL>
 `;
 
-describe('Designer', () => {
-  let element: Designer;
+describe('oscd-editor-sld', () => {
+  const xmlEditor: XMLEditor = new XMLEditor();
+  let element: OscdEditorSLD;
   let lastCalledWizard: Element | undefined;
 
   function queryUI({
@@ -94,7 +96,10 @@ describe('Designer', () => {
       element.shadowRoot!.querySelector<HTMLElement>('sld-editor')!.shadowRoot!;
     if (scl) {
       const sclTarget = element.doc.querySelector(scl);
-      target = target.getElementById?.(<string>identity(sclTarget))!;
+      const t = target.getElementById?.(<string>identity(sclTarget));
+      if (t) {
+        target = t;
+      }
     }
     if (ui) {
       target = target.querySelector(ui)!;
@@ -105,22 +110,23 @@ describe('Designer', () => {
   beforeEach(async () => {
     const doc = new DOMParser().parseFromString(
       emptyDocString,
-      'application/xml'
+      'application/xml',
     );
     element = await fixture(
-      html`<oscd-designer
+      html`<oscd-editor-sld
         docName="testDoc"
         .doc=${doc}
-        @oscd-edit=${({ detail }: EditEvent) => {
-          handleEdit(detail);
-          element.editCount += 1;
+        @oscd-edit=${(event: EditEvent) => {
+          const editV2 = convertEdit(event.detail);
+          xmlEditor.commit(editV2);
+          element.docVersion += 1;
         }}
         @oscd-edit-wizard-request=${({
           detail: { element: e },
         }: CustomEvent<{ element: Element }>) => {
           lastCalledWizard = e;
         }}
-      ></oscd-designer>`
+      ></oscd-editor-sld>`,
     );
   });
 
@@ -131,7 +137,7 @@ describe('Designer', () => {
   });
 
   it('shows a placeholder message while no document is loaded', async () => {
-    element = await fixture(html`<oscd-designer></oscd-designer>`);
+    element = await fixture(html`<oscd-editor-sld></oscd-editor-sld>`);
     expect(element.shadowRoot?.querySelector('p')).to.contain.text('SCL');
   });
 
@@ -155,7 +161,7 @@ describe('Designer', () => {
       .shadowRoot!.querySelector<Button>('[label="Add Substation"]')
       ?.click();
     const [name1, name2] = Array.from(
-      element.doc.querySelectorAll('Substation')
+      element.doc.querySelectorAll('Substation'),
     ).map(substation => substation.getAttribute('name'));
     expect(name1).not.to.equal(name2);
   });
@@ -192,7 +198,7 @@ describe('Designer', () => {
       expect(element.gridSize).to.be.lessThan(initial);
     });
 
-    it('allows resizing substations', async () => {
+    it('allows resizing substations', () => {
       const sldEditor =
         element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
       sldEditor.shadowRoot
@@ -203,7 +209,7 @@ describe('Designer', () => {
       sldEditor.shadowRoot
         ?.querySelector<Button>('mwc-button[slot="primaryAction"]')
         ?.click();
-      expect(element).to.have.property('editCount', 0);
+      expect(element).to.have.property('docVersion', 0);
       sldEditor.substationWidthUI.value = '1337';
       sldEditor.substationHeightUI.value = '42';
       sldEditor.shadowRoot
@@ -230,19 +236,19 @@ describe('Designer', () => {
       expect(element.doc.querySelector('VoltageLevel')).to.exist;
       expect(element.doc.querySelector('VoltageLevel')).to.have.attribute(
         'x',
-        '5'
+        '5',
       );
       expect(element.doc.querySelector('VoltageLevel')).to.have.attribute(
         'y',
-        '3'
+        '3',
       );
       expect(element.doc.querySelector('VoltageLevel')).to.have.attribute(
         'w',
-        '7'
+        '7',
       );
       expect(element.doc.querySelector('VoltageLevel')).to.have.attribute(
         'h',
-        '8'
+        '8',
       );
     });
 
@@ -258,7 +264,7 @@ describe('Designer', () => {
       await sendMouse({ type: 'click', position: [350, 350] });
       await sendMouse({ type: 'click', position: [450, 450] });
       const [name1, name2] = Array.from(
-        element.doc.querySelectorAll('VoltageLevel')
+        element.doc.querySelectorAll('VoltageLevel'),
       ).map(substation => substation.getAttribute('name'));
       expect(name1).not.to.equal(name2);
       expect(name1).to.exist;
@@ -282,7 +288,7 @@ describe('Designer', () => {
     beforeEach(async () => {
       const doc = new DOMParser().parseFromString(
         voltageLevelDocString,
-        'application/xml'
+        'application/xml',
       );
       element.doc = doc;
       await element.updateComplete;
@@ -322,7 +328,7 @@ describe('Designer', () => {
 
     it('moves voltage levels on move handle click', async () => {
       queryUI({ scl: 'VoltageLevel', ui: 'rect' }).dispatchEvent(
-        new PointerEvent('click')
+        new PointerEvent('click'),
       );
       expect(element)
         .property('placing')
@@ -342,7 +348,7 @@ describe('Designer', () => {
       }).dispatchEvent(new PointerEvent('contextmenu'));
       await element.updateComplete;
       expect(queryUI({ ui: 'menu' })).to.exist;
-      await expect(queryUI({ ui: 'menu' })).dom.to.equalSnapshot();
+      expect(queryUI({ ui: 'menu' })).dom.to.equalSnapshot();
     });
 
     it('resizes voltage levels on resize menu item select', async () => {
@@ -354,7 +360,7 @@ describe('Designer', () => {
       const sldEditor =
         element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
       const item = sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-of-type(2)'
+        'mwc-list-item:nth-of-type(2)',
       )!;
       item.selected = true;
       await element.updateComplete;
@@ -378,7 +384,7 @@ describe('Designer', () => {
       const sldEditor =
         element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
       const item = sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-last-of-type(5)'
+        'mwc-list-item:nth-last-of-type(5)',
       )!;
       item.selected = true;
       await element.updateComplete;
@@ -402,11 +408,11 @@ describe('Designer', () => {
         element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
       await element.updateComplete;
       sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-last-of-type(2)'
+        'mwc-list-item:nth-last-of-type(2)',
       )!.selected = true;
       await sldEditor.updateComplete;
       expect(lastCalledWizard).to.equal(
-        element.doc.querySelector('VoltageLevel')
+        element.doc.querySelector('VoltageLevel'),
       );
     });
 
@@ -419,7 +425,7 @@ describe('Designer', () => {
         element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
       await element.updateComplete;
       sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-last-of-type(4)'
+        'mwc-list-item:nth-last-of-type(4)',
       )!.selected = true;
       await sldEditor.updateComplete;
       expect(element)
@@ -428,11 +434,11 @@ describe('Designer', () => {
       await sendMouse({ type: 'click', position: [200, 200] });
       expect(element.doc.querySelector('VoltageLevel')).to.have.attribute(
         'smth:lx',
-        '5'
+        '5',
       );
       expect(element.doc.querySelector('VoltageLevel')).to.have.attribute(
         'smth:ly',
-        '4.5'
+        '4.5',
       );
     });
 
@@ -460,20 +466,20 @@ describe('Designer', () => {
       await sendMouse({ type: 'click', position: [200, 200] });
       expect(element.doc.querySelector('VoltageLevel')).to.have.attribute(
         'smth:lx',
-        '5'
+        '5',
       );
       expect(element.doc.querySelector('VoltageLevel')).to.have.attribute(
         'smth:ly',
-        '4.5'
+        '4.5',
       );
     });
 
     it('requests a voltage level edit wizard on label middle click', async () => {
       queryUI({ ui: '.label text' }).dispatchEvent(
-        new PointerEvent('auxclick', { button: 1 })
+        new PointerEvent('auxclick', { button: 1 }),
       );
       expect(lastCalledWizard).to.equal(
-        element.doc.querySelector('VoltageLevel')
+        element.doc.querySelector('VoltageLevel'),
       );
     });
 
@@ -513,7 +519,7 @@ describe('Designer', () => {
       expect(bus).to.have.attribute('y', '3');
       expect(bus).to.have.attribute('smth:w', '1');
       expect(bus).to.have.attribute('h', '8');
-      await expect(bus).dom.to.equalSnapshot({
+      expect(bus).dom.to.equalSnapshot({
         ignoreAttributes: ['esld:uuid'],
       });
     });
@@ -523,7 +529,7 @@ describe('Designer', () => {
     beforeEach(async () => {
       const doc = new DOMParser().parseFromString(
         bayDocString,
-        'application/xml'
+        'application/xml',
       );
       element.doc = doc;
       await element.updateComplete;
@@ -564,7 +570,7 @@ describe('Designer', () => {
         element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
       await element.updateComplete;
       sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-last-of-type(2)'
+        'mwc-list-item:nth-last-of-type(2)',
       )!.selected = true;
       await sldEditor.updateComplete;
       expect(lastCalledWizard).to.equal(element.doc.querySelector('Bay'));
@@ -591,7 +597,7 @@ describe('Designer', () => {
       const sldEditor =
         element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
       const moveHandle = sldEditor.shadowRoot!.querySelectorAll<SVGElement>(
-        'g.voltagelevel > .handle'
+        'g.voltagelevel > .handle',
       )[1];
       moveHandle.dispatchEvent(new PointerEvent('click'));
       expect(element)
@@ -607,7 +613,7 @@ describe('Designer', () => {
 
     it('moves bays on move handle click', async () => {
       queryUI({ scl: 'Bay', ui: 'rect' }).dispatchEvent(
-        new PointerEvent('click')
+        new PointerEvent('click'),
       );
       expect(element)
         .property('placing')
@@ -620,7 +626,7 @@ describe('Designer', () => {
 
     it('renames reparented bays if necessary', async () => {
       queryUI({ scl: 'Bay', ui: 'rect' }).dispatchEvent(
-        new PointerEvent('click')
+        new PointerEvent('click'),
       );
       const bay = element.placing!;
       expect(bay.parentElement).to.have.attribute('name', 'V1');
@@ -632,7 +638,7 @@ describe('Designer', () => {
       expect(bay.parentElement).to.have.attribute('name', 'V2');
       expect(bay).to.have.attribute('name', 'B2');
       queryUI({ scl: 'Bay', ui: 'rect' }).dispatchEvent(
-        new PointerEvent('click')
+        new PointerEvent('click'),
       );
       await sendMouse({ type: 'click', position: [200, 200] });
       expect(bay).to.have.attribute('esld:x', '5');
@@ -643,7 +649,7 @@ describe('Designer', () => {
 
     it("updates reparented bays' connectivity node paths", async () => {
       queryUI({ scl: 'Bay', ui: 'rect' }).dispatchEvent(
-        new PointerEvent('click')
+        new PointerEvent('click'),
       );
       const bay = element.placing!;
       const cNode = bay.querySelector('ConnectivityNode')!;
@@ -651,14 +657,14 @@ describe('Designer', () => {
       await sendMouse({ type: 'click', position: [600, 200] });
       expect(element).to.have.property('placing', undefined);
       expect(cNode).to.have.attribute('pathName', 'S1/V2/B2/L1');
-      await expect(element.doc.documentElement).dom.to.equalSnapshot({
+      expect(element.doc.documentElement).dom.to.equalSnapshot({
         ignoreAttributes: ['esld:uuid'],
       });
     });
 
     it('moves a bay when its parent voltage level is moved', async () => {
       queryUI({ scl: 'VoltageLevel', ui: 'rect' }).dispatchEvent(
-        new PointerEvent('click')
+        new PointerEvent('click'),
       );
       const bay = element.placing!.querySelector('Bay')!;
       expect(bay).to.have.attribute('esld:x', '2');
@@ -696,7 +702,7 @@ describe('Designer', () => {
           element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
         const moveHandle =
           sldEditor.shadowRoot!.querySelectorAll<SVGElement>(
-            'g.bay .handle'
+            'g.bay .handle',
           )[1];
         moveHandle.dispatchEvent(new PointerEvent('click'));
         expect(element)
@@ -741,7 +747,7 @@ describe('Designer', () => {
     beforeEach(async () => {
       const doc = new DOMParser().parseFromString(
         equipmentDocString,
-        'application/xml'
+        'application/xml',
       );
       element.doc = doc;
       await element.updateComplete;
@@ -756,11 +762,11 @@ describe('Designer', () => {
         element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
       await element.updateComplete;
       sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-last-of-type(2)'
+        'mwc-list-item:nth-last-of-type(2)',
       )!.selected = true;
       await sldEditor.updateComplete;
       expect(lastCalledWizard).to.equal(
-        element.doc.querySelector('[type="SMC"]')
+        element.doc.querySelector('[type="SMC"]'),
       );
     });
 
@@ -773,7 +779,7 @@ describe('Designer', () => {
         element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
       await element.updateComplete;
       sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-last-of-type(4)'
+        'mwc-list-item:nth-last-of-type(4)',
       )!.selected = true;
       await sldEditor.updateComplete;
       expect(element)
@@ -781,10 +787,10 @@ describe('Designer', () => {
         .to.have.property('tagName', 'ConductingEquipment');
       await sendMouse({ type: 'click', position: [200, 200] });
       expect(
-        element.doc.querySelector('ConductingEquipment')
+        element.doc.querySelector('ConductingEquipment'),
       ).to.have.attribute('esld:lx', '5');
       expect(
-        element.doc.querySelector('ConductingEquipment')
+        element.doc.querySelector('ConductingEquipment'),
       ).to.have.attribute('esld:ly', '4.5');
     });
 
@@ -811,17 +817,17 @@ describe('Designer', () => {
         .shadowRoot!.getElementById(<string>id)!
         .querySelector('rect')!;
       eqClickTarget.dispatchEvent(
-        new PointerEvent('click', { shiftKey: true })
+        new PointerEvent('click', { shiftKey: true }),
       );
       expect(element.doc.querySelector('ConductingEquipment[*|x="3"][*|y="3"]'))
         .to.not.exist;
       await sendMouse({ type: 'click', position: [150, 180] });
       expect(
-        element.doc.querySelector('ConductingEquipment[*|x="3"][*|y="3"]')
+        element.doc.querySelector('ConductingEquipment[*|x="3"][*|y="3"]'),
       ).to.exist.and.have.attribute('type', equipment!.getAttribute('type')!);
       expect(equipment).to.have.attribute('esld:x', '4');
       expect(equipment).to.have.attribute('esld:y', '4');
-      await expect(element.doc.documentElement).dom.to.equalSnapshot({
+      expect(element.doc.documentElement).dom.to.equalSnapshot({
         ignoreAttributes: ['esld:uuid'],
       });
     });
@@ -841,11 +847,11 @@ describe('Designer', () => {
 
     it('opens a menu on equipment right click', async () => {
       queryUI({ scl: 'ConductingEquipment', ui: 'rect' }).dispatchEvent(
-        new PointerEvent('contextmenu', { clientX: 750, clientY: 550 })
+        new PointerEvent('contextmenu', { clientX: 750, clientY: 550 }),
       );
       await element.updateComplete;
       expect(queryUI({ ui: 'menu' })).to.exist;
-      await expect(queryUI({ ui: 'menu' })).dom.to.equalSnapshot();
+      expect(queryUI({ ui: 'menu' })).dom.to.equalSnapshot();
     });
 
     it('flips equipment on mirror menu item select', async () => {
@@ -859,7 +865,7 @@ describe('Designer', () => {
       eqClickTarget.dispatchEvent(new PointerEvent('contextmenu'));
       await element.updateComplete;
       let item = sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-of-type(6)'
+        'mwc-list-item:nth-of-type(6)',
       )!;
       expect(equipment).to.not.have.attribute('esld:flip');
       item.selected = true;
@@ -872,11 +878,11 @@ describe('Designer', () => {
       eqClickTarget.dispatchEvent(new PointerEvent('contextmenu'));
       await element.updateComplete;
       item = sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-of-type(6)'
+        'mwc-list-item:nth-of-type(6)',
       )!;
       item.selected = true;
       await element.updateComplete;
-      expect(equipment).to.not.have.attribute('esld:flip');
+      expect(equipment).to.have.attribute('esld:flip');
     });
 
     it('rotates equipment on rotate menu item select', async () => {
@@ -890,7 +896,7 @@ describe('Designer', () => {
       eqClickTarget.dispatchEvent(new PointerEvent('contextmenu'));
       await element.updateComplete;
       const item = sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-of-type(7)'
+        'mwc-list-item:nth-of-type(7)',
       )!;
       expect(equipment).to.have.attribute('esld:rot', '1');
       item.selected = true;
@@ -909,7 +915,7 @@ describe('Designer', () => {
       eqClickTarget.dispatchEvent(new PointerEvent('contextmenu'));
       await element.updateComplete;
       const item = sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-last-of-type(5)'
+        'mwc-list-item:nth-last-of-type(5)',
       )!;
       item.selected = true;
       await element.updateComplete;
@@ -932,7 +938,7 @@ describe('Designer', () => {
         .exist;
       expect(equipment.querySelector('Terminal[name="T1"]')).to.have.attribute(
         'cNodeName',
-        'grounded'
+        'grounded',
       );
       await element.updateComplete;
       const eqClickTarget2 = sldEditor
@@ -943,9 +949,9 @@ describe('Designer', () => {
         .exist;
       expect(equipment.querySelector('Terminal[name="T2"]')).to.have.attribute(
         'cNodeName',
-        'grounded'
+        'grounded',
       );
-      await expect(element.doc.documentElement).dom.to.equalSnapshot({
+      expect(element.doc.documentElement).dom.to.equalSnapshot({
         ignoreAttributes: ['esld:uuid'],
       });
     });
@@ -955,32 +961,32 @@ describe('Designer', () => {
         element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
       const equipment = element.doc.querySelector('ConductingEquipment')!;
       queryUI({ scl: 'ConductingEquipment', ui: 'rect' }).dispatchEvent(
-        new PointerEvent('contextmenu')
+        new PointerEvent('contextmenu'),
       );
       await element.updateComplete;
       expect(
-        equipment.querySelector('Terminal[name="T1"][cNodeName="grounded"]')
+        equipment.querySelector('Terminal[name="T1"][cNodeName="grounded"]'),
       ).to.not.exist;
       sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-of-type(3)'
+        'mwc-list-item:nth-of-type(3)',
       )!.selected = true;
       await element.updateComplete;
       expect(
-        equipment.querySelector('Terminal[name="T1"][cNodeName="grounded"]')
+        equipment.querySelector('Terminal[name="T1"][cNodeName="grounded"]'),
       ).to.exist;
       queryUI({ scl: 'ConductingEquipment', ui: 'rect' }).dispatchEvent(
-        new PointerEvent('contextmenu')
+        new PointerEvent('contextmenu'),
       );
       await element.updateComplete;
       expect(
-        equipment.querySelector('Terminal[name="T2"][cNodeName="grounded"]')
+        equipment.querySelector('Terminal[name="T2"][cNodeName="grounded"]'),
       ).to.not.exist;
       sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-of-type(4)'
+        'mwc-list-item:nth-of-type(4)',
       )!.selected = true;
       await element.updateComplete;
       expect(
-        equipment.querySelector('Terminal[name="T2"][cNodeName="grounded"]')
+        equipment.querySelector('Terminal[name="T2"][cNodeName="grounded"]'),
       ).to.exist;
     });
 
@@ -994,17 +1000,17 @@ describe('Designer', () => {
       eqClickTarget.dispatchEvent(new PointerEvent('click'));
       await element.updateComplete;
       const equipment2 = element.doc.querySelector(
-        'ConductingEquipment:nth-child(2)'
+        'ConductingEquipment:nth-child(2)',
       );
       const eq2ClickTarget = sldEditor.shadowRoot!.getElementById(
-        <string>identity(equipment2)
+        <string>identity(equipment2),
       )!;
       const position = middleOf(eq2ClickTarget);
       position[0] -= 1;
       expect(element.doc.querySelector('ConnectivityNode')).to.not.exist;
       await sendMouse({ type: 'click', position });
       expect(element.doc.querySelector('ConnectivityNode')).to.exist;
-      await expect(element.doc.documentElement).dom.to.equalSnapshot({
+      expect(element.doc.documentElement).dom.to.equalSnapshot({
         ignoreAttributes: ['esld:uuid'],
       });
     });
@@ -1014,11 +1020,11 @@ describe('Designer', () => {
         element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
       let equipment = element.doc.querySelector('ConductingEquipment')!;
       queryUI({ scl: 'ConductingEquipment', ui: 'rect' }).dispatchEvent(
-        new PointerEvent('contextmenu')
+        new PointerEvent('contextmenu'),
       );
       await element.updateComplete;
       sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-of-type(2)'
+        'mwc-list-item:nth-of-type(2)',
       )!.selected = true;
       expect(equipment.querySelector('Terminal[name="T1"]')).to.not.exist;
       let position = middleOf(queryUI({ scl: '[type="VTR"]', ui: 'rect' }));
@@ -1027,11 +1033,11 @@ describe('Designer', () => {
       expect(equipment.querySelector('Terminal[name="T1"]')).to.exist;
 
       queryUI({ scl: 'ConductingEquipment', ui: 'rect' }).dispatchEvent(
-        new PointerEvent('contextmenu')
+        new PointerEvent('contextmenu'),
       );
       await element.updateComplete;
       sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-of-type(3)'
+        'mwc-list-item:nth-of-type(3)',
       )!.selected = true;
       expect(equipment.querySelector('Terminal[name="T2"]')).to.not.exist;
       position = middleOf(queryUI({ scl: '[type="NEW"]', ui: 'rect' }));
@@ -1041,11 +1047,11 @@ describe('Designer', () => {
 
       equipment = element.doc.querySelector('[type="DIS"]')!;
       queryUI({ scl: '[type="DIS"]', ui: 'rect' }).dispatchEvent(
-        new PointerEvent('contextmenu')
+        new PointerEvent('contextmenu'),
       );
       await element.updateComplete;
       sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-of-type(2)'
+        'mwc-list-item:nth-of-type(2)',
       )!.selected = true;
       expect(equipment.querySelector('Terminal[name="T1"]')).to.not.exist;
       position = middleOf(queryUI({ scl: '[type="CTR"]', ui: 'rect' }));
@@ -1053,18 +1059,18 @@ describe('Designer', () => {
       expect(equipment.querySelector('Terminal[name="T1"]')).to.exist;
 
       queryUI({ scl: '[type="DIS"]', ui: 'rect' }).dispatchEvent(
-        new PointerEvent('contextmenu')
+        new PointerEvent('contextmenu'),
       );
       await element.updateComplete;
       sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-of-type(3)'
+        'mwc-list-item:nth-of-type(3)',
       )!.selected = true;
       expect(equipment.querySelector('Terminal[name="T2"]')).to.not.exist;
       position = middleOf(queryUI({ scl: '[name="DIS2"]', ui: 'rect' }));
       position[1] += 1;
       await sendMouse({ type: 'click', position });
       expect(equipment.querySelector('Terminal[name="T2"]')).to.exist;
-      await expect(element.doc.documentElement).dom.to.equalSnapshot({
+      expect(element.doc.documentElement).dom.to.equalSnapshot({
         ignoreAttributes: ['esld:uuid'],
       });
     });
@@ -1079,7 +1085,7 @@ describe('Designer', () => {
       eqClickTarget.dispatchEvent(new PointerEvent('click'));
       await element.updateComplete;
       const eq2ClickTarget = sldEditor.shadowRoot!.getElementById(
-        <string>identity(equipment)
+        <string>identity(equipment),
       )!;
       const position = middleOf(eq2ClickTarget);
       expect(element.doc.querySelector('ConnectivityNode')).to.not.exist;
@@ -1095,15 +1101,15 @@ describe('Designer', () => {
         .shadowRoot!.getElementById(<string>identity(equipment))!
         .querySelector('circle:nth-of-type(2)')!;
       expect(
-        element.doc.querySelectorAll('ConnectivityNode[name="grounded"]')
+        element.doc.querySelectorAll('ConnectivityNode[name="grounded"]'),
       ).to.have.lengthOf(0);
       eqClickTarget.dispatchEvent(new PointerEvent('contextmenu'));
       await element.updateComplete;
       expect(
-        element.doc.querySelectorAll('ConnectivityNode[name="grounded"]')
+        element.doc.querySelectorAll('ConnectivityNode[name="grounded"]'),
       ).to.have.lengthOf(1);
       const position = middleOf(
-        queryUI({ scl: 'ConductingEquipment', ui: 'rect' })
+        queryUI({ scl: 'ConductingEquipment', ui: 'rect' }),
       );
       await sendMouse({ type: 'click', position });
       await sendMouse({
@@ -1111,9 +1117,9 @@ describe('Designer', () => {
         position: middleOf(queryUI({ scl: '[name="V2"] Bay', ui: 'rect' })),
       });
       expect(
-        element.doc.querySelectorAll('ConnectivityNode[name="grounded"]')
+        element.doc.querySelectorAll('ConnectivityNode[name="grounded"]'),
       ).to.have.lengthOf(2);
-      await expect(element.doc.documentElement).dom.to.equalSnapshot({
+      expect(element.doc.documentElement).dom.to.equalSnapshot({
         ignoreAttributes: ['esld:uuid'],
       });
     });
@@ -1129,10 +1135,10 @@ describe('Designer', () => {
         eqClickTarget.dispatchEvent(new PointerEvent('click'));
         await element.updateComplete;
         const equipment2 = element.doc.querySelector(
-          'ConductingEquipment[type="DIS"]'
+          'ConductingEquipment[type="DIS"]',
         );
         const eq2ClickTarget = sldEditor.shadowRoot!.getElementById(
-          <string>identity(equipment2)
+          <string>identity(equipment2),
         )!;
         const position = middleOf(eq2ClickTarget);
         position[0] -= 1;
@@ -1149,10 +1155,10 @@ describe('Designer', () => {
         eqClickTarget.dispatchEvent(new PointerEvent('click'));
         await element.updateComplete;
         const equipment2 = element.doc.querySelector(
-          'ConductingEquipment[type="CTR"]'
+          'ConductingEquipment[type="CTR"]',
         );
         const eq2ClickTarget = sldEditor.shadowRoot!.getElementById(
-          <string>identity(equipment2)
+          <string>identity(equipment2),
         )!;
         const position = middleOf(eq2ClickTarget);
         position[0] -= 1;
@@ -1163,7 +1169,7 @@ describe('Designer', () => {
         await sendMouse({ type: 'click', position });
         expect(element.doc.querySelector('ConnectivityNode[name="L2"]')).to
           .exist;
-        await expect(element.doc.documentElement).dom.to.equalSnapshot({
+        expect(element.doc.documentElement).dom.to.equalSnapshot({
           ignoreAttributes: ['esld:uuid'],
         });
       });
@@ -1172,7 +1178,7 @@ describe('Designer', () => {
         const sldEditor =
           element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
         const equipment = element.doc.querySelector(
-          'ConductingEquipment[type="CTR"]'
+          'ConductingEquipment[type="CTR"]',
         );
         const eqClickTarget = sldEditor
           .shadowRoot!.getElementById(<string>identity(equipment))!
@@ -1180,19 +1186,19 @@ describe('Designer', () => {
         eqClickTarget.dispatchEvent(new PointerEvent('click'));
         const cNode = element.doc.querySelector('ConnectivityNode');
         const cNodeClickTarget = sldEditor.shadowRoot!.getElementById(
-          <string>identity(cNode)
+          <string>identity(cNode),
         )!;
         await sendMouse({
           type: 'click',
           position: middleOf(cNodeClickTarget),
         });
         expect(
-          equipment!.querySelector('Terminal')
+          equipment!.querySelector('Terminal'),
         ).to.exist.and.to.have.attribute(
           'connectivityNode',
-          cNode!.getAttribute('pathName')!
+          cNode!.getAttribute('pathName')!,
         );
-        await expect(element.doc.documentElement).dom.to.equalSnapshot({
+        expect(element.doc.documentElement).dom.to.equalSnapshot({
           ignoreAttributes: ['esld:uuid'],
         });
       });
@@ -1201,7 +1207,7 @@ describe('Designer', () => {
         const sldEditor =
           element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
         const equipment = element.doc.querySelector(
-          'ConductingEquipment[type="DIS"]'
+          'ConductingEquipment[type="DIS"]',
         );
         const eqClickTarget = sldEditor
           .shadowRoot!.getElementById(<string>identity(equipment))!
@@ -1209,7 +1215,7 @@ describe('Designer', () => {
         eqClickTarget.dispatchEvent(new PointerEvent('click'));
         const cNode = element.doc.querySelector('ConnectivityNode');
         const cNodeClickTarget = sldEditor.shadowRoot!.getElementById(
-          <string>identity(cNode)
+          <string>identity(cNode),
         )!;
         expect(equipment!.querySelectorAll('Terminal')).to.have.lengthOf(1);
         await sendMouse({
@@ -1217,7 +1223,7 @@ describe('Designer', () => {
           position: middleOf(cNodeClickTarget),
         });
         expect(equipment!.querySelectorAll('Terminal')).to.have.lengthOf(1);
-        await expect(element.doc.documentElement).dom.to.equalSnapshot({
+        expect(element.doc.documentElement).dom.to.equalSnapshot({
           ignoreAttributes: ['esld:uuid'],
         });
       });
@@ -1226,7 +1232,7 @@ describe('Designer', () => {
         const sldEditor =
           element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
         const equipment = element.doc.querySelector(
-          'ConductingEquipment[type="CTR"]'
+          'ConductingEquipment[type="CTR"]',
         );
         const eqClickTarget = sldEditor
           .shadowRoot!.getElementById(<string>identity(equipment))!
@@ -1237,7 +1243,7 @@ describe('Designer', () => {
         await sendMouse({ type: 'click', position: [300, 250] });
         await sendMouse({ type: 'click', position: [300, 220] });
         const equipment2 = element.doc.querySelector(
-          'ConductingEquipment[type="NEW"]'
+          'ConductingEquipment[type="NEW"]',
         );
         const eq2ClickTarget = sldEditor
           .shadowRoot!.getElementById(<string>identity(equipment2))!
@@ -1245,7 +1251,7 @@ describe('Designer', () => {
         eq2ClickTarget.dispatchEvent(new PointerEvent('click'));
         await sendMouse({ type: 'click', position: [400, 300] });
         const equipment3 = element.doc.querySelector(
-          'ConductingEquipment[type="VTR"]'
+          'ConductingEquipment[type="VTR"]',
         );
         const eq3ClickTarget = sldEditor
           .shadowRoot!.getElementById(<string>identity(equipment3))!
@@ -1254,9 +1260,9 @@ describe('Designer', () => {
         await sendMouse({ type: 'click', position: [300, 220] });
         expect(element.doc.querySelectorAll('Vertex')).to.have.property(
           'length',
-          16
+          16,
         );
-        await expect(element.doc.documentElement).dom.to.equalSnapshot({
+        expect(element.doc.documentElement).dom.to.equalSnapshot({
           ignoreAttributes: ['esld:uuid'],
         });
       });
@@ -1264,14 +1270,14 @@ describe('Designer', () => {
       describe('between more than two pieces of equipment', async () => {
         beforeEach(async () => {
           queryUI({ scl: '[type="CTR"]', ui: 'circle' }).dispatchEvent(
-            new PointerEvent('click')
+            new PointerEvent('click'),
           );
           await sendMouse({
             type: 'click',
             position: middleOf(queryUI({ scl: 'ConnectivityNode' })),
           });
           queryUI({ scl: '[type="BAT"]', ui: 'circle' }).dispatchEvent(
-            new PointerEvent('click')
+            new PointerEvent('click'),
           );
           await sendMouse({
             type: 'click',
@@ -1282,21 +1288,23 @@ describe('Designer', () => {
         it('disconnects equipment on rotation', async () => {
           expect(element.doc.querySelector('[type="CTR"] > Terminal')).to.exist;
           queryUI({ scl: '[type="CTR"]', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('auxclick', { button: 1 })
+            new PointerEvent('auxclick', { button: 1 }),
           );
+          await element.updateComplete;
           expect(element.doc.querySelector('[type="CTR"] > Terminal')).to.not
             .exist;
           expect(element.doc.querySelectorAll('Vertex')).to.have.property(
             'length',
-            2
+            2,
           );
           expect(element.doc.querySelector('[type="BAT"] > Terminal')).to.exist;
           queryUI({ scl: '[type="BAT"]', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('auxclick', { button: 1 })
+            new PointerEvent('auxclick', { button: 1 }),
           );
+          await element.updateComplete;
           expect(element.doc.querySelector('[type="BAT"] > Terminal')).to.not
             .exist;
-          await expect(element.doc.documentElement).dom.to.equalSnapshot({
+          expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
@@ -1306,22 +1314,22 @@ describe('Designer', () => {
             element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
           const equipment = element.doc.querySelector('[type="CTR"]')!;
           queryUI({ scl: '[type="CTR"]', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('contextmenu')
+            new PointerEvent('contextmenu'),
           );
           await element.updateComplete;
           expect(equipment.querySelector('Terminal[name="T1"]')).to.exist;
           sldEditor.shadowRoot!.querySelector<ListItem>(
-            'mwc-list-item:nth-of-type(2)'
+            'mwc-list-item:nth-of-type(2)',
           )!.selected = true;
           await element.updateComplete;
           expect(equipment.querySelector('Terminal[name="T1"]')).to.not.exist;
           queryUI({ scl: '[type="CTR"]', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('contextmenu')
+            new PointerEvent('contextmenu'),
           );
           await sldEditor.updateComplete;
           expect(equipment.querySelector('Terminal[name="T2"]')).to.exist;
           sldEditor.shadowRoot!.querySelector<ListItem>(
-            'mwc-list-item:nth-of-type(4)'
+            'mwc-list-item:nth-of-type(4)',
           )!.selected = true;
           await element.updateComplete;
           expect(equipment.querySelector('Terminal[name="T2"]')).to.not.exist;
@@ -1329,94 +1337,94 @@ describe('Designer', () => {
 
         it('simplifies horizontal connection paths when disconnecting', async () => {
           queryUI({ scl: '[type="VTR"]', ui: 'circle' }).dispatchEvent(
-            new PointerEvent('click')
+            new PointerEvent('click'),
           );
           await sendMouse({ type: 'click', position: [300, 220] });
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(6);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(16);
           queryUI({ scl: '[type="CBR"]', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('auxclick', { button: 1 })
+            new PointerEvent('auxclick', { button: 1 }),
           );
           element.updateComplete;
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(4);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(13);
-          await expect(element.doc.documentElement).dom.to.equalSnapshot({
+          expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
 
         it('simplifies vertical connection paths when disconnecting', async () => {
           queryUI({ scl: '[type="NEW"]', ui: 'circle' }).dispatchEvent(
-            new PointerEvent('click')
+            new PointerEvent('click'),
           );
           await sendMouse({ type: 'click', position: [600, 270] });
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(6);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(16);
           queryUI({ scl: '[type="NEW"]', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('auxclick', { button: 1 })
+            new PointerEvent('auxclick', { button: 1 }),
           );
           element.updateComplete;
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(4);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(11);
-          await expect(element.doc.documentElement).dom.to.equalSnapshot({
+          expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
 
         it('simplifies when disconnecting only where possible', async () => {
           queryUI({ scl: '[type="VTR"]', ui: 'circle' }).dispatchEvent(
-            new PointerEvent('click')
+            new PointerEvent('click'),
           );
           await sendMouse({ type: 'click', position: [300, 220] });
           queryUI({ scl: '[type="NEW"]', ui: 'circle' }).dispatchEvent(
-            new PointerEvent('click')
+            new PointerEvent('click'),
           );
           await sendMouse({ type: 'click', position: [300, 220] });
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(7);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(19);
           queryUI({ scl: '[type="NEW"]', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('auxclick', { button: 1 })
+            new PointerEvent('auxclick', { button: 1 }),
           );
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(6);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(16);
-          await expect(element.doc.documentElement).dom.to.equalSnapshot({
+          expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
 
         it('disconnects equipment upon being moved', async () => {
           queryUI({ scl: '[type="DIS"]', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('click')
+            new PointerEvent('click'),
           );
           expect(element.doc.querySelector('[type="DIS"] > Terminal')).to.exist;
           await sendMouse({ type: 'click', position: [150, 180] });
           expect(element.doc.querySelector('[type="DIS"] > Terminal')).to.not
             .exist;
-          await expect(element.doc.documentElement).dom.to.equalSnapshot({
+          expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
 
         it('removes superfluous connectivity nodes when disconnecting', async () => {
           queryUI({ scl: '[type="CTR"]', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('auxclick', { button: 1 })
+            new PointerEvent('auxclick', { button: 1 }),
           );
           queryUI({ scl: '[type="DIS"]', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('auxclick', { button: 1 })
+            new PointerEvent('auxclick', { button: 1 }),
           );
           expect(element.doc.querySelector('ConnectivityNode')).to.not.exist;
-          await expect(element.doc.documentElement).dom.to.equalSnapshot({
+          expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
 
         it('removes contained connectivity nodes when moving containers', async () => {
           queryUI({ scl: 'VoltageLevel', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('click')
+            new PointerEvent('click'),
           );
           await sendMouse({ type: 'click', position: [100, 150] });
           expect(
-            element.doc.querySelectorAll('ConnectivityNode')
+            element.doc.querySelectorAll('ConnectivityNode'),
           ).to.have.lengthOf(1);
         });
 
@@ -1426,11 +1434,11 @@ describe('Designer', () => {
             ui: 'rect',
           }).dispatchEvent(new PointerEvent('click'));
           expect(
-            element.doc.querySelectorAll('ConnectivityNode')
+            element.doc.querySelectorAll('ConnectivityNode'),
           ).to.have.lengthOf(2);
           await sendMouse({ type: 'click', position: [500, 150] });
           expect(
-            element.doc.querySelectorAll('ConnectivityNode')
+            element.doc.querySelectorAll('ConnectivityNode'),
           ).to.have.lengthOf(1);
         });
 
@@ -1439,7 +1447,7 @@ describe('Designer', () => {
             queryUI({
               scl: '[name="V2"]',
               ui: '.handle',
-            })
+            }),
           );
           queryUI({
             scl: '[name="V2"]',
@@ -1449,13 +1457,13 @@ describe('Designer', () => {
             .shadowRoot!.querySelector<Button>('[label="Add Substation"]')
             ?.click();
           expect(
-            element.doc.querySelectorAll('ConnectivityNode')
+            element.doc.querySelectorAll('ConnectivityNode'),
           ).to.have.lengthOf(2);
           await sendMouse({ position, type: 'click' });
           expect(
-            element.doc.querySelectorAll('ConnectivityNode')
+            element.doc.querySelectorAll('ConnectivityNode'),
           ).to.have.lengthOf(1);
-          await expect(element.doc.documentElement).dom.to.equalSnapshot({
+          expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
@@ -1465,16 +1473,16 @@ describe('Designer', () => {
             element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
           const equipment = element.doc.querySelector('[type="CTR"]')!;
           queryUI({ scl: '[type="CTR"]', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('contextmenu')
+            new PointerEvent('contextmenu'),
           );
           await element.updateComplete;
           expect(equipment.querySelector('Terminal[name="T1"]')).to.exist;
           sldEditor.shadowRoot!.querySelector<ListItem>(
-            'mwc-list-item:nth-last-of-type(1)'
+            'mwc-list-item:nth-last-of-type(1)',
           )!.selected = true;
           await element.updateComplete;
           expect(equipment.parentElement).to.not.exist;
-          await expect(element.doc.documentElement).dom.to.equalSnapshot({
+          expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
@@ -1484,16 +1492,16 @@ describe('Designer', () => {
             element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
           const bay = element.doc.querySelector('Bay')!;
           queryUI({ scl: 'Bay', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('contextmenu')
+            new PointerEvent('contextmenu'),
           );
           await element.updateComplete;
           expect(bay.querySelector('Terminal[name="T1"]')).to.exist;
           sldEditor.shadowRoot!.querySelector<ListItem>(
-            'mwc-list-item:nth-last-of-type(1)'
+            'mwc-list-item:nth-last-of-type(1)',
           )!.selected = true;
           await element.updateComplete;
           expect(bay.parentElement).to.not.exist;
-          await expect(element.doc.documentElement).dom.to.equalSnapshot({
+          expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
@@ -1503,16 +1511,16 @@ describe('Designer', () => {
             element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
           const bay = element.doc.querySelector('[name="V2"]')!;
           queryUI({ scl: '[name="V2"]', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('contextmenu')
+            new PointerEvent('contextmenu'),
           );
           await element.updateComplete;
           expect(bay.querySelector('Terminal[name="T1"]')).to.exist;
           sldEditor.shadowRoot!.querySelector<ListItem>(
-            'mwc-list-item:nth-last-of-type(1)'
+            'mwc-list-item:nth-last-of-type(1)',
           )!.selected = true;
           await element.updateComplete;
           expect(bay.parentElement).to.not.exist;
-          await expect(element.doc.documentElement).dom.to.equalSnapshot({
+          expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
@@ -1530,7 +1538,7 @@ describe('Designer', () => {
             });
             await sendMouse({ type: 'click', position: [450, 150] });
             queryUI({ scl: '[type="VTR"]', ui: 'circle' }).dispatchEvent(
-              new PointerEvent('click')
+              new PointerEvent('click'),
             );
             await sendMouse({
               type: 'click',
@@ -1543,12 +1551,12 @@ describe('Designer', () => {
               queryUI({
                 scl: '[name="V2"] > [name="B1"]',
                 ui: '.handle',
-              })
+              }),
             );
             expect(
               element.doc
                 .querySelector('[name="L"]')
-                ?.querySelectorAll('Section')
+                ?.querySelectorAll('Section'),
             ).to.have.lengthOf(3);
             queryUI({
               scl: '[name="V2"] > [name="B1"]',
@@ -1559,9 +1567,9 @@ describe('Designer', () => {
             expect(
               element.doc
                 .querySelector('[name="L"]')
-                ?.querySelectorAll('Section')
+                ?.querySelectorAll('Section'),
             ).to.have.lengthOf(1);
-            await expect(element.doc.documentElement).dom.to.equalSnapshot({
+            expect(element.doc.documentElement).dom.to.equalSnapshot({
               ignoreAttributes: ['esld:uuid'],
             });
           });
@@ -1573,19 +1581,19 @@ describe('Designer', () => {
             }).dispatchEvent(new PointerEvent('click'));
             await sendMouse({ type: 'click', position: [450, 150] });
             queryUI({ scl: '[type="CBR"]', ui: 'circle' }).dispatchEvent(
-              new PointerEvent('click')
+              new PointerEvent('click'),
             );
             await sendMouse({ type: 'click', position: [450, 150] });
             expect(
-              element.doc.querySelectorAll('Section[bus] Vertex')
+              element.doc.querySelectorAll('Section[bus] Vertex'),
             ).to.have.lengthOf(4);
             queryUI({ scl: '[type="CBR"]', ui: 'rect' }).dispatchEvent(
-              new PointerEvent('auxclick', { button: 1 })
+              new PointerEvent('auxclick', { button: 1 }),
             );
             expect(
-              element.doc.querySelectorAll('Section[bus] Vertex')
+              element.doc.querySelectorAll('Section[bus] Vertex'),
             ).to.have.lengthOf(4);
-            await expect(element.doc.documentElement).dom.to.equalSnapshot({
+            expect(element.doc.documentElement).dom.to.equalSnapshot({
               ignoreAttributes: ['esld:uuid'],
             });
           });
@@ -1608,13 +1616,13 @@ describe('Designer', () => {
             const sldEditor =
               element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
             sldEditor.shadowRoot!.querySelector<ListItem>(
-              'mwc-list-item:nth-of-type(2)'
+              'mwc-list-item:nth-of-type(2)',
             )!.selected = true;
             const bus = element.doc.querySelector('[name="BB1"]');
             expect(bus).to.have.attribute('h', '3');
             await sendMouse({ type: 'click', position: [450, 150] });
             expect(bus).to.have.attribute('h', '2');
-            await expect(element.doc.documentElement).dom.to.equalSnapshot({
+            expect(element.doc.documentElement).dom.to.equalSnapshot({
               ignoreAttributes: ['esld:uuid'],
             });
           });
@@ -1628,25 +1636,31 @@ describe('Designer', () => {
             const sldEditor =
               element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
             sldEditor.shadowRoot!.querySelector<ListItem>(
-              'mwc-list-item:nth-last-of-type(6)'
+              'mwc-list-item:nth-last-of-type(6)',
             )!.selected = true;
             expect(
-              element.doc.querySelector('ConductingEquipment[*|x="3"][*|y="3"]')
+              element.doc.querySelector(
+                'ConductingEquipment[*|x="3"][*|y="3"]',
+              ),
             ).to.not.exist;
             expect(
-              element.doc.querySelector('ConductingEquipment')
+              element.doc.querySelector('ConductingEquipment'),
             ).to.have.attribute('esld:x', '4');
             expect(
-              element.doc.querySelector('ConductingEquipment')
+              element.doc.querySelector('ConductingEquipment'),
             ).to.have.attribute('esld:y', '4');
             await sendMouse({ type: 'click', position: [150, 180] });
             expect(
-              element.doc.querySelector('ConductingEquipment[*|x="3"][*|y="3"]')
+              element.doc.querySelector(
+                'ConductingEquipment[*|x="3"][*|y="3"]',
+              ),
             ).to.exist;
             expect(
-              element.doc.querySelector('ConductingEquipment[*|x="4"][*|y="4"]')
+              element.doc.querySelector(
+                'ConductingEquipment[*|x="4"][*|y="4"]',
+              ),
             ).to.exist;
-            await expect(element.doc.documentElement).dom.to.equalSnapshot({
+            expect(element.doc.documentElement).dom.to.equalSnapshot({
               ignoreAttributes: ['esld:uuid'],
             });
           });
@@ -1660,13 +1674,13 @@ describe('Designer', () => {
             const sldEditor =
               element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
             sldEditor.shadowRoot!.querySelector<ListItem>(
-              'mwc-list-item:nth-of-type(3)'
+              'mwc-list-item:nth-of-type(3)',
             )!.selected = true;
             const bus = element.doc.querySelector('[name="BB1"]');
             expect(bus).to.have.attribute('y', '2');
             await sendMouse({ type: 'click', position: [430, 400] });
             expect(bus).to.have.attribute('y', '10');
-            await expect(element.doc.documentElement).dom.to.equalSnapshot({
+            expect(element.doc.documentElement).dom.to.equalSnapshot({
               ignoreAttributes: ['esld:uuid'],
             });
           });
@@ -1680,7 +1694,7 @@ describe('Designer', () => {
               element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
             await element.updateComplete;
             sldEditor.shadowRoot!.querySelector<ListItem>(
-              'mwc-list-item:nth-last-of-type(4)'
+              'mwc-list-item:nth-last-of-type(4)',
             )!.selected = true;
             await sldEditor.updateComplete;
             expect(element)
@@ -1689,11 +1703,11 @@ describe('Designer', () => {
             await sendMouse({ type: 'click', position: [200, 200] });
             expect(element.doc.querySelector('[name="BB1"]')).to.have.attribute(
               'lx',
-              '5'
+              '5',
             );
             expect(element.doc.querySelector('[name="BB1"]')).to.have.attribute(
               'ly',
-              '4.5'
+              '4.5',
             );
           });
 
@@ -1706,11 +1720,11 @@ describe('Designer', () => {
               element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
             await element.updateComplete;
             sldEditor.shadowRoot!.querySelector<ListItem>(
-              'mwc-list-item:nth-last-of-type(2)'
+              'mwc-list-item:nth-last-of-type(2)',
             )!.selected = true;
             await sldEditor.updateComplete;
             expect(lastCalledWizard).to.equal(
-              element.doc.querySelector('[name="BB1"]')
+              element.doc.querySelector('[name="BB1"]'),
             );
           });
 
@@ -1724,11 +1738,11 @@ describe('Designer', () => {
             const sldEditor =
               element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
             sldEditor.shadowRoot!.querySelector<ListItem>(
-              'mwc-list-item:nth-last-of-type(1)'
+              'mwc-list-item:nth-last-of-type(1)',
             )!.selected = true;
             await sldEditor.updateComplete;
             expect(element.doc.querySelector('[name="BB1"]')).to.not.exist;
-            await expect(element.doc.documentElement).dom.to.equalSnapshot({
+            expect(element.doc.documentElement).dom.to.equalSnapshot({
               ignoreAttributes: ['esld:uuid'],
             });
           });
@@ -1742,14 +1756,14 @@ describe('Designer', () => {
             const sldEditor =
               element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
             sldEditor.shadowRoot!.querySelector<ListItem>(
-              'mwc-list-item:nth-last-of-type(6)'
+              'mwc-list-item:nth-last-of-type(6)',
             )!.selected = true;
             expect(element.doc.querySelector('[name="V1"] [name="B2"]')).not.to
               .exist;
             await sendMouse({ type: 'click', position: [280, 350] });
             expect(element.doc.querySelector('[name="V1"] [name="B2"]')).to
               .exist;
-            await expect(element.doc.documentElement).dom.to.equalSnapshot({
+            expect(element.doc.documentElement).dom.to.equalSnapshot({
               ignoreAttributes: ['esld:uuid'],
             });
           });
@@ -1767,7 +1781,7 @@ describe('Designer', () => {
             await sendMouse({ type: 'click', position: [100, 150] });
             expect(element.doc.querySelector('[name="S2"] [name="V1"]')).to
               .exist;
-            await expect(element.doc.documentElement).dom.to.equalSnapshot({
+            expect(element.doc.documentElement).dom.to.equalSnapshot({
               ignoreAttributes: ['esld:uuid'],
             });
           });

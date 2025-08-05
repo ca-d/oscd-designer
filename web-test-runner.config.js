@@ -1,6 +1,6 @@
-// import { playwrightLauncher } from '@web/test-runner-playwright';
+import { playwrightLauncher } from '@web/test-runner-playwright';
 
-const filteredLogs = ['in dev mode', 'scheduled an update'];
+const filteredLogs = ['Running in dev mode', 'Lit is in dev mode'];
 
 export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
   /** Test files to run */
@@ -31,11 +31,14 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
   // concurrency: 1,
 
   /** Browsers to run tests on */
-  // browsers: [
-  //   playwrightLauncher({ product: 'chromium' }),
-  //   playwrightLauncher({ product: 'firefox' }),
-  //   playwrightLauncher({ product: 'webkit' }),
-  // ],
+  browsers: [
+    playwrightLauncher({ product: 'chromium' }),
+    // playwrightLauncher({ product: 'firefox' }),
+    // playwrightLauncher({ product: 'webkit' }),
+  ],
 
   // See documentation for all available options
+  // When encountering aync/timeout issues, it can help (your nerves) to set a short timeout
+  // so you're not left hanging for a long time.
+  // testsFinishTimeout: 3000,
 });

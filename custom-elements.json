@@ -1,0 +1,1658 @@
+{
+  "schemaVersion": "1.0.0",
+  "readme": "",
+  "modules": [
+    {
+      "kind": "javascript-module",
+      "path": "icons.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "resizePath",
+          "default": "svg`<path d=\"M120 616v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 640v-80h80v80h-80Zm0-640v-80h80v80h-80Zm160 640v-80h80v80h-80Zm160 0v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160v-80h80v80h-80Zm0-160V296H600v-80h240v240h-80ZM120 936V696h80v160h160v80H120Z\" />`"
+        },
+        {
+          "kind": "variable",
+          "name": "movePath",
+          "default": "svg`<path d=\"M480 976 310 806l57-57 73 73V616l-205-1 73 73-58 58L80 576l169-169 57 57-72 72h206V330l-73 73-57-57 170-170 170 170-57 57-73-73v206l205 1-73-73 58-58 170 170-170 170-57-57 73-73H520l-1 205 73-73 58 58-170 170Z\"/>`"
+        },
+        {
+          "kind": "variable",
+          "name": "voltageLevelIcon",
+          "default": "html`<svg id=\"VoltageLevel\" viewBox=\"0 0 25 25\" width=\"24\" height=\"24\" slot=\"icon\" > ${voltageLevelPath} </svg>`"
+        },
+        {
+          "kind": "variable",
+          "name": "voltageLevelGraphic",
+          "default": "html`<svg id=\"VoltageLevel\" viewBox=\"0 0 25 25\" width=\"24\" height=\"24\" slot=\"graphic\" > ${voltageLevelPath} </svg>`"
+        },
+        {
+          "kind": "variable",
+          "name": "bayIcon",
+          "default": "html`<svg id=\"Bay\" viewBox=\"0 0 25 25\" width=\"24\" height=\"24\" slot=\"icon\" > ${bayPath} </svg>`"
+        },
+        {
+          "kind": "variable",
+          "name": "bayGraphic",
+          "default": "html`<svg id=\"Bay\" viewBox=\"0 0 25 25\" width=\"24\" height=\"24\" slot=\"graphic\" > ${bayPath} </svg>`"
+        },
+        {
+          "kind": "variable",
+          "name": "eqRingPath",
+          "default": "svg` <path d=\"M 12.5,0 V 4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" /> <circle cx=\"12.5\" cy=\"12.5\" r=\"8.5\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.5\" stroke-linecap=\"round\" /> `"
+        },
+        {
+          "kind": "function",
+          "name": "equipmentPath",
+          "return": {
+            "type": {
+              "text": "TemplateResult<2>"
+            }
+          },
+          "parameters": [
+            {
+              "name": "equipmentType",
+              "type": {
+                "text": "string | null"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "equipmentGraphic",
+          "return": {
+            "type": {
+              "text": "TemplateResult<1>"
+            }
+          },
+          "parameters": [
+            {
+              "name": "equipmentType",
+              "type": {
+                "text": "string | null"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "equipmentIcon",
+          "return": {
+            "type": {
+              "text": "TemplateResult<1>"
+            }
+          },
+          "parameters": [
+            {
+              "name": "equipmentType",
+              "type": {
+                "text": "string"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "variable",
+          "name": "connectivityNodeMarker",
+          "default": "svg`<marker markerWidth=\"3\" markerHeight=\"3\" refX=\"12.5\" refY=\"12.5\" viewBox=\"0 0 25 25\" id=\"circle\" > <circle fill=\"black\" cx=\"12.5\" cy=\"12.5\" r=\"12.5\" /> </marker>`"
+        },
+        {
+          "kind": "variable",
+          "name": "groundedMarker",
+          "default": "svg`<marker markerWidth=\"20\" markerHeight=\"20\" refX=\"12.5\" refY=\"12.5\" viewBox=\"0 0 25 25\" id=\"grounded\" orient=\"auto-start-reverse\" > <line y1=\"17\" y2=\"8\" x1=\"12.5\" x2=\"12.5\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\" /> <line y1=\"15.5\" y2=\"9.5\" x1=\"14.7\" x2=\"14.7\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\" /> <line y1=\"14.5\" y2=\"10.5\" x1=\"16.8\" x2=\"16.8\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\" /> </marker>`"
+        },
+        {
+          "kind": "variable",
+          "name": "powerTransformerTwoWindingSymbol",
+          "default": "svg`<symbol id=\"PTR\" viewBox=\"0 0 25 25\" width=\"1\" height=\"1\" > <line x1=\"12.5\" y1=\"2\" x2=\"12.5\" y2=\"5\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" /> <circle cx=\"12.5\" cy=\"10\" r=\"5\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.5\" stroke-linecap=\"round\" /> <circle cx=\"12.5\" cy=\"15\" r=\"5\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.5\" stroke-linecap=\"round\" /> <line x1=\"12.5\" y1=\"20\" x2=\"12.5\" y2=\"23\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" /> </symbol>`"
+        },
+        {
+          "kind": "variable",
+          "name": "symbols",
+          "default": "svg` <defs> <pattern id=\"halfgrid\" patternUnits=\"userSpaceOnUse\" width=\"1\" height=\"1\" viewBox=\"0 0 1 1\"> <circle cx=\"0.1\" cy=\"0.8\" r=\"0.035\" fill=\"#888\" opacity=\"0.3\" /> <circle cx=\"0.6\" cy=\"0.3\" r=\"0.035\" fill=\"#888\" opacity=\"0.3\" /> <circle cx=\"0.1\" cy=\"0.3\" r=\"0.035\" fill=\"#888\" opacity=\"0.3\" /> <circle cx=\"0.6\" cy=\"0.8\" r=\"0.035\" fill=\"#888\" opacity=\"0.3\" /> </pattern> <pattern id=\"grid\" patternUnits=\"userSpaceOnUse\" width=\"1\" height=\"1\" viewBox=\"0 0 1 1\"> <line x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\" stroke=\"#888\" stroke-opacity=\"0.3\" stroke-width=\"0.06\" /> <line x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\" stroke=\"#888\" stroke-opacity=\"0.3\" stroke-width=\"0.06\" /> <line x1=\"1\" y1=\"0\" x2=\"1\" y2=\"1\" stroke=\"#888\" stroke-opacity=\"0.3\" stroke-width=\"0.06\" /> <line x1=\"0\" y1=\"1\" x2=\"1\" y2=\"1\" stroke=\"#888\" stroke-opacity=\"0.3\" stroke-width=\"0.06\" /> </pattern> ${eqTypes.map(eqType => equipmentSymbol(eqType))} ${equipmentSymbol('ConductingEquipment')} ${connectivityNodeMarker} ${groundedMarker} </defs> `"
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "resizePath",
+          "declaration": {
+            "name": "resizePath",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "movePath",
+          "declaration": {
+            "name": "movePath",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "voltageLevelIcon",
+          "declaration": {
+            "name": "voltageLevelIcon",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "voltageLevelGraphic",
+          "declaration": {
+            "name": "voltageLevelGraphic",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "bayIcon",
+          "declaration": {
+            "name": "bayIcon",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "bayGraphic",
+          "declaration": {
+            "name": "bayGraphic",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "eqRingPath",
+          "declaration": {
+            "name": "eqRingPath",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "equipmentPath",
+          "declaration": {
+            "name": "equipmentPath",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "equipmentGraphic",
+          "declaration": {
+            "name": "equipmentGraphic",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "equipmentIcon",
+          "declaration": {
+            "name": "equipmentIcon",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "connectivityNodeMarker",
+          "declaration": {
+            "name": "connectivityNodeMarker",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "groundedMarker",
+          "declaration": {
+            "name": "groundedMarker",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "powerTransformerTwoWindingSymbol",
+          "declaration": {
+            "name": "powerTransformerTwoWindingSymbol",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "symbols",
+          "declaration": {
+            "name": "symbols",
+            "module": "icons.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "oscd-editor-sld.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "OscdEditorSLD",
+          "members": [
+            {
+              "kind": "field",
+              "name": "doc",
+              "type": {
+                "text": "XMLDocument"
+              },
+              "attribute": "doc"
+            },
+            {
+              "kind": "field",
+              "name": "docVersion",
+              "type": {
+                "text": "number"
+              },
+              "attribute": "docVersion"
+            },
+            {
+              "kind": "field",
+              "name": "_docVersion",
+              "type": {
+                "text": "number"
+              },
+              "privacy": "private",
+              "default": "-1"
+            },
+            {
+              "kind": "field",
+              "name": "gridSize",
+              "type": {
+                "text": "number"
+              },
+              "default": "32"
+            },
+            {
+              "kind": "field",
+              "name": "nsp",
+              "type": {
+                "text": "string"
+              },
+              "default": "'esld'"
+            },
+            {
+              "kind": "field",
+              "name": "templateElements",
+              "type": {
+                "text": "Record<string, Element>"
+              },
+              "default": "{}"
+            },
+            {
+              "kind": "field",
+              "name": "resizing",
+              "type": {
+                "text": "Element | undefined"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "placing",
+              "type": {
+                "text": "Element | undefined"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "placingLabel",
+              "type": {
+                "text": "Element | undefined"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "connecting",
+              "type": {
+                "text": "{\n    equipment: Element;\n    path: Point[];\n    terminal: 'top' | 'bottom';\n  } | undefined"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "zoomIn",
+              "parameters": [
+                {
+                  "name": "step",
+                  "default": "4"
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "zoomOut",
+              "parameters": [
+                {
+                  "name": "step",
+                  "default": "4"
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "startResizing",
+              "parameters": [
+                {
+                  "name": "element",
+                  "type": {
+                    "text": "Element | undefined"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "startPlacing",
+              "parameters": [
+                {
+                  "name": "element",
+                  "type": {
+                    "text": "Element | undefined"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "startPlacingLabel",
+              "parameters": [
+                {
+                  "name": "element",
+                  "type": {
+                    "text": "Element | undefined"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "startConnecting",
+              "parameters": [
+                {
+                  "name": "{ equipment, terminal }",
+                  "type": {
+                    "text": "StartConnectDetail"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "reset"
+            },
+            {
+              "kind": "field",
+              "name": "handleKeydown"
+            },
+            {
+              "kind": "method",
+              "name": "rotateElement",
+              "parameters": [
+                {
+                  "name": "element",
+                  "type": {
+                    "text": "Element"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "placeLabel",
+              "parameters": [
+                {
+                  "name": "element",
+                  "type": {
+                    "text": "Element"
+                  }
+                },
+                {
+                  "name": "x",
+                  "type": {
+                    "text": "number"
+                  }
+                },
+                {
+                  "name": "y",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "placeElement",
+              "parameters": [
+                {
+                  "name": "element",
+                  "type": {
+                    "text": "Element"
+                  }
+                },
+                {
+                  "name": "parent",
+                  "type": {
+                    "text": "Element"
+                  }
+                },
+                {
+                  "name": "x",
+                  "type": {
+                    "text": "number"
+                  }
+                },
+                {
+                  "name": "y",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "connectEquipment",
+              "parameters": [
+                {
+                  "name": "{\n    equipment,\n    terminal,\n    connectTo,\n    toTerminal,\n    path,\n  }",
+                  "type": {
+                    "text": "ConnectDetail"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "insertSubstation"
+            }
+          ],
+          "attributes": [
+            {
+              "name": "doc",
+              "type": {
+                "text": "XMLDocument"
+              },
+              "fieldName": "doc"
+            },
+            {
+              "name": "docVersion",
+              "type": {
+                "text": "number"
+              },
+              "fieldName": "docVersion"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "default",
+          "declaration": {
+            "name": "OscdEditorSLD",
+            "module": "oscd-editor-sld.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "sld-editor.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "SLDEditor",
+          "members": [
+            {
+              "kind": "field",
+              "name": "doc",
+              "type": {
+                "text": "XMLDocument"
+              },
+              "attribute": "doc"
+            },
+            {
+              "kind": "field",
+              "name": "substation",
+              "type": {
+                "text": "Element"
+              },
+              "attribute": "substation"
+            },
+            {
+              "kind": "field",
+              "name": "editCount",
+              "type": {
+                "text": "number"
+              },
+              "default": "-1",
+              "attribute": "editCount"
+            },
+            {
+              "kind": "field",
+              "name": "gridSize",
+              "type": {
+                "text": "number"
+              },
+              "default": "32",
+              "attribute": "gridSize"
+            },
+            {
+              "kind": "field",
+              "name": "nsp",
+              "type": {
+                "text": "string"
+              },
+              "default": "'esld'",
+              "attribute": "nsp"
+            },
+            {
+              "kind": "field",
+              "name": "resizing",
+              "type": {
+                "text": "Element | undefined"
+              },
+              "attribute": "resizing"
+            },
+            {
+              "kind": "field",
+              "name": "placing",
+              "type": {
+                "text": "Element | undefined"
+              },
+              "attribute": "placing"
+            },
+            {
+              "kind": "field",
+              "name": "placingLabel",
+              "type": {
+                "text": "Element | undefined"
+              },
+              "attribute": "placingLabel"
+            },
+            {
+              "kind": "field",
+              "name": "connecting",
+              "type": {
+                "text": "{\n    equipment: Element;\n    path: Point[];\n    terminal: 'top' | 'bottom';\n  } | undefined"
+              },
+              "attribute": "connecting"
+            },
+            {
+              "kind": "field",
+              "name": "resizeSubstationUI",
+              "type": {
+                "text": "Dialog"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "substationWidthUI",
+              "type": {
+                "text": "TextField"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "substationHeightUI",
+              "type": {
+                "text": "TextField"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "sld",
+              "type": {
+                "text": "SVGGraphicsElement"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "mouseX",
+              "type": {
+                "text": "number"
+              },
+              "default": "0"
+            },
+            {
+              "kind": "field",
+              "name": "mouseY",
+              "type": {
+                "text": "number"
+              },
+              "default": "0"
+            },
+            {
+              "kind": "field",
+              "name": "mouseX2",
+              "type": {
+                "text": "number"
+              },
+              "default": "0"
+            },
+            {
+              "kind": "field",
+              "name": "mouseY2",
+              "type": {
+                "text": "number"
+              },
+              "default": "0"
+            },
+            {
+              "kind": "field",
+              "name": "menu",
+              "type": {
+                "text": "{ element: Element; top: number; left: number } | undefined"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "coordinatesRef",
+              "type": {
+                "text": "Ref<HTMLElement>"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "positionCoordinates",
+              "parameters": [
+                {
+                  "name": "e",
+                  "type": {
+                    "text": "MouseEvent"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "openMenu",
+              "parameters": [
+                {
+                  "name": "element",
+                  "type": {
+                    "text": "Element"
+                  }
+                },
+                {
+                  "name": "e",
+                  "type": {
+                    "text": "MouseEvent"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "svgCoordinates",
+              "parameters": [
+                {
+                  "name": "clientX",
+                  "type": {
+                    "text": "number"
+                  }
+                },
+                {
+                  "name": "clientY",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "canPlaceAt",
+              "parameters": [
+                {
+                  "name": "element",
+                  "type": {
+                    "text": "Element"
+                  }
+                },
+                {
+                  "name": "x",
+                  "type": {
+                    "text": "number"
+                  }
+                },
+                {
+                  "name": "y",
+                  "type": {
+                    "text": "number"
+                  }
+                },
+                {
+                  "name": "w",
+                  "type": {
+                    "text": "number"
+                  }
+                },
+                {
+                  "name": "h",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "canResizeTo",
+              "parameters": [
+                {
+                  "name": "element",
+                  "type": {
+                    "text": "Element"
+                  }
+                },
+                {
+                  "name": "w",
+                  "type": {
+                    "text": "number"
+                  }
+                },
+                {
+                  "name": "h",
+                  "type": {
+                    "text": "number"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderedLabelPosition",
+              "return": {
+                "type": {
+                  "text": "Point"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "element",
+                  "type": {
+                    "text": "Element"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderedPosition",
+              "return": {
+                "type": {
+                  "text": "Point"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "element",
+                  "type": {
+                    "text": "Element"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "field",
+              "name": "handleKeydown"
+            },
+            {
+              "kind": "field",
+              "name": "handleClick"
+            },
+            {
+              "kind": "method",
+              "name": "nearestOpenTerminal",
+              "return": {
+                "type": {
+                  "text": "'top' | 'bottom' | undefined"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "equipment",
+                  "optional": true,
+                  "type": {
+                    "text": "Element"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "groundTerminal",
+              "parameters": [
+                {
+                  "name": "equipment",
+                  "type": {
+                    "text": "Element"
+                  }
+                },
+                {
+                  "name": "name",
+                  "type": {
+                    "text": "'T1' | 'T2'"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "flipElement",
+              "parameters": [
+                {
+                  "name": "element",
+                  "type": {
+                    "text": "Element"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "equipmentMenuItems",
+              "parameters": [
+                {
+                  "name": "equipment",
+                  "type": {
+                    "text": "Element"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "busBarMenuItems",
+              "parameters": [
+                {
+                  "name": "busBar",
+                  "type": {
+                    "text": "Element"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "containerMenuItems",
+              "parameters": [
+                {
+                  "name": "bayOrVL",
+                  "type": {
+                    "text": "Element"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderMenu"
+            },
+            {
+              "kind": "method",
+              "name": "renderLabel",
+              "parameters": [
+                {
+                  "name": "element",
+                  "type": {
+                    "text": "Element"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderContainer",
+              "return": {
+                "type": {
+                  "text": "TemplateResult<2>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "bayOrVL",
+                  "type": {
+                    "text": "Element"
+                  }
+                },
+                {
+                  "name": "preview",
+                  "default": "false"
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderEquipment",
+              "parameters": [
+                {
+                  "name": "equipment",
+                  "type": {
+                    "text": "Element"
+                  }
+                },
+                {
+                  "name": "{ preview = false, connect = false }",
+                  "default": "{}"
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderBusBar",
+              "parameters": [
+                {
+                  "name": "busBar",
+                  "type": {
+                    "text": "Element"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderConnectivityNode",
+              "parameters": [
+                {
+                  "name": "cNode",
+                  "type": {
+                    "text": "Element"
+                  }
+                }
+              ]
+            }
+          ],
+          "attributes": [
+            {
+              "name": "doc",
+              "type": {
+                "text": "XMLDocument"
+              },
+              "fieldName": "doc"
+            },
+            {
+              "name": "substation",
+              "type": {
+                "text": "Element"
+              },
+              "fieldName": "substation"
+            },
+            {
+              "name": "editCount",
+              "type": {
+                "text": "number"
+              },
+              "default": "-1",
+              "fieldName": "editCount"
+            },
+            {
+              "name": "gridSize",
+              "type": {
+                "text": "number"
+              },
+              "default": "32",
+              "fieldName": "gridSize"
+            },
+            {
+              "name": "nsp",
+              "type": {
+                "text": "string"
+              },
+              "default": "'esld'",
+              "fieldName": "nsp"
+            },
+            {
+              "name": "resizing",
+              "type": {
+                "text": "Element | undefined"
+              },
+              "fieldName": "resizing"
+            },
+            {
+              "name": "placing",
+              "type": {
+                "text": "Element | undefined"
+              },
+              "fieldName": "placing"
+            },
+            {
+              "name": "placingLabel",
+              "type": {
+                "text": "Element | undefined"
+              },
+              "fieldName": "placingLabel"
+            },
+            {
+              "name": "connecting",
+              "type": {
+                "text": "{\n    equipment: Element;\n    path: Point[];\n    terminal: 'top' | 'bottom';\n  } | undefined"
+              },
+              "fieldName": "connecting"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "sld-editor",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "SLDEditor",
+          "declaration": {
+            "name": "SLDEditor",
+            "module": "sld-editor.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "sld-editor",
+          "declaration": {
+            "name": "SLDEditor",
+            "module": "sld-editor.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "util.ts",
+      "declarations": [
+        {
+          "kind": "variable",
+          "name": "privType",
+          "type": {
+            "text": "string"
+          },
+          "default": "'Transpower-SLD-Vertices'"
+        },
+        {
+          "kind": "variable",
+          "name": "sldNs",
+          "type": {
+            "text": "string"
+          },
+          "default": "'https://transpower.co.nz/SCL/SSD/SLD/v0'"
+        },
+        {
+          "kind": "variable",
+          "name": "xmlnsNs",
+          "type": {
+            "text": "string"
+          },
+          "default": "'http://www.w3.org/2000/xmlns/'"
+        },
+        {
+          "kind": "variable",
+          "name": "svgNs",
+          "type": {
+            "text": "string"
+          },
+          "default": "'http://www.w3.org/2000/svg'"
+        },
+        {
+          "kind": "variable",
+          "name": "xlinkNs",
+          "type": {
+            "text": "string"
+          },
+          "default": "'http://www.w3.org/1999/xlink'"
+        },
+        {
+          "kind": "variable",
+          "name": "eqTypes",
+          "type": {
+            "text": "[\n  'CAB',\n  'CAP',\n  'CBR',\n  'CTR',\n  'DIS',\n  'GEN',\n  'IFL',\n  'LIN',\n  'MOT',\n  'REA',\n  'RES',\n  'SAR',\n  'SMC',\n  'VTR',\n]"
+          },
+          "default": "[ 'CAB', 'CAP', 'CBR', 'CTR', 'DIS', 'GEN', 'IFL', 'LIN', 'MOT', 'REA', 'RES', 'SAR', 'SMC', 'VTR', ]"
+        },
+        {
+          "kind": "function",
+          "name": "isEqType",
+          "return": {
+            "type": {
+              "text": "str is EqType"
+            }
+          },
+          "parameters": [
+            {
+              "name": "str",
+              "type": {
+                "text": "string"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "variable",
+          "name": "ringedEqTypes",
+          "default": "new Set(['GEN', 'MOT', 'SMC'])"
+        },
+        {
+          "kind": "function",
+          "name": "uuid"
+        },
+        {
+          "kind": "function",
+          "name": "xmlBoolean",
+          "parameters": [
+            {
+              "name": "value",
+              "optional": true,
+              "type": {
+                "text": "string | null"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "isBusBar",
+          "parameters": [
+            {
+              "name": "element",
+              "type": {
+                "text": "Element"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "attributes",
+          "return": {
+            "type": {
+              "text": "Attrs"
+            }
+          },
+          "parameters": [
+            {
+              "name": "element",
+              "type": {
+                "text": "Element"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "elementPath",
+          "return": {
+            "type": {
+              "text": "string"
+            }
+          },
+          "parameters": [
+            {
+              "name": "element",
+              "type": {
+                "text": "Element"
+              }
+            },
+            {
+              "name": "rest",
+              "type": {
+                "text": "string[]"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "removeNode",
+          "return": {
+            "type": {
+              "text": "Edit[]"
+            }
+          },
+          "parameters": [
+            {
+              "name": "node",
+              "type": {
+                "text": "Element"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "reparentElement",
+          "return": {
+            "type": {
+              "text": "Edit[]"
+            }
+          },
+          "parameters": [
+            {
+              "name": "element",
+              "type": {
+                "text": "Element"
+              }
+            },
+            {
+              "name": "parent",
+              "type": {
+                "text": "Element"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "removeTerminal",
+          "return": {
+            "type": {
+              "text": "Edit[]"
+            }
+          },
+          "parameters": [
+            {
+              "name": "terminal",
+              "type": {
+                "text": "Element"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "connectionStartPoints",
+          "return": {
+            "type": {
+              "text": "{\n  top: { close: Point; far: Point };\n  bottom: { close: Point; far: Point };\n}"
+            }
+          },
+          "parameters": [
+            {
+              "name": "equipment",
+              "type": {
+                "text": "Element"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "newResizeEvent",
+          "return": {
+            "type": {
+              "text": "ResizeEvent"
+            }
+          },
+          "parameters": [
+            {
+              "name": "detail",
+              "type": {
+                "text": "ResizeDetail"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "newPlaceEvent",
+          "return": {
+            "type": {
+              "text": "PlaceEvent"
+            }
+          },
+          "parameters": [
+            {
+              "name": "detail",
+              "type": {
+                "text": "PlaceDetail"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "newPlaceLabelEvent",
+          "return": {
+            "type": {
+              "text": "PlaceLabelEvent"
+            }
+          },
+          "parameters": [
+            {
+              "name": "detail",
+              "type": {
+                "text": "PlaceLabelDetail"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "newConnectEvent",
+          "return": {
+            "type": {
+              "text": "ConnectEvent"
+            }
+          },
+          "parameters": [
+            {
+              "name": "detail",
+              "type": {
+                "text": "ConnectDetail"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "newRotateEvent",
+          "return": {
+            "type": {
+              "text": "StartEvent"
+            }
+          },
+          "parameters": [
+            {
+              "name": "detail",
+              "type": {
+                "text": "Element"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "newStartResizeEvent",
+          "return": {
+            "type": {
+              "text": "StartEvent"
+            }
+          },
+          "parameters": [
+            {
+              "name": "detail",
+              "type": {
+                "text": "Element"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "newStartPlaceEvent",
+          "return": {
+            "type": {
+              "text": "StartEvent"
+            }
+          },
+          "parameters": [
+            {
+              "name": "detail",
+              "type": {
+                "text": "Element"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "newStartPlaceLabelEvent",
+          "return": {
+            "type": {
+              "text": "StartEvent"
+            }
+          },
+          "parameters": [
+            {
+              "name": "detail",
+              "type": {
+                "text": "Element"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "newStartConnectEvent",
+          "return": {
+            "type": {
+              "text": "StartConnectEvent"
+            }
+          },
+          "parameters": [
+            {
+              "name": "detail",
+              "type": {
+                "text": "StartConnectDetail"
+              }
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "privType",
+          "declaration": {
+            "name": "privType",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "sldNs",
+          "declaration": {
+            "name": "sldNs",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "xmlnsNs",
+          "declaration": {
+            "name": "xmlnsNs",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "svgNs",
+          "declaration": {
+            "name": "svgNs",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "xlinkNs",
+          "declaration": {
+            "name": "xlinkNs",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "eqTypes",
+          "declaration": {
+            "name": "eqTypes",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "isEqType",
+          "declaration": {
+            "name": "isEqType",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "ringedEqTypes",
+          "declaration": {
+            "name": "ringedEqTypes",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "uuid",
+          "declaration": {
+            "name": "uuid",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "xmlBoolean",
+          "declaration": {
+            "name": "xmlBoolean",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "isBusBar",
+          "declaration": {
+            "name": "isBusBar",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "attributes",
+          "declaration": {
+            "name": "attributes",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "elementPath",
+          "declaration": {
+            "name": "elementPath",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "removeNode",
+          "declaration": {
+            "name": "removeNode",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "reparentElement",
+          "declaration": {
+            "name": "reparentElement",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "removeTerminal",
+          "declaration": {
+            "name": "removeTerminal",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "connectionStartPoints",
+          "declaration": {
+            "name": "connectionStartPoints",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "newResizeEvent",
+          "declaration": {
+            "name": "newResizeEvent",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "newPlaceEvent",
+          "declaration": {
+            "name": "newPlaceEvent",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "newPlaceLabelEvent",
+          "declaration": {
+            "name": "newPlaceLabelEvent",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "newConnectEvent",
+          "declaration": {
+            "name": "newConnectEvent",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "newRotateEvent",
+          "declaration": {
+            "name": "newRotateEvent",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "newStartResizeEvent",
+          "declaration": {
+            "name": "newStartResizeEvent",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "newStartPlaceEvent",
+          "declaration": {
+            "name": "newStartPlaceEvent",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "newStartPlaceLabelEvent",
+          "declaration": {
+            "name": "newStartPlaceLabelEvent",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "newStartConnectEvent",
+          "declaration": {
+            "name": "newStartConnectEvent",
+            "module": "util.ts"
+          }
+        }
+      ]
+    }
+  ]
+}
