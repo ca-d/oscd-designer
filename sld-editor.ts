@@ -62,8 +62,8 @@ import {
   xlinkNs,
   xmlBoolean,
 } from './util.js';
-import { Edit } from '@omicronenergy/oscd-api';
-import { newEditEvent } from '@omicronenergy/oscd-api/utils.js';
+import { EditV2, Transactor } from '@omicronenergy/oscd-api';
+import { newEditEventV2 } from '@omicronenergy/oscd-api/utils.js';
 
 const parentTags: Partial<Record<string, string[]>> = {
   ConductingEquipment: ['Bay'],
@@ -334,19 +334,22 @@ function renderMenuHeader(element: Element) {
 
 @customElement('sld-editor')
 export class SLDEditor extends LitElement {
-  @property()
+  @property({ type: Object })
+  editor!: Transactor<EditV2>;
+
+  @property({ type: Object })
   doc!: XMLDocument;
 
-  @property()
+  @property({ type: Object })
   substation!: Element;
 
-  @property()
+  @property({ type: Number })
   editCount = -1;
 
-  @property()
+  @property({ type: Number })
   gridSize = 32;
 
-  @property()
+  @property({ type: String })
   nsp = 'esld';
 
   @property()
@@ -355,7 +358,7 @@ export class SLDEditor extends LitElement {
   @property()
   resizingTL?: Element;
 
-  @property()
+  @property({ type: Object })
   placing?: Element;
 
   @property()
@@ -364,7 +367,7 @@ export class SLDEditor extends LitElement {
   @property()
   placingLabel?: Element;
 
-  @property()
+  @property({ type: Object })
   connecting?: {
     from: Element;
     path: Point[];
@@ -645,7 +648,7 @@ export class SLDEditor extends LitElement {
       this.groundHint.show();
       return;
     }
-    const edits: Edit[] = [];
+    const edits: EditV2[] = [];
     let grounded = bay.querySelector(
       ':scope > ConnectivityNode[name="grounded"]',
     );
@@ -683,18 +686,17 @@ export class SLDEditor extends LitElement {
       node: terminal,
       reference: getReference(equipment, tagName),
     });
-    this.dispatchEvent(newEditEvent(edits));
+    this.dispatchEvent(newEditEventV2(edits));
   }
 
   flipElement(element: Element) {
     const { flip, kind } = attributes(element);
-    const edits: Edit[] = [
+    const edits: EditV2[] = [
       {
         element,
-        attributes: {
-          [`${this.nsp}:flip`]: {
-            namespaceURI: sldNs,
-            value: flip ? null : 'true',
+        attributesNS: {
+          [sldNs]: {
+            [`${this.nsp}:flip`]: flip ? null : 'true',
           },
         },
       },
@@ -710,7 +712,7 @@ export class SLDEditor extends LitElement {
         );
       }
     }
-    this.dispatchEvent(newEditEvent(edits));
+    this.dispatchEvent(newEditEventV2(edits));
   }
 
   addTextTo(element: Element) {
@@ -728,7 +730,7 @@ export class SLDEditor extends LitElement {
       (y < 2 ? y + 1 : y - 1).toString(),
     );
     this.dispatchEvent(
-      newEditEvent({
+      newEditEventV2({
         node: text,
         parent: element,
         reference: getReference(element, 'Text'),
@@ -752,7 +754,8 @@ export class SLDEditor extends LitElement {
     if (tapChanger)
       items.unshift(
         {
-          handler: () => this.dispatchEvent(newEditEvent({ node: tapChanger })),
+          handler: () =>
+            this.dispatchEvent(newEditEventV2({ node: tapChanger })),
           content: html`<mwc-list-item graphic="icon">
             <span>Remove Tap Changer</span>
             <mwc-icon slot="graphic">remove</mwc-icon>
@@ -777,7 +780,7 @@ export class SLDEditor extends LitElement {
           node.setAttribute('type', 'LTC');
           node.setAttribute('name', uniqueName(node, winding));
           this.dispatchEvent(
-            newEditEvent({
+            newEditEventV2({
               parent: winding,
               node,
               reference: getReference(winding, 'TapChanger'),
@@ -796,7 +799,7 @@ export class SLDEditor extends LitElement {
       items.unshift({
         handler: () =>
           this.dispatchEvent(
-            newEditEvent(
+            newEditEventV2(
               neutralPoints.map(neutralPoint => removeTerminal(neutralPoint)),
             ),
           ),
@@ -811,7 +814,7 @@ export class SLDEditor extends LitElement {
       items.unshift({
         handler: () =>
           this.dispatchEvent(
-            newEditEvent(terminals.map(terminal => removeTerminal(terminal))),
+            newEditEventV2(terminals.map(terminal => removeTerminal(terminal))),
           ),
         content: html`<mwc-list-item graphic="icon">
           <span>Detach Terminal${terminals.length > 1 ? 's' : nothing}</span>
@@ -877,7 +880,7 @@ export class SLDEditor extends LitElement {
               <span>Delete Text</span>
               <mwc-icon slot="graphic">format_strikethrough</mwc-icon>
             </mwc-list-item>`,
-            handler: () => this.dispatchEvent(newEditEvent({ node: text })),
+            handler: () => this.dispatchEvent(newEditEventV2({ node: text })),
           }
         : {
             content: html`<mwc-list-item graphic="icon">
@@ -899,12 +902,12 @@ export class SLDEditor extends LitElement {
           <mwc-icon slot="graphic">delete</mwc-icon>
         </mwc-list-item>`,
         handler: () => {
-          const edits: Edit[] = [];
+          const edits: EditV2[] = [];
           Array.from(
             transformer.querySelectorAll('Terminal, NeutralPoint'),
           ).forEach(terminal => edits.push(...removeTerminal(terminal)));
           edits.push({ node: transformer });
-          this.dispatchEvent(newEditEvent(edits));
+          this.dispatchEvent(newEditEventV2(edits));
         },
       },
     ];
@@ -981,7 +984,7 @@ export class SLDEditor extends LitElement {
               <mwc-icon slot="graphic">format_strikethrough</mwc-icon>
             </mwc-list-item>`,
             handler: () =>
-              this.dispatchEvent(newEditEvent({ node: textElement })),
+              this.dispatchEvent(newEditEventV2({ node: textElement })),
           }
         : {
             content: html`<mwc-list-item graphic="icon">
@@ -1004,12 +1007,12 @@ export class SLDEditor extends LitElement {
           <mwc-icon slot="graphic">delete</mwc-icon>
         </mwc-list-item>`,
         handler: () => {
-          const edits: Edit[] = [];
+          const edits: EditV2[] = [];
           Array.from(equipment.querySelectorAll('Terminal')).forEach(terminal =>
             edits.push(...removeTerminal(terminal)),
           );
           edits.push({ node: equipment });
-          this.dispatchEvent(newEditEvent(edits));
+          this.editor.commit(edits);
         },
       },
     ];
@@ -1056,7 +1059,7 @@ export class SLDEditor extends LitElement {
     if (bottomTerminal)
       items.unshift({
         handler: () =>
-          this.dispatchEvent(newEditEvent(removeTerminal(bottomTerminal))),
+          this.dispatchEvent(newEditEventV2(removeTerminal(bottomTerminal))),
         content: item('disconnect', false),
       });
     else if (!singleTerminal.has(equipment.getAttribute('type')!)) {
@@ -1080,8 +1083,7 @@ export class SLDEditor extends LitElement {
     }
     if (topTerminal)
       items.unshift({
-        handler: () =>
-          this.dispatchEvent(newEditEvent(removeTerminal(topTerminal))),
+        handler: () => this.editor.commit(removeTerminal(topTerminal)),
         content: item('disconnect', true),
       });
     else
@@ -1155,7 +1157,7 @@ export class SLDEditor extends LitElement {
               <span>Remove Text</span>
               <mwc-icon slot="graphic">format_strikethrough</mwc-icon>
             </mwc-list-item>`,
-            handler: () => this.dispatchEvent(newEditEvent({ node: text })),
+            handler: () => this.dispatchEvent(newEditEventV2({ node: text })),
           }
         : {
             content: html`<mwc-list-item graphic="icon">
@@ -1179,9 +1181,7 @@ export class SLDEditor extends LitElement {
         </mwc-list-item>`,
         handler: () => {
           const node = busBar.querySelector('ConnectivityNode')!;
-          this.dispatchEvent(
-            newEditEvent([...removeNode(node), { node: busBar }]),
-          );
+          this.editor.commit([...removeNode(node), { node: busBar }]);
         },
       },
     ];
@@ -1248,7 +1248,7 @@ export class SLDEditor extends LitElement {
               <span>Remove Text</span>
               <mwc-icon slot="graphic">format_strikethrough</mwc-icon>
             </mwc-list-item>`,
-            handler: () => this.dispatchEvent(newEditEvent({ node: text })),
+            handler: () => this.dispatchEvent(newEditEventV2({ node: text })),
           }
         : {
             content: html`<mwc-list-item graphic="icon">
@@ -1271,7 +1271,7 @@ export class SLDEditor extends LitElement {
           <mwc-icon slot="graphic">delete</mwc-icon>
         </mwc-list-item>`,
         handler: () => {
-          const edits: Edit[] = [];
+          const edits: EditV2[] = [];
           Array.from(bayOrVL.getElementsByTagName('ConnectivityNode')).forEach(
             cNode => {
               if (
@@ -1298,7 +1298,7 @@ export class SLDEditor extends LitElement {
               edits.push(...removeNode(cNode));
           });
           edits.push({ node: bayOrVL });
-          this.dispatchEvent(newEditEvent(edits));
+          this.editor.commit(edits);
         },
       },
     ];
@@ -1345,7 +1345,7 @@ export class SLDEditor extends LitElement {
           <mwc-icon slot="graphic">delete</mwc-icon>
         </mwc-list-item>`,
         handler: () => {
-          this.dispatchEvent(newEditEvent({ node: text }));
+          this.dispatchEvent(newEditEventV2({ node: text }));
         },
       },
     ];
@@ -1358,10 +1358,12 @@ export class SLDEditor extends LitElement {
         </mwc-list-item>`,
         handler: () => {
           this.dispatchEvent(
-            newEditEvent({
+            newEditEventV2({
               element: text,
-              attributes: {
-                [`${this.nsp}:weight`]: { namespaceURI: sldNs, value: '500' },
+              attributesNS: {
+                [sldNs]: {
+                  [`${this.nsp}:weight`]: '500',
+                },
               },
             }),
           );
@@ -1376,10 +1378,12 @@ export class SLDEditor extends LitElement {
         </mwc-list-item>`,
         handler: () => {
           this.dispatchEvent(
-            newEditEvent({
+            newEditEventV2({
               element: text,
-              attributes: {
-                [`${this.nsp}:weight`]: { namespaceURI: sldNs, value: null },
+              attributesNS: {
+                [sldNs]: {
+                  [`${this.nsp}:weight`]: null,
+                },
               },
             }),
           );
@@ -1397,12 +1401,11 @@ export class SLDEditor extends LitElement {
         </mwc-list-item>`,
         handler: () => {
           this.dispatchEvent(
-            newEditEvent({
+            newEditEventV2({
               element: text,
-              attributes: {
-                [`${this.nsp}:color`]: {
-                  namespaceURI: sldNs,
-                  value: '#BB1326',
+              attributesNS: {
+                [sldNs]: {
+                  [`${this.nsp}:color`]: '#BB1326',
                 },
               },
             }),
@@ -1421,12 +1424,11 @@ export class SLDEditor extends LitElement {
         </mwc-list-item>`,
         handler: () => {
           this.dispatchEvent(
-            newEditEvent({
+            newEditEventV2({
               element: text,
-              attributes: {
-                [`${this.nsp}:color`]: {
-                  namespaceURI: sldNs,
-                  value: '#12579B',
+              attributesNS: {
+                [sldNs]: {
+                  [`${this.nsp}:color`]: '#12579B',
                 },
               },
             }),
@@ -1442,12 +1444,11 @@ export class SLDEditor extends LitElement {
         </mwc-list-item>`,
         handler: () => {
           this.dispatchEvent(
-            newEditEvent({
+            newEditEventV2({
               element: text,
-              attributes: {
-                [`${this.nsp}:color`]: {
-                  namespaceURI: sldNs,
-                  value: null,
+              attributesNS: {
+                [sldNs]: {
+                  [`${this.nsp}:color`]: null,
                 },
               },
             }),
@@ -1722,7 +1723,7 @@ export class SLDEditor extends LitElement {
           label="Delete Substation"
           title="Delete Substation"
           @click=${() =>
-            this.dispatchEvent(newEditEvent({ node: this.substation }))}
+            this.dispatchEvent(newEditEventV2({ node: this.substation }))}
           icon="delete"
         >
         </mwc-icon-button>
@@ -1902,11 +1903,13 @@ export class SLDEditor extends LitElement {
             this.resizeSubstationUI.close();
             if (newW === oldW.toString() && newH === oldH.toString()) return;
             this.dispatchEvent(
-              newEditEvent({
+              newEditEventV2({
                 element: this.substation,
-                attributes: {
-                  [`${this.nsp}:w`]: { namespaceURI: sldNs, value: newW },
-                  [`${this.nsp}:h`]: { namespaceURI: sldNs, value: newH },
+                attributesNS: {
+                  [sldNs]: {
+                    [`${this.nsp}:w`]: newW,
+                    [`${this.nsp}:h`]: newH,
+                  },
                 },
               }),
             );

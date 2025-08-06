@@ -3,7 +3,13 @@ import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 
 import { property, query, state } from 'lit/decorators.js';
 
-import { Edit, Update } from '@omicronenergy/oscd-api';
+import {
+  AttributesV2,
+  EditV2,
+  SetAttributes,
+  Transactor,
+  Update,
+} from '@omicronenergy/oscd-api';
 import { newEditEvent } from '@omicronenergy/oscd-api/utils.js';
 import { getReference } from '@openscd/oscd-scl';
 
@@ -79,9 +85,9 @@ function cutSectionAt(
   index: number,
   [x, y]: Point,
   nsPrefix: string,
-): Edit[] {
+): EditV2[] {
   const parent = section.parentElement!;
-  const edits = [] as Edit[];
+  const edits = [] as EditV2[];
   const vertices = Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex'));
   const vertexAtXY = vertices.find(
     ve =>
@@ -92,8 +98,9 @@ function cutSectionAt(
   if (
     vertexAtXY === vertices[0] ||
     vertexAtXY === vertices[vertices.length - 1]
-  )
+  ) {
     return [];
+  }
 
   const newSection = section.cloneNode(true) as Element;
   Array.from(newSection.getElementsByTagNameNS(sldNs, 'Vertex'))
@@ -121,6 +128,9 @@ function cutSectionAt(
 }
 
 export default class OscdEditorSLD extends LitElement {
+  @property({ type: Object })
+  editor!: Transactor<EditV2>;
+
   @property({ type: Object })
   doc!: XMLDocument;
 
@@ -240,8 +250,7 @@ export default class OscdEditorSLD extends LitElement {
     window.removeEventListener('keydown', this.handleKeydown);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  updated(changedProperties: Map<string, any>) {
+  updated(changedProperties: Map<string, unknown>) {
     if (!changedProperties.has('doc')) return;
     const sldNsPrefix = this.doc.documentElement.lookupPrefix(sldNs);
     if (sldNsPrefix) {
@@ -272,14 +281,13 @@ export default class OscdEditorSLD extends LitElement {
     const edits = [
       {
         element,
-        attributes: {
-          [`${this.nsp}:rot`]: {
-            namespaceURI: sldNs,
-            value: ((rot + 1) % 4).toString(),
+        attributesNS: {
+          [sldNs]: {
+            [`${this.nsp}:rot`]: ((rot + 1) % 4).toString(),
           },
         },
       },
-    ] as Edit[];
+    ] as EditV2[];
     if (
       element.tagName === 'ConductingEquipment' ||
       element.tagName === 'PowerTransformer'
@@ -288,24 +296,25 @@ export default class OscdEditorSLD extends LitElement {
         .filter(terminal => terminal.getAttribute('cNodeName') !== 'grounded')
         .forEach(terminal => edits.push(...removeTerminal(terminal)));
     }
-    this.dispatchEvent(newEditEvent(edits));
+    this.editor.commit(edits);
   }
 
   placeLabel(element: Element, x: number, y: number) {
-    this.dispatchEvent(
-      newEditEvent({
-        element,
-        attributes: {
-          lx: { namespaceURI: sldNs, value: x.toString() },
-          ly: { namespaceURI: sldNs, value: y.toString() },
+    const editV2: EditV2 = {
+      element,
+      attributesNS: {
+        [sldNs]: {
+          lx: x.toString(),
+          ly: y.toString(),
         },
-      }),
-    );
+      },
+    };
+    this.editor.commit(editV2);
     this.reset();
   }
 
   placeElement(element: Element, parent: Element, x: number, y: number) {
-    const edits: Edit[] = [];
+    const edits: EditV2[] = [];
     if (element.parentElement !== parent) {
       edits.push(...reparentElement(element, parent));
     }
@@ -342,11 +351,13 @@ export default class OscdEditorSLD extends LitElement {
       }
       edits.push({
         element,
-        attributes: {
-          x: { namespaceURI: sldNs, value: x.toString() },
-          y: { namespaceURI: sldNs, value: y.toString() },
-          lx: { namespaceURI: sldNs, value: (lx + dx).toString() },
-          ly: { namespaceURI: sldNs, value: (ly + dy).toString() },
+        attributesNS: {
+          [sldNs]: {
+            x: x.toString(),
+            y: y.toString(),
+            lx: (lx + dx).toString(),
+            ly: (ly + dy).toString(),
+          },
         },
       });
     }
@@ -356,18 +367,14 @@ export default class OscdEditorSLD extends LitElement {
         label: [textLX, textLY],
       } = attributes(text);
       const newAttributes = {
-        lx: {
-          namespaceURI: sldNs,
-          value: (textLX + dx).toString(),
-        },
-        ly: {
-          namespaceURI: sldNs,
-          value: (textLY + dy).toString(),
+        [sldNs]: {
+          lx: (textLX + dx).toString(),
+          ly: (textLY + dy).toString(),
         },
       };
       edits.push({
         element: text,
-        attributes: newAttributes,
+        attributesNS: newAttributes,
       });
     });
 
@@ -380,23 +387,19 @@ export default class OscdEditorSLD extends LitElement {
         pos: [descX, descY],
         label: [descLX, descLY],
       } = attributes(descendant);
-      const newAttributes: Update['attributes'] = {
-        x: { namespaceURI: sldNs, value: (descX + dx).toString() },
-        y: { namespaceURI: sldNs, value: (descY + dy).toString() },
+      const newAttributes: AttributesV2 = {
+        x: (descX + dx).toString(),
+        y: (descY + dy).toString(),
       };
       if (descendant.localName !== 'Vertex') {
-        newAttributes.lx = {
-          namespaceURI: sldNs,
-          value: (descLX + dx).toString(),
-        };
-        newAttributes.ly = {
-          namespaceURI: sldNs,
-          value: (descLY + dy).toString(),
-        };
+        newAttributes.lx = (descLX + dx).toString();
+        newAttributes.ly = (descLY + dy).toString();
       }
       edits.push({
         element: descendant,
-        attributes: newAttributes,
+        attributesNS: {
+          [sldNs]: newAttributes,
+        },
       });
     });
 
@@ -503,22 +506,26 @@ export default class OscdEditorSLD extends LitElement {
         edits.push(...removeNode(section.closest('ConnectivityNode')!));
         edits.push({
           element: lastVertex,
-          attributes: {
-            x: { namespaceURI: sldNs, value: x.toString() },
-            y: { namespaceURI: sldNs, value: y.toString() },
+          attributesNS: {
+            [sldNs]: {
+              x: x.toString(),
+              y: y.toString(),
+            },
           },
         });
         edits.push({
           element: bay,
-          attributes: {
-            w: { namespaceURI: sldNs, value: w.toString() },
-            h: { namespaceURI: sldNs, value: h.toString() },
+          attributesNS: {
+            [sldNs]: {
+              w: w.toString(),
+              h: h.toString(),
+            },
           },
         });
       }
     }
 
-    this.dispatchEvent(newEditEvent(edits));
+    this.editor.commit(edits);
     if (
       ['Bay', 'VoltageLevel'].includes(element.tagName) &&
       (!element.hasAttributeNS(sldNs, 'w') ||
@@ -540,7 +547,7 @@ export default class OscdEditorSLD extends LitElement {
       to.tagName === 'TransformerWinding'
     )
       return;
-    const edits = [] as Edit[];
+    const edits = [] as EditV2[];
     let cNode: Element;
     let connectivityNode: string;
     let cNodeName: string;
@@ -553,14 +560,21 @@ export default class OscdEditorSLD extends LitElement {
       cNode.setAttribute('name', 'L1');
       const bay = from.closest('Bay') || to.closest('Bay')!;
       edits.push(...reparentElement(cNode, bay));
-      connectivityNode = (edits.find(
-        e => 'attributes' in e && 'pathName' in e.attributes,
-      ) as Update | undefined)!.attributes.pathName as string;
+      connectivityNode = (
+        edits.find(
+          e =>
+            e &&
+            'attributes' in e &&
+            e.attributes &&
+            'pathName' in e.attributes,
+        ) as SetAttributes | undefined
+      )?.attributes?.pathName as string;
       cNodeName =
         ((
-          edits.find(e => 'attributes' in e && 'name' in e.attributes) as
-            | Update
-            | undefined
+          edits.find(
+            e =>
+              e && 'attributes' in e && e.attributes && 'name' in e.attributes,
+          ) as Update | undefined
         )?.attributes.name as string | undefined) ??
         cNode.getAttribute('name')!;
       priv = this.doc.createElementNS(
@@ -663,7 +677,7 @@ export default class OscdEditorSLD extends LitElement {
       });
     }
     this.reset();
-    this.dispatchEvent(newEditEvent(edits));
+    this.editor.commit(edits);
   }
 
   render() {
@@ -939,6 +953,7 @@ export default class OscdEditorSLD extends LitElement {
       ${Array.from(this.doc.querySelectorAll(':root > Substation')).map(
         subs =>
           html`<sld-editor
+            .editor=${this.editor}
             .doc=${this.doc}
             .editCount=${this.docVersion}
             .substation=${subs}
