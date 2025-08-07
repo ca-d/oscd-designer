@@ -18,28 +18,68 @@
         },
         {
           "kind": "variable",
+          "name": "oneWindingPTRIcon",
+          "default": "html`<svg viewBox=\"0 0 30 30\" width=\"24\" height=\"24\" slot=\"icon\" > ${oneWindingPTRPath} </svg>`"
+        },
+        {
+          "kind": "variable",
+          "name": "twoWindingPTRIcon",
+          "default": "html`<svg viewBox=\"0 0 30 30\" width=\"24\" height=\"24\" slot=\"icon\" > ${twoWindingPTRPath} </svg>`"
+        },
+        {
+          "kind": "variable",
+          "name": "twoWindingPTRIconHorizontal",
+          "default": "html`<svg viewBox=\"0 0 30 30\" width=\"24\" height=\"24\" transform=\"rotate(-90)\" slot=\"icon\" > ${twoWindingPTRPath} </svg>`"
+        },
+        {
+          "kind": "variable",
+          "name": "threeWindingPTRIcon",
+          "default": "html`<svg viewBox=\"0 0 30 30\" width=\"24\" height=\"24\" slot=\"icon\" > ${threeWindingPTRPath} </svg>`"
+        },
+        {
+          "kind": "variable",
+          "name": "oneWindingPTRGraphic",
+          "default": "html`<svg viewBox=\"0 0 30 30\" width=\"24\" height=\"24\" slot=\"graphic\" > ${oneWindingPTRPath} </svg>`"
+        },
+        {
+          "kind": "variable",
+          "name": "twoWindingPTRGraphic",
+          "default": "html`<svg viewBox=\"0 0 30 30\" width=\"24\" height=\"24\" slot=\"graphic\" > ${twoWindingPTRPath} </svg>`"
+        },
+        {
+          "kind": "variable",
+          "name": "twoWindingPTRGraphicHorizontal",
+          "default": "html`<svg viewBox=\"0 0 30 30\" width=\"24\" height=\"24\" transform=\"rotate(-90)\" slot=\"graphic\" > ${twoWindingPTRPath} </svg>`"
+        },
+        {
+          "kind": "variable",
+          "name": "threeWindingPTRGraphic",
+          "default": "html`<svg viewBox=\"-2 -1 34 34\" width=\"24\" height=\"24\" slot=\"graphic\" > ${threeWindingPTRPath} </svg>`"
+        },
+        {
+          "kind": "variable",
           "name": "voltageLevelIcon",
-          "default": "html`<svg id=\"VoltageLevel\" viewBox=\"0 0 25 25\" width=\"24\" height=\"24\" slot=\"icon\" > ${voltageLevelPath} </svg>`"
+          "default": "html`<svg viewBox=\"0 0 25 25\" width=\"24\" height=\"24\" slot=\"icon\" > ${voltageLevelPath} </svg>`"
         },
         {
           "kind": "variable",
           "name": "voltageLevelGraphic",
-          "default": "html`<svg id=\"VoltageLevel\" viewBox=\"0 0 25 25\" width=\"24\" height=\"24\" slot=\"graphic\" > ${voltageLevelPath} </svg>`"
+          "default": "html`<svg viewBox=\"0 0 25 25\" width=\"24\" height=\"24\" slot=\"graphic\" > ${voltageLevelPath} </svg>`"
         },
         {
           "kind": "variable",
           "name": "bayIcon",
-          "default": "html`<svg id=\"Bay\" viewBox=\"0 0 25 25\" width=\"24\" height=\"24\" slot=\"icon\" > ${bayPath} </svg>`"
+          "default": "html`<svg viewBox=\"0 0 25 25\" width=\"24\" height=\"24\" slot=\"icon\" > ${bayPath} </svg>`"
         },
         {
           "kind": "variable",
           "name": "bayGraphic",
-          "default": "html`<svg id=\"Bay\" viewBox=\"0 0 25 25\" width=\"24\" height=\"24\" slot=\"graphic\" > ${bayPath} </svg>`"
+          "default": "html`<svg viewBox=\"0 0 25 25\" width=\"24\" height=\"24\" slot=\"graphic\" > ${bayPath} </svg>`"
         },
         {
           "kind": "variable",
           "name": "eqRingPath",
-          "default": "svg` <path d=\"M 12.5,0 V 4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" /> <circle cx=\"12.5\" cy=\"12.5\" r=\"8.5\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.5\" stroke-linecap=\"round\" /> `"
+          "default": "svg` <circle cx=\"12.5\" cy=\"12.5\" r=\"8.5\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.5\" stroke-linecap=\"round\" /> `"
         },
         {
           "kind": "function",
@@ -94,23 +134,8 @@
         },
         {
           "kind": "variable",
-          "name": "connectivityNodeMarker",
-          "default": "svg`<marker markerWidth=\"3\" markerHeight=\"3\" refX=\"12.5\" refY=\"12.5\" viewBox=\"0 0 25 25\" id=\"circle\" > <circle fill=\"black\" cx=\"12.5\" cy=\"12.5\" r=\"12.5\" /> </marker>`"
-        },
-        {
-          "kind": "variable",
-          "name": "groundedMarker",
-          "default": "svg`<marker markerWidth=\"20\" markerHeight=\"20\" refX=\"12.5\" refY=\"12.5\" viewBox=\"0 0 25 25\" id=\"grounded\" orient=\"auto-start-reverse\" > <line y1=\"17\" y2=\"8\" x1=\"12.5\" x2=\"12.5\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\" /> <line y1=\"15.5\" y2=\"9.5\" x1=\"14.7\" x2=\"14.7\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\" /> <line y1=\"14.5\" y2=\"10.5\" x1=\"16.8\" x2=\"16.8\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"1.5\" /> </marker>`"
-        },
-        {
-          "kind": "variable",
-          "name": "powerTransformerTwoWindingSymbol",
-          "default": "svg`<symbol id=\"PTR\" viewBox=\"0 0 25 25\" width=\"1\" height=\"1\" > <line x1=\"12.5\" y1=\"2\" x2=\"12.5\" y2=\"5\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" /> <circle cx=\"12.5\" cy=\"10\" r=\"5\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.5\" stroke-linecap=\"round\" /> <circle cx=\"12.5\" cy=\"15\" r=\"5\" stroke=\"currentColor\" fill=\"none\" stroke-width=\"1.5\" stroke-linecap=\"round\" /> <line x1=\"12.5\" y1=\"20\" x2=\"12.5\" y2=\"23\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" /> </symbol>`"
-        },
-        {
-          "kind": "variable",
           "name": "symbols",
-          "default": "svg` <defs> <pattern id=\"halfgrid\" patternUnits=\"userSpaceOnUse\" width=\"1\" height=\"1\" viewBox=\"0 0 1 1\"> <circle cx=\"0.1\" cy=\"0.8\" r=\"0.035\" fill=\"#888\" opacity=\"0.3\" /> <circle cx=\"0.6\" cy=\"0.3\" r=\"0.035\" fill=\"#888\" opacity=\"0.3\" /> <circle cx=\"0.1\" cy=\"0.3\" r=\"0.035\" fill=\"#888\" opacity=\"0.3\" /> <circle cx=\"0.6\" cy=\"0.8\" r=\"0.035\" fill=\"#888\" opacity=\"0.3\" /> </pattern> <pattern id=\"grid\" patternUnits=\"userSpaceOnUse\" width=\"1\" height=\"1\" viewBox=\"0 0 1 1\"> <line x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\" stroke=\"#888\" stroke-opacity=\"0.3\" stroke-width=\"0.06\" /> <line x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\" stroke=\"#888\" stroke-opacity=\"0.3\" stroke-width=\"0.06\" /> <line x1=\"1\" y1=\"0\" x2=\"1\" y2=\"1\" stroke=\"#888\" stroke-opacity=\"0.3\" stroke-width=\"0.06\" /> <line x1=\"0\" y1=\"1\" x2=\"1\" y2=\"1\" stroke=\"#888\" stroke-opacity=\"0.3\" stroke-width=\"0.06\" /> </pattern> ${eqTypes.map(eqType => equipmentSymbol(eqType))} ${equipmentSymbol('ConductingEquipment')} ${connectivityNodeMarker} ${groundedMarker} </defs> `"
+          "default": "svg` <defs> <pattern id=\"halfgrid\" patternUnits=\"userSpaceOnUse\" width=\"1\" height=\"1\" viewBox=\"0 0 1 1\"> <circle cx=\"0.1\" cy=\"0.8\" r=\"0.035\" fill=\"#888\" opacity=\"0.3\" /> <circle cx=\"0.6\" cy=\"0.3\" r=\"0.035\" fill=\"#888\" opacity=\"0.3\" /> <circle cx=\"0.1\" cy=\"0.3\" r=\"0.035\" fill=\"#888\" opacity=\"0.3\" /> <circle cx=\"0.6\" cy=\"0.8\" r=\"0.035\" fill=\"#888\" opacity=\"0.3\" /> </pattern> <pattern id=\"grid\" patternUnits=\"userSpaceOnUse\" width=\"1\" height=\"1\" viewBox=\"0 0 1 1\"> <line x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\" stroke=\"#888\" stroke-opacity=\"0.3\" stroke-width=\"0.06\" /> <line x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\" stroke=\"#888\" stroke-opacity=\"0.3\" stroke-width=\"0.06\" /> <line x1=\"1\" y1=\"0\" x2=\"1\" y2=\"1\" stroke=\"#888\" stroke-opacity=\"0.3\" stroke-width=\"0.06\" /> <line x1=\"0\" y1=\"1\" x2=\"1\" y2=\"1\" stroke=\"#888\" stroke-opacity=\"0.3\" stroke-width=\"0.06\" /> </pattern> ${eqTypes.map(eqType => equipmentSymbol(eqType))} ${equipmentSymbol('ConductingEquipment')} ${groundedMarker} ${arrowMarker} </defs> `"
         }
       ],
       "exports": [
@@ -127,6 +152,70 @@
           "name": "movePath",
           "declaration": {
             "name": "movePath",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "oneWindingPTRIcon",
+          "declaration": {
+            "name": "oneWindingPTRIcon",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "twoWindingPTRIcon",
+          "declaration": {
+            "name": "twoWindingPTRIcon",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "twoWindingPTRIconHorizontal",
+          "declaration": {
+            "name": "twoWindingPTRIconHorizontal",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "threeWindingPTRIcon",
+          "declaration": {
+            "name": "threeWindingPTRIcon",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "oneWindingPTRGraphic",
+          "declaration": {
+            "name": "oneWindingPTRGraphic",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "twoWindingPTRGraphic",
+          "declaration": {
+            "name": "twoWindingPTRGraphic",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "twoWindingPTRGraphicHorizontal",
+          "declaration": {
+            "name": "twoWindingPTRGraphicHorizontal",
+            "module": "icons.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "threeWindingPTRGraphic",
+          "declaration": {
+            "name": "threeWindingPTRGraphic",
             "module": "icons.ts"
           }
         },
@@ -191,30 +280,6 @@
           "name": "equipmentIcon",
           "declaration": {
             "name": "equipmentIcon",
-            "module": "icons.ts"
-          }
-        },
-        {
-          "kind": "js",
-          "name": "connectivityNodeMarker",
-          "declaration": {
-            "name": "connectivityNodeMarker",
-            "module": "icons.ts"
-          }
-        },
-        {
-          "kind": "js",
-          "name": "groundedMarker",
-          "declaration": {
-            "name": "groundedMarker",
-            "module": "icons.ts"
-          }
-        },
-        {
-          "kind": "js",
-          "name": "powerTransformerTwoWindingSymbol",
-          "declaration": {
-            "name": "powerTransformerTwoWindingSymbol",
             "module": "icons.ts"
           }
         },
@@ -319,7 +384,7 @@
               "kind": "field",
               "name": "connecting",
               "type": {
-                "text": "{\n    equipment: Element;\n    path: Point[];\n    terminal: 'top' | 'bottom';\n  } | undefined"
+                "text": "{\n    from: Element;\n    path: Point[];\n    fromTerminal: 'T1' | 'T2' | 'N1' | 'N2';\n  } | undefined"
               }
             },
             {
@@ -383,7 +448,7 @@
               "name": "startConnecting",
               "parameters": [
                 {
-                  "name": "{ equipment, terminal }",
+                  "name": "detail",
                   "type": {
                     "text": "StartConnectDetail"
                   }
@@ -469,7 +534,7 @@
               "name": "connectEquipment",
               "parameters": [
                 {
-                  "name": "{\n    equipment,\n    terminal,\n    connectTo,\n    toTerminal,\n    path,\n  }",
+                  "name": "{\n    from,\n    fromTerminal,\n    to,\n    toTerminal,\n    path,\n  }",
                   "type": {
                     "text": "ConnectDetail"
                   }
@@ -610,7 +675,7 @@
               "kind": "field",
               "name": "connecting",
               "type": {
-                "text": "{\n    equipment: Element;\n    path: Point[];\n    terminal: 'top' | 'bottom';\n  } | undefined"
+                "text": "{\n    from: Element;\n    path: Point[];\n    fromTerminal: 'T1' | 'T2' | 'N1' | 'N2';\n  } | undefined"
               },
               "attribute": "connecting"
             },
@@ -669,6 +734,22 @@
             {
               "kind": "field",
               "name": "mouseY2",
+              "type": {
+                "text": "number"
+              },
+              "default": "0"
+            },
+            {
+              "kind": "field",
+              "name": "mouseX2f",
+              "type": {
+                "text": "number"
+              },
+              "default": "0"
+            },
+            {
+              "kind": "field",
+              "name": "mouseY2f",
               "type": {
                 "text": "number"
               },
@@ -843,7 +924,7 @@
               "name": "nearestOpenTerminal",
               "return": {
                 "type": {
-                  "text": "'top' | 'bottom' | undefined"
+                  "text": "'T1' | 'T2' | undefined"
                 }
               },
               "parameters": [
@@ -869,7 +950,7 @@
                 {
                   "name": "name",
                   "type": {
-                    "text": "'T1' | 'T2'"
+                    "text": "'T1' | 'T2' | 'N1' | 'N2'"
                   }
                 }
               ]
@@ -880,6 +961,30 @@
               "parameters": [
                 {
                   "name": "element",
+                  "type": {
+                    "text": "Element"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "transformerWindingMenuItems",
+              "parameters": [
+                {
+                  "name": "winding",
+                  "type": {
+                    "text": "Element"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "transformerMenuItems",
+              "parameters": [
+                {
+                  "name": "transformer",
                   "type": {
                     "text": "Element"
                   }
@@ -949,6 +1054,61 @@
               "parameters": [
                 {
                   "name": "bayOrVL",
+                  "type": {
+                    "text": "Element"
+                  }
+                },
+                {
+                  "name": "preview",
+                  "default": "false"
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "windingMeasures",
+              "return": {
+                "type": {
+                  "text": "{\n    center: Point;\n    size: number;\n    terminals: Partial<Record<'T1' | 'T2' | 'N1' | 'N2', Point>>;\n    grounded: Partial<Record<'N1' | 'N2', [Point, Point]>>;\n    arc?: {\n      from: Point;\n      fromCtl: Point;\n      to: Point;\n      toCtl: Point;\n    };\n  }"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "winding",
+                  "type": {
+                    "text": "Element"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderTransformerWinding",
+              "return": {
+                "type": {
+                  "text": "TemplateResult<2>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "winding",
+                  "type": {
+                    "text": "Element"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "renderPowerTransformer",
+              "return": {
+                "type": {
+                  "text": "TemplateResult<2>"
+                }
+              },
+              "parameters": [
+                {
+                  "name": "transformer",
                   "type": {
                     "text": "Element"
                   }
@@ -1070,7 +1230,7 @@
             {
               "name": "connecting",
               "type": {
-                "text": "{\n    equipment: Element;\n    path: Point[];\n    terminal: 'top' | 'bottom';\n  } | undefined"
+                "text": "{\n    from: Element;\n    path: Point[];\n    fromTerminal: 'T1' | 'T2' | 'N1' | 'N2';\n  } | undefined"
               },
               "fieldName": "connecting"
             }
@@ -1177,8 +1337,30 @@
           "default": "new Set(['GEN', 'MOT', 'SMC'])"
         },
         {
+          "kind": "variable",
+          "name": "singleTerminal",
+          "default": "new Set([ 'BAT', 'EFN', 'FAN', 'GEN', 'IFL', 'MOT', 'PMP', 'RRC', 'SAR', 'SMC', 'VTR', ])"
+        },
+        {
           "kind": "function",
           "name": "uuid"
+        },
+        {
+          "kind": "function",
+          "name": "isTransformerKind",
+          "return": {
+            "type": {
+              "text": "kind is TransformerKind"
+            }
+          },
+          "parameters": [
+            {
+              "name": "kind",
+              "type": {
+                "text": "string | null"
+              }
+            }
+          ]
         },
         {
           "kind": "function",
@@ -1264,6 +1446,29 @@
         },
         {
           "kind": "function",
+          "name": "uniqueName",
+          "return": {
+            "type": {
+              "text": "string"
+            }
+          },
+          "parameters": [
+            {
+              "name": "element",
+              "type": {
+                "text": "Element"
+              }
+            },
+            {
+              "name": "parent",
+              "type": {
+                "text": "Element"
+              }
+            }
+          ]
+        },
+        {
+          "kind": "function",
           "name": "reparentElement",
           "return": {
             "type": {
@@ -1307,7 +1512,7 @@
           "name": "connectionStartPoints",
           "return": {
             "type": {
-              "text": "{\n  top: { close: Point; far: Point };\n  bottom: { close: Point; far: Point };\n}"
+              "text": "{\n  T1: [Point, Point];\n  T2: [Point, Point];\n}"
             }
           },
           "parameters": [
@@ -1540,9 +1745,25 @@
         },
         {
           "kind": "js",
+          "name": "singleTerminal",
+          "declaration": {
+            "name": "singleTerminal",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
           "name": "uuid",
           "declaration": {
             "name": "uuid",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "isTransformerKind",
+          "declaration": {
+            "name": "isTransformerKind",
             "module": "util.ts"
           }
         },
@@ -1583,6 +1804,14 @@
           "name": "removeNode",
           "declaration": {
             "name": "removeNode",
+            "module": "util.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "uniqueName",
+          "declaration": {
+            "name": "uniqueName",
             "module": "util.ts"
           }
         },

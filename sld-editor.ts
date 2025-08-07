@@ -55,8 +55,8 @@ import {
   xlinkNs,
   xmlBoolean,
 } from './util.js';
-import { Edit, EditV2, Transactor } from '@omicronenergy/oscd-api';
-import { newEditEvent } from '@omicronenergy/oscd-api/utils.js';
+import { EditV2, Transactor } from '@omicronenergy/oscd-api';
+import { newEditEventV2 } from '@omicronenergy/oscd-api/utils.js';
 
 const parentTags: Partial<Record<string, string[]>> = {
   ConductingEquipment: ['Bay'],
@@ -193,7 +193,7 @@ function preventDefault(e: Event) {
 function copy(element: Element, nsp: string): Element {
   const clone = element.cloneNode(true) as Element;
   const terminals = new Set<Element>(
-    Array.from(element.querySelectorAll('Terminal, NeutralPoint'))
+    Array.from(element.querySelectorAll('Terminal, NeutralPoint')),
   );
   const cNodes = new Set<Element>(
     Array.from(element.querySelectorAll('ConnectivityNode')),
@@ -210,8 +210,8 @@ function copy(element: Element, nsp: string): Element {
   cNodes.forEach(cNode => {
     const foreignTerminal = Array.from(
       element.ownerDocument.querySelectorAll(
-        `[connectivityNode="${cNode.getAttribute('pathName')}"]`
-      )
+        `[connectivityNode="${cNode.getAttribute('pathName')}"]`,
+      ),
     ).find(terminal => !terminals.has(terminal));
     if (
       foreignTerminal ||
@@ -252,10 +252,10 @@ function copy(element: Element, nsp: string): Element {
       if (!oldUUID) return;
       const newUUID = uuid();
       Array.from(clone.querySelectorAll(`Vertex[*|uuid="${oldUUID}"`)).forEach(
-        vertex => vertex.setAttributeNS(sldNs, `${nsp}:uuid`, newUUID)
+        vertex => vertex.setAttributeNS(sldNs, `${nsp}:uuid`, newUUID),
       );
       terminal.setAttributeNS(sldNs, `${nsp}:uuid`, newUUID);
-    }
+    },
   );
   return clone;
 }
@@ -408,7 +408,7 @@ export class SLDEditor extends LitElement {
     if (element.tagName === 'Substation') return true;
 
     const overlappingSibling = Array.from(
-      this.substation.querySelectorAll(`${element.tagName}, PowerTransformer`)
+      this.substation.querySelectorAll(`${element.tagName}, PowerTransformer`),
     ).find(
       sibling =>
         sibling.closest(element.tagName) !== element &&
@@ -425,8 +425,8 @@ export class SLDEditor extends LitElement {
         ? containsRect(this.substation, x, y, w, h)
         : Array.from(
             this.substation.querySelectorAll(
-              parentTags[element.tagName]!.join(',')
-            )
+              parentTags[element.tagName]!.join(','),
+            ),
           ).find(
             parent => !isBusBar(parent) && containsRect(parent, x, y, w, h),
           );
@@ -557,10 +557,10 @@ export class SLDEditor extends LitElement {
       equipment.closest('Bay') ||
       Array.from(
         equipment.closest('VoltageLevel')?.querySelectorAll('Bay') ||
-          equipment.closest('Substation')!.querySelectorAll('Bay')
+          equipment.closest('Substation')!.querySelectorAll('Bay'),
       ).find(b => !isBusBar(b));
     if (!bay) return;
-    const edits: Edit[] = [];
+    const edits: EditV2[] = [];
     let grounded = bay.querySelector(
       ':scope > ConnectivityNode[name="grounded"]',
     );
@@ -582,7 +582,7 @@ export class SLDEditor extends LitElement {
     const tagName = neutralPoint ? 'NeutralPoint' : 'Terminal';
     const terminal = this.doc.createElementNS(
       this.doc.documentElement.namespaceURI,
-      tagName
+      tagName,
     );
     terminal.setAttribute('name', name);
     terminal.setAttribute('cNodeName', 'grounded');
@@ -598,18 +598,17 @@ export class SLDEditor extends LitElement {
       node: terminal,
       reference: getReference(equipment, tagName),
     });
-    this.dispatchEvent(newEditEvent(edits));
+    this.dispatchEvent(newEditEventV2(edits));
   }
 
   flipElement(element: Element) {
     const { flip, kind } = attributes(element);
-    const edits: Edit[] = [
+    const edits: EditV2[] = [
       {
         element,
-        attributes: {
-          [`${this.nsp}:flip`]: {
-            namespaceURI: sldNs,
-            value: flip ? null : 'true',
+        attributesNS: {
+          [sldNs]: {
+            [`${this.nsp}:flip`]: flip ? null : 'true',
           },
         },
       },
@@ -617,15 +616,15 @@ export class SLDEditor extends LitElement {
     if (element.tagName === 'PowerTransformer') {
       const winding = element.querySelector('TransformerWinding')!;
       Array.from(winding.querySelectorAll('Terminal')).forEach(terminal =>
-        edits.push(...removeTerminal(terminal))
+        edits.push(...removeTerminal(terminal)),
       );
       if (kind === 'earthing') {
         Array.from(winding.querySelectorAll('NeutralPoint')).forEach(np =>
-          edits.push(...removeTerminal(np))
+          edits.push(...removeTerminal(np)),
         );
       }
     }
-    this.dispatchEvent(newEditEvent(edits));
+    this.dispatchEvent(newEditEventV2(edits));
   }
 
   transformerWindingMenuItems(winding: Element) {
@@ -644,7 +643,8 @@ export class SLDEditor extends LitElement {
     if (tapChanger)
       items.unshift(
         {
-          handler: () => this.dispatchEvent(newEditEvent({ node: tapChanger })),
+          handler: () =>
+            this.dispatchEvent(newEditEventV2({ node: tapChanger })),
           content: html`<mwc-list-item graphic="icon">
             <span>Remove Tap Changer</span>
             <mwc-icon slot="graphic">remove</mwc-icon>
@@ -656,24 +656,24 @@ export class SLDEditor extends LitElement {
             <mwc-icon slot="graphic">edit</mwc-icon>
           </mwc-list-item>`,
           handler: () => this.dispatchEvent(newEditWizardEvent(tapChanger)),
-        }
+        },
       );
     else
       items.unshift({
         handler: () => {
           const node = this.doc.createElementNS(
             this.doc.documentElement.namespaceURI,
-            'TapChanger'
+            'TapChanger',
           );
           node.setAttribute('name', 'LTC');
           node.setAttribute('type', 'LTC');
           node.setAttribute('name', uniqueName(node, winding));
           this.dispatchEvent(
-            newEditEvent({
+            newEditEventV2({
               parent: winding,
               node,
               reference: getReference(winding, 'TapChanger'),
-            })
+            }),
           );
         },
         content: html`<mwc-list-item graphic="icon">
@@ -688,9 +688,9 @@ export class SLDEditor extends LitElement {
       items.unshift({
         handler: () =>
           this.dispatchEvent(
-            newEditEvent(
-              neutralPoints.map(neutralPoint => removeTerminal(neutralPoint))
-            )
+            newEditEventV2(
+              neutralPoints.map(neutralPoint => removeTerminal(neutralPoint)),
+            ),
           ),
         content: html`<mwc-list-item graphic="icon">
           <span>Detach Neutral Point</span>
@@ -703,7 +703,7 @@ export class SLDEditor extends LitElement {
       items.unshift({
         handler: () =>
           this.dispatchEvent(
-            newEditEvent(terminals.map(terminal => removeTerminal(terminal)))
+            newEditEventV2(terminals.map(terminal => removeTerminal(terminal))),
           ),
         content: html`<mwc-list-item graphic="icon">
           <span>Detach Terminal${terminals.length > 1 ? 's' : nothing}</span>
@@ -768,12 +768,12 @@ export class SLDEditor extends LitElement {
           <mwc-icon slot="graphic">delete</mwc-icon>
         </mwc-list-item>`,
         handler: () => {
-          const edits: Edit[] = [];
+          const edits: EditV2[] = [];
           Array.from(
-            transformer.querySelectorAll('Terminal, NeutralPoint')
+            transformer.querySelectorAll('Terminal, NeutralPoint'),
           ).forEach(terminal => edits.push(...removeTerminal(terminal)));
           edits.push({ node: transformer });
-          this.dispatchEvent(newEditEvent(edits));
+          this.dispatchEvent(newEditEventV2(edits));
         },
       },
     ];
@@ -907,7 +907,7 @@ export class SLDEditor extends LitElement {
     if (bottomTerminal)
       items.unshift({
         handler: () =>
-          this.dispatchEvent(newEditEvent(removeTerminal(bottomTerminal))),
+          this.dispatchEvent(newEditEventV2(removeTerminal(bottomTerminal))),
         content: item('disconnect', false),
       });
     else if (!singleTerminal.has(equipment.getAttribute('type')!)) {
@@ -919,14 +919,14 @@ export class SLDEditor extends LitElement {
                 from: equipment,
                 fromTerminal: 'T2',
                 path: connectionStartPoints(equipment).T2,
-              })
+              }),
             ),
           content: item('connect', false),
         },
         {
           handler: () => this.groundTerminal(equipment, 'T2'),
           content: item('ground', false),
-        }
+        },
       );
     }
     if (topTerminal)
@@ -943,7 +943,7 @@ export class SLDEditor extends LitElement {
                 from: equipment,
                 fromTerminal: 'T1',
                 path: connectionStartPoints(equipment).T1,
-              })
+              }),
             ),
           content: item('connect', true),
         },
@@ -1081,8 +1081,8 @@ export class SLDEditor extends LitElement {
               if (
                 Array.from(
                   this.doc.querySelectorAll(
-                    `[connectivityNode="${cNode.getAttribute('pathName')}"]`
-                  )
+                    `[connectivityNode="${cNode.getAttribute('pathName')}"]`,
+                  ),
                 ).find(
                   terminal => terminal.closest(bayOrVL.tagName) !== bayOrVL,
                 )
@@ -1091,12 +1091,12 @@ export class SLDEditor extends LitElement {
             },
           );
           Array.from(
-            bayOrVL.querySelectorAll('Terminal, NeutralPoint')
+            bayOrVL.querySelectorAll('Terminal, NeutralPoint'),
           ).forEach(terminal => {
             const cNode = this.doc.querySelector(
               `ConnectivityNode[pathName="${terminal.getAttribute(
-                'connectivityNode'
-              )}"]`
+                'connectivityNode',
+              )}"]`,
             );
             if (cNode && cNode.closest(bayOrVL.tagName) !== bayOrVL)
               edits.push(...removeNode(cNode));
@@ -1297,7 +1297,7 @@ export class SLDEditor extends LitElement {
         svg`<line x1="${x2}" y1="${y2}" x2="${x3}" y2="${y3}"
                 stroke-linecap="square" stroke="black" />`,
         svg`<line x1="${x3}" y1="${y3}" x2="${x4}" y2="${y4}"
-                stroke-linecap="square" stroke="black" />`
+                stroke-linecap="square" stroke="black" />`,
       );
       connectionPreview.push(
         svg`<rect width="100%" height="100%" fill="url(#grid)"
@@ -1424,12 +1424,12 @@ export class SLDEditor extends LitElement {
           )
           .map(cNode => this.renderConnectivityNode(cNode))}
         ${Array.from(
-          this.substation.querySelectorAll(':scope > PowerTransformer')
+          this.substation.querySelectorAll(':scope > PowerTransformer'),
         ).map(transformer => this.renderPowerTransformer(transformer))}
         ${Array.from(
           this.substation.querySelectorAll(
-            'VoltageLevel, Bay, ConductingEquipment, PowerTransformer'
-          )
+            'VoltageLevel, Bay, ConductingEquipment, PowerTransformer',
+          ),
         )
           .filter(
             e =>
@@ -1505,11 +1505,13 @@ export class SLDEditor extends LitElement {
             this.resizeSubstationUI.close();
             if (newW === oldW.toString() && newH === oldH.toString()) return;
             this.dispatchEvent(
-              newEditEvent({
+              newEditEventV2({
                 element: this.substation,
-                attributes: {
-                  [`${this.nsp}:w`]: { namespaceURI: sldNs, value: newW },
-                  [`${this.nsp}:h`]: { namespaceURI: sldNs, value: newH },
+                attributesNS: {
+                  [sldNs]: {
+                    [`${this.nsp}:w`]: newW,
+                    [`${this.nsp}:h`]: newH,
+                  },
                 },
               }),
             );
@@ -1690,8 +1692,8 @@ export class SLDEditor extends LitElement {
         preview
           ? Array.from(
               bayOrVL.querySelectorAll(
-                'Bay, ConductingEquipment, PowerTransformer'
-              )
+                'Bay, ConductingEquipment, PowerTransformer',
+              ),
             )
               .concat(bayOrVL)
               .map(element => this.renderLabel(element))
@@ -1716,7 +1718,7 @@ export class SLDEditor extends LitElement {
   } {
     const transformer = winding.parentElement!;
     const windings = Array.from(transformer.children).filter(
-      c => c.tagName === 'TransformerWinding'
+      c => c.tagName === 'TransformerWinding',
     );
     const [x, y] = this.renderedPosition(transformer).map(c => c + 0.5);
     let center = [x, y] as Point;
@@ -1732,16 +1734,16 @@ export class SLDEditor extends LitElement {
         }
       | undefined;
     const terminalElements = Array.from(winding.children).filter(
-      c => c.tagName === 'Terminal'
+      c => c.tagName === 'Terminal',
     );
     const terminal1 = terminalElements.find(
-      t => t.getAttribute('name') === 'T1'
+      t => t.getAttribute('name') === 'T1',
     );
     const terminal2 = terminalElements.find(
-      t => t.getAttribute('name') !== 'T1'
+      t => t.getAttribute('name') !== 'T1',
     );
     const neutral = Array.from(winding.children).find(
-      c => c.tagName === 'NeutralPoint'
+      c => c.tagName === 'NeutralPoint',
     );
     const windingIndex = windings.indexOf(winding);
     const { rot, kind, flip } = attributes(transformer);
@@ -1952,7 +1954,7 @@ export class SLDEditor extends LitElement {
     const ports: TemplateResult<2>[] = [];
     Object.entries(grounded).forEach(([_, [[x1, y1], [x2, y2]]]) => {
       ports.push(
-        svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`
+        svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="black" stroke-width="0.06" marker-start="url(#grounded)" />`,
       );
     });
     if (
@@ -1999,7 +2001,7 @@ export class SLDEditor extends LitElement {
                       [x, y],
                       [x1, y1],
                     ],
-                  })
+                  }),
                 );
               }}
       fill="#${terminal ? 'BB1326' : '12579B'}" stroke="#F5E214" />`);
@@ -2032,11 +2034,11 @@ export class SLDEditor extends LitElement {
 
   renderPowerTransformer(
     transformer: Element,
-    preview = false
+    preview = false,
   ): TemplateResult<2> {
     if (this.placing === transformer && !preview) return svg``;
     const windings = Array.from(transformer.children).filter(
-      c => c.tagName === 'TransformerWinding'
+      c => c.tagName === 'TransformerWinding',
     );
     const [x, y] = this.renderedPosition(transformer);
     return svg`<g class="${classMap({ transformer: true, preview })}"
@@ -2053,12 +2055,12 @@ export class SLDEditor extends LitElement {
           if (this.placing === transformer) {
             const parent =
               Array.from(
-                this.substation.querySelectorAll(':scope > VoltageLevel > Bay')
+                this.substation.querySelectorAll(':scope > VoltageLevel > Bay'),
               )
                 .concat(
                   Array.from(
-                    this.substation.querySelectorAll(':scope > VoltageLevel')
-                  )
+                    this.substation.querySelectorAll(':scope > VoltageLevel'),
+                  ),
                 )
                 .find(vl => containsRect(vl, x, y, 1, 1)) || this.substation;
             this.dispatchEvent(
@@ -2067,7 +2069,7 @@ export class SLDEditor extends LitElement {
                 parent,
                 x,
                 y,
-              })
+              }),
             );
           }
 
@@ -2166,7 +2168,7 @@ export class SLDEditor extends LitElement {
           from: equipment,
           fromTerminal: 'T1',
           path: connectionStartPoints(equipment).T1,
-        })
+        }),
       )}
     @contextmenu=${(e: MouseEvent) => {
       e.preventDefault();
@@ -2209,7 +2211,7 @@ export class SLDEditor extends LitElement {
           from: equipment,
           fromTerminal: 'T2',
           path: connectionStartPoints(equipment).T2,
-        })
+        }),
       )}
     @contextmenu=${(e: MouseEvent) => {
       e.preventDefault();
@@ -2322,19 +2324,22 @@ export class SLDEditor extends LitElement {
     if (!priv) return nothing;
     const circles = [] as TemplateResult<2>[];
     const intersections = Object.entries(
-      Array.from(priv.querySelectorAll('Vertex')).reduce((record, vertex) => {
-        const ret = record;
-        const key = JSON.stringify(this.renderedPosition(vertex));
-        if (ret[key]) ret[key].push(vertex);
-        else ret[key] = [vertex];
-        return ret;
-      }, {} as Record<string, Element[]>)
+      Array.from(priv.querySelectorAll('Vertex')).reduce(
+        (record, vertex) => {
+          const ret = record;
+          const key = JSON.stringify(this.renderedPosition(vertex));
+          if (ret[key]) ret[key].push(vertex);
+          else ret[key] = [vertex];
+          return ret;
+        },
+        {} as Record<string, Element[]>,
+      ),
     )
       .filter(
         ([_, vertices]) =>
           vertices.length > 2 ||
           (vertices.length === 2 &&
-            vertices.find(v => v.hasAttributeNS(sldNs, 'uuid')))
+            vertices.find(v => v.hasAttributeNS(sldNs, 'uuid'))),
       )
       .map(([_, [vertex]]) => this.renderedPosition(vertex));
     intersections.forEach(([x, y]) =>
@@ -2349,7 +2354,7 @@ export class SLDEditor extends LitElement {
     sections.forEach(section => {
       const busBar = xmlBoolean(section.getAttribute('bus'));
       const vertices = Array.from(
-        section.getElementsByTagNameNS(sldNs, 'Vertex')
+        section.getElementsByTagNameNS(sldNs, 'Vertex'),
       );
       let i = 0;
       while (i < vertices.length - 1) {
@@ -2410,7 +2415,7 @@ export class SLDEditor extends LitElement {
               from
                 .closest('ConductingEquipment, PowerTransformer')!
                 .querySelector(
-                  `[connectivityNode="${cNode.getAttribute('pathName')}"]`
+                  `[connectivityNode="${cNode.getAttribute('pathName')}"]`,
                 )
             )
               return;
@@ -2442,7 +2447,7 @@ export class SLDEditor extends LitElement {
                 fromTerminal,
                 path,
                 to: cNode,
-              })
+              }),
             );
           };
 

@@ -9,7 +9,7 @@ import {
   Transactor,
   Update,
 } from '@omicronenergy/oscd-api';
-import { newEditEvent } from '@omicronenergy/oscd-api/utils.js';
+import { newEditEventV2 } from '@omicronenergy/oscd-api/utils.js';
 import { getReference } from '@openscd/oscd-scl';
 
 import '@material/mwc-button';
@@ -242,7 +242,7 @@ export default class OscdEditorSLD extends LitElement {
     ].forEach(tag => {
       this.templateElements[tag] = this.doc.createElementNS(
         this.doc.documentElement.namespaceURI,
-        tag
+        tag,
       );
     });
     this.templateElements.BusBar = makeBusBar(this.doc, this.nsp);
@@ -259,7 +259,7 @@ export default class OscdEditorSLD extends LitElement {
           },
         },
       },
-    ] as Edit[];
+    ] as EditV2[];
     if (
       element.tagName === 'ConductingEquipment' ||
       element.tagName === 'PowerTransformer'
@@ -336,8 +336,8 @@ export default class OscdEditorSLD extends LitElement {
 
     Array.from(
       element.querySelectorAll(
-        'Bay, ConductingEquipment, PowerTransformer, Vertex'
-      )
+        'Bay, ConductingEquipment, PowerTransformer, Vertex',
+      ),
     ).forEach(descendant => {
       const {
         pos: [descX, descY],
@@ -368,7 +368,7 @@ export default class OscdEditorSLD extends LitElement {
         .forEach(terminal => edits.push(...removeTerminal(terminal)));
 
       const groundedTerminals = Array.from(
-        element.querySelectorAll('Terminal, NeutralPoint')
+        element.querySelectorAll('Terminal, NeutralPoint'),
       ).filter(terminal => terminal.getAttribute('cNodeName') === 'grounded');
 
       if (groundedTerminals.length > 0) {
@@ -421,9 +421,9 @@ export default class OscdEditorSLD extends LitElement {
               this.doc.querySelectorAll(
                 `Terminal[connectivityNode="${cNode.getAttribute('pathName')}"],
                  NeutralPoint[connectivityNode="${cNode.getAttribute(
-                   'pathName'
-                 )}"]`
-              )
+                   'pathName',
+                 )}"]`,
+              ),
             ).find(terminal => terminal.closest(element.tagName) !== element)
           )
             edits.push(...removeNode(cNode));
@@ -433,12 +433,12 @@ export default class OscdEditorSLD extends LitElement {
         terminal => {
           const cNode = this.doc.querySelector(
             `ConnectivityNode[pathName="${terminal.getAttribute(
-              'connectivityNode'
-            )}"]`
+              'connectivityNode',
+            )}"]`,
           );
           if (cNode && cNode.closest(element.tagName) !== element)
             edits.push(...removeNode(cNode));
-        }
+        },
       );
     }
 
@@ -499,7 +499,7 @@ export default class OscdEditorSLD extends LitElement {
       to.tagName === 'TransformerWinding'
     )
       return;
-    const edits = [] as Edit[];
+    const edits = [] as EditV2[];
     let cNode: Element;
     let connectivityNode: string;
     let cNodeName: string;
@@ -593,7 +593,7 @@ export default class OscdEditorSLD extends LitElement {
       : 'NeutralPoint';
     const fromTermElement = this.doc.createElementNS(
       this.doc.documentElement.namespaceURI,
-      fromTagName
+      fromTagName,
     );
     fromTermElement.setAttributeNS(sldNs, `${this.nsp}:uuid`, fromTermUUID);
     fromTermElement.setAttribute('name', fromTerminal);
@@ -613,7 +613,7 @@ export default class OscdEditorSLD extends LitElement {
         : 'NeutralPoint';
       const toTermElement = this.doc.createElementNS(
         this.doc.documentElement.namespaceURI,
-        toTagName
+        toTagName,
       );
       toTermElement.setAttributeNS(sldNs, `${this.nsp}:uuid`, toTermUUID);
       toTermElement.setAttribute('name', toTerminal!);
@@ -661,11 +661,13 @@ export default class OscdEditorSLD extends LitElement {
             }}
             @oscd-sld-resize=${({ detail: { element, w, h } }: ResizeEvent) => {
               this.dispatchEvent(
-                newEditEvent({
+                newEditEventV2({
                   element,
-                  attributes: {
-                    w: { namespaceURI: sldNs, value: w.toString() },
-                    h: { namespaceURI: sldNs, value: h.toString() },
+                  attributesNS: {
+                    [sldNs]: {
+                      w: w.toString(),
+                      h: h.toString(),
+                    },
                   },
                 }),
               );
@@ -760,7 +762,7 @@ export default class OscdEditorSLD extends LitElement {
         >
         </mwc-fab
         >${Array.from(this.doc.documentElement.children).find(
-          c => c.tagName === 'Substation'
+          c => c.tagName === 'Substation',
         )
           ? html`<mwc-fab
                 mini
@@ -918,7 +920,7 @@ export default class OscdEditorSLD extends LitElement {
     node.setAttribute('name', `S${index}`);
     node.setAttributeNS(sldNs, `${this.nsp}:w`, '50');
     node.setAttributeNS(sldNs, `${this.nsp}:h`, '25');
-    this.dispatchEvent(newEditEvent({ parent, node, reference }));
+    this.dispatchEvent(newEditEventV2({ parent, node, reference }));
   }
 
   static styles = css`
