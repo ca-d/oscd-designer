@@ -11139,14 +11139,6 @@ function convertEdit(edit) {
     return [];
 }
 
-function newEditEvent(edit) {
-    return new CustomEvent('oscd-edit', {
-        composed: true,
-        bubbles: true,
-        detail: edit,
-    });
-}
-
 function newEditEventV2(edit, options) {
     return new CustomEvent('oscd-edit-v2', {
         composed: true,
@@ -65657,11 +65649,13 @@ class OscdEditorSLD extends s$j {
             this.startConnecting(detail);
         }}
             @oscd-sld-resize=${({ detail: { element, w, h } }) => {
-            this.dispatchEvent(newEditEvent({
+            this.dispatchEvent(newEditEventV2({
                 element,
-                attributes: {
-                    w: { namespaceURI: sldNs, value: w.toString() },
-                    h: { namespaceURI: sldNs, value: h.toString() },
+                attributesNS: {
+                    [sldNs]: {
+                        w: w.toString(),
+                        h: h.toString()
+                    },
                 },
             }));
             this.reset();
@@ -65674,15 +65668,17 @@ class OscdEditorSLD extends s$j {
                 lx += x - oldX;
                 ly += y - oldY;
             }
-            this.dispatchEvent(newEditEvent({
+            this.dispatchEvent(newEditEventV2({
                 element,
-                attributes: {
-                    x: { namespaceURI: sldNs, value: x.toString() },
-                    y: { namespaceURI: sldNs, value: y.toString() },
-                    w: { namespaceURI: sldNs, value: w.toString() },
-                    h: { namespaceURI: sldNs, value: h.toString() },
-                    lx: { namespaceURI: sldNs, value: lx.toString() },
-                    ly: { namespaceURI: sldNs, value: ly.toString() },
+                attributesNS: {
+                    [sldNs]: {
+                        x: x.toString(),
+                        y: y.toString(),
+                        w: w.toString(),
+                        h: h.toString(),
+                        lx: lx.toString(),
+                        ly: ly.toString()
+                    },
                 },
             }));
             this.reset();
@@ -65710,7 +65706,7 @@ class OscdEditorSLD extends s$j {
         node.setAttribute('name', `S${index}`);
         node.setAttributeNS(sldNs, `${this.nsp}:w`, '50');
         node.setAttributeNS(sldNs, `${this.nsp}:h`, '25');
-        this.dispatchEvent(newEditEvent({ parent, node, reference }));
+        this.dispatchEvent(newEditEventV2({ parent, node, reference }));
     }
 }
 OscdEditorSLD.styles = i$t `
