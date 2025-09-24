@@ -11139,6 +11139,14 @@ function convertEdit(edit) {
     return [];
 }
 
+function newEditEvent(edit) {
+    return new CustomEvent('oscd-edit', {
+        composed: true,
+        bubbles: true,
+        detail: edit,
+    });
+}
+
 function newEditEventV2(edit, options) {
     return new CustomEvent('oscd-edit-v2', {
         composed: true,
@@ -65654,7 +65662,7 @@ class OscdEditorSLD extends s$j {
                 attributesNS: {
                     [sldNs]: {
                         w: w.toString(),
-                        h: h.toString()
+                        h: h.toString(),
                     },
                 },
             }));
@@ -65677,7 +65685,7 @@ class OscdEditorSLD extends s$j {
                         w: w.toString(),
                         h: h.toString(),
                         lx: lx.toString(),
-                        ly: ly.toString()
+                        ly: ly.toString(),
                     },
                 },
             }));
@@ -65706,6 +65714,7 @@ class OscdEditorSLD extends s$j {
         node.setAttribute('name', `S${index}`);
         node.setAttributeNS(sldNs, `${this.nsp}:w`, '50');
         node.setAttributeNS(sldNs, `${this.nsp}:h`, '25');
+        this.dispatchEvent(newEditEvent({ parent, node, reference }));
         this.dispatchEvent(newEditEventV2({ parent, node, reference }));
     }
 }
