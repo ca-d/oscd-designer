@@ -4,7 +4,11 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "noEmitOnError": true,
-    "lib": ["es2021", "dom", "DOM.Iterable"],
+    "lib": [
+      "es2021",
+      "dom",
+      "DOM.Iterable"
+    ],
     "strict": true,
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
@@ -15,7 +19,13 @@
     "inlineSources": true,
     "rootDir": "./",
     "declaration": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": [
+      "node",
+      "mocha"
+    ]
   },
-  "include": ["**/*.ts"]
+  "include": [
+    "**/*.ts"
+  ]
 }
