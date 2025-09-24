@@ -47,7 +47,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  upload-release-bundle:
+  upload-release-build:
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
@@ -64,8 +64,8 @@ jobs:
       - name: Set repository name env var
         run: echo "REPO_NAME=${GITHUB_REPOSITORY##*/}" >> $GITHUB_ENV
 
-      - name: Build plugin bundle
-        run: npm run bundle
+      - name: Build plugin
+        run: npm run build
 
       - name: Create zipped bundle
         run: |
