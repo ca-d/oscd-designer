@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.2](https://github.com/ca-d/oscd-designer/compare/oscd-editor-sld-v0.0.1...oscd-editor-sld-v0.0.2) (2025-09-24)
+
+
+### Bug Fixes
+
+* **package:** add marked back into built scripts ([7af458e](https://github.com/ca-d/oscd-designer/commit/7af458ec0e6b24ef50d651d9faa0ae4236157bf3))
+
 ## [0.0.1](https://github.com/ca-d/oscd-designer/compare/oscd-editor-sld-v0.0.1...oscd-editor-sld-v0.0.1) (2025-09-24)
 
 
