@@ -13997,7 +13997,6 @@ class OscdEditorSLD extends s$3 {
         node.setAttributeNS(sldNs, `${this.nsp}:h`, '25');
         this.dispatchEvent(newEditEvent({ parent, node, reference }));
         this.dispatchEvent(newEditEventV2({ parent, node, reference }));
-        window.alert('dispatched');
     }
 }
 OscdEditorSLD.styles = i$6 `
