@@ -1,6 +1,6 @@
 {
   "name": "@omicronenergy/oscd-editor-sld",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "OpenSCD Menu Plugin for loading IEC 61850 SCL files into OpenSCD.",
   "type": "module",
   "repository": {
