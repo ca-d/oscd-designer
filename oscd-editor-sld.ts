@@ -10,7 +10,7 @@ import {
   Transactor,
   Update,
 } from '@omicronenergy/oscd-api';
-import { newEditEvent } from '@omicronenergy/oscd-api/utils.js';
+import { newEditEvent, newEditEventV2 } from '@omicronenergy/oscd-api/utils.js';
 import { getReference } from '@openscd/oscd-scl';
 
 import type { Dialog } from '@material/mwc-dialog';
@@ -986,11 +986,13 @@ export default class OscdEditorSLD extends LitElement {
             }}
             @oscd-sld-resize=${({ detail: { element, w, h } }: ResizeEvent) => {
               this.dispatchEvent(
-                newEditEvent({
+                newEditEventV2({
                   element,
-                  attributes: {
-                    w: { namespaceURI: sldNs, value: w.toString() },
-                    h: { namespaceURI: sldNs, value: h.toString() },
+                  attributesNS: {
+                    [sldNs]: {
+                      w: w.toString(),
+                      h: h.toString(),
+                    },
                   },
                 }),
               );
@@ -1010,15 +1012,17 @@ export default class OscdEditorSLD extends LitElement {
                 ly += y - oldY;
               }
               this.dispatchEvent(
-                newEditEvent({
+                newEditEventV2({
                   element,
-                  attributes: {
-                    x: { namespaceURI: sldNs, value: x.toString() },
-                    y: { namespaceURI: sldNs, value: y.toString() },
-                    w: { namespaceURI: sldNs, value: w.toString() },
-                    h: { namespaceURI: sldNs, value: h.toString() },
-                    lx: { namespaceURI: sldNs, value: lx.toString() },
-                    ly: { namespaceURI: sldNs, value: ly.toString() },
+                  attributesNS: {
+                    [sldNs]: {
+                      x: x.toString(),
+                      y: y.toString(),
+                      w: w.toString(),
+                      h: h.toString(),
+                      lx: lx.toString(),
+                      ly: ly.toString(),
+                    },
                   },
                 }),
               );
@@ -1059,6 +1063,7 @@ export default class OscdEditorSLD extends LitElement {
     node.setAttributeNS(sldNs, `${this.nsp}:w`, '50');
     node.setAttributeNS(sldNs, `${this.nsp}:h`, '25');
     this.dispatchEvent(newEditEvent({ parent, node, reference }));
+    this.dispatchEvent(newEditEventV2({ parent, node, reference }));
   }
 
   static styles = css`
