@@ -40,5 +40,19 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
   // See documentation for all available options
   // When encountering aync/timeout issues, it can help (your nerves) to set a short timeout
   // so you're not left hanging for a long time.
-  // testsFinishTimeout: 3000,
+  testsFinishTimeout: 10000,
+
+  // Fix for the structuredClone error causing timeouts for failing tests it can't clone the error reports for.
+  testRunnerHtml: testFramework =>
+    `<!DOCTYPE html>
+    <html>
+      <body>
+        <!-- Script to replace window.structuredClone with @ungap/structured-clone (in lossy mode) -->
+        <script type="module">       
+          import structuredClone from '@ungap/structured-clone';
+          window.structuredClone = (value) => structuredClone(value, { lossy: true });
+        </script>
+        <script type="module" src="${testFramework}"></script>
+      </body>
+    </html>`,
 });
