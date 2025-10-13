@@ -47,7 +47,7 @@ export default class OscdEditorSLD extends LitElement {
     placeLabel(element: Element, x: number, y: number): void;
     placeElement(element: Element, parent: Element, x: number, y: number): void;
     connectEquipment({ from, fromTerminal, to, toTerminal, path, }: ConnectDetail): void;
-    render(): import("lit").TemplateResult<1>;
+    render(): import("lit-html").TemplateResult<1>;
     insertSubstation(): void;
     static styles: import("lit").CSSResult;
 }

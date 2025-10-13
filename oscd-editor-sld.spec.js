@@ -63,7 +63,7 @@ export const equipmentDocString = `<?xml version="1.0" encoding="UTF-8"?>
 </SCL>
 `;
 describe('oscd-editor-sld', () => {
-    const xmlEditor = new XMLEditor();
+    let xmlEditor = new XMLEditor();
     let element;
     let lastCalledWizard;
     function queryUI({ scl, ui, }) {
@@ -81,6 +81,7 @@ describe('oscd-editor-sld', () => {
         return target;
     }
     beforeEach(async () => {
+        xmlEditor = new XMLEditor();
         const doc = new DOMParser().parseFromString(emptyDocString, 'application/xml');
         element = await fixture(html `<oscd-editor-sld
         .editor=${xmlEditor}
@@ -105,17 +106,17 @@ describe('oscd-editor-sld', () => {
         element = await fixture(html `<oscd-editor-sld></oscd-editor-sld>`);
         expect(element.shadowRoot?.querySelector('p')).to.contain.text('SCL');
     });
-    it('adds the SLD XML namespace if doc lacks it', async () => {
+    it('adds the SLD XML namespace if doc lacks it', () => {
         expect(element.doc.documentElement).to.have.attribute('xmlns:esld');
     });
-    it('adds a substation on add button click', async () => {
+    it('adds a substation on add button click', () => {
         expect(element.doc.querySelector('Substation')).to.not.exist;
         element
             .shadowRoot.querySelector('[label="Add Substation"]')
             ?.click();
         expect(element.doc.querySelector('Substation')).to.exist;
     });
-    it('gives new substations unique names', async () => {
+    it('gives new substations unique names', () => {
         element
             .shadowRoot.querySelector('[label="Add Substation"]')
             ?.click();
@@ -125,7 +126,7 @@ describe('oscd-editor-sld', () => {
         const [name1, name2] = Array.from(element.doc.querySelectorAll('Substation')).map(substation => substation.getAttribute('name'));
         expect(name1).not.to.equal(name2);
     });
-    it('does not zoom out past a positive minimum value', async () => {
+    it('does not zoom out past a positive minimum value', () => {
         for (let i = 0; i < 20; i += 1)
             element
                 .shadowRoot.querySelector('[icon="zoom_out"]')
@@ -139,14 +140,14 @@ describe('oscd-editor-sld', () => {
                 ?.click();
             await element.updateComplete;
         });
-        it('zooms in on zoom in button click', async () => {
+        it('zooms in on zoom in button click', () => {
             const initial = element.gridSize;
             element
                 .shadowRoot.querySelector('[icon="zoom_in"]')
                 ?.click();
             expect(element.gridSize).to.be.greaterThan(initial);
         });
-        it('zooms out on zoom out button click', async () => {
+        it('zooms out on zoom out button click', () => {
             const initial = element.gridSize;
             element
                 .shadowRoot.querySelector('[icon="zoom_out"]')
@@ -226,7 +227,7 @@ describe('oscd-editor-sld', () => {
             element.doc = doc;
             await element.updateComplete;
         });
-        it('forbids undersizing the substation', async () => {
+        it('forbids undersizing the substation', () => {
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
             sldEditor.shadowRoot
                 ?.querySelector('h2 > mwc-icon-button')
@@ -365,7 +366,7 @@ describe('oscd-editor-sld', () => {
             expect(element.doc.querySelector('VoltageLevel')).to.have.attribute('smth:lx', '5');
             expect(element.doc.querySelector('VoltageLevel')).to.have.attribute('smth:ly', '4.5');
         });
-        it('requests a voltage level edit wizard on label middle click', async () => {
+        it('requests a voltage level edit wizard on label middle click', () => {
             queryUI({ ui: '.label text' }).dispatchEvent(new PointerEvent('auxclick', { button: 1 }));
             expect(lastCalledWizard).to.equal(element.doc.querySelector('VoltageLevel'));
         });
@@ -1050,7 +1051,7 @@ describe('oscd-editor-sld', () => {
                         ignoreAttributes: ['esld:uuid'],
                     });
                 });
-                it('removes superfluous connectivity nodes when disconnecting', async () => {
+                it('removes superfluous connectivity nodes when disconnecting', () => {
                     queryUI({ scl: '[type="CTR"]', ui: 'rect' }).dispatchEvent(new PointerEvent('auxclick', { button: 1 }));
                     queryUI({ scl: '[type="DIS"]', ui: 'rect' }).dispatchEvent(new PointerEvent('auxclick', { button: 1 }));
                     expect(element.doc.querySelector('ConnectivityNode')).to.not.exist;
