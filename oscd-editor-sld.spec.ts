@@ -78,7 +78,7 @@ export const equipmentDocString = `<?xml version="1.0" encoding="UTF-8"?>
 `;
 
 describe('oscd-editor-sld', () => {
-  const xmlEditor: XMLEditor = new XMLEditor();
+  let xmlEditor: XMLEditor = new XMLEditor();
   let element: OscdEditorSLD;
   let lastCalledWizard: Element | undefined;
 
@@ -108,6 +108,7 @@ describe('oscd-editor-sld', () => {
   }
 
   beforeEach(async () => {
+    xmlEditor = new XMLEditor();
     const doc = new DOMParser().parseFromString(
       emptyDocString,
       'application/xml',
@@ -142,11 +143,11 @@ describe('oscd-editor-sld', () => {
     expect(element.shadowRoot?.querySelector('p')).to.contain.text('SCL');
   });
 
-  it('adds the SLD XML namespace if doc lacks it', async () => {
+  it('adds the SLD XML namespace if doc lacks it', () => {
     expect(element.doc.documentElement).to.have.attribute('xmlns:esld');
   });
 
-  it('adds a substation on add button click', async () => {
+  it('adds a substation on add button click', () => {
     expect(element.doc.querySelector('Substation')).to.not.exist;
     element
       .shadowRoot!.querySelector<Button>('[label="Add Substation"]')
@@ -154,7 +155,7 @@ describe('oscd-editor-sld', () => {
     expect(element.doc.querySelector('Substation')).to.exist;
   });
 
-  it('gives new substations unique names', async () => {
+  it('gives new substations unique names', () => {
     element
       .shadowRoot!.querySelector<Button>('[label="Add Substation"]')
       ?.click();
@@ -167,7 +168,7 @@ describe('oscd-editor-sld', () => {
     expect(name1).not.to.equal(name2);
   });
 
-  it('does not zoom out past a positive minimum value', async () => {
+  it('does not zoom out past a positive minimum value', () => {
     for (let i = 0; i < 20; i += 1)
       element
         .shadowRoot!.querySelector<IconButton>('[icon="zoom_out"]')
@@ -183,7 +184,7 @@ describe('oscd-editor-sld', () => {
       await element.updateComplete;
     });
 
-    it('zooms in on zoom in button click', async () => {
+    it('zooms in on zoom in button click', () => {
       const initial = element.gridSize;
       element
         .shadowRoot!.querySelector<IconButton>('[icon="zoom_in"]')
@@ -191,7 +192,7 @@ describe('oscd-editor-sld', () => {
       expect(element.gridSize).to.be.greaterThan(initial);
     });
 
-    it('zooms out on zoom out button click', async () => {
+    it('zooms out on zoom out button click', () => {
       const initial = element.gridSize;
       element
         .shadowRoot!.querySelector<IconButton>('[icon="zoom_out"]')
@@ -295,7 +296,7 @@ describe('oscd-editor-sld', () => {
       await element.updateComplete;
     });
 
-    it('forbids undersizing the substation', async () => {
+    it('forbids undersizing the substation', () => {
       const sldEditor =
         element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
       sldEditor.shadowRoot
@@ -476,7 +477,7 @@ describe('oscd-editor-sld', () => {
       );
     });
 
-    it('requests a voltage level edit wizard on label middle click', async () => {
+    it('requests a voltage level edit wizard on label middle click', () => {
       queryUI({ ui: '.label text' }).dispatchEvent(
         new PointerEvent('auxclick', { button: 1 }),
       );
@@ -1407,7 +1408,7 @@ describe('oscd-editor-sld', () => {
           });
         });
 
-        it('removes superfluous connectivity nodes when disconnecting', async () => {
+        it('removes superfluous connectivity nodes when disconnecting', () => {
           queryUI({ scl: '[type="CTR"]', ui: 'rect' }).dispatchEvent(
             new PointerEvent('auxclick', { button: 1 }),
           );
