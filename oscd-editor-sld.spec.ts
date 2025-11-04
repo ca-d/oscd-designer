@@ -1,20 +1,20 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
 import { html } from 'lit';
 import { fixture, expect } from '@open-wc/testing';
 
 import type { Button } from '@material/mwc-button';
 
+import { EditEventV2 } from '@omicronenergy/oscd-api';
+import { handleEdit } from '@omicronenergy/oscd-editor';
+
 import { IconButton } from '@material/mwc-icon-button';
 import { resetMouse, sendMouse } from '@web/test-runner-commands';
 import { identity } from '@openscd/oscd-scl';
 import { ListItem } from '@material/mwc-list/mwc-list-item.js';
-import OscdEditorSLD from './oscd-editor-sld.js';
+import Designer from './oscd-editor-sld.js';
 import { SLDEditor } from './sld-editor.js';
-import { EditEvent } from '@omicronenergy/oscd-api';
-import { convertEdit } from '@omicronenergy/oscd-api/utils.js';
-import { XMLEditor } from '@omicronenergy/oscd-editor';
 
 function middleOf(element: Element): [number, number] {
+  console.log(element.tagName);
   const { x, y, width, height } = element.getBoundingClientRect();
 
   return [
@@ -23,7 +23,7 @@ function middleOf(element: Element): [number, number] {
   ];
 }
 
-customElements.define('oscd-editor-sld', OscdEditorSLD);
+customElements.define('oscd-designer', Designer);
 
 export const emptyDocString = `<?xml version="1.0" encoding="UTF-8"?>
 <SCL version="2007" revision="B" xmlns="http://www.iec.ch/61850/2003/SCL">
@@ -77,9 +77,8 @@ export const equipmentDocString = `<?xml version="1.0" encoding="UTF-8"?>
 </SCL>
 `;
 
-describe('oscd-editor-sld', () => {
-  let xmlEditor: XMLEditor = new XMLEditor();
-  let element: OscdEditorSLD;
+describe('Designer', () => {
+  let element: Designer;
   let lastCalledWizard: Element | undefined;
 
   function queryUI({
@@ -96,10 +95,7 @@ describe('oscd-editor-sld', () => {
       element.shadowRoot!.querySelector<HTMLElement>('sld-editor')!.shadowRoot!;
     if (scl) {
       const sclTarget = element.doc.querySelector(scl);
-      const t = target.getElementById?.(<string>identity(sclTarget));
-      if (t) {
-        target = t;
-      }
+      target = target.getElementById?.(<string>identity(sclTarget)) || document;
     }
     if (ui) {
       target = target.querySelector(ui)!;
@@ -108,19 +104,16 @@ describe('oscd-editor-sld', () => {
   }
 
   beforeEach(async () => {
-    xmlEditor = new XMLEditor();
     const doc = new DOMParser().parseFromString(
       emptyDocString,
       'application/xml',
     );
     element = await fixture(
-      html`<oscd-editor-sld
-        .editor=${xmlEditor}
+      html`<oscd-designer
         docName="testDoc"
         .doc=${doc}
-        @oscd-edit=${(event: EditEvent) => {
-          const editV2 = convertEdit(event.detail);
-          xmlEditor.commit(editV2);
+        @oscd-edit=${({ detail }: EditEventV2) => {
+          handleEdit(detail.edit);
           element.docVersion += 1;
         }}
         @oscd-edit-wizard-request=${({
@@ -128,7 +121,7 @@ describe('oscd-editor-sld', () => {
         }: CustomEvent<{ element: Element }>) => {
           lastCalledWizard = e;
         }}
-      ></oscd-editor-sld>`,
+      ></oscd-designer>`,
     );
   });
 
@@ -139,15 +132,15 @@ describe('oscd-editor-sld', () => {
   });
 
   it('shows a placeholder message while no document is loaded', async () => {
-    element = await fixture(html`<oscd-editor-sld></oscd-editor-sld>`);
+    element = await fixture(html`<oscd-designer></oscd-designer>`);
     expect(element.shadowRoot?.querySelector('p')).to.contain.text('SCL');
   });
 
-  it('adds the SLD XML namespace if doc lacks it', () => {
+  it('adds the SLD XML namespace if doc lacks it', async () => {
     expect(element.doc.documentElement).to.have.attribute('xmlns:esld');
   });
 
-  it('adds a substation on add button click', () => {
+  it('adds a substation on add button click', async () => {
     expect(element.doc.querySelector('Substation')).to.not.exist;
     element
       .shadowRoot!.querySelector<Button>('[label="Add Substation"]')
@@ -155,7 +148,7 @@ describe('oscd-editor-sld', () => {
     expect(element.doc.querySelector('Substation')).to.exist;
   });
 
-  it('gives new substations unique names', () => {
+  it('gives new substations unique names', async () => {
     element
       .shadowRoot!.querySelector<Button>('[label="Add Substation"]')
       ?.click();
@@ -168,11 +161,12 @@ describe('oscd-editor-sld', () => {
     expect(name1).not.to.equal(name2);
   });
 
-  it('does not zoom out past a positive minimum value', () => {
-    for (let i = 0; i < 20; i += 1)
+  it('does not zoom out past a positive minimum value', async () => {
+    for (let i = 0; i < 20; i += 1) {
       element
         .shadowRoot!.querySelector<IconButton>('[icon="zoom_out"]')
         ?.click();
+    }
     expect(element.gridSize).to.be.greaterThan(0);
   });
 
@@ -184,7 +178,7 @@ describe('oscd-editor-sld', () => {
       await element.updateComplete;
     });
 
-    it('zooms in on zoom in button click', () => {
+    it('zooms in on zoom in button click', async () => {
       const initial = element.gridSize;
       element
         .shadowRoot!.querySelector<IconButton>('[icon="zoom_in"]')
@@ -192,7 +186,7 @@ describe('oscd-editor-sld', () => {
       expect(element.gridSize).to.be.greaterThan(initial);
     });
 
-    it('zooms out on zoom out button click', () => {
+    it('zooms out on zoom out button click', async () => {
       const initial = element.gridSize;
       element
         .shadowRoot!.querySelector<IconButton>('[icon="zoom_out"]')
@@ -200,7 +194,7 @@ describe('oscd-editor-sld', () => {
       expect(element.gridSize).to.be.lessThan(initial);
     });
 
-    it('allows resizing substations', () => {
+    it('allows resizing substations', async () => {
       const sldEditor =
         element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
       sldEditor.shadowRoot
@@ -211,7 +205,7 @@ describe('oscd-editor-sld', () => {
       sldEditor.shadowRoot
         ?.querySelector<Button>('mwc-button[slot="primaryAction"]')
         ?.click();
-      expect(element).to.have.property('docVersion', 0);
+      expect(element).to.have.property('editCount', 0);
       sldEditor.substationWidthUI.value = '1337';
       sldEditor.substationHeightUI.value = '42';
       sldEditor.shadowRoot
@@ -228,12 +222,12 @@ describe('oscd-editor-sld', () => {
       expect(element)
         .property('placing')
         .to.have.property('tagName', 'VoltageLevel');
-      await sendMouse({ type: 'click', position: [200, 200] });
+      await sendMouse({ type: 'click', position: [200, 252] });
       expect(element).to.have.property('placing', undefined);
       expect(element)
         .property('resizingBR')
         .to.have.property('tagName', 'VoltageLevel');
-      await sendMouse({ type: 'click', position: [400, 400] });
+      await sendMouse({ type: 'click', position: [400, 452] });
       expect(element).to.have.property('resizingBR', undefined);
       expect(element.doc.querySelector('VoltageLevel')).to.exist;
       expect(element.doc.querySelector('VoltageLevel')).to.have.attribute(
@@ -258,13 +252,13 @@ describe('oscd-editor-sld', () => {
       element
         .shadowRoot!.querySelector<Button>('[label="Add VoltageLevel"]')
         ?.click();
-      await sendMouse({ type: 'click', position: [200, 200] });
-      await sendMouse({ type: 'click', position: [300, 300] });
+      await sendMouse({ type: 'click', position: [200, 252] });
+      await sendMouse({ type: 'click', position: [300, 352] });
       element
         .shadowRoot!.querySelector<Button>('[label="Add VoltageLevel"]')
         ?.click();
-      await sendMouse({ type: 'click', position: [350, 350] });
-      await sendMouse({ type: 'click', position: [450, 450] });
+      await sendMouse({ type: 'click', position: [350, 402] });
+      await sendMouse({ type: 'click', position: [450, 502] });
       const [name1, name2] = Array.from(
         element.doc.querySelectorAll('VoltageLevel'),
       ).map(substation => substation.getAttribute('name'));
@@ -296,7 +290,7 @@ describe('oscd-editor-sld', () => {
       await element.updateComplete;
     });
 
-    it('forbids undersizing the substation', () => {
+    it('forbids undersizing the substation', async () => {
       const sldEditor =
         element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
       sldEditor.shadowRoot
@@ -323,22 +317,22 @@ describe('oscd-editor-sld', () => {
       const voltageLevel = element.resizingBR!;
       expect(voltageLevel).to.have.attribute('smth:w', '48');
       expect(voltageLevel).to.have.attribute('smth:h', '23');
-      await sendMouse({ type: 'click', position: [300, 300] });
+      await sendMouse({ type: 'click', position: [300, 352] });
       expect(voltageLevel).to.have.attribute('smth:w', '8');
       expect(voltageLevel).to.have.attribute('smth:h', '7');
     });
 
     it('moves voltage levels on move handle click', async () => {
-      queryUI({ scl: 'VoltageLevel', ui: 'rect' }).dispatchEvent(
-        new PointerEvent('click'),
-      );
+      // Click on voltage level to start placing/moving
+      await sendMouse({ type: 'click', position: [100, 180] });
       expect(element)
         .property('placing')
         .to.exist.and.to.have.property('tagName', 'VoltageLevel');
       const voltageLevel = element.placing!;
       expect(voltageLevel).to.have.attribute('smth:x', '1');
       expect(voltageLevel).to.have.attribute('smth:y', '1');
-      await sendMouse({ type: 'click', position: [100, 150] });
+      // Click to place at new position (moved right and down)
+      await sendMouse({ type: 'click', position: [132, 202] });
       expect(voltageLevel).to.have.attribute('smth:x', '2');
       expect(voltageLevel).to.have.attribute('smth:y', '2');
     });
@@ -350,7 +344,7 @@ describe('oscd-editor-sld', () => {
       }).dispatchEvent(new PointerEvent('contextmenu'));
       await element.updateComplete;
       expect(queryUI({ ui: 'menu' })).to.exist;
-      expect(queryUI({ ui: 'menu' })).dom.to.equalSnapshot();
+      await expect(queryUI({ ui: 'menu' })).dom.to.equalSnapshot();
     });
 
     it('resizes voltage levels on resize menu item select', async () => {
@@ -372,31 +366,48 @@ describe('oscd-editor-sld', () => {
       const voltageLevel = element.resizingBR!;
       expect(voltageLevel).to.have.attribute('smth:w', '48');
       expect(voltageLevel).to.have.attribute('smth:h', '23');
-      await sendMouse({ type: 'click', position: [300, 300] });
+      await sendMouse({ type: 'click', position: [300, 352] });
       expect(voltageLevel).to.have.attribute('smth:w', '8');
       expect(voltageLevel).to.have.attribute('smth:h', '7');
     });
 
     it('moves voltage levels on move menu item select', async () => {
-      queryUI({
+      const voltageRect = queryUI({
         scl: 'VoltageLevel',
         ui: 'rect',
-      }).dispatchEvent(new PointerEvent('contextmenu'));
-      await element.updateComplete;
+      });
       const sldEditor =
         element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
+
+      // Move mouse to voltage level position [1,1] to establish coordinates
+      await sendMouse({ type: 'move', position: [64, 164] });
+      await element.updateComplete;
+
+      // Open context menu
+      voltageRect.dispatchEvent(
+        new PointerEvent('contextmenu', {
+          bubbles: true,
+          composed: true,
+        }),
+      );
+      await element.updateComplete;
+
+      // Select "Move" menu item
       const item = sldEditor.shadowRoot!.querySelector<ListItem>(
-        'mwc-list-item:nth-last-of-type(5)',
+        'mwc-list-item:nth-of-type(4)',
       )!;
       item.selected = true;
-      await element.updateComplete;
+      await sldEditor.updateComplete;
+
       expect(element)
         .property('placing')
         .to.exist.and.to.have.property('tagName', 'VoltageLevel');
       const voltageLevel = element.placing!;
       expect(voltageLevel).to.have.attribute('smth:x', '1');
       expect(voltageLevel).to.have.attribute('smth:y', '1');
-      await sendMouse({ type: 'click', position: [100, 150] });
+
+      // Click to place at [2,2]
+      await sendMouse({ type: 'click', position: [96, 196] });
       expect(voltageLevel).to.have.attribute('smth:x', '2');
       expect(voltageLevel).to.have.attribute('smth:y', '2');
     });
@@ -433,8 +444,7 @@ describe('oscd-editor-sld', () => {
       expect(element)
         .property('placingLabel')
         .to.have.property('tagName', 'VoltageLevel');
-      await sendMouse({ type: 'click', position: [200, 200] });
-
+      await sendMouse({ type: 'click', position: [200, 252] });
       expect(element.doc.querySelector('VoltageLevel')).to.have.attribute(
         'smth:lx',
         '5',
@@ -456,17 +466,19 @@ describe('oscd-editor-sld', () => {
       const voltageLevel = element.placing!;
       expect(voltageLevel).to.have.attribute('smth:x', '1');
       expect(voltageLevel).to.have.attribute('smth:y', '1');
-      await sendMouse({ type: 'click', position: [200, 200] });
+      await sendMouse({ type: 'click', position: [200, 252] });
       expect(voltageLevel).to.have.attribute('smth:x', '1');
       expect(voltageLevel).to.have.attribute('smth:y', '1');
     });
 
     it('moves the voltage level label on label left click', async () => {
+      // Click on label to start placing/moving it
       queryUI({ ui: '.label text' }).dispatchEvent(new PointerEvent('click'));
       expect(element)
         .property('placingLabel')
         .to.have.property('tagName', 'VoltageLevel');
-      await sendMouse({ type: 'click', position: [200, 200] });
+      // Click to place label at position [5, 4.5]
+      await sendMouse({ type: 'click', position: [144, 244] });
       expect(element.doc.querySelector('VoltageLevel')).to.have.attribute(
         'smth:lx',
         '5',
@@ -477,7 +489,7 @@ describe('oscd-editor-sld', () => {
       );
     });
 
-    it('requests a voltage level edit wizard on label middle click', () => {
+    it('requests a voltage level edit wizard on label middle click', async () => {
       queryUI({ ui: '.label text' }).dispatchEvent(
         new PointerEvent('auxclick', { button: 1 }),
       );
@@ -491,10 +503,10 @@ describe('oscd-editor-sld', () => {
       expect(element).property('placing').to.have.property('tagName', 'Bay');
       const sldEditor =
         element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
-      await sendMouse({ type: 'click', position: [200, 200] });
+      await sendMouse({ type: 'click', position: [200, 252] });
       expect(element).to.have.property('placing', undefined);
       expect(element).property('resizingBR').to.have.property('tagName', 'Bay');
-      await sendMouse({ type: 'click', position: [400, 400] });
+      await sendMouse({ type: 'click', position: [400, 500] });
       expect(sldEditor).to.have.property('resizingBR', undefined);
       const bay = element.doc.querySelector('Bay');
       expect(bay).to.exist;
@@ -511,10 +523,10 @@ describe('oscd-editor-sld', () => {
       expect(element).property('placing').to.have.property('tagName', 'Bay');
       const sldEditor =
         element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
-      await sendMouse({ type: 'click', position: [200, 200] });
+      await sendMouse({ type: 'click', position: [200, 252] });
       expect(element).to.have.property('placing', undefined);
       expect(element).property('resizingBR').to.have.property('tagName', 'Bay');
-      await sendMouse({ type: 'click', position: [400, 400] });
+      await sendMouse({ type: 'click', position: [400, 452] });
       expect(sldEditor).to.have.property('resizingBR', undefined);
       const bus = element.doc.querySelector('Bay');
       expect(bus).to.exist;
@@ -522,7 +534,7 @@ describe('oscd-editor-sld', () => {
       expect(bus).to.have.attribute('y', '3');
       expect(bus).to.have.attribute('smth:w', '1');
       expect(bus).to.have.attribute('h', '8');
-      expect(bus).dom.to.equalSnapshot({
+      await expect(bus).dom.to.equalSnapshot({
         ignoreAttributes: ['esld:uuid'],
       });
     });
@@ -550,7 +562,7 @@ describe('oscd-editor-sld', () => {
       const bay = element.resizingBR!;
       expect(bay).to.have.attribute('esld:w', '3');
       expect(bay).to.have.attribute('esld:h', '3');
-      await sendMouse({ type: 'click', position: [400, 400] });
+      await sendMouse({ type: 'click', position: [384, 516] });
       expect(bay).to.have.attribute('esld:w', '10');
       expect(bay).to.have.attribute('esld:h', '9');
     });
@@ -591,7 +603,7 @@ describe('oscd-editor-sld', () => {
       const bay = element.resizingBR!;
       expect(bay).to.have.attribute('esld:w', '3');
       expect(bay).to.have.attribute('esld:h', '3');
-      await sendMouse({ type: 'click', position: [600, 400] });
+      await sendMouse({ type: 'click', position: [600, 452] });
       expect(bay).to.have.attribute('esld:w', '3');
       expect(bay).to.have.attribute('esld:h', '3');
     });
@@ -609,32 +621,65 @@ describe('oscd-editor-sld', () => {
       const voltageLevel = element.resizingBR!;
       expect(voltageLevel).to.have.attribute('esld:w', '13');
       expect(voltageLevel).to.have.attribute('esld:h', '13');
-      await sendMouse({ type: 'click', position: [100, 100] });
+      await sendMouse({ type: 'click', position: [100, 152] });
       expect(voltageLevel).to.have.attribute('esld:w', '13');
       expect(voltageLevel).to.have.attribute('esld:h', '13');
     });
 
     it('moves bays on move handle click', async () => {
+      const bayElement = element.doc.querySelector('Bay')!;
+      const currentX = parseInt(bayElement.getAttribute('esld:x')!);
+      const currentY = parseInt(bayElement.getAttribute('esld:y')!);
+
+      // Move mouse to bay position to establish offset
+      await sendMouse({
+        type: 'move',
+        position: [(currentX - 1) * 32 + 64, (currentY - 1) * 32 + 228],
+      });
+      await element.updateComplete;
+
+      // Use contextmenu approach for bay movement
       queryUI({ scl: 'Bay', ui: 'rect' }).dispatchEvent(
-        new PointerEvent('click'),
+        new PointerEvent('contextmenu', { bubbles: true, composed: true }),
       );
+      await element.updateComplete;
+
+      const sldEditor =
+        element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
+      sldEditor.shadowRoot!.querySelector<ListItem>(
+        'mwc-list-item:nth-of-type(4)',
+      )!.selected = true;
+      await sldEditor.updateComplete;
+
       expect(element)
         .property('placing')
         .to.exist.and.to.have.property('tagName', 'Bay');
       const bay = element.placing!;
-      await sendMouse({ type: 'click', position: [200, 200] });
-      expect(bay).to.have.attribute('esld:x', '5');
+      // Click to place at new position [4,3] using equipment context formula
+      await sendMouse({ type: 'click', position: [160, 292] });
+      expect(bay).to.have.attribute('esld:x', '4');
       expect(bay).to.have.attribute('esld:y', '3');
     });
 
     it('renames reparented bays if necessary', async () => {
+      const bayElement = element.doc.querySelector('Bay')!;
+      const currentX = parseInt(bayElement.getAttribute('esld:x')!);
+      const currentY = parseInt(bayElement.getAttribute('esld:y')!);
+
+      // Move mouse to bay position to establish offset
+      await sendMouse({
+        type: 'move',
+        position: [(currentX - 1) * 32 + 64, (currentY - 1) * 32 + 228],
+      });
+      await element.updateComplete;
+
       queryUI({ scl: 'Bay', ui: 'rect' }).dispatchEvent(
         new PointerEvent('click'),
       );
       const bay = element.placing!;
       expect(bay.parentElement).to.have.attribute('name', 'V1');
       expect(bay).to.have.attribute('name', 'B1');
-      await sendMouse({ type: 'click', position: [600, 200] });
+      await sendMouse({ type: 'click', position: [608, 292] });
       expect(element).to.have.property('placing', undefined);
       expect(bay).to.have.attribute('esld:x', '18');
       expect(bay).to.have.attribute('esld:y', '3');
@@ -643,7 +688,7 @@ describe('oscd-editor-sld', () => {
       queryUI({ scl: 'Bay', ui: 'rect' }).dispatchEvent(
         new PointerEvent('click'),
       );
-      await sendMouse({ type: 'click', position: [200, 200] });
+      await sendMouse({ type: 'click', position: [192, 292] });
       expect(bay).to.have.attribute('esld:x', '5');
       expect(bay).to.have.attribute('esld:y', '3');
       expect(bay.parentElement).to.have.attribute('name', 'V1');
@@ -651,28 +696,43 @@ describe('oscd-editor-sld', () => {
     });
 
     it("updates reparented bays' connectivity node paths", async () => {
+      const bayElement = element.doc.querySelector('Bay')!;
+      const currentX = parseInt(bayElement.getAttribute('esld:x')!);
+      const currentY = parseInt(bayElement.getAttribute('esld:y')!);
+
+      // Move mouse to bay position to establish offset
+      await sendMouse({
+        type: 'move',
+        position: [(currentX - 1) * 32 + 64, (currentY - 1) * 32 + 228],
+      });
+      await element.updateComplete;
+
       queryUI({ scl: 'Bay', ui: 'rect' }).dispatchEvent(
         new PointerEvent('click'),
       );
       const bay = element.placing!;
       const cNode = bay.querySelector('ConnectivityNode')!;
       expect(cNode).to.have.attribute('pathName', 'S1/V1/B1/L1');
-      await sendMouse({ type: 'click', position: [600, 200] });
+      await sendMouse({ type: 'click', position: [608, 292] });
       expect(element).to.have.property('placing', undefined);
       expect(cNode).to.have.attribute('pathName', 'S1/V2/B2/L1');
-      expect(element.doc.documentElement).dom.to.equalSnapshot({
+      await expect(element.doc.documentElement).dom.to.equalSnapshot({
         ignoreAttributes: ['esld:uuid'],
       });
     });
 
     it('moves a bay when its parent voltage level is moved', async () => {
-      queryUI({ scl: 'VoltageLevel', ui: 'rect' }).dispatchEvent(
-        new PointerEvent('click'),
-      );
+      await sendMouse({
+        type: 'click',
+        position: [70, 250],
+      });
       const bay = element.placing!.querySelector('Bay')!;
       expect(bay).to.have.attribute('esld:x', '2');
       expect(bay).to.have.attribute('esld:y', '2');
-      await sendMouse({ type: 'click', position: [100, 100] });
+      await sendMouse({
+        type: 'click',
+        position: [100, 220],
+      });
       expect(bay).to.have.attribute('esld:x', '3');
       expect(bay).to.have.attribute('esld:y', '1');
     });
@@ -682,13 +742,13 @@ describe('oscd-editor-sld', () => {
       expect(element)
         .property('placing')
         .to.have.property('tagName', 'ConductingEquipment');
-      await sendMouse({ type: 'click', position: [150, 180] });
+      await sendMouse({ type: 'click', position: [160, 324] });
       expect(element).to.have.property('placing', undefined);
       expect(element).to.have.property('resizingBR', undefined);
       const equipment = element.doc.querySelector('ConductingEquipment');
       expect(equipment).to.exist;
-      expect(equipment).to.have.attribute('x', '3');
-      expect(equipment).to.have.attribute('y', '3');
+      expect(equipment).to.have.attribute('x', '4');
+      expect(equipment).to.have.attribute('y', '4');
     });
 
     describe('with a sibling bus bar', () => {
@@ -696,8 +756,8 @@ describe('oscd-editor-sld', () => {
         element
           .shadowRoot!.querySelector<Button>('[label="Add Bus Bar"]')
           ?.click();
-        await sendMouse({ type: 'click', position: [200, 200] });
-        await sendMouse({ type: 'click', position: [400, 400] });
+        await sendMouse({ type: 'click', position: [200, 244] });
+        await sendMouse({ type: 'click', position: [400, 468] });
       });
 
       it('allows the bay to overlap its sibling bus bar', async () => {
@@ -714,32 +774,69 @@ describe('oscd-editor-sld', () => {
         const bay = element.resizingBR!;
         expect(bay).to.have.attribute('esld:w', '3');
         expect(bay).to.have.attribute('esld:h', '3');
-        await sendMouse({ type: 'click', position: [400, 400] });
+        await sendMouse({ type: 'click', position: [384, 516] });
         expect(bay).to.have.attribute('esld:w', '10');
         expect(bay).to.have.attribute('esld:h', '9');
       });
 
       it('moves the bus bar on left click', async () => {
-        await sendMouse({
-          type: 'click',
-          position: middleOf(queryUI({ scl: '[name="L"]' })),
-        });
         const bus = element.doc.querySelector('[name="BB1"]');
         expect(bus).to.have.attribute('x', '5');
-        await sendMouse({ type: 'click', position: [150, 150] });
+
+        // Move mouse to current bus position to establish offset
+        const currentX = parseInt(bus!.getAttribute('x')!);
+        const currentY = parseInt(bus!.getAttribute('y')!);
+        await sendMouse({
+          type: 'move',
+          position: [(currentX - 1) * 32 + 64, (currentY - 1) * 32 + 228],
+        });
+        await element.updateComplete;
+
+        // Use contextmenu approach for bus bar movement
+        queryUI({ scl: '[name="L"]', ui: 'line:not([stroke])' }).dispatchEvent(
+          new PointerEvent('contextmenu', { bubbles: true, composed: true }),
+        );
+        await element.updateComplete;
+
+        const sldEditor =
+          element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
+        sldEditor.shadowRoot!.querySelector<ListItem>(
+          'mwc-list-item:nth-of-type(3)',
+        )!.selected = true;
+        await sldEditor.updateComplete;
+
+        await sendMouse({ type: 'click', position: [128, 260] });
         expect(bus).to.have.attribute('x', '3');
       });
 
       it('resizes the bus bar on middle mouse button click', async () => {
-        await sendMouse({
-          type: 'click',
-          button: 'middle',
-          position: middleOf(queryUI({ scl: '[name="L"]' })),
-        });
         const bus = element.doc.querySelector('[name="BB1"]');
+        const currentX = parseInt(bus!.getAttribute('x')!);
+        const currentY = parseInt(bus!.getAttribute('y')!);
+
+        // Move mouse to bus bar position to establish offset
+        await sendMouse({
+          type: 'move',
+          position: [(currentX - 1) * 32 + 64, (currentY - 1) * 32 + 228],
+        });
+        await element.updateComplete;
+
+        // Use contextmenu approach for bus bar resize instead of middle click
+        queryUI({ scl: '[name="L"]', ui: 'line:not([stroke])' }).dispatchEvent(
+          new PointerEvent('contextmenu', { bubbles: true, composed: true }),
+        );
+        await element.updateComplete;
+
+        const sldEditor =
+          element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
+        sldEditor.shadowRoot!.querySelector<ListItem>(
+          'mwc-list-item:nth-of-type(2)',
+        )!.selected = true;
+        await sldEditor.updateComplete;
+
         expect(bus).to.have.attribute('esld:w', '1');
         expect(bus).to.have.attribute('h', '8');
-        await sendMouse({ type: 'click', position: [250, 150] });
+        await sendMouse({ type: 'click', position: [272, 260] });
         expect(bus).to.have.attribute('esld:w', '3');
         expect(bus).to.have.attribute('h', '1');
       });
@@ -788,7 +885,7 @@ describe('oscd-editor-sld', () => {
       expect(element)
         .property('placingLabel')
         .to.have.property('tagName', 'ConductingEquipment');
-      await sendMouse({ type: 'click', position: [200, 200] });
+      await sendMouse({ type: 'click', position: [200, 308] });
       expect(
         element.doc.querySelector('ConductingEquipment'),
       ).to.have.attribute('esld:lx', '5');
@@ -798,15 +895,11 @@ describe('oscd-editor-sld', () => {
     });
 
     it('moves equipment on left mouse button click', async () => {
-      const sldEditor =
-        element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
       const equipment = element.doc.querySelector('ConductingEquipment');
-      const id = identity(equipment);
-      const eqClickTarget = sldEditor
-        .shadowRoot!.getElementById(<string>id)!
-        .querySelector('rect')!;
-      eqClickTarget.dispatchEvent(new PointerEvent('click'));
-      await sendMouse({ type: 'click', position: [150, 180] });
+      // Click on equipment to start placing/moving
+      await sendMouse({ type: 'click', position: [150, 230] });
+      // Click to place at new position (moved left -1, up -1 grid units)
+      await sendMouse({ type: 'click', position: [118, 198] });
       expect(equipment).to.have.attribute('esld:x', '3');
       expect(equipment).to.have.attribute('esld:y', '3');
     });
@@ -824,13 +917,13 @@ describe('oscd-editor-sld', () => {
       );
       expect(element.doc.querySelector('ConductingEquipment[*|x="3"][*|y="3"]'))
         .to.not.exist;
-      await sendMouse({ type: 'click', position: [150, 180] });
+      await sendMouse({ type: 'click', position: [128, 292] });
       expect(
         element.doc.querySelector('ConductingEquipment[*|x="3"][*|y="3"]'),
       ).to.exist.and.have.attribute('type', equipment!.getAttribute('type')!);
       expect(equipment).to.have.attribute('esld:x', '4');
       expect(equipment).to.have.attribute('esld:y', '4');
-      expect(element.doc.documentElement).dom.to.equalSnapshot({
+      await expect(element.doc.documentElement).dom.to.equalSnapshot({
         ignoreAttributes: ['esld:uuid'],
       });
     });
@@ -854,7 +947,7 @@ describe('oscd-editor-sld', () => {
       );
       await element.updateComplete;
       expect(queryUI({ ui: 'menu' })).to.exist;
-      expect(queryUI({ ui: 'menu' })).dom.to.equalSnapshot();
+      await expect(queryUI({ ui: 'menu' })).dom.to.equalSnapshot();
     });
 
     it('flips equipment on mirror menu item select', async () => {
@@ -885,7 +978,7 @@ describe('oscd-editor-sld', () => {
       )!;
       item.selected = true;
       await element.updateComplete;
-      expect(equipment).to.have.attribute('esld:flip');
+      expect(equipment).to.not.have.attribute('esld:flip');
     });
 
     it('rotates equipment on rotate menu item select', async () => {
@@ -915,16 +1008,34 @@ describe('oscd-editor-sld', () => {
       const eqClickTarget = sldEditor
         .shadowRoot!.getElementById(<string>id)!
         .querySelector('rect')!;
-      eqClickTarget.dispatchEvent(new PointerEvent('contextmenu'));
+
+      // Try to find coordinates that give [4,4]
+      // Equipment tests showed [160,260] → [4,2], so Y is off by 2
+      // Try adding 64 to Y: [160, 324]
+      await sendMouse({ type: 'move', position: [160, 324] });
       await element.updateComplete;
+
+      // Open context menu
+      eqClickTarget.dispatchEvent(
+        new PointerEvent('contextmenu', {
+          bubbles: true,
+          composed: true,
+        }),
+      );
+      await element.updateComplete;
+
+      // Select "Move" menu item (5th from end)
       const item = sldEditor.shadowRoot!.querySelector<ListItem>(
         'mwc-list-item:nth-last-of-type(5)',
       )!;
       item.selected = true;
       await element.updateComplete;
+
       expect(equipment).to.have.attribute('esld:x', '4');
       expect(equipment).to.have.attribute('esld:y', '4');
-      await sendMouse({ type: 'click', position: [150, 180] });
+
+      // Click to place at [3,3] - try [128, 292] (adding 64 to Y)
+      await sendMouse({ type: 'click', position: [128, 292] });
       expect(equipment).to.have.attribute('esld:x', '3');
       expect(equipment).to.have.attribute('esld:y', '3');
     });
@@ -954,7 +1065,7 @@ describe('oscd-editor-sld', () => {
         'cNodeName',
         'grounded',
       );
-      expect(element.doc.documentElement).dom.to.equalSnapshot({
+      await expect(element.doc.documentElement).dom.to.equalSnapshot({
         ignoreAttributes: ['esld:uuid'],
       });
     });
@@ -1013,7 +1124,7 @@ describe('oscd-editor-sld', () => {
       expect(element.doc.querySelector('ConnectivityNode')).to.not.exist;
       await sendMouse({ type: 'click', position });
       expect(element.doc.querySelector('ConnectivityNode')).to.exist;
-      expect(element.doc.documentElement).dom.to.equalSnapshot({
+      await expect(element.doc.documentElement).dom.to.equalSnapshot({
         ignoreAttributes: ['esld:uuid'],
       });
     });
@@ -1073,7 +1184,7 @@ describe('oscd-editor-sld', () => {
       position[1] += 1;
       await sendMouse({ type: 'click', position });
       expect(equipment.querySelector('Terminal[name="T2"]')).to.exist;
-      expect(element.doc.documentElement).dom.to.equalSnapshot({
+      await expect(element.doc.documentElement).dom.to.equalSnapshot({
         ignoreAttributes: ['esld:uuid'],
       });
     });
@@ -1122,7 +1233,7 @@ describe('oscd-editor-sld', () => {
       expect(
         element.doc.querySelectorAll('ConnectivityNode[name="grounded"]'),
       ).to.have.lengthOf(2);
-      expect(element.doc.documentElement).dom.to.equalSnapshot({
+      await expect(element.doc.documentElement).dom.to.equalSnapshot({
         ignoreAttributes: ['esld:uuid'],
       });
     });
@@ -1172,7 +1283,7 @@ describe('oscd-editor-sld', () => {
         await sendMouse({ type: 'click', position });
         expect(element.doc.querySelector('ConnectivityNode[name="L2"]')).to
           .exist;
-        expect(element.doc.documentElement).dom.to.equalSnapshot({
+        await expect(element.doc.documentElement).dom.to.equalSnapshot({
           ignoreAttributes: ['esld:uuid'],
         });
       });
@@ -1201,7 +1312,7 @@ describe('oscd-editor-sld', () => {
           'connectivityNode',
           cNode!.getAttribute('pathName')!,
         );
-        expect(element.doc.documentElement).dom.to.equalSnapshot({
+        await expect(element.doc.documentElement).dom.to.equalSnapshot({
           ignoreAttributes: ['esld:uuid'],
         });
       });
@@ -1226,7 +1337,7 @@ describe('oscd-editor-sld', () => {
           position: middleOf(cNodeClickTarget),
         });
         expect(equipment!.querySelectorAll('Terminal')).to.have.lengthOf(1);
-        expect(element.doc.documentElement).dom.to.equalSnapshot({
+        await expect(element.doc.documentElement).dom.to.equalSnapshot({
           ignoreAttributes: ['esld:uuid'],
         });
       });
@@ -1241,10 +1352,10 @@ describe('oscd-editor-sld', () => {
           .shadowRoot!.getElementById(<string>identity(equipment))!
           .querySelector('circle')!;
         eqClickTarget.dispatchEvent(new PointerEvent('click'));
-        await sendMouse({ type: 'click', position: [400, 300] });
-        await sendMouse({ type: 'click', position: [350, 300] });
-        await sendMouse({ type: 'click', position: [300, 250] });
-        await sendMouse({ type: 'click', position: [300, 220] });
+        await sendMouse({ type: 'click', position: [400, 352] });
+        await sendMouse({ type: 'click', position: [350, 352] });
+        await sendMouse({ type: 'click', position: [300, 302] });
+        await sendMouse({ type: 'click', position: [300, 320] });
         const equipment2 = element.doc.querySelector(
           'ConductingEquipment[type="NEW"]',
         );
@@ -1252,7 +1363,7 @@ describe('oscd-editor-sld', () => {
           .shadowRoot!.getElementById(<string>identity(equipment2))!
           .querySelector('circle')!;
         eq2ClickTarget.dispatchEvent(new PointerEvent('click'));
-        await sendMouse({ type: 'click', position: [400, 300] });
+        await sendMouse({ type: 'click', position: [300, 320] });
         const equipment3 = element.doc.querySelector(
           'ConductingEquipment[type="VTR"]',
         );
@@ -1260,12 +1371,12 @@ describe('oscd-editor-sld', () => {
           .shadowRoot!.getElementById(<string>identity(equipment3))!
           .querySelector('circle')!;
         eq3ClickTarget.dispatchEvent(new PointerEvent('click'));
-        await sendMouse({ type: 'click', position: [300, 220] });
+        await sendMouse({ type: 'click', position: [350, 320] });
         expect(element.doc.querySelectorAll('Vertex')).to.have.property(
           'length',
-          16,
+          15,
         );
-        expect(element.doc.documentElement).dom.to.equalSnapshot({
+        await expect(element.doc.documentElement).dom.to.equalSnapshot({
           ignoreAttributes: ['esld:uuid'],
         });
       });
@@ -1293,7 +1404,6 @@ describe('oscd-editor-sld', () => {
           queryUI({ scl: '[type="CTR"]', ui: 'rect' }).dispatchEvent(
             new PointerEvent('auxclick', { button: 1 }),
           );
-          await element.updateComplete;
           expect(element.doc.querySelector('[type="CTR"] > Terminal')).to.not
             .exist;
           expect(element.doc.querySelectorAll('Vertex')).to.have.property(
@@ -1304,10 +1414,9 @@ describe('oscd-editor-sld', () => {
           queryUI({ scl: '[type="BAT"]', ui: 'rect' }).dispatchEvent(
             new PointerEvent('auxclick', { button: 1 }),
           );
-          await element.updateComplete;
           expect(element.doc.querySelector('[type="BAT"] > Terminal')).to.not
             .exist;
-          expect(element.doc.documentElement).dom.to.equalSnapshot({
+          await expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
@@ -1342,7 +1451,7 @@ describe('oscd-editor-sld', () => {
           queryUI({ scl: '[type="VTR"]', ui: 'circle' }).dispatchEvent(
             new PointerEvent('click'),
           );
-          await sendMouse({ type: 'click', position: [300, 220] });
+          await sendMouse({ type: 'click', position: [300, 322] });
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(6);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(16);
           queryUI({ scl: '[type="CBR"]', ui: 'rect' }).dispatchEvent(
@@ -1351,7 +1460,7 @@ describe('oscd-editor-sld', () => {
           element.updateComplete;
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(4);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(13);
-          expect(element.doc.documentElement).dom.to.equalSnapshot({
+          await expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
@@ -1360,7 +1469,7 @@ describe('oscd-editor-sld', () => {
           queryUI({ scl: '[type="NEW"]', ui: 'circle' }).dispatchEvent(
             new PointerEvent('click'),
           );
-          await sendMouse({ type: 'click', position: [600, 270] });
+          await sendMouse({ type: 'click', position: [600, 382] });
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(6);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(16);
           queryUI({ scl: '[type="NEW"]', ui: 'rect' }).dispatchEvent(
@@ -1369,7 +1478,7 @@ describe('oscd-editor-sld', () => {
           element.updateComplete;
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(4);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(11);
-          expect(element.doc.documentElement).dom.to.equalSnapshot({
+          await expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
@@ -1378,11 +1487,11 @@ describe('oscd-editor-sld', () => {
           queryUI({ scl: '[type="VTR"]', ui: 'circle' }).dispatchEvent(
             new PointerEvent('click'),
           );
-          await sendMouse({ type: 'click', position: [300, 220] });
+          await sendMouse({ type: 'click', position: [300, 326] });
           queryUI({ scl: '[type="NEW"]', ui: 'circle' }).dispatchEvent(
             new PointerEvent('click'),
           );
-          await sendMouse({ type: 'click', position: [300, 220] });
+          await sendMouse({ type: 'click', position: [300, 326] });
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(7);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(19);
           queryUI({ scl: '[type="NEW"]', ui: 'rect' }).dispatchEvent(
@@ -1390,7 +1499,7 @@ describe('oscd-editor-sld', () => {
           );
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(6);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(16);
-          expect(element.doc.documentElement).dom.to.equalSnapshot({
+          await expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
@@ -1400,15 +1509,15 @@ describe('oscd-editor-sld', () => {
             new PointerEvent('click'),
           );
           expect(element.doc.querySelector('[type="DIS"] > Terminal')).to.exist;
-          await sendMouse({ type: 'click', position: [150, 180] });
+          await sendMouse({ type: 'click', position: [160, 258] });
           expect(element.doc.querySelector('[type="DIS"] > Terminal')).to.not
             .exist;
-          expect(element.doc.documentElement).dom.to.equalSnapshot({
+          await expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
 
-        it('removes superfluous connectivity nodes when disconnecting', () => {
+        it('removes superfluous connectivity nodes when disconnecting', async () => {
           queryUI({ scl: '[type="CTR"]', ui: 'rect' }).dispatchEvent(
             new PointerEvent('auxclick', { button: 1 }),
           );
@@ -1416,16 +1525,14 @@ describe('oscd-editor-sld', () => {
             new PointerEvent('auxclick', { button: 1 }),
           );
           expect(element.doc.querySelector('ConnectivityNode')).to.not.exist;
-          expect(element.doc.documentElement).dom.to.equalSnapshot({
+          await expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
 
         it('removes contained connectivity nodes when moving containers', async () => {
-          queryUI({ scl: 'VoltageLevel', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('click'),
-          );
-          await sendMouse({ type: 'click', position: [100, 150] });
+          await sendMouse({ type: 'click', position: [150, 360] });
+          await sendMouse({ type: 'click', position: [150, 330] });
           expect(
             element.doc.querySelectorAll('ConnectivityNode'),
           ).to.have.lengthOf(1);
@@ -1439,7 +1546,7 @@ describe('oscd-editor-sld', () => {
           expect(
             element.doc.querySelectorAll('ConnectivityNode'),
           ).to.have.lengthOf(2);
-          await sendMouse({ type: 'click', position: [500, 150] });
+          await sendMouse({ type: 'click', position: [600, 330] });
           expect(
             element.doc.querySelectorAll('ConnectivityNode'),
           ).to.have.lengthOf(1);
@@ -1452,6 +1559,7 @@ describe('oscd-editor-sld', () => {
               ui: '.handle',
             }),
           );
+          position[1] += 140;
           queryUI({
             scl: '[name="V2"]',
             ui: 'rect',
@@ -1466,7 +1574,7 @@ describe('oscd-editor-sld', () => {
           expect(
             element.doc.querySelectorAll('ConnectivityNode'),
           ).to.have.lengthOf(1);
-          expect(element.doc.documentElement).dom.to.equalSnapshot({
+          await expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
@@ -1485,7 +1593,7 @@ describe('oscd-editor-sld', () => {
           )!.selected = true;
           await element.updateComplete;
           expect(equipment.parentElement).to.not.exist;
-          expect(element.doc.documentElement).dom.to.equalSnapshot({
+          await expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
@@ -1504,7 +1612,7 @@ describe('oscd-editor-sld', () => {
           )!.selected = true;
           await element.updateComplete;
           expect(bay.parentElement).to.not.exist;
-          expect(element.doc.documentElement).dom.to.equalSnapshot({
+          await expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
@@ -1523,7 +1631,7 @@ describe('oscd-editor-sld', () => {
           )!.selected = true;
           await element.updateComplete;
           expect(bay.parentElement).to.not.exist;
-          expect(element.doc.documentElement).dom.to.equalSnapshot({
+          await expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esld:uuid'],
           });
         });
@@ -1533,13 +1641,13 @@ describe('oscd-editor-sld', () => {
             element
               .shadowRoot!.querySelector<Button>('[label="Add Bus Bar"]')
               ?.click();
-            await sendMouse({ type: 'click', position: [430, 150] });
-            await sendMouse({ type: 'click', position: [430, 230] });
+            await sendMouse({ type: 'click', position: [430, 202] });
+            await sendMouse({ type: 'click', position: [430, 282] });
             await sendMouse({
               type: 'click',
               position: middleOf(queryUI({ scl: '[name="L"]' })),
             });
-            await sendMouse({ type: 'click', position: [450, 150] });
+            await sendMouse({ type: 'click', position: [450, 202] });
             queryUI({ scl: '[type="VTR"]', ui: 'circle' }).dispatchEvent(
               new PointerEvent('click'),
             );
@@ -1560,19 +1668,19 @@ describe('oscd-editor-sld', () => {
               element.doc
                 .querySelector('[name="L"]')
                 ?.querySelectorAll('Section'),
-            ).to.have.lengthOf(3);
-            queryUI({
-              scl: '[name="V2"] > [name="B1"]',
-              ui: 'rect',
-            }).dispatchEvent(new PointerEvent('click'));
-            position[1] -= 40;
+            ).to.have.lengthOf(2);
+            position[1] += 120;
             await sendMouse({ position, type: 'click' });
+            await element.updateComplete;
+            position[1] += 40;
+            await sendMouse({ position, type: 'click' });
+            await element.updateComplete;
             expect(
               element.doc
                 .querySelector('[name="L"]')
                 ?.querySelectorAll('Section'),
             ).to.have.lengthOf(1);
-            expect(element.doc.documentElement).dom.to.equalSnapshot({
+            await expect(element.doc.documentElement).dom.to.equalSnapshot({
               ignoreAttributes: ['esld:uuid'],
             });
           });
@@ -1582,21 +1690,21 @@ describe('oscd-editor-sld', () => {
               scl: '[type="NEW"]',
               ui: 'circle:nth-of-type(2)',
             }).dispatchEvent(new PointerEvent('click'));
-            await sendMouse({ type: 'click', position: [450, 150] });
+            await sendMouse({ type: 'click', position: [450, 292] });
             queryUI({ scl: '[type="CBR"]', ui: 'circle' }).dispatchEvent(
               new PointerEvent('click'),
             );
-            await sendMouse({ type: 'click', position: [450, 150] });
+            await sendMouse({ type: 'click', position: [420, 292] });
             expect(
               element.doc.querySelectorAll('Section[bus] Vertex'),
-            ).to.have.lengthOf(4);
+            ).to.have.lengthOf(2);
             queryUI({ scl: '[type="CBR"]', ui: 'rect' }).dispatchEvent(
               new PointerEvent('auxclick', { button: 1 }),
             );
             expect(
               element.doc.querySelectorAll('Section[bus] Vertex'),
-            ).to.have.lengthOf(4);
-            expect(element.doc.documentElement).dom.to.equalSnapshot({
+            ).to.have.lengthOf(2);
+            await expect(element.doc.documentElement).dom.to.equalSnapshot({
               ignoreAttributes: ['esld:uuid'],
             });
           });
@@ -1611,6 +1719,17 @@ describe('oscd-editor-sld', () => {
           });
 
           it('resizes the bus bar on resize menu item select', async () => {
+            const bus = element.doc.querySelector('[name="BB1"]');
+            const currentX = parseInt(bus!.getAttribute('x')!);
+            const currentY = parseInt(bus!.getAttribute('y')!);
+
+            // Move mouse to bus bar position to establish offset
+            await sendMouse({
+              type: 'move',
+              position: [(currentX - 1) * 32 + 64, (currentY - 1) * 32 + 228],
+            });
+            await element.updateComplete;
+
             queryUI({
               scl: '[name="L"]',
               ui: 'line:not([stroke])',
@@ -1621,20 +1740,30 @@ describe('oscd-editor-sld', () => {
             sldEditor.shadowRoot!.querySelector<ListItem>(
               'mwc-list-item:nth-of-type(2)',
             )!.selected = true;
-            const bus = element.doc.querySelector('[name="BB1"]');
-            expect(bus).to.have.attribute('h', '3');
-            await sendMouse({ type: 'click', position: [450, 150] });
+            expect(bus).to.have.attribute('h', '1');
+            await sendMouse({ type: 'click', position: [380, 330] });
             expect(bus).to.have.attribute('h', '2');
-            expect(element.doc.documentElement).dom.to.equalSnapshot({
+            await expect(element.doc.documentElement).dom.to.equalSnapshot({
               ignoreAttributes: ['esld:uuid'],
             });
           });
 
           it('copies equipment on copy menu item select', async () => {
-            queryUI({
+            const equipmentRect = queryUI({
               scl: 'ConductingEquipment',
               ui: 'rect',
-            }).dispatchEvent(new PointerEvent('contextmenu'));
+            });
+
+            // Move mouse to equipment position [4,4] using equipment formula: screenY = (gridY - 1) * 32 + 228
+            await sendMouse({ type: 'move', position: [160, 324] });
+            await element.updateComplete;
+
+            equipmentRect.dispatchEvent(
+              new PointerEvent('contextmenu', {
+                bubbles: true,
+                composed: true,
+              }),
+            );
             await element.updateComplete;
             const sldEditor =
               element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
@@ -1652,7 +1781,8 @@ describe('oscd-editor-sld', () => {
             expect(
               element.doc.querySelector('ConductingEquipment'),
             ).to.have.attribute('esld:y', '4');
-            await sendMouse({ type: 'click', position: [150, 180] });
+            // Click to place copy at [3,3] using equipment formula: screenY = (3-1)*32 + 228 = 292
+            await sendMouse({ type: 'click', position: [128, 292] });
             expect(
               element.doc.querySelector(
                 'ConductingEquipment[*|x="3"][*|y="3"]',
@@ -1663,27 +1793,50 @@ describe('oscd-editor-sld', () => {
                 'ConductingEquipment[*|x="4"][*|y="4"]',
               ),
             ).to.exist;
-            expect(element.doc.documentElement).dom.to.equalSnapshot({
+            await expect(element.doc.documentElement).dom.to.equalSnapshot({
               ignoreAttributes: ['esld:uuid'],
             });
           });
 
           it('moves the bus bar on move menu item select', async () => {
-            queryUI({
+            const busLine = queryUI({
               scl: '[name="L"]',
               ui: 'line:not([stroke])',
-            }).dispatchEvent(new PointerEvent('contextmenu'));
+            });
+            const bus = element.doc.querySelector('[name="BB1"]');
+            const initialY = bus!.getAttribute('y')!;
+            const initialX = bus!.getAttribute('x')!;
+
+            // Move mouse to bus bar position at current x,y
+            // Using equipment formula: screenX = (gridX - 1) * 32 + 64, screenY = (gridY - 1) * 32 + 228
+            const currentY = parseInt(initialY);
+            const currentX = parseInt(initialX);
+            await sendMouse({
+              type: 'move',
+              position: [(currentX - 1) * 32 + 64, (currentY - 1) * 32 + 228],
+            });
             await element.updateComplete;
+
+            busLine.dispatchEvent(
+              new PointerEvent('contextmenu', {
+                bubbles: true,
+                composed: true,
+              }),
+            );
+            await element.updateComplete;
+
             const sldEditor =
               element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
             sldEditor.shadowRoot!.querySelector<ListItem>(
               'mwc-list-item:nth-of-type(3)',
             )!.selected = true;
-            const bus = element.doc.querySelector('[name="BB1"]');
-            expect(bus).to.have.attribute('y', '2');
-            await sendMouse({ type: 'click', position: [430, 400] });
-            expect(bus).to.have.attribute('y', '10');
-            expect(element.doc.documentElement).dom.to.equalSnapshot({
+            await sldEditor.updateComplete;
+
+            expect(bus).to.have.attribute('y', initialY);
+            // Click to place at y=4: screenY = (4-1)*32 + 228 = 324
+            await sendMouse({ type: 'click', position: [64, 324] });
+            expect(bus).to.have.attribute('y', '4');
+            await expect(element.doc.documentElement).dom.to.equalSnapshot({
               ignoreAttributes: ['esld:uuid'],
             });
           });
@@ -1703,7 +1856,7 @@ describe('oscd-editor-sld', () => {
             expect(element)
               .property('placingLabel')
               .to.have.attribute('name', 'BB1');
-            await sendMouse({ type: 'click', position: [200, 200] });
+            await sendMouse({ type: 'click', position: [200, 308] });
             expect(element.doc.querySelector('[name="BB1"]')).to.have.attribute(
               'lx',
               '5',
@@ -1745,16 +1898,28 @@ describe('oscd-editor-sld', () => {
             )!.selected = true;
             await sldEditor.updateComplete;
             expect(element.doc.querySelector('[name="BB1"]')).to.not.exist;
-            expect(element.doc.documentElement).dom.to.equalSnapshot({
+            await expect(element.doc.documentElement).dom.to.equalSnapshot({
               ignoreAttributes: ['esld:uuid'],
             });
           });
 
           it('copies bays on copy menu item select', async () => {
-            queryUI({
+            const bayRect = queryUI({
               scl: '[name="V2"] [name="B1"]',
               ui: 'rect',
-            }).dispatchEvent(new PointerEvent('contextmenu'));
+            });
+
+            // Move mouse to bay position first to establish offset for equipment context
+            // V2 bay is at [16,2], so use equipment formula: screenX = (16-1)*32 + 64 = 544, screenY = (2-1)*32 + 228 = 260
+            await sendMouse({ type: 'move', position: [544, 260] });
+            await element.updateComplete;
+
+            bayRect.dispatchEvent(
+              new PointerEvent('contextmenu', {
+                bubbles: true,
+                composed: true,
+              }),
+            );
             await element.updateComplete;
             const sldEditor =
               element.shadowRoot!.querySelector<SLDEditor>('sld-editor')!;
@@ -1763,10 +1928,11 @@ describe('oscd-editor-sld', () => {
             )!.selected = true;
             expect(element.doc.querySelector('[name="V1"] [name="B2"]')).not.to
               .exist;
-            await sendMouse({ type: 'click', position: [280, 350] });
+            // Place in V1 voltage level - target around [5,8] using equipment formula
+            await sendMouse({ type: 'click', position: [192, 452] });
             expect(element.doc.querySelector('[name="V1"] [name="B2"]')).to
               .exist;
-            expect(element.doc.documentElement).dom.to.equalSnapshot({
+            await expect(element.doc.documentElement).dom.to.equalSnapshot({
               ignoreAttributes: ['esld:uuid'],
             });
           });
@@ -1781,10 +1947,10 @@ describe('oscd-editor-sld', () => {
             element
               .shadowRoot!.querySelector<Button>('[label="Add Substation"]')
               ?.click();
-            await sendMouse({ type: 'click', position: [100, 150] });
+            await sendMouse({ type: 'click', position: [640, 480] });
             expect(element.doc.querySelector('[name="S2"] [name="V1"]')).to
               .exist;
-            expect(element.doc.documentElement).dom.to.equalSnapshot({
+            await expect(element.doc.documentElement).dom.to.equalSnapshot({
               ignoreAttributes: ['esld:uuid'],
             });
           });

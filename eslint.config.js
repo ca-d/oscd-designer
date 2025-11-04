@@ -17,12 +17,12 @@ const compat = new FlatCompat({
 });
 
 export default [
-  ...openWcConfig,
   ...compat.extends(
     'eslint:recommended',
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
   ),
+  ...openWcConfig,
   {
     ignores: ['dist/', 'node_modules', 'coverage', 'doc'],
   },
@@ -90,4 +90,10 @@ export default [
     },
   },
   eslintPluginPrettierRecommended,
+  {
+    files: ['*.spec.ts', '*.test.ts'],
+    rules: {
+      '@typescript-eslint/no-unused-expressions': 'off',
+    },
+  },
 ];

@@ -336,8 +336,9 @@
               "kind": "field",
               "name": "editor",
               "type": {
-                "text": "Transactor<EditV2>"
+                "text": "object"
               },
+              "default": "{ commit: (edit: EditV2) => { this.dispatchEvent(newEditEventV2(edit)); return { undo: [], redo: [] }; }, }",
               "attribute": "editor"
             },
             {
@@ -631,8 +632,9 @@
             {
               "name": "editor",
               "type": {
-                "text": "Transactor<EditV2>"
+                "text": "object"
               },
+              "default": "{ commit: (edit: EditV2) => { this.dispatchEvent(newEditEventV2(edit)); return { undo: [], redo: [] }; }, }",
               "fieldName": "editor"
             },
             {

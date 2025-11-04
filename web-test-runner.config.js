@@ -30,12 +30,12 @@ export default /** @type {import("@web/test-runner").TestRunnerConfig} */ ({
   /** Amount of test files per browser to test concurrently */
   // concurrency: 1,
 
-  /** Browsers to run tests on */
+  /** Browsers to run tests on
   browsers: [
     playwrightLauncher({ product: 'chromium' }),
     // playwrightLauncher({ product: 'firefox' }),
     // playwrightLauncher({ product: 'webkit' }),
-  ],
+  ], */
 
   // See documentation for all available options
   // When encountering aync/timeout issues, it can help (your nerves) to set a short timeout

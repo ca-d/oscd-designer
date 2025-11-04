@@ -7,10 +7,9 @@ import {
   AttributesV2,
   EditV2,
   SetAttributes,
-  Transactor,
   Update,
 } from '@omicronenergy/oscd-api';
-import { newEditEvent, newEditEventV2 } from '@omicronenergy/oscd-api/utils.js';
+import { newEditEventV2 } from '@omicronenergy/oscd-api/utils.js';
 import { getReference } from '@openscd/oscd-scl';
 
 import type { Dialog } from '@material/mwc-dialog';
@@ -129,7 +128,12 @@ function cutSectionAt(
 
 export default class OscdEditorSLD extends LitElement {
   @property({ type: Object })
-  editor!: Transactor<EditV2>;
+  editor = {
+    commit: (edit: EditV2) => {
+      this.dispatchEvent(newEditEventV2(edit));
+      return { undo: [], redo: [] };
+    },
+  };
 
   @property({ type: Object })
   doc!: XMLDocument;
@@ -141,8 +145,12 @@ export default class OscdEditorSLD extends LitElement {
 
   set docVersion(value: number) {
     this.connecting = undefined;
-    if (!this.resizingBR?.parentElement) this.resizingBR = undefined;
-    if (!this.placingLabel?.parentElement) this.placingLabel = undefined;
+    if (!this.resizingBR?.parentElement) {
+      this.resizingBR = undefined;
+    }
+    if (!this.placingLabel?.parentElement) {
+      this.placingLabel = undefined;
+    }
     this._docVersion = value;
   }
 
@@ -182,7 +190,9 @@ export default class OscdEditorSLD extends LitElement {
 
   @state()
   get showLabels(): boolean {
-    if (this.labelToggle) return this.labelToggle.on;
+    if (this.labelToggle) {
+      return this.labelToggle.on;
+    }
     return true;
   }
 
@@ -198,7 +208,9 @@ export default class OscdEditorSLD extends LitElement {
 
   zoomOut() {
     this.gridSize -= 3;
-    if (this.gridSize < 2) this.gridSize = 2;
+    if (this.gridSize < 2) {
+      this.gridSize = 2;
+    }
   }
 
   startResizingBottomRight(element: Element | undefined) {
@@ -237,7 +249,9 @@ export default class OscdEditorSLD extends LitElement {
   }
 
   handleKeydown = ({ key }: KeyboardEvent) => {
-    if (key === 'Escape') this.reset();
+    if (key === 'Escape') {
+      this.reset();
+    }
   };
 
   connectedCallback() {
@@ -251,7 +265,9 @@ export default class OscdEditorSLD extends LitElement {
   }
 
   updated(changedProperties: Map<string, unknown>) {
-    if (!changedProperties.has('doc')) return;
+    if (!changedProperties.has('doc')) {
+      return;
+    }
     const sldNsPrefix = this.doc.documentElement.lookupPrefix(sldNs);
     if (sldNsPrefix) {
       this.nsp = sldNsPrefix;
@@ -343,8 +359,9 @@ export default class OscdEditorSLD extends LitElement {
         element.tagName === 'PowerTransformer' &&
         !element.hasAttributeNS(sldNs, 'lx')
       ) {
-        if (rot < 2) lx += 1.5;
-        else {
+        if (rot < 2) {
+          lx += 1.5;
+        } else {
           lx -= 2;
           ly += 2;
         }
@@ -417,10 +434,11 @@ export default class OscdEditorSLD extends LitElement {
 
       if (groundedTerminals.length > 0) {
         const bayName = parent.closest('Bay')?.getAttribute('name');
-        if (!bayName)
+        if (!bayName) {
           groundedTerminals.forEach(terminal =>
             edits.push(...removeTerminal(terminal)),
           );
+        }
 
         let newCNode = parent.querySelector(
           `ConnectivityNode[name="grounded"]`,
@@ -473,8 +491,9 @@ export default class OscdEditorSLD extends LitElement {
                  )}"]`,
               ),
             ).find(terminal => terminal.closest(element.tagName) !== element)
-          )
+          ) {
             edits.push(...removeNode(cNode));
+          }
         },
       );
       Array.from(element.querySelectorAll('Terminal, NeutralPoint')).forEach(
@@ -484,8 +503,9 @@ export default class OscdEditorSLD extends LitElement {
               'connectivityNode',
             )}"]`,
           );
-          if (cNode && cNode.closest(element.tagName) !== element)
+          if (cNode && cNode.closest(element.tagName) !== element) {
             edits.push(...removeNode(cNode));
+          }
         },
       );
     }
@@ -530,9 +550,11 @@ export default class OscdEditorSLD extends LitElement {
       ['Bay', 'VoltageLevel'].includes(element.tagName) &&
       (!element.hasAttributeNS(sldNs, 'w') ||
         !element.hasAttributeNS(sldNs, 'h'))
-    )
+    ) {
       this.startResizingBottomRight(element);
-    else this.reset();
+    } else {
+      this.reset();
+    }
   }
 
   connectEquipment({
@@ -545,8 +567,9 @@ export default class OscdEditorSLD extends LitElement {
     if (
       from.tagName === 'TransformerWinding' &&
       to.tagName === 'TransformerWinding'
-    )
+    ) {
       return;
+    }
     const edits = [] as EditV2[];
     let cNode: Element;
     let connectivityNode: string;
@@ -601,10 +624,11 @@ export default class OscdEditorSLD extends LitElement {
       const vertex = this.doc.createElementNS(sldNs, `${this.nsp}:Vertex`);
       vertex.setAttributeNS(sldNs, `${this.nsp}:x`, x.toString());
       vertex.setAttributeNS(sldNs, `${this.nsp}:y`, y.toString());
-      if (i === 0)
+      if (i === 0) {
         vertex.setAttributeNS(sldNs, `${this.nsp}:uuid`, fromTermUUID);
-      else if (i === path.length - 1 && to.tagName !== 'ConnectivityNode')
+      } else if (i === path.length - 1 && to.tagName !== 'ConnectivityNode') {
         vertex.setAttributeNS(sldNs, `${this.nsp}:uuid`, toTermUUID);
+      }
       edits.push({ parent: section, node: vertex, reference: null });
     });
     if (to.tagName === 'ConnectivityNode') {
@@ -681,7 +705,9 @@ export default class OscdEditorSLD extends LitElement {
   }
 
   render() {
-    if (!this.doc) return html`<p>Please open an SCL document</p>`;
+    if (!this.doc) {
+      return html`<p>Please open an SCL document</p>`;
+    }
     return html`<main>
       <nav>
         ${
@@ -1057,12 +1083,12 @@ export default class OscdEditorSLD extends LitElement {
     );
     const reference = getReference(parent, 'Substation');
     let index = 1;
-    while (this.doc.querySelector(`:root > Substation[name="S${index}"]`))
+    while (this.doc.querySelector(`:root > Substation[name="S${index}"]`)) {
       index += 1;
+    }
     node.setAttribute('name', `S${index}`);
     node.setAttributeNS(sldNs, `${this.nsp}:w`, '50');
     node.setAttributeNS(sldNs, `${this.nsp}:h`, '25');
-    this.dispatchEvent(newEditEvent({ parent, node, reference }));
     this.dispatchEvent(newEditEventV2({ parent, node, reference }));
   }
 
