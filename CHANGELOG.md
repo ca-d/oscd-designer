@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.0.2](https://github.com/ca-d/oscd-designer/compare/oscd-editor-sld-v0.0.1...oscd-editor-sld-v0.0.2) (2025-11-04)
+
+
+### Bug Fixes
+
+* bump shell version ([454fdf2](https://github.com/ca-d/oscd-designer/commit/454fdf28442043962c2cc9af23360da484209300))
+* **package:** add marked back into built scripts ([7af458e](https://github.com/ca-d/oscd-designer/commit/7af458ec0e6b24ef50d651d9faa0ae4236157bf3))
+* remove vestigial bottom nav ([42bbbdf](https://github.com/ca-d/oscd-designer/commit/42bbbdf04a72b2c6987eef0882a50a9d1631e242))
+
 ## [0.0.1](https://github.com/ca-d/oscd-designer/compare/oscd-editor-sld-v0.0.1...oscd-editor-sld-v0.0.1) (2025-09-24)
 
 
