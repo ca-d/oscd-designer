@@ -40,10 +40,12 @@ export const singleTerminal = new Set([
 export function uuid() {
     const digits = new Array(36);
     for (let i = 0; i < 36; i += 1) {
-        if ([8, 13, 18, 23].includes(i))
+        if ([8, 13, 18, 23].includes(i)) {
             digits[i] = '-';
-        else
+        }
+        else {
             digits[i] = Math.floor(Math.random() * 16);
+        }
     }
     digits[14] = 4;
     digits[19] &= ~(1 << 2);
@@ -109,12 +111,14 @@ export function removeNode(node) {
             .slice(1)
             .forEach(vertex => edits.push({ node: vertex }));
         const lastVertex = sections[sections.length - 1].lastElementChild;
-        if (lastVertex)
+        if (lastVertex) {
             edits.push({ parent: busSection, node: lastVertex, reference: null });
+        }
         sections.slice(1).forEach(section => edits.push({ node: section }));
     }
-    else
+    else {
         edits.push({ node });
+    }
     Array.from(node.ownerDocument.querySelectorAll(`Terminal[connectivityNode="${node.getAttribute('pathName')}"], NeutralPoint[connectivityNode="${node.getAttribute('pathName')}"]`)).forEach(terminal => edits.push({ node: terminal }));
     return edits;
 }
@@ -132,20 +136,25 @@ function healSectionCut(cut) {
         vertex.getAttributeNS(sldNs, 'y') === y;
     const cutVertices = Array.from(cut.closest('Private').getElementsByTagNameNS(sldNs, 'Section')).flatMap(section => Array.from(section.children).filter(isCut));
     const cutSections = cutVertices.map(v => v.parentElement);
-    if (cutSections.length > 2)
+    if (cutSections.length > 2) {
         return [];
-    if (cutSections.length < 2)
+    }
+    if (cutSections.length < 2) {
         return removeNode(cut.closest('ConnectivityNode'));
+    }
     const [busA, busB] = cutSections.map(section => xmlBoolean(section.getAttribute('bus')));
-    if (busA !== busB)
+    if (busA !== busB) {
         return [];
+    }
     const edits = [];
     const [sectionA, sectionB] = cutSections;
-    if (isCut(sectionA.firstElementChild))
+    if (isCut(sectionA.firstElementChild)) {
         edits.push(reverseSection(sectionA));
+    }
     const sectionBChildren = Array.from(sectionB.children);
-    if (isCut(sectionB.lastElementChild))
+    if (isCut(sectionB.lastElementChild)) {
         sectionBChildren.reverse();
+    }
     sectionBChildren
         .slice(1)
         .forEach(node => edits.push({ parent: sectionA, node, reference: null }));
@@ -157,8 +166,9 @@ function healSectionCut(cut) {
     if (neighbourA &&
         cutA &&
         neighbourB &&
-        collinear(neighbourA, cutA, neighbourB))
+        collinear(neighbourA, cutA, neighbourB)) {
         edits.push({ node: cutA });
+    }
     edits.push({ node: sectionB });
     return edits;
 }
@@ -167,8 +177,9 @@ function updateTerminals(
 parent, cNode, substationName, voltageLevelName, bayName, cNodeName, connectivityNode) {
     const updates = [];
     const oldPathName = cNode.getAttribute('pathName');
-    if (!oldPathName)
+    if (!oldPathName) {
         return [];
+    }
     const [oldSubstationName, oldVoltageLevelName, oldBayName, oldCNodeName] = oldPathName.split('/');
     const terminals = Array.from(cNode.getRootNode().querySelectorAll(`Terminal[substationName="${oldSubstationName}"][voltageLevelName="${oldVoltageLevelName}"][bayName="${oldBayName}"][cNodeName="${oldCNodeName}"], Terminal[connectivityNode="${oldPathName}"], NeutralPoint[substationName="${oldSubstationName}"][voltageLevelName="${oldVoltageLevelName}"][bayName="${oldBayName}"][cNodeName="${oldCNodeName}"], NeutralPoint[connectivityNode="${oldPathName}"]`));
     terminals.forEach(terminal => {
@@ -188,21 +199,26 @@ parent, cNode, substationName, voltageLevelName, bayName, cNodeName, connectivit
 function updateConnectivityNodes(element, parent, name) {
     const updates = [];
     const cNodes = Array.from(element.getElementsByTagName('ConnectivityNode'));
-    if (element.tagName === 'ConnectivityNode')
+    if (element.tagName === 'ConnectivityNode') {
         cNodes.push(element);
+    }
     const substationName = parent.closest('Substation').getAttribute('name');
     let voltageLevelName = parent.closest('VoltageLevel')?.getAttribute('name');
-    if (element.tagName === 'VoltageLevel')
+    if (element.tagName === 'VoltageLevel') {
         voltageLevelName = name;
+    }
     cNodes.forEach(cNode => {
         let cNodeName = cNode.getAttribute('name');
-        if (element === cNode)
+        if (element === cNode) {
             cNodeName = name;
+        }
         let bayName = cNode.parentElement?.getAttribute('name') ?? '';
-        if (element.tagName === 'Bay')
+        if (element.tagName === 'Bay') {
             bayName = name;
-        if (parent.tagName === 'Bay' && parent.hasAttribute('name'))
+        }
+        if (parent.tagName === 'Bay' && parent.hasAttribute('name')) {
             bayName = parent.getAttribute('name');
+        }
         if (cNodeName && bayName) {
             const pathName = `${substationName}/${voltageLevelName}/${bayName}/${cNodeName}`;
             updates.push({
@@ -211,8 +227,9 @@ function updateConnectivityNodes(element, parent, name) {
                     pathName,
                 },
             });
-            if (substationName && voltageLevelName && bayName)
+            if (substationName && voltageLevelName && bayName) {
                 updates.push(...updateTerminals(parent, cNode, substationName, voltageLevelName, bayName, cNodeName, pathName));
+            }
         }
     });
     return updates;
@@ -221,8 +238,9 @@ export function uniqueName(element, parent) {
     const children = Array.from(parent.children);
     const oldName = element.getAttribute('name');
     if (oldName &&
-        !children.find(child => child.getAttribute('name') === oldName))
+        !children.find(child => child.getAttribute('name') === oldName)) {
         return oldName;
+    }
     const baseName = element.getAttribute('name')?.replace(/[0-9]*$/, '') ??
         element.getAttribute('type') ??
         element.tagName.charAt(0);
@@ -230,8 +248,9 @@ export function uniqueName(element, parent) {
     function hasName(child) {
         return child.getAttribute('name') === baseName + index.toString();
     }
-    while (children.find(hasName))
+    while (children.find(hasName)) {
         index += 1;
+    }
     return baseName + index.toString();
 }
 export function reparentElement(element, parent) {
@@ -242,8 +261,9 @@ export function reparentElement(element, parent) {
         reference: getReference(parent, element.tagName),
     });
     const newName = uniqueName(element, parent);
-    if (newName !== element.getAttribute('name'))
+    if (newName !== element.getAttribute('name')) {
         edits.push({ element, attributes: { name: newName } });
+    }
     edits.push(...updateConnectivityNodes(element, parent, newName));
     return edits;
 }
@@ -261,8 +281,9 @@ export function removeTerminal(terminal) {
         const newParent = otherTerminals
             .find(t => t.closest('Bay'))
             .closest('Bay');
-        if (newParent)
+        if (newParent) {
             edits.push(...reparentElement(cNode, newParent));
+        }
     }
     if (cNode &&
         otherTerminals.length <= 1 &&
@@ -273,14 +294,16 @@ export function removeTerminal(terminal) {
     const priv = cNode?.querySelector(`Private[type="${privType}"]`);
     const vertex = priv?.querySelector(`Vertex[*|uuid="${terminal.getAttributeNS(sldNs, 'uuid')}"]`);
     const section = vertex?.parentElement;
-    if (!section)
+    if (!section) {
         return edits;
+    }
     edits.push({ node: section });
     const cut = vertex === section.lastElementChild
         ? section.firstElementChild
         : section.lastElementChild;
-    if (cut)
+    if (cut) {
         edits.push(...healSectionCut(cut));
+    }
     return edits;
 }
 export function connectionStartPoints(equipment) {

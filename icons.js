@@ -122,19 +122,24 @@ export const zigZagPath = svg `
 export const zigZag2WTransform = 'matrix(0.8, 0, 0, 0.8, 0.3, 0.3) translate(0 -0.1) rotate(-20 1.5 1.5)';
 export function ptrIcon(windings, { slot = 'icon', kind = 'default', } = {}) {
     let path = svg ``;
-    if (windings === 3)
+    if (windings === 3) {
         path = ptr3WPath;
+    }
     else if (windings === 2) {
-        if (kind === 'auto')
+        if (kind === 'auto') {
             path = ptr2WAPath;
-        else
+        }
+        else {
             path = ptr2WPath;
+        }
     }
     else if (windings === 1) {
-        if (kind === 'auto')
+        if (kind === 'auto') {
             path = ptr1WAPath;
-        else
+        }
+        else {
             path = ptr1WPath;
+        }
     }
     const zigZag = kind === 'earthing'
         ? svg `<g transform="${windings > 1 ? zigZag2WTransform : nothing}">${zigZagPath}</g>`
@@ -522,8 +527,9 @@ const defaultEquipmentPath = svg `
   />
 `;
 export function equipmentPath(equipmentType) {
-    if (equipmentType && isEqType(equipmentType))
+    if (equipmentType && isEqType(equipmentType)) {
         return equipmentPaths[equipmentType];
+    }
     return defaultEquipmentPath;
 }
 export function equipmentGraphic(equipmentType) {

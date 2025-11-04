@@ -1,5 +1,5 @@
 import { LitElement } from 'lit';
-import { EditV2, Transactor } from '@omicronenergy/oscd-api';
+import { EditV2 } from '@omicronenergy/oscd-api';
 import type { Dialog } from '@material/mwc-dialog';
 import type { IconButtonToggle } from '@material/mwc-icon-button-toggle';
 import '@material/mwc-button';
@@ -10,7 +10,12 @@ import '@material/mwc-icon';
 import './sld-editor.js';
 import { ConnectDetail, Point, StartConnectDetail } from './util.js';
 export default class OscdEditorSLD extends LitElement {
-    editor: Transactor<EditV2>;
+    editor: {
+        commit: (edit: EditV2) => {
+            undo: never[];
+            redo: never[];
+        };
+    };
     doc: XMLDocument;
     get docVersion(): number;
     set docVersion(value: number);

@@ -2,7 +2,7 @@ import { __decorate } from "tslib";
 import { LitElement, html, css, nothing } from 'lit';
 import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 import { property, query, state } from 'lit/decorators.js';
-import { newEditEvent, newEditEventV2 } from '@omicronenergy/oscd-api/utils.js';
+import { newEditEventV2 } from '@omicronenergy/oscd-api/utils.js';
 import { getReference } from '@openscd/oscd-scl';
 import '@material/mwc-button';
 import '@material/mwc-fab';
@@ -70,14 +70,21 @@ function cutSectionAt(section, index, [x, y], nsPrefix) {
 class OscdEditorSLD extends LitElement {
     constructor() {
         super(...arguments);
+        this.editor = {
+            commit: (edit) => {
+                this.dispatchEvent(newEditEventV2(edit));
+                return { undo: [], redo: [] };
+            },
+        };
         this._docVersion = -1;
         this.gridSize = 32;
         this.nsp = 'esld';
         this.templateElements = {};
         this.placingOffset = [0, 0];
         this.handleKeydown = ({ key }) => {
-            if (key === 'Escape')
+            if (key === 'Escape') {
                 this.reset();
+            }
         };
     }
     get docVersion() {
@@ -85,15 +92,18 @@ class OscdEditorSLD extends LitElement {
     }
     set docVersion(value) {
         this.connecting = undefined;
-        if (!this.resizingBR?.parentElement)
+        if (!this.resizingBR?.parentElement) {
             this.resizingBR = undefined;
-        if (!this.placingLabel?.parentElement)
+        }
+        if (!this.placingLabel?.parentElement) {
             this.placingLabel = undefined;
+        }
         this._docVersion = value;
     }
     get showLabels() {
-        if (this.labelToggle)
+        if (this.labelToggle) {
             return this.labelToggle.on;
+        }
         return true;
     }
     zoomIn() {
@@ -101,8 +111,9 @@ class OscdEditorSLD extends LitElement {
     }
     zoomOut() {
         this.gridSize -= 3;
-        if (this.gridSize < 2)
+        if (this.gridSize < 2) {
             this.gridSize = 2;
+        }
     }
     startResizingBottomRight(element) {
         this.reset();
@@ -142,8 +153,9 @@ class OscdEditorSLD extends LitElement {
         window.removeEventListener('keydown', this.handleKeydown);
     }
     updated(changedProperties) {
-        if (!changedProperties.has('doc'))
+        if (!changedProperties.has('doc')) {
             return;
+        }
         const sldNsPrefix = this.doc.documentElement.lookupPrefix(sldNs);
         if (sldNsPrefix) {
             this.nsp = sldNsPrefix;
@@ -216,8 +228,9 @@ class OscdEditorSLD extends LitElement {
             }
             if (element.tagName === 'PowerTransformer' &&
                 !element.hasAttributeNS(sldNs, 'lx')) {
-                if (rot < 2)
+                if (rot < 2) {
                     lx += 1.5;
+                }
                 else {
                     lx -= 2;
                     ly += 2;
@@ -273,8 +286,9 @@ class OscdEditorSLD extends LitElement {
             const groundedTerminals = Array.from(element.querySelectorAll('Terminal, NeutralPoint')).filter(terminal => terminal.getAttribute('cNodeName') === 'grounded');
             if (groundedTerminals.length > 0) {
                 const bayName = parent.closest('Bay')?.getAttribute('name');
-                if (!bayName)
+                if (!bayName) {
                     groundedTerminals.forEach(terminal => edits.push(...removeTerminal(terminal)));
+                }
                 let newCNode = parent.querySelector(`ConnectivityNode[name="grounded"]`);
                 if (!newCNode) {
                     newCNode = this.doc.createElementNS(this.doc.documentElement.namespaceURI, 'ConnectivityNode');
@@ -309,13 +323,15 @@ class OscdEditorSLD extends LitElement {
         else if (element.getRootNode() === this.doc) {
             Array.from(element.getElementsByTagName('ConnectivityNode')).forEach(cNode => {
                 if (Array.from(this.doc.querySelectorAll(`Terminal[connectivityNode="${cNode.getAttribute('pathName')}"],
-                 NeutralPoint[connectivityNode="${cNode.getAttribute('pathName')}"]`)).find(terminal => terminal.closest(element.tagName) !== element))
+                 NeutralPoint[connectivityNode="${cNode.getAttribute('pathName')}"]`)).find(terminal => terminal.closest(element.tagName) !== element)) {
                     edits.push(...removeNode(cNode));
+                }
             });
             Array.from(element.querySelectorAll('Terminal, NeutralPoint')).forEach(terminal => {
                 const cNode = this.doc.querySelector(`ConnectivityNode[pathName="${terminal.getAttribute('connectivityNode')}"]`);
-                if (cNode && cNode.closest(element.tagName) !== element)
+                if (cNode && cNode.closest(element.tagName) !== element) {
                     edits.push(...removeNode(cNode));
+                }
             });
         }
         if (element.localName === 'Vertex') {
@@ -353,15 +369,18 @@ class OscdEditorSLD extends LitElement {
         this.editor.commit(edits);
         if (['Bay', 'VoltageLevel'].includes(element.tagName) &&
             (!element.hasAttributeNS(sldNs, 'w') ||
-                !element.hasAttributeNS(sldNs, 'h')))
+                !element.hasAttributeNS(sldNs, 'h'))) {
             this.startResizingBottomRight(element);
-        else
+        }
+        else {
             this.reset();
+        }
     }
     connectEquipment({ from, fromTerminal, to, toTerminal, path, }) {
         if (from.tagName === 'TransformerWinding' &&
-            to.tagName === 'TransformerWinding')
+            to.tagName === 'TransformerWinding') {
             return;
+        }
         const edits = [];
         let cNode;
         let connectivityNode;
@@ -401,10 +420,12 @@ class OscdEditorSLD extends LitElement {
             const vertex = this.doc.createElementNS(sldNs, `${this.nsp}:Vertex`);
             vertex.setAttributeNS(sldNs, `${this.nsp}:x`, x.toString());
             vertex.setAttributeNS(sldNs, `${this.nsp}:y`, y.toString());
-            if (i === 0)
+            if (i === 0) {
                 vertex.setAttributeNS(sldNs, `${this.nsp}:uuid`, fromTermUUID);
-            else if (i === path.length - 1 && to.tagName !== 'ConnectivityNode')
+            }
+            else if (i === path.length - 1 && to.tagName !== 'ConnectivityNode') {
                 vertex.setAttributeNS(sldNs, `${this.nsp}:uuid`, toTermUUID);
+            }
             edits.push({ parent: section, node: vertex, reference: null });
         });
         if (to.tagName === 'ConnectivityNode') {
@@ -467,8 +488,9 @@ class OscdEditorSLD extends LitElement {
         this.editor.commit(edits);
     }
     render() {
-        if (!this.doc)
+        if (!this.doc) {
             return html `<p>Please open an SCL document</p>`;
+        }
         return html `<main>
       <nav>
         ${Array.from(this.doc.querySelectorAll(':root > Substation > VoltageLevel > Bay')).find(bay => !isBusBar(bay))
@@ -764,12 +786,12 @@ class OscdEditorSLD extends LitElement {
         const node = this.doc.createElementNS(this.doc.documentElement.namespaceURI, 'Substation');
         const reference = getReference(parent, 'Substation');
         let index = 1;
-        while (this.doc.querySelector(`:root > Substation[name="S${index}"]`))
+        while (this.doc.querySelector(`:root > Substation[name="S${index}"]`)) {
             index += 1;
+        }
         node.setAttribute('name', `S${index}`);
         node.setAttributeNS(sldNs, `${this.nsp}:w`, '50');
         node.setAttributeNS(sldNs, `${this.nsp}:h`, '25');
-        this.dispatchEvent(newEditEvent({ parent, node, reference }));
         this.dispatchEvent(newEditEventV2({ parent, node, reference }));
     }
 }
