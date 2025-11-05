@@ -1,18 +1,18 @@
+/* eslint-disable no-unused-expressions */
 import { html } from 'lit';
 import { fixture, expect } from '@open-wc/testing';
-import { handleEdit } from '@omicronenergy/oscd-editor';
+import { handleEdit } from '@openscd/open-scd-core';
 import { resetMouse, sendMouse } from '@web/test-runner-commands';
 import { identity } from '@openscd/oscd-scl';
-import Designer from './oscd-editor-sld.js';
+import OscdEditorSld from './oscd-editor-sld.js';
 function middleOf(element) {
-    console.log(element.tagName);
     const { x, y, width, height } = element.getBoundingClientRect();
     return [
         Math.floor(x + window.pageXOffset + width / 2),
         Math.floor(y + window.pageYOffset + height / 2),
     ];
 }
-customElements.define('oscd-designer', Designer);
+customElements.define('oscd-editor-sld', OscdEditorSld);
 export const emptyDocString = `<?xml version="1.0" encoding="UTF-8"?>
 <SCL version="2007" revision="B" xmlns="http://www.iec.ch/61850/2003/SCL">
 </SCL>`;
@@ -61,14 +61,15 @@ export const equipmentDocString = `<?xml version="1.0" encoding="UTF-8"?>
   </Substation>
 </SCL>
 `;
-describe('Designer', () => {
+describe('SLD Editor', () => {
     let element;
     let lastCalledWizard;
     function queryUI({ scl, ui, }) {
+        var _a;
         let target = element.shadowRoot.querySelector('sld-editor').shadowRoot;
         if (scl) {
             const sclTarget = element.doc.querySelector(scl);
-            target = target.getElementById?.(identity(sclTarget)) || document;
+            target = (_a = target.getElementById) === null || _a === void 0 ? void 0 : _a.call(target, identity(sclTarget));
         }
         if (ui) {
             target = target.querySelector(ui);
@@ -77,17 +78,17 @@ describe('Designer', () => {
     }
     beforeEach(async () => {
         const doc = new DOMParser().parseFromString(emptyDocString, 'application/xml');
-        element = await fixture(html `<oscd-designer
+        element = await fixture(html `<oscd-editor-sld
         docName="testDoc"
         .doc=${doc}
         @oscd-edit=${({ detail }) => {
-            handleEdit(detail.edit);
-            element.docVersion += 1;
+            handleEdit(detail);
+            element.editCount += 1;
         }}
         @oscd-edit-wizard-request=${({ detail: { element: e }, }) => {
             lastCalledWizard = e;
         }}
-      ></oscd-designer>`);
+      ></oscd-editor-sld>`);
     });
     afterEach(async () => {
         lastCalledWizard = undefined;
@@ -95,81 +96,75 @@ describe('Designer', () => {
         await resetMouse();
     });
     it('shows a placeholder message while no document is loaded', async () => {
-        element = await fixture(html `<oscd-designer></oscd-designer>`);
-        expect(element.shadowRoot?.querySelector('p')).to.contain.text('SCL');
+        var _a;
+        element = await fixture(html `<oscd-editor-sld></oscd-editor-sld>`);
+        expect((_a = element.shadowRoot) === null || _a === void 0 ? void 0 : _a.querySelector('p')).to.contain.text('SCL');
     });
     it('adds the SLD XML namespace if doc lacks it', async () => {
         expect(element.doc.documentElement).to.have.attribute('xmlns:esld');
     });
     it('adds a substation on add button click', async () => {
+        var _a;
         expect(element.doc.querySelector('Substation')).to.not.exist;
-        element
-            .shadowRoot.querySelector('[label="Add Substation"]')
-            ?.click();
+        (_a = element
+            .shadowRoot.querySelector('[label="Add Substation"]')) === null || _a === void 0 ? void 0 : _a.click();
         expect(element.doc.querySelector('Substation')).to.exist;
     });
     it('gives new substations unique names', async () => {
-        element
-            .shadowRoot.querySelector('[label="Add Substation"]')
-            ?.click();
-        element
-            .shadowRoot.querySelector('[label="Add Substation"]')
-            ?.click();
+        var _a, _b;
+        (_a = element
+            .shadowRoot.querySelector('[label="Add Substation"]')) === null || _a === void 0 ? void 0 : _a.click();
+        (_b = element
+            .shadowRoot.querySelector('[label="Add Substation"]')) === null || _b === void 0 ? void 0 : _b.click();
         const [name1, name2] = Array.from(element.doc.querySelectorAll('Substation')).map(substation => substation.getAttribute('name'));
         expect(name1).not.to.equal(name2);
     });
     it('does not zoom out past a positive minimum value', async () => {
-        for (let i = 0; i < 20; i += 1) {
-            element
-                .shadowRoot.querySelector('[icon="zoom_out"]')
-                ?.click();
-        }
+        var _a;
+        for (let i = 0; i < 20; i += 1)
+            (_a = element
+                .shadowRoot.querySelector('[icon="zoom_out"]')) === null || _a === void 0 ? void 0 : _a.click();
         expect(element.gridSize).to.be.greaterThan(0);
     });
     describe('given a substation', () => {
         beforeEach(async () => {
-            element
-                .shadowRoot.querySelector('[label="Add Substation"]')
-                ?.click();
+            var _a;
+            (_a = element
+                .shadowRoot.querySelector('[label="Add Substation"]')) === null || _a === void 0 ? void 0 : _a.click();
             await element.updateComplete;
         });
         it('zooms in on zoom in button click', async () => {
+            var _a;
             const initial = element.gridSize;
-            element
-                .shadowRoot.querySelector('[icon="zoom_in"]')
-                ?.click();
+            (_a = element
+                .shadowRoot.querySelector('[icon="zoom_in"]')) === null || _a === void 0 ? void 0 : _a.click();
             expect(element.gridSize).to.be.greaterThan(initial);
         });
         it('zooms out on zoom out button click', async () => {
+            var _a;
             const initial = element.gridSize;
-            element
-                .shadowRoot.querySelector('[icon="zoom_out"]')
-                ?.click();
+            (_a = element
+                .shadowRoot.querySelector('[icon="zoom_out"]')) === null || _a === void 0 ? void 0 : _a.click();
             expect(element.gridSize).to.be.lessThan(initial);
         });
         it('allows resizing substations', async () => {
+            var _a, _b, _c, _d, _e, _f;
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
-            sldEditor.shadowRoot
-                ?.querySelector('h2 > mwc-icon-button')
-                ?.click();
+            (_b = (_a = sldEditor.shadowRoot) === null || _a === void 0 ? void 0 : _a.querySelector('h2 > mwc-icon-button')) === null || _b === void 0 ? void 0 : _b.click();
             sldEditor.substationWidthUI.value = '50';
             sldEditor.substationHeightUI.value = '25';
-            sldEditor.shadowRoot
-                ?.querySelector('mwc-button[slot="primaryAction"]')
-                ?.click();
+            (_d = (_c = sldEditor.shadowRoot) === null || _c === void 0 ? void 0 : _c.querySelector('mwc-button[slot="primaryAction"]')) === null || _d === void 0 ? void 0 : _d.click();
             expect(element).to.have.property('editCount', 0);
             sldEditor.substationWidthUI.value = '1337';
             sldEditor.substationHeightUI.value = '42';
-            sldEditor.shadowRoot
-                ?.querySelector('mwc-button[slot="primaryAction"]')
-                ?.click();
+            (_f = (_e = sldEditor.shadowRoot) === null || _e === void 0 ? void 0 : _e.querySelector('mwc-button[slot="primaryAction"]')) === null || _f === void 0 ? void 0 : _f.click();
             expect(sldEditor.substation).to.have.attribute('esld:h', '42');
             expect(sldEditor.substation).to.have.attribute('esld:w', '1337');
         });
         it('allows placing a new voltage level', async () => {
-            element
-                .shadowRoot.querySelector('[label="Add VoltageLevel"]')
-                ?.click();
+            var _a;
+            (_a = element
+                .shadowRoot.querySelector('[label="Add VoltageLevel"]')) === null || _a === void 0 ? void 0 : _a.click();
             expect(element)
                 .property('placing')
                 .to.have.property('tagName', 'VoltageLevel');
@@ -187,14 +182,13 @@ describe('Designer', () => {
             expect(element.doc.querySelector('VoltageLevel')).to.have.attribute('h', '8');
         });
         it('gives new voltage levels unique names', async () => {
-            element
-                .shadowRoot.querySelector('[label="Add VoltageLevel"]')
-                ?.click();
+            var _a, _b;
+            (_a = element
+                .shadowRoot.querySelector('[label="Add VoltageLevel"]')) === null || _a === void 0 ? void 0 : _a.click();
             await sendMouse({ type: 'click', position: [200, 252] });
             await sendMouse({ type: 'click', position: [300, 352] });
-            element
-                .shadowRoot.querySelector('[label="Add VoltageLevel"]')
-                ?.click();
+            (_b = element
+                .shadowRoot.querySelector('[label="Add VoltageLevel"]')) === null || _b === void 0 ? void 0 : _b.click();
             await sendMouse({ type: 'click', position: [350, 402] });
             await sendMouse({ type: 'click', position: [450, 502] });
             const [name1, name2] = Array.from(element.doc.querySelectorAll('VoltageLevel')).map(substation => substation.getAttribute('name'));
@@ -203,9 +197,9 @@ describe('Designer', () => {
             expect(name2).to.exist;
         });
         it('allows the user to abort placing an element', async () => {
-            element
-                .shadowRoot.querySelector('[label="Add VoltageLevel"]')
-                ?.click();
+            var _a;
+            (_a = element
+                .shadowRoot.querySelector('[label="Add VoltageLevel"]')) === null || _a === void 0 ? void 0 : _a.click();
             expect(element)
                 .property('placing')
                 .to.have.property('tagName', 'VoltageLevel');
@@ -221,15 +215,12 @@ describe('Designer', () => {
             await element.updateComplete;
         });
         it('forbids undersizing the substation', async () => {
+            var _a, _b, _c, _d;
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
-            sldEditor.shadowRoot
-                ?.querySelector('h2 > mwc-icon-button')
-                ?.click();
+            (_b = (_a = sldEditor.shadowRoot) === null || _a === void 0 ? void 0 : _a.querySelector('h2 > mwc-icon-button')) === null || _b === void 0 ? void 0 : _b.click();
             sldEditor.substationWidthUI.value = '30';
             sldEditor.substationHeightUI.value = '20';
-            sldEditor.shadowRoot
-                ?.querySelector('mwc-button[slot="primaryAction"]')
-                ?.click();
+            (_d = (_c = sldEditor.shadowRoot) === null || _c === void 0 ? void 0 : _c.querySelector('mwc-button[slot="primaryAction"]')) === null || _d === void 0 ? void 0 : _d.click();
             expect(sldEditor.substation).to.have.attribute('smth:h', '25');
             expect(sldEditor.substation).to.have.attribute('smth:w', '50');
         });
@@ -378,7 +369,8 @@ describe('Designer', () => {
             expect(lastCalledWizard).to.equal(element.doc.querySelector('VoltageLevel'));
         });
         it('allows placing a new bay', async () => {
-            element.shadowRoot.querySelector('[label="Add Bay"]')?.click();
+            var _a;
+            (_a = element.shadowRoot.querySelector('[label="Add Bay"]')) === null || _a === void 0 ? void 0 : _a.click();
             expect(element).property('placing').to.have.property('tagName', 'Bay');
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
             await sendMouse({ type: 'click', position: [200, 252] });
@@ -394,9 +386,9 @@ describe('Designer', () => {
             expect(bay).to.have.attribute('h', '8');
         });
         it('allows placing a new bus bar', async () => {
-            element
-                .shadowRoot.querySelector('[label="Add Bus Bar"]')
-                ?.click();
+            var _a;
+            (_a = element
+                .shadowRoot.querySelector('[label="Add Bus Bar"]')) === null || _a === void 0 ? void 0 : _a.click();
             expect(element).property('placing').to.have.property('tagName', 'Bay');
             const sldEditor = element.shadowRoot.querySelector('sld-editor');
             await sendMouse({ type: 'click', position: [200, 252] });
@@ -556,6 +548,7 @@ describe('Designer', () => {
             });
         });
         it('moves a bay when its parent voltage level is moved', async () => {
+            const voltageLevel = element.doc.querySelector('VoltageLevel');
             await sendMouse({
                 type: 'click',
                 position: [70, 250],
@@ -571,7 +564,8 @@ describe('Designer', () => {
             expect(bay).to.have.attribute('esld:y', '1');
         });
         it('allows placing new conducting equipment', async () => {
-            element.shadowRoot.querySelector('[label="Add GEN"]')?.click();
+            var _a;
+            (_a = element.shadowRoot.querySelector('[label="Add GEN"]')) === null || _a === void 0 ? void 0 : _a.click();
             expect(element)
                 .property('placing')
                 .to.have.property('tagName', 'ConductingEquipment');
@@ -585,9 +579,9 @@ describe('Designer', () => {
         });
         describe('with a sibling bus bar', () => {
             beforeEach(async () => {
-                element
-                    .shadowRoot.querySelector('[label="Add Bus Bar"]')
-                    ?.click();
+                var _a;
+                (_a = element
+                    .shadowRoot.querySelector('[label="Add Bus Bar"]')) === null || _a === void 0 ? void 0 : _a.click();
                 await sendMouse({ type: 'click', position: [200, 244] });
                 await sendMouse({ type: 'click', position: [400, 468] });
             });
@@ -1145,6 +1139,7 @@ describe('Designer', () => {
                     expect(element.doc.querySelectorAll('ConnectivityNode')).to.have.lengthOf(1);
                 });
                 it('keeps internal connectivity nodes when moving containers', async () => {
+                    var _a;
                     const position = middleOf(queryUI({
                         scl: '[name="V2"]',
                         ui: '.handle',
@@ -1154,9 +1149,8 @@ describe('Designer', () => {
                         scl: '[name="V2"]',
                         ui: 'rect',
                     }).dispatchEvent(new PointerEvent('click'));
-                    element
-                        .shadowRoot.querySelector('[label="Add Substation"]')
-                        ?.click();
+                    (_a = element
+                        .shadowRoot.querySelector('[label="Add Substation"]')) === null || _a === void 0 ? void 0 : _a.click();
                     expect(element.doc.querySelectorAll('ConnectivityNode')).to.have.lengthOf(2);
                     await sendMouse({ position, type: 'click' });
                     expect(element.doc.querySelectorAll('ConnectivityNode')).to.have.lengthOf(1);
@@ -1205,9 +1199,9 @@ describe('Designer', () => {
                 });
                 describe('and a bus bar', () => {
                     beforeEach(async () => {
-                        element
-                            .shadowRoot.querySelector('[label="Add Bus Bar"]')
-                            ?.click();
+                        var _a;
+                        (_a = element
+                            .shadowRoot.querySelector('[label="Add Bus Bar"]')) === null || _a === void 0 ? void 0 : _a.click();
                         await sendMouse({ type: 'click', position: [430, 202] });
                         await sendMouse({ type: 'click', position: [430, 282] });
                         await sendMouse({
@@ -1222,22 +1216,21 @@ describe('Designer', () => {
                         });
                     });
                     it('keeps the bus bar when moving containers', async () => {
+                        var _a, _b;
                         const position = middleOf(queryUI({
                             scl: '[name="V2"] > [name="B1"]',
                             ui: '.handle',
                         }));
-                        expect(element.doc
-                            .querySelector('[name="L"]')
-                            ?.querySelectorAll('Section')).to.have.lengthOf(2);
+                        expect((_a = element.doc
+                            .querySelector('[name="L"]')) === null || _a === void 0 ? void 0 : _a.querySelectorAll('Section')).to.have.lengthOf(2);
                         position[1] += 120;
                         await sendMouse({ position, type: 'click' });
                         await element.updateComplete;
                         position[1] += 40;
                         await sendMouse({ position, type: 'click' });
                         await element.updateComplete;
-                        expect(element.doc
-                            .querySelector('[name="L"]')
-                            ?.querySelectorAll('Section')).to.have.lengthOf(1);
+                        expect((_b = element.doc
+                            .querySelector('[name="L"]')) === null || _b === void 0 ? void 0 : _b.querySelectorAll('Section')).to.have.lengthOf(1);
                         await expect(element.doc.documentElement).dom.to.equalSnapshot({
                             ignoreAttributes: ['esld:uuid'],
                         });
@@ -1417,15 +1410,15 @@ describe('Designer', () => {
                         });
                     });
                     it('copies voltage levels on move handle shift click', async () => {
+                        var _a;
                         queryUI({
                             scl: '[name="V1"]',
                             ui: 'rect',
                         }).dispatchEvent(new PointerEvent('click', { shiftKey: true }));
                         expect(element.doc.querySelector('[name="V1"] [name="B2"]')).not.to
                             .exist;
-                        element
-                            .shadowRoot.querySelector('[label="Add Substation"]')
-                            ?.click();
+                        (_a = element
+                            .shadowRoot.querySelector('[label="Add Substation"]')) === null || _a === void 0 ? void 0 : _a.click();
                         await sendMouse({ type: 'click', position: [640, 480] });
                         expect(element.doc.querySelector('[name="S2"] [name="V1"]')).to
                             .exist;
