@@ -4,6 +4,7 @@ import {
   canPlaceAt,
   canResizeTo,
   canResizeToTL,
+  isUnsizedContainer,
 } from './sld-placement.js';
 import { createSCLDoc } from '../test-helpers.js';
 
@@ -26,6 +27,27 @@ const standardLayout = `
 `;
 
 describe('sld-placement', () => {
+  describe('isUnsizedContainer', () => {
+    it('is true for a bay or voltage level without a size', () => {
+      const doc = createSCLDoc('<Substation name="S1"/>');
+      expect(isUnsizedContainer(doc.createElement('Bay'))).to.be.true;
+      expect(isUnsizedContainer(doc.createElement('VoltageLevel'))).to.be.true;
+    });
+
+    it('is false once the container has a size', () => {
+      const doc = createSCLDoc(standardLayout);
+      expect(isUnsizedContainer(doc.querySelector('Bay')!)).to.be.false;
+      expect(isUnsizedContainer(doc.querySelector('VoltageLevel')!)).to.be.false;
+    });
+
+    it('is false for other elements', () => {
+      const doc = createSCLDoc(standardLayout);
+      expect(isUnsizedContainer(doc.querySelector('Substation')!)).to.be.false;
+      expect(isUnsizedContainer(doc.createElement('ConductingEquipment'))).to.be
+        .false;
+    });
+  });
+
   describe('canPlaceAt', () => {
     it('always returns true for Substation elements', () => {
       const doc = createSCLDoc(standardLayout);

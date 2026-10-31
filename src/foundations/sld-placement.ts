@@ -10,7 +10,7 @@
 import { contains } from './geometry.js';
 import { containsRect, overlapsRect } from './element-geometry.js';
 import { isBusBar } from './connectivity.js';
-import { attributes } from './sld-attributes.js';
+import { attributes, getSLDAttributes } from './sld-attributes.js';
 import { iedReferences, isIedReferenceElement } from './ied.js';
 
 const parentTags: Partial<Record<string, string[]>> = {
@@ -20,6 +20,15 @@ const parentTags: Partial<Record<string, string[]>> = {
   PowerTransformer: ['Bay', 'VoltageLevel', 'Substation'],
   Reference: ['Bay', 'VoltageLevel', 'Substation'],
 };
+
+/** A VoltageLevel or Bay that has not been sized yet, so it can be dragged out. */
+export function isUnsizedContainer(element: Element): boolean {
+  return (
+    ['Bay', 'VoltageLevel'].includes(element.tagName) &&
+    !isBusBar(element) &&
+    (!getSLDAttributes(element, 'w') || !getSLDAttributes(element, 'h'))
+  );
+}
 
 export function canPlaceAt(
   root: Element,

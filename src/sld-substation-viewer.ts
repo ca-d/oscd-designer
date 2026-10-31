@@ -55,7 +55,7 @@ import {
 } from './foundations/routing.js';
 import type { RouterMode } from './foundations/routing.js';
 import { containsRect } from './foundations/element-geometry.js';
-import { canPlaceAt } from './foundations/sld-placement.js';
+import { canPlaceAt, isUnsizedContainer } from './foundations/sld-placement.js';
 import {
   busBarJunctions,
   busBarLine,
@@ -153,6 +153,26 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
       event.composedPath().includes(this.sld),
     isActive: () => !isMode(this.interaction, 'idle', 'locked'),
   });
+
+  // Dragging out a new VoltageLevel or Bay between any two corners.
+  protected dragOut = new DragToClickController(this, {
+    canStart: event =>
+      !this.disabled &&
+      !!this.placing &&
+      isUnsizedContainer(this.placing) &&
+      event.composedPath().includes(this.sld),
+    isActive: () => !!this.placing,
+    begin: (press) => {
+      this.dragAnchor = this.gridPosition(press);
+    },
+    finish: () => {
+      this.dragAnchor = undefined;
+    },
+  });
+
+  /** Grid cell where a drag-out began; the opposite corner follows the cursor. */
+  @state()
+  dragAnchor?: Point;
 
   @property()
   doc!: XMLDocument;
@@ -349,6 +369,12 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
     return [Math.round(x * 2) / 2, Math.round(y * 2) / 2];
   }
 
+  /** Top-left of the element being placed: the cursor, or the dragged-out corner. */
+  private placingCorner(): Point {
+    const [anchorX, anchorY] = this.dragAnchor ?? [this.mouseX, this.mouseY];
+    return [Math.min(anchorX, this.mouseX), Math.min(anchorY, this.mouseY)];
+  }
+
   renderedLabelPosition(element: Element, { preview = false } = {}): Point {
     let {
       label: [x, y],
@@ -363,8 +389,9 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
       const {
         pos: [parentX, parentY],
       } = attributes(this.placing!);
-      x += this.mouseX - parentX - offsetX;
-      y += this.mouseY - parentY - offsetY;
+      const [cornerX, cornerY] = this.placingCorner();
+      x += cornerX - parentX - offsetX;
+      y += cornerY - parentY - offsetY;
     }
     if (this.placingLabel === element) {
       x = this.mouseX2 - 0.5 - offsetX;
@@ -396,8 +423,9 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
         pos: [parentX, parentY],
       } = attributes(this.placing!);
       const [offsetX, offsetY] = this.placingOffset;
-      x += this.mouseX - parentX - offsetX;
-      y += this.mouseY - parentY - offsetY;
+      const [cornerX, cornerY] = this.placingCorner();
+      x += cornerX - parentX - offsetX;
+      y += cornerY - parentY - offsetY;
     }
     return [x, y];
   }
@@ -944,6 +972,7 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
     return {
       ...this.sharedContext(),
       highlight: this.highlight,
+      dragAnchor: this.dragAnchor,
       mouseX: this.mouseX,
       mouseY: this.mouseY,
       svgCoordinates: (clientX, clientY) =>

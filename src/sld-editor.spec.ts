@@ -1017,6 +1017,48 @@ describe('SLD Editor', () => {
       });
     });
 
+    describe('dragging out a new bay', () => {
+      async function dragOut(from: [number, number], to: [number, number]) {
+        const newBay = element.doc.createElement('Bay');
+        newBay.setAttribute('name', 'NewBay');
+        element.startPlacing(newBay);
+        await sendMouse({ type: 'move', position: gridPos(...from) });
+        await sendMouse({ type: 'down' });
+        await sendMouse({ type: 'move', position: gridPos(...to) });
+        await sendMouse({ type: 'up' });
+        await aTimeout(10);
+        return element.doc.querySelector('Bay')!;
+      }
+
+      function expectSizedBay(bay: Element) {
+        expect(element.interaction.mode).to.equal('idle');
+        expect(sldAttribute(bay, 'x')).to.equal('5');
+        expect(sldAttribute(bay, 'y')).to.equal('3');
+        expect(sldAttribute(bay, 'w')).to.equal('7');
+        expect(sldAttribute(bay, 'h')).to.equal('8');
+      }
+
+      it('from the top left to the bottom right corner', async () => {
+        expectSizedBay(await dragOut(placeTL, placeBR));
+      });
+
+      it('from the bottom right to the top left corner', async () => {
+        expectSizedBay(await dragOut(placeBR, placeTL));
+      });
+
+      it('from the bottom left to the top right corner', async () => {
+        expectSizedBay(
+          await dragOut([placeTL[0], placeBR[1]], [placeBR[0], placeTL[1]]),
+        );
+      });
+
+      it('from the top right to the bottom left corner', async () => {
+        expectSizedBay(
+          await dragOut([placeBR[0], placeTL[1]], [placeTL[0], placeBR[1]]),
+        );
+      });
+    });
+
     it('allows placing a new bus bar', async () => {
       const busBar = makeBusBar(element.doc, element.nsp);
       element.startPlacing(busBar);

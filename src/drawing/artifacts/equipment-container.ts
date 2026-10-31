@@ -40,6 +40,8 @@ import { isMode, targetInMode } from '../../foundations/interaction-mode.js';
 
 export type EquipmentContainerContext = SldSharedContext & {
   highlight: Highlight[];
+  /** Grid cell a new container is being dragged out from. */
+  dragAnchor?: Point;
   mouseX: number;
   mouseY: number;
   svgCoordinates(clientX: number, clientY: number): Point;
@@ -295,6 +297,15 @@ function render(
     dim: [w, h],
   } = attributes(element);
 
+  const draggedOut =
+    !!context.dragAnchor &&
+    targetInMode(context.interaction, 'placing') === element;
+  if (draggedOut) {
+    const [anchorX, anchorY] = context.dragAnchor!;
+    w = Math.abs(context.mouseX - anchorX) + 1;
+    h = Math.abs(context.mouseY - anchorY) + 1;
+  }
+
   const right = x + w - 1;
   const bottom = y + h - 1;
 
@@ -391,6 +402,7 @@ function render(
             y,
             element,
             parent,
+            ...(draggedOut ? { w, h } : {}),
           }),
         );
     } else {

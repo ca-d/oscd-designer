@@ -159,3 +159,72 @@ describe('drag-to-click', () => {
     expect(isInSldCanvas([document.body])).to.be.false;
   });
 });
+
+describe('drag-to-click with begin and finish hooks', () => {
+  let begun: MouseEvent[];
+  let finished: number;
+  let host: HTMLElement;
+  let target: Element;
+  let clicks: number;
+
+  class HookHost extends LitElement {
+    controller = new DragToClickController(this, {
+      canStart: () => true,
+      isActive: () => true,
+      begin: press => begun.push(press),
+      finish: () => {
+        finished += 1;
+      },
+    });
+
+    render() {
+      return html`<svg id="sld"><rect id="target" width="10" height="10" /></svg>`;
+    }
+  }
+  customElements.define('drag-to-click-hook-host', HookHost);
+
+  beforeEach(async () => {
+    begun = [];
+    finished = 0;
+    clicks = 0;
+    host = await fixture(html`<drag-to-click-hook-host></drag-to-click-hook-host>`);
+    target = host.shadowRoot!.querySelector('#target')!;
+    host.shadowRoot!.addEventListener('click', () => {
+      clicks += 1;
+    });
+  });
+
+  it('calls begin with the press instead of replaying a click', () => {
+    mouse('mousedown', target, 10, 10);
+    mouse('mousemove', window, 30, 10);
+
+    expect(begun).to.have.length(1);
+    expect([begun[0].clientX, begun[0].clientY]).to.deep.equal([10, 10]);
+    expect(clicks).to.equal(0);
+  });
+
+  it('commits on release and then finishes', () => {
+    mouse('mousedown', target, 10, 10);
+    mouse('mousemove', window, 30, 10);
+    mouse('mouseup', target, 50, 60);
+
+    expect(clicks).to.equal(1);
+    expect(finished).to.equal(1);
+  });
+
+  it('finishes when released outside a substation canvas', () => {
+    mouse('mousedown', target, 10, 10);
+    mouse('mousemove', window, 30, 10);
+    mouse('mouseup', window, 50, 60);
+
+    expect(clicks).to.equal(0);
+    expect(finished).to.equal(1);
+  });
+
+  it('does not finish a press that never became a drag', () => {
+    mouse('mousedown', target, 10, 10);
+    mouse('mouseup', target, 10, 10);
+
+    expect(finished).to.equal(0);
+  });
+});
