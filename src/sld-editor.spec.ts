@@ -2617,8 +2617,13 @@ describe('SLD Editor', () => {
             await element.updateComplete;
             clickInteractive(menuItem(0));
             expect(sldAttribute(bus!, 'h')).equal('1');
+            const terminals = element.doc.querySelectorAll('Terminal').length;
             await sendMouse({ type: 'click', position: gridPos(11, 4) });
             expect(sldAttribute(bus!, 'h')).equal('2');
+            expect(
+              element.doc.querySelectorAll('Terminal'),
+              'the feeders stay connected',
+            ).to.have.lengthOf(terminals);
             await expect(element.doc.documentElement).dom.to.equalSnapshot({
               ignoreAttributes: ['esldoscd:uuid'],
             });

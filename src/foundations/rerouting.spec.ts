@@ -3,6 +3,7 @@ import { handleEdit } from '@omicronenergy/oscd-editor';
 
 import { connectionPointsAt } from './connectivity.js';
 import {
+  createFlipElementEdits,
   createRotateEdits,
   shiftDescendantEdits,
   shiftElementEdits,
@@ -281,6 +282,63 @@ describe('rerouteEdits', () => {
       expect(sectionSignature(route.section)).to.equal(
         pointsSignature(route.points),
       );
+    });
+  });
+
+  describe('mirroring a transformer', () => {
+    /** A transformer below Q1, wired to it by its T1 terminal. */
+    function transformerDoc(
+      windingTerminals = terminal('T1', 'ut1'),
+      end = vertex(8.5, 7.3, 'ut1'),
+    ) {
+      return substation({
+        extra: `<PowerTransformer name="PT1">
+            ${layout('smth:x="8" smth:y="8"')}
+            <TransformerWinding name="W1">${windingTerminals}</TransformerWinding>
+          </PowerTransformer>
+          <ConnectivityNode name="L2" pathName="S1/V1/B1/L2">
+            <Private type="OpenSCD-SLD-Layout">
+              <smth:Section>${vertex(3.5, 3.84, 'u1')}${vertex(3.5, 6.5)}${vertex(8.5, 6.5)}${end}</smth:Section>
+            </Private>
+          </ConnectivityNode>`,
+      });
+    }
+
+    it('keeps the connection, reattaching the wire to where the terminal went', () => {
+      const doc = transformerDoc();
+      const transformer = doc.querySelector('PowerTransformer')!;
+      handleEdit(createFlipElementEdits(transformer, 'smth'));
+
+      expect(attributes(transformer).flip).to.be.true;
+      expect(doc.querySelectorAll('Terminal')).to.have.lengthOf(3);
+      const wire = polyline(sections(doc)[0]);
+      expect(wire[0]).to.deep.equal([3.5, 3.84]);
+      expect(wire[wire.length - 1]).to.deep.equal([8.5, 9.7]);
+      wire.slice(1).forEach(([x, y], i) => {
+        expect(x === wire[i][0] || y === wire[i][1], `${wire}`).to.be.true;
+      });
+    });
+
+    it('leaves a wire alone whose terminal stays where it is', () => {
+      const doc = transformerDoc(
+        terminal('N1', 'ut1'),
+        `${vertex(7.8, 6.5)}${vertex(7.8, 8.5, 'ut1')}`,
+      );
+      const transformer = doc.querySelector('PowerTransformer')!;
+      const before = polyline(sections(doc)[0]);
+      handleEdit(createFlipElementEdits(transformer, 'smth'));
+
+      expect(polyline(sections(doc)[0])).to.deep.equal(before);
+    });
+
+    it('reports a wire that had to run through other elements', () => {
+      const doc = transformerDoc();
+      const transformer = doc.querySelector('PowerTransformer')!;
+      const fallbacks: FlaggedSection[] = [];
+      createFlipElementEdits(transformer, 'smth', fallbacks);
+
+      expect(fallbacks.every(({ section }) => section === sections(doc)[0])).to.be
+        .true;
     });
   });
 

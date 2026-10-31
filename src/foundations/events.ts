@@ -109,6 +109,14 @@ export function newRotateEvent(detail: Element): StartEvent {
   });
 }
 
+export function newFlipEvent(detail: Element): StartEvent {
+  return new CustomEvent('oscd-sld-flip', {
+    bubbles: true,
+    composed: true,
+    detail,
+  });
+}
+
 export type StartConnectDetail = {
   from: Element;
   fromTerminal: 'T1' | 'T2' | 'N1' | 'N2';
@@ -308,6 +316,7 @@ declare global {
     ['oscd-sld-connect']: ConnectEvent;
     ['oscd-sld-extend-connect-point']: ExtendConnectPointEvent;
     ['oscd-sld-rotate']: StartEvent;
+    ['oscd-sld-flip']: StartEvent;
     ['oscd-sld-start-interaction']: StartInteractionEvent;
     ['oscd-sld-selected']: SelectEvent;
     ['oscd-sld-edit-scl']: EditSclEvent;

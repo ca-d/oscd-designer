@@ -1,13 +1,13 @@
 import { getReference } from '@openscd/scl-lib';
 
-import { busSections, connectivityPath, isBusBar } from './connectivity.js';
+import { connectivityPath } from './connectivity.js';
 import {
   removeNode,
   removeTerminal,
   reparentElement,
 } from './connectivity-edits.js';
 import { iedReferences, isIedReferenceElement } from './ied.js';
-import { rerouteEdits } from './rerouting.js';
+import { flippedTerminalPort, rerouteEdits } from './rerouting.js';
 import type { FlaggedSection } from './rerouting.js';
 import {
   attributes,
@@ -161,11 +161,13 @@ export function createGroundTerminalEdits(
   return edits;
 }
 
+/** Edits mirroring `element`; a transformer's connections follow its terminals. */
 export function createFlipElementEdits(
   element: Element,
   nsp: string,
+  fallbacks: FlaggedSection[] = [],
 ): EditV2[] {
-  const { flip, kind } = attributes(element);
+  const { flip } = attributes(element);
   const edits: EditV2[] = [
     updateSLDAttributes(element, nsp, {
       flip: flip ? null : 'true',
@@ -173,15 +175,22 @@ export function createFlipElementEdits(
   ];
 
   if (element.tagName === 'PowerTransformer') {
-    const winding = element.querySelector('TransformerWinding')!;
-    Array.from(winding.querySelectorAll('Terminal')).forEach(terminal =>
-      edits.push(...removeTerminal(terminal)),
+    edits.push(
+      ...rerouteEdits(
+        element.ownerDocument,
+        { kind: 'flip', element },
+        nsp,
+        fallbacks,
+      ),
     );
-    if (kind === 'earthing') {
-      Array.from(winding.querySelectorAll('NeutralPoint')).forEach(np =>
-        edits.push(...removeTerminal(np)),
-      );
-    }
+    // A terminal that cannot be placed on the mirrored drawing has to go.
+    Array.from(
+      element.querySelectorAll(
+        'TransformerWinding > Terminal, TransformerWinding > NeutralPoint',
+      ),
+    )
+      .filter(terminal => !flippedTerminalPort(terminal))
+      .forEach(terminal => edits.push(...removeTerminal(terminal)));
   }
 
   return edits;
@@ -759,45 +768,6 @@ export function disconnectExternalEdits(
   );
 
   return edits;
-}
-
-export function busBarVertexEdits(
-  element: Element,
-  x: number,
-  y: number,
-  nsp: string,
-): EditV2[] {
-  if (element.localName !== 'Vertex') {
-    return [];
-  }
-
-  const bay = element.closest('Bay')!;
-  const sections = busSections(bay);
-  const section = sections[0];
-  const vertex = section.querySelector('Vertex')!;
-  const lastSection = sections[sections.length - 1];
-  const lastVertex = lastSection.querySelector('Vertex:last-of-type')!;
-  const {
-    pos: [x1, y1],
-  } = attributes(vertex);
-  const w = x - x1 + 1;
-  const h = y - y1 + 1;
-
-  if (!isBusBar(bay)) {
-    return [];
-  }
-
-  return [
-    ...removeNode(section.closest('ConnectivityNode')!),
-    updateSLDAttributes(lastVertex, nsp, {
-      x: x.toString(),
-      y: y.toString(),
-    }),
-    updateSLDAttributes(bay, nsp, {
-      w: w.toString(),
-      h: h.toString(),
-    }),
-  ];
 }
 
 export function wrapIedReferenceEdits(

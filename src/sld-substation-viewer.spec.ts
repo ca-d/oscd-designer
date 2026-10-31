@@ -631,13 +631,15 @@ describe('SldSubstationViewer connection routing', () => {
   });
 
   describe('towards an existing connectivity node', () => {
-    async function viewerWithWire(cursor: [number, number]) {
+    async function viewerWithWire(cursor: [number, number], bus = false) {
       const doc = contractSubstationDoc();
       const cNode = doc.querySelector('ConnectivityNode')!;
       const priv = doc.createElementNS(cNode.namespaceURI, 'Private');
       priv.setAttribute('type', 'OpenSCD-SLD-Layout');
       const section = doc.createElementNS(SLD_NS, 'sld:Section');
-      section.setAttributeNS(SLD_NS, 'sld:bus', 'true');
+      if (bus) {
+        section.setAttributeNS(SLD_NS, 'sld:bus', 'true');
+      }
       [2.5, 10.5].forEach((x) => {
         const vertex = doc.createElementNS(SLD_NS, 'sld:Vertex');
         vertex.setAttributeNS(SLD_NS, 'sld:x', `${x}`);
@@ -674,8 +676,13 @@ describe('SldSubstationViewer connection routing', () => {
       expect(meetingPoint(far.el)).to.deep.equal([3.5, 7.5]);
     });
 
+    it('meets a bus bar where the cursor is on it', async () => {
+      const { el } = await viewerWithWire([9.5, 7.5], true);
+      expect(meetingPoint(el)).to.deep.equal([9.5, 7.5]);
+    });
+
     it('meets a free end of the wire straight on when the cursor is on it', async () => {
-      const { el } = await viewerWithWire([10.5, 7.5]);
+      const { el } = await viewerWithWire([10.5, 7.5], true);
       const lines = previewLines(el);
       const last = lines[lines.length - 1];
       expect(['x2', 'y2'].map(a => Number(last.getAttribute(a)))).to.deep.equal([

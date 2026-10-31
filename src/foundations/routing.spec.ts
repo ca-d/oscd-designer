@@ -326,6 +326,18 @@ describe('routing', () => {
       ]);
     });
 
+    it('are met where they are pointed at, not at a feeder that is nearer', () => {
+      const router = new ConnectionRouter(10, 10, [], [
+        { net: 'bus', points: [[0, 5], [7, 5]], bus: true },
+        { net: 'bus', points: [[7, 5], [10, 5]], bus: true },
+        { net: 'bus', points: [[7, 5], [7, 8]] },
+      ]);
+      expect(router.routeToNet([8, 9], [0, -1], 'bus', [], [8, 5])).to.deep.equal([
+        [8, 9],
+        [8, 5],
+      ]);
+    });
+
     it('can still be connected to', () => {
       const router = new ConnectionRouter(10, 10, [], [bus([2, 5], [8, 5])]);
       expect(router.routeToNet([5, 1], [0, 1], 'bus')).to.deep.equal([

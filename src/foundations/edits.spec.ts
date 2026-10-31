@@ -1,7 +1,6 @@
 import { expect } from '@open-wc/testing';
 
 import {
-  busBarVertexEdits,
   createDeleteBusBarEdits,
   createDeleteContainerEdits,
   createFlipElementEdits,
@@ -153,7 +152,7 @@ describe('edits', () => {
       expect(nsAttrs[`smth:flip`]).to.be.null;
     });
 
-    it('also removes first winding terminals for PowerTransformer', () => {
+    it('keeps the terminals of a PowerTransformer', () => {
       const doc = sldFixture({ children: `
               <PowerTransformer name="T1">
                 <Private type="OpenSCD-SLD-Layout">
@@ -161,7 +160,6 @@ describe('edits', () => {
                 </Private>
                 <TransformerWinding name="W1">
                   <Terminal name="T1" connectivityNode="S1/V1/B1/L1"/>
-                  <Terminal name="T2" connectivityNode="S1/V1/B1/L1"/>
                 </TransformerWinding>
                 <TransformerWinding name="W2">
                   <Terminal name="T1" connectivityNode="S1/V1/B1/L1"/>
@@ -171,22 +169,18 @@ describe('edits', () => {
             ` });
       const pt = doc.querySelector('PowerTransformer')!;
       const edits = createFlipElementEdits(pt, 'smth');
-      expect(edits.length).to.be.greaterThan(1);
-      const nodeEdits = edits.filter(
-        e => 'node' in e && (e as { node: Node }).node instanceof Element,
-      );
-      expect(nodeEdits.length).to.be.greaterThan(0);
+      expect(edits).to.have.lengthOf(1);
     });
 
-    it('also removes NeutralPoints for earthing transformers', () => {
+    it('removes terminals that have no place on the mirrored transformer', () => {
       const doc = sldFixture({ children: `
               <PowerTransformer name="T1">
                 <Private type="OpenSCD-SLD-Layout">
-                  <smth:SLDAttributes smth:x="3" smth:y="3" smth:w="1" smth:h="1" smth:kind="earthing"/>
+                  <smth:SLDAttributes smth:x="3" smth:y="3" smth:w="1" smth:h="1"/>
                 </Private>
                 <TransformerWinding name="W1">
                   <Terminal name="T1" connectivityNode="S1/V1/B1/L1"/>
-                  <NeutralPoint name="N1" connectivityNode="S1/V1/B1/L1"/>
+                  <NeutralPoint name="N3" connectivityNode="S1/V1/B1/L1"/>
                 </TransformerWinding>
               </PowerTransformer>
               <ConnectivityNode name="L1" pathName="S1/V1/B1/L1"/>
@@ -676,38 +670,6 @@ describe('edits', () => {
       const detached = bay.cloneNode(true) as Element;
       const edits = disconnectExternalEdits(detached, doc);
       expect(edits).to.have.length(0);
-    });
-  });
-
-  describe('busBarVertexEdits', () => {
-    it('returns empty for non-Vertex elements', () => {
-      const doc = sldFixture({ children: `
-              <Private type="OpenSCD-SLD-Layout">
-                <smth:SLDAttributes smth:x="1" smth:y="1" smth:w="5" smth:h="5"/>
-              </Private>
-            ` });
-      const bay = doc.querySelector('Bay')!;
-      const edits = busBarVertexEdits(bay, 5, 5, 'smth');
-      expect(edits).to.have.length(0);
-    });
-
-    it('produces edits to resize a bus bar when moving its end vertex', () => {
-      const doc = sldFixture({ bayName: "BB1", children: `
-              <Private type="OpenSCD-SLD-Layout">
-                <smth:SLDAttributes smth:x="2" smth:y="3" smth:w="4" smth:h="1"/>
-              </Private>
-              <ConnectivityNode name="L1" pathName="S1/V1/BB1/L1">
-                <Private type="OpenSCD-SLD-Layout">
-                  <smth:Section smth:bus="true">
-                    <smth:Vertex smth:x="2" smth:y="3"/>
-                    <smth:Vertex smth:x="5" smth:y="3"/>
-                  </smth:Section>
-                </Private>
-              </ConnectivityNode>
-            ` });
-      const vertex = doc.getElementsByTagNameNS(sldNs, 'Vertex')[1]!;
-      const edits = busBarVertexEdits(vertex, 7, 3, 'smth');
-      expect(edits.length).to.be.greaterThan(0);
     });
   });
 

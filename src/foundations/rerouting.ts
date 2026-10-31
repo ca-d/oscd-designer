@@ -13,6 +13,7 @@
 
 import { connectionPointsAt } from './connectivity.js';
 import { iedReferences } from './ied.js';
+import { transformerWindingMeasures } from './transformer.js';
 import { cleanPath } from './geometry.js';
 import { ConnectionRouter } from './routing.js';
 import { updateSLDAttributes } from './sld-attribute-edits.js';
@@ -27,10 +28,11 @@ import { sldNs } from '../foundations.js';
 import type { EditV2 } from '@openscd/oscd-api';
 import type { Point, Rect } from './geometry.js';
 
-/** What the user is changing: moving an element (and all it contains) or turning equipment a quarter. */
+/** What the user is changing: moving an element (and all it contains), turning equipment a quarter or mirroring a transformer. */
 export type LayoutChange =
   | { kind: 'move'; element: Element; dx: number; dy: number }
-  | { kind: 'rotate'; element: Element };
+  | { kind: 'rotate'; element: Element }
+  | { kind: 'flip'; element: Element };
 
 /** Where a section meets its end: the point, the first point of a route there and the direction leaving it. */
 export type Port = { point: Point; approach: Point; outward: Point };
@@ -69,6 +71,8 @@ function layoutOf(change: LayoutChange) {
     change.kind === 'move' && change.element.contains(element);
   const turns = (element: Element) =>
     change.kind === 'rotate' && change.element === element;
+  const flips = (element: Element) =>
+    change.kind === 'flip' && change.element === element;
 
   const shift = (element: Element): Point => (shifts(element) ? delta : [0, 0]);
 
@@ -86,10 +90,45 @@ function layoutOf(change: LayoutChange) {
       return turns(element) ? (((rot + 1) % 4) as 0 | 1 | 2 | 3) : rot;
     },
     turns,
+    flips,
   };
 }
 
 type Layout = ReturnType<typeof layoutOf>;
+
+/** Where a transformer terminal would be once its transformer is mirrored. */
+export function flippedTerminalPort(terminal: Element): Port | undefined {
+  const transformer = terminal.closest('PowerTransformer');
+  const winding = terminal.closest('TransformerWinding');
+  if (!transformer || !winding) {
+    return undefined;
+  }
+
+  // Without terminals, all of the winding's terminal positions are measured.
+  const windingsOf = (element: Element) =>
+    Array.from(element.children).filter(c => c.tagName === 'TransformerWinding');
+  const copy = transformer.cloneNode(true) as Element;
+  copy.querySelectorAll('Terminal, NeutralPoint').forEach(t => t.remove());
+  const attrs = attributes(transformer);
+  const { center, terminals } = transformerWindingMeasures(
+    windingsOf(copy)[windingsOf(transformer).indexOf(winding)],
+    attrs.pos,
+    { ...attrs, flip: !attrs.flip },
+    '',
+  );
+  const point = terminals[terminal.getAttribute('name') as 'T1'];
+  if (!point) {
+    return undefined;
+  }
+  const [dx, dy] = [point[0] - center[0], point[1] - center[1]];
+  const outward: Point =
+    Math.abs(dx) > Math.abs(dy) ? [Math.sign(dx), 0] : [0, Math.sign(dy)];
+  const axis = outward[0] !== 0 ? 0 : 1;
+  const approach: Point = [...point];
+  const scaled = point[axis] / STEP;
+  approach[axis] = (outward[axis] > 0 ? Math.ceil(scaled) : Math.floor(scaled)) * STEP;
+  return { point, approach, outward };
+}
 
 function terminalPort(
   terminal: Element,
@@ -114,6 +153,9 @@ function terminalPort(
   const transformer = terminal.closest('PowerTransformer');
   if (!transformer) {
     return undefined;
+  }
+  if (layout.flips(transformer)) {
+    return flippedTerminalPort(terminal);
   }
 
   // The whole transformer drawing moves and turns rigidly about its centre.

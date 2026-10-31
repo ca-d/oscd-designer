@@ -32,6 +32,7 @@ import { updateSLDAttributes } from '../foundations/sld-attribute-edits.js';
 import {
   newEditIedEvent,
   newGroundHintEvent,
+  newFlipEvent,
   newRotateEvent,
   newSclEditDialogEvent,
   newStartInteractionEvent,
@@ -241,7 +242,7 @@ function transformerMenuItems(
     items.unshift({
       headline: 'Mirror',
       icon: 'flip',
-      handler: () => flipElement(transformer, context),
+      handler: () => context.dispatch(newFlipEvent(transformer)),
     });
   }
 

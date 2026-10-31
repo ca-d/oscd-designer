@@ -14,12 +14,12 @@ import { SldContextMenu } from './context-menu/sld-context-menu.js';
 import { SldCoordinateTooltip } from './sld-coordinate-tooltip.js';
 import { attributes, getSLDAttributes } from './foundations/sld-attributes.js';
 import {
-  busBarVertexEdits,
   createConnectEdits,
   createGroundTerminalEdits,
   createPlaceLabelEdit,
   createResizeEdits,
   createResizeTLEdits,
+  createFlipElementEdits,
   createRotateEdits,
   disconnectExternalEdits,
   leavesSubstation,
@@ -35,6 +35,7 @@ import {
   sectionSignature,
 } from './foundations/rerouting.js';
 import type { FlaggedSection } from './foundations/rerouting.js';
+import { busBarVertexEdits } from './foundations/bus-bar-edits.js';
 import {
   iedReferences,
   isIedReferenceElement,
@@ -239,6 +240,17 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
 
     const edits: EditV2[] = [];
 
+    // Resizing a bus bar moves its end, not the section vertex it was grabbed by.
+    const resize = busBarVertexEdits(element, x, y, this.nsp);
+    if (resize.length) {
+      this.dispatchEvent(newEditEventV2(resize));
+      const resolve = this._resolvePlacement;
+      this._resolvePlacement = undefined;
+      this.interaction = interactions.idle();
+      resolve?.({ element, parent, x, y });
+      return;
+    }
+
     if (element.parentElement !== parent && !isIedReferenceElement(element)) {
       edits.push(...reparentElement(element, parent));
     }
@@ -260,7 +272,6 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
         ),
       );
     }
-    edits.push(...busBarVertexEdits(element, x, y, this.nsp));
     edits.push(...wrapIedReferenceEdits(element, parent, this.doc));
 
     this.dispatchEvent(newEditEventV2(edits));
@@ -295,6 +306,14 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
       newEditEventV2(createResizeTLEdits(element, this.nsp, x, y, w, h)),
     );
     this.interaction = interactions.idle();
+  }
+
+  handleFlip(element: Element) {
+    const fallbacks: FlaggedSection[] = [];
+    this.dispatchEvent(
+      newEditEventV2(createFlipElementEdits(element, this.nsp, fallbacks)),
+    );
+    this.warnAbout(fallbacks);
   }
 
   handleRotate(element: Element) {
@@ -577,6 +596,8 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
             }: ExtendConnectPointEvent) => this.handleExtendConnectPoint(detail.path)}
             @oscd-sld-rotate=${({ detail }: StartEvent) =>
               this.handleRotate(detail)}
+            @oscd-sld-flip=${({ detail }: StartEvent) =>
+              this.handleFlip(detail)}
           >
             <sld-substation-header
               slot="header"
@@ -607,6 +628,8 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
         this.handleStartInteraction(detail)}
       @oscd-sld-rotate=${({ detail }: StartEvent) =>
         this.handleRotate(detail)}
+      @oscd-sld-flip=${({ detail }: StartEvent) =>
+        this.handleFlip(detail)}
       @oscd-sld-ground-hint=${() => {
         this.handleGroundHint();
       }}
