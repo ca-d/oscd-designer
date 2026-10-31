@@ -45,6 +45,9 @@ export type PlaceDetail = {
   y: number;
   element: Element;
   parent: Element;
+  /** Set when a new container was dragged out to its final size. */
+  w?: number;
+  h?: number;
 };
 
 export type PlaceEvent = CustomEvent<PlaceDetail>;

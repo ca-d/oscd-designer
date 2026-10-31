@@ -222,12 +222,21 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
     return undefined;
   }
 
-  handlePlace(element: Element, parent: Element, x: number, y: number) {
+  handlePlace(
+    element: Element,
+    parent: Element,
+    x: number,
+    y: number,
+    w?: number,
+    h?: number,
+  ) {
     const {
       pos: [oldX, oldY],
     } = attributes(element);
     const dx = x - oldX;
     const dy = y - oldY;
+    const isNew = this.isNewBayOrVL(element);
+    const sized = isNew && w !== undefined && h !== undefined;
 
     const edits: EditV2[] = [];
 
@@ -242,13 +251,16 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
     edits.push(...disconnectExternalEdits(element, this.doc));
     edits.push(...busBarVertexEdits(element, x, y, this.nsp));
     edits.push(...wrapIedReferenceEdits(element, parent, this.doc));
+    if (sized) {
+      edits.push(createResizeEdits(element, this.nsp, w, h));
+    }
 
     this.dispatchEvent(newEditEventV2(edits));
 
     const resolve = this._resolvePlacement;
     this._resolvePlacement = undefined;
 
-    if (this.isNewBayOrVL(element)) {
+    if (isNew && !sized) {
       this.interaction = interactions.resizingBR(element);
     } else {
       this.interaction = interactions.idle();
@@ -503,8 +515,8 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
               this.handleResizeTL(element, x, y, w, h);
             }}
             @oscd-sld-place=${({
-              detail: { element, parent, x, y },
-            }: PlaceEvent) => this.handlePlace(element, parent, x, y)}
+              detail: { element, parent, x, y, w, h },
+            }: PlaceEvent) => this.handlePlace(element, parent, x, y, w, h)}
             @oscd-sld-place-label=${({
               detail: { element, x, y },
             }: PlaceLabelEvent) => {

@@ -7,6 +7,10 @@ export interface DragToClickOptions {
   canStart: (event: MouseEvent) => boolean;
   /** Whether the click that began the drag actually started a gesture. */
   isActive: () => boolean;
+  /** Replaces the click replayed on the pressed element when the drag begins. */
+  begin?: (press: MouseEvent) => void;
+  /** Runs once a drag that began has ended, however it ended. */
+  finish?: () => void;
 }
 
 /** True when `path` runs through a substation canvas, where drops are accepted. */
@@ -94,7 +98,11 @@ export class DragToClickController implements ReactiveController {
       return;
     }
     press.dragging = true;
-    clickAt(press.target, press.event);
+    if (this.options.begin) {
+      this.options.begin(press.event);
+    } else {
+      clickAt(press.target, press.event);
+    }
   };
 
   private onUp = (event: MouseEvent) => {
@@ -113,9 +121,13 @@ export class DragToClickController implements ReactiveController {
   private preventSelection = (event: Event) => event.preventDefault();
 
   private end = () => {
+    const dragged = this.press?.dragging;
     this.press = undefined;
     window.removeEventListener('mousemove', this.onMove);
     window.removeEventListener('mouseup', this.onUp);
     window.removeEventListener('selectstart', this.preventSelection);
+    if (dragged) {
+      this.options.finish?.();
+    }
   };
 }
