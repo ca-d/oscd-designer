@@ -30,7 +30,8 @@ export declare function declareSldNamespaceEdit(doc: XMLDocument): SetAttributes
  */
 export declare function withSldNamespace(doc: XMLDocument, edits: EditV2): EditV2;
 export declare function createGroundTerminalEdits(equipment: Element, name: TerminalName): EditV2[] | null;
-export declare function createFlipElementEdits(element: Element, nsp: string): EditV2[];
+/** Edits mirroring `element`; a transformer's connections follow its terminals. */
+export declare function createFlipElementEdits(element: Element, nsp: string, fallbacks?: FlaggedSection[]): EditV2[];
 export declare function createAddTextEdit(element: Element, nsp: string): EditV2;
 export declare function createDeleteBusBarEdits(busBar: Element): EditV2[];
 export declare function createDeleteContainerEdits(container: Element): EditV2[];
@@ -52,5 +53,4 @@ export declare function rewireTerminalEdits(element: Element, parent: Element, d
 export declare function leavesSubstation(element: Element, parent: Element): boolean;
 /** Builds edits that detach what an element in another substation was connected to. */
 export declare function disconnectExternalEdits(element: Element, doc: XMLDocument): EditV2[];
-export declare function busBarVertexEdits(element: Element, x: number, y: number, nsp: string): EditV2[];
 export declare function wrapIedReferenceEdits(element: Element, parent: Element, doc: XMLDocument): EditV2[];

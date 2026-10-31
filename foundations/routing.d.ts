@@ -82,10 +82,12 @@ export declare class ConnectionRouter {
      * Routes to the nearest place where the connection can meet the wires of
      * `net` (never along them) and ends there. Which point on the net that is
      * depends only on the route, so it is the same wherever on the net the user
-     * pointed. The one exception is pointing at one of its bends or free ends
-     * (`at`), which are met there when they can be reached.
+     * pointed. The exceptions are pointing at one of its bends or free ends
+     * (`at`), and at a bus bar, which are met there when they can be reached.
      */
     routeToNet(from: Point, heading: Point, net: unknown, own?: Point[], at?: Point): Point[] | undefined;
+    /** Routes to the bus bar of `net` at `at`, arriving straight on, or returns `undefined`. */
+    private routeToBus;
     /**
      * Routes to a bend or free end of `net` and ends exactly there (free ends
      * straight on), or returns `undefined`.

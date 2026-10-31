@@ -341,7 +341,7 @@ describe('sld-context-menu-factory', () => {
         <ConnectivityNode name="N" pathName="S1/V1/B1/N"/>
       `);
             const pt = doc.querySelector('PowerTransformer');
-            expectHandlerSignatures(pt);
+            expectHandlerSignatures(pt, {}, { Mirror: 'oscd-sld-flip' });
         });
         it('Copy dispatches a copy placement intent with offset', () => {
             const doc = bayDoc(`

@@ -49,6 +49,7 @@ export type ExtendConnectPointEvent = CustomEvent<ExtendConnectPointDetail>;
 export declare function newExtendConnectPointEvent(path: Point[]): ExtendConnectPointEvent;
 export type StartEvent = CustomEvent<Element>;
 export declare function newRotateEvent(detail: Element): StartEvent;
+export declare function newFlipEvent(detail: Element): StartEvent;
 export type StartConnectDetail = {
     from: Element;
     fromTerminal: 'T1' | 'T2' | 'N1' | 'N2';
@@ -146,6 +147,7 @@ declare global {
         ['oscd-sld-connect']: ConnectEvent;
         ['oscd-sld-extend-connect-point']: ExtendConnectPointEvent;
         ['oscd-sld-rotate']: StartEvent;
+        ['oscd-sld-flip']: StartEvent;
         ['oscd-sld-start-interaction']: StartInteractionEvent;
         ['oscd-sld-selected']: SelectEvent;
         ['oscd-sld-edit-scl']: EditSclEvent;

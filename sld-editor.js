@@ -11,8 +11,9 @@ import { SldResizeSubstationDialog } from './sld-resize-substation-dialog.js';
 import { SldContextMenu } from './context-menu/sld-context-menu.js';
 import { SldCoordinateTooltip } from './sld-coordinate-tooltip.js';
 import { attributes, getSLDAttributes } from './foundations/sld-attributes.js';
-import { busBarVertexEdits, createConnectEdits, createGroundTerminalEdits, createPlaceLabelEdit, createResizeEdits, createResizeTLEdits, createRotateEdits, disconnectExternalEdits, leavesSubstation, rewireTerminalEdits, shiftDescendantEdits, shiftElementEdits, shiftTextEdits, wrapIedReferenceEdits, } from './foundations/edits.js';
+import { createConnectEdits, createGroundTerminalEdits, createPlaceLabelEdit, createResizeEdits, createResizeTLEdits, createFlipElementEdits, createRotateEdits, disconnectExternalEdits, leavesSubstation, rewireTerminalEdits, shiftDescendantEdits, shiftElementEdits, shiftTextEdits, wrapIedReferenceEdits, } from './foundations/edits.js';
 import { pointsSignature, rerouteEdits, sectionSignature, } from './foundations/rerouting.js';
+import { busBarVertexEdits } from './foundations/bus-bar-edits.js';
 import { iedReferences, isIedReferenceElement, resolveIed, } from './foundations/ied.js';
 import { reparentElement, sldNs, sldPrefix } from './foundations.js';
 import { downloadSvg } from './foundations/export.js';
@@ -197,6 +198,16 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
         const isNew = this.isNewBayOrVL(element);
         const sized = isNew && w !== undefined && h !== undefined;
         const edits = [];
+        // Resizing a bus bar moves its end, not the section vertex it was grabbed by.
+        const resize = busBarVertexEdits(element, x, y, this.nsp);
+        if (resize.length) {
+            this.dispatchEvent(newEditEventV2(resize));
+            const resolve = this._resolvePlacement;
+            this._resolvePlacement = undefined;
+            this.interaction = interactions.idle();
+            resolve?.({ element, parent, x, y });
+            return;
+        }
         if (element.parentElement !== parent && !isIedReferenceElement(element)) {
             edits.push(...reparentElement(element, parent));
         }
@@ -211,7 +222,6 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
         else {
             edits.push(...rerouteEdits(this.doc, { kind: 'move', element, dx, dy }, this.nsp, fallbacks));
         }
-        edits.push(...busBarVertexEdits(element, x, y, this.nsp));
         edits.push(...wrapIedReferenceEdits(element, parent, this.doc));
         if (sized) {
             edits.push(createResizeEdits(element, this.nsp, w, h));
@@ -239,6 +249,11 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
     handleResizeTL(element, x, y, w, h) {
         this.dispatchEvent(newEditEventV2(createResizeTLEdits(element, this.nsp, x, y, w, h)));
         this.interaction = interactions.idle();
+    }
+    handleFlip(element) {
+        const fallbacks = [];
+        this.dispatchEvent(newEditEventV2(createFlipElementEdits(element, this.nsp, fallbacks)));
+        this.warnAbout(fallbacks);
     }
     handleRotate(element) {
         const fallbacks = [];
@@ -368,6 +383,7 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
             @oscd-sld-connect=${({ detail }) => this.handleConnect(detail)}
             @oscd-sld-extend-connect-point=${({ detail, }) => this.handleExtendConnectPoint(detail.path)}
             @oscd-sld-rotate=${({ detail }) => this.handleRotate(detail)}
+            @oscd-sld-flip=${({ detail }) => this.handleFlip(detail)}
           >
             <sld-substation-header
               slot="header"
@@ -391,6 +407,7 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
       .nsp=${this.nsp}
       @oscd-sld-start-interaction=${({ detail }) => this.handleStartInteraction(detail)}
       @oscd-sld-rotate=${({ detail }) => this.handleRotate(detail)}
+      @oscd-sld-flip=${({ detail }) => this.handleFlip(detail)}
       @oscd-sld-ground-hint=${() => {
             this.handleGroundHint();
         }}

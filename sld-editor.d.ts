@@ -73,6 +73,7 @@ export declare class SldEditor extends SldEditor_base {
     handlePlaceLabel(element: Element, x: number, y: number): void;
     handleResize(element: Element, w: number, h: number): void;
     handleResizeTL(element: Element, x: number, y: number, w: number, h: number): void;
+    handleFlip(element: Element): void;
     handleRotate(element: Element): void;
     /**
      * Sections that had to run through other elements to stay connected, with the

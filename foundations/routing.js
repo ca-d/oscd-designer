@@ -168,11 +168,12 @@ export class ConnectionRouter {
                 });
             });
         }));
-        wires.forEach(({ net, points }) => {
+        wires.forEach(({ net, points, bus = false }) => {
             const goals = this.netGoals.get(net) ?? {
                 ids: [],
                 boxes: [],
                 vertices: new Map(),
+                bus: new Map(),
             };
             this.netGoals.set(net, goals);
             points.slice(1).forEach((point, i) => {
@@ -180,7 +181,11 @@ export class ConnectionRouter {
                 this.interior(points[i], point, (ix, iy, horizontal) => {
                     const kind = horizontal ? ON_HORIZONTAL_WIRE : ON_VERTICAL_WIRE;
                     if (this.cell(ix, iy) === kind) {
-                        goals.ids.push(this.id(ix, iy, horizontal ? 1 : 0));
+                        const goal = this.id(ix, iy, horizontal ? 1 : 0);
+                        goals.ids.push(goal);
+                        if (bus) {
+                            goals.bus.set(iy * this.cols + ix, goal);
+                        }
                         [minX, maxX] = [Math.min(minX, ix), Math.max(maxX, ix)];
                         [minY, maxY] = [Math.min(minY, iy), Math.max(maxY, iy)];
                     }
@@ -289,8 +294,8 @@ export class ConnectionRouter {
      * Routes to the nearest place where the connection can meet the wires of
      * `net` (never along them) and ends there. Which point on the net that is
      * depends only on the route, so it is the same wherever on the net the user
-     * pointed. The one exception is pointing at one of its bends or free ends
-     * (`at`), which are met there when they can be reached.
+     * pointed. The exceptions are pointing at one of its bends or free ends
+     * (`at`), and at a bus bar, which are met there when they can be reached.
      */
     routeToNet(from, heading, net, own = [], at) {
         const goals = this.netGoals.get(net);
@@ -301,7 +306,19 @@ export class ConnectionRouter {
         if (atVertex || !goals.ids.length) {
             return atVertex;
         }
+        const onBus = at ? this.routeToBus(from, heading, net, at, own) : undefined;
+        if (onBus) {
+            return onBus;
+        }
         return this.plan(from, heading, { kind: 'net', ids: goals.ids, boxes: goals.boxes }, own);
+    }
+    /** Routes to the bus bar of `net` at `at`, arriving straight on, or returns `undefined`. */
+    routeToBus(from, heading, net, at, own) {
+        const [ix, iy] = [Math.round(at[0] / STEP), Math.round(at[1] / STEP)];
+        const id = this.netGoals.get(net)?.bus.get(iy * this.cols + ix);
+        return id === undefined
+            ? undefined
+            : this.plan(from, heading, { kind: 'net', ids: [id], boxes: [[ix, iy, ix, iy]] }, own);
     }
     /**
      * Routes to a bend or free end of `net` and ends exactly there (free ends

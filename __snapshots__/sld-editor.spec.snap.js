@@ -6304,6 +6304,45 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
             </Section>
+            <Section>
+              <Vertex
+                esldoscd:x="12.5"
+                esldoscd:y="3.5"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="13"
+                esldoscd:y="3.5"
+              >
+              </Vertex>
+            </Section>
+            <Section>
+              <Vertex
+                esldoscd:x="17.16"
+                esldoscd:y="3.5"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="14"
+                esldoscd:y="3.5"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="14"
+                esldoscd:y="3"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="13"
+                esldoscd:y="3"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="13"
+                esldoscd:y="3.5"
+              >
+              </Vertex>
+            </Section>
           </Private>
         </ConnectivityNode>
       </Bay>
@@ -6520,6 +6559,19 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
             >
             </SLDAttributes>
           </Private>
+          <Terminal
+            bayName="BB1"
+            cNodeName="L"
+            connectivityNode="S1/V1/BB1/L"
+            name="T1"
+            substationName="S1"
+            voltageLevelName="V1"
+          >
+            <Private type="OpenSCD-SLD-Layout">
+              <SLDAttributes>
+              </SLDAttributes>
+            </Private>
+          </Terminal>
         </ConductingEquipment>
         <ConductingEquipment
           name="DIS2"

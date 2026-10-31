@@ -47,6 +47,13 @@ export function newRotateEvent(detail) {
         detail,
     });
 }
+export function newFlipEvent(detail) {
+    return new CustomEvent('oscd-sld-flip', {
+        bubbles: true,
+        composed: true,
+        detail,
+    });
+}
 export function newStartInteractionEvent(detail) {
     return new CustomEvent('oscd-sld-start-interaction', {
         bubbles: true,

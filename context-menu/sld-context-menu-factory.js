@@ -8,7 +8,7 @@ import { isIedReferenceElement, resolveIed, } from '../foundations/ied.js';
 import { createRemoveIedReferenceEdit } from '../foundations/ied-edits.js';
 import { attributes, DEFAULT_LABEL_COLOR, getSLDAttributes, } from '../foundations/sld-attributes.js';
 import { updateSLDAttributes } from '../foundations/sld-attribute-edits.js';
-import { newEditIedEvent, newGroundHintEvent, newRotateEvent, newSclEditDialogEvent, newStartInteractionEvent, } from '../foundations/events.js';
+import { newEditIedEvent, newGroundHintEvent, newFlipEvent, newRotateEvent, newSclEditDialogEvent, newStartInteractionEvent, } from '../foundations/events.js';
 /**
  * These colours are used in three places:
  * - the show/hide guard,
@@ -156,7 +156,7 @@ function transformerMenuItems(transformer, context) {
         items.unshift({
             headline: 'Mirror',
             icon: 'flip',
-            handler: () => flipElement(transformer, context),
+            handler: () => context.dispatch(newFlipEvent(transformer)),
         });
     }
     return items;
