@@ -72,6 +72,7 @@ import {
   xmlBoolean,
 } from './foundations/sld-attributes.js';
 import { sldThemeStyles } from './theme.js';
+import { DragToClickController } from './drag-to-click.js';
 import { singleTerminal } from './foundations/equipment.js';
 import {
   iedReferences,
@@ -143,6 +144,15 @@ type PreviewRoute = Pick<PlannedRoute, 'section' | 'points' | 'fallback'> &
 
 export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
   static scopedElements = {};
+
+  // Drag-and-drop for placing, moving, resizing and connecting.
+  protected dragToClick = new DragToClickController(this, {
+    canStart: event =>
+      isMode(this.interaction, 'idle') &&
+      !this.disabled &&
+      event.composedPath().includes(this.sld),
+    isActive: () => !isMode(this.interaction, 'idle', 'locked'),
+  });
 
   @property()
   doc!: XMLDocument;
