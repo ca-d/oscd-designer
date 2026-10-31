@@ -561,6 +561,41 @@ describe('SldSubstationViewer connection routing', () => {
     });
   });
 
+  it('turns on the equipment border when there is no room to leave straight', async () => {
+    const doc = contractSubstationDoc();
+    const bay = doc.querySelector('Bay')!;
+    const below = doc.createElementNS(bay.namespaceURI, 'ConductingEquipment');
+    below.setAttribute('name', 'BELOW');
+    below.setAttribute('type', 'DIS');
+    const priv = doc.createElementNS(bay.namespaceURI, 'Private');
+    priv.setAttribute('type', 'OpenSCD-SLD-Layout');
+    const attrs = doc.createElementNS(SLD_NS, 'sld:SLDAttributes');
+    attrs.setAttributeNS(SLD_NS, 'sld:x', '3');
+    attrs.setAttributeNS(SLD_NS, 'sld:y', '4');
+    priv.appendChild(attrs);
+    below.appendChild(priv);
+    bay.appendChild(below);
+
+    const el = await mountViewer(doc);
+    el.interaction = interactions.connectingFrom(
+      doc.querySelector('ConductingEquipment')!,
+      'T2',
+      [
+        [3.5, 3.84],
+        [3.5, 4],
+      ],
+    );
+    [el.mouseX2, el.mouseY2] = [6.5, 4];
+    await el.updateComplete;
+
+    const lines = previewLines(el);
+    expect(lines.length).to.be.greaterThan(0);
+    const last = lines[lines.length - 1];
+    expect(['x2', 'y2'].map(a => Number(last.getAttribute(a)))).to.deep.equal([
+      6.5, 4,
+    ]);
+  });
+
   it('commits the routed leg and keeps its direction on click', async () => {
     const el = await connectingViewer([6.5, 3.5]);
     const paths: Point[][] = [];
@@ -602,6 +637,7 @@ describe('SldSubstationViewer connection routing', () => {
       const priv = doc.createElementNS(cNode.namespaceURI, 'Private');
       priv.setAttribute('type', 'OpenSCD-SLD-Layout');
       const section = doc.createElementNS(SLD_NS, 'sld:Section');
+      section.setAttributeNS(SLD_NS, 'sld:bus', 'true');
       [2.5, 10.5].forEach((x) => {
         const vertex = doc.createElementNS(SLD_NS, 'sld:Vertex');
         vertex.setAttributeNS(SLD_NS, 'sld:x', `${x}`);
@@ -660,5 +696,170 @@ describe('SldSubstationViewer connection routing', () => {
       expect(detail.to).to.equal(cNode);
       expect(detail.path[detail.path.length - 1]).to.deep.equal([3.5, 7.5]);
     });
+  });
+});
+
+describe('SldSubstationViewer live reroute preview', () => {
+  /** Two pieces of equipment in a bay, wired bottom to bottom. */
+  async function wiredViewer(crossing = false) {
+    const doc = contractSubstationDoc();
+    const [first, second] = Array.from(
+      doc.querySelectorAll('ConductingEquipment'),
+    );
+    const wired: [Element, string][] = [
+      [first, 'u1'],
+      [second, 'u2'],
+    ];
+    wired.forEach(([equipment, uuid]) => {
+      const terminal = doc.createElementNS(equipment.namespaceURI, 'Terminal');
+      terminal.setAttribute('name', 'T2');
+      terminal.setAttribute('connectivityNode', 'S1/V1/B1_1/L1');
+      const priv = doc.createElementNS(equipment.namespaceURI, 'Private');
+      priv.setAttribute('type', 'OpenSCD-SLD-Layout');
+      const attrs = doc.createElementNS(SLD_NS, 'sld:SLDAttributes');
+      attrs.setAttributeNS(SLD_NS, 'sld:uuid', uuid);
+      priv.appendChild(attrs);
+      terminal.appendChild(priv);
+      equipment.appendChild(terminal);
+    });
+
+    const cNode = doc.querySelector('ConnectivityNode')!;
+    const priv = doc.createElementNS(cNode.namespaceURI, 'Private');
+    priv.setAttribute('type', 'OpenSCD-SLD-Layout');
+    const section = doc.createElementNS(SLD_NS, 'sld:Section');
+    [
+      [3.5, 3.84, 'u1'],
+      [3.5, 5, undefined],
+      [4.5, 5, undefined],
+      [4.5, 3.84, 'u2'],
+    ].forEach(([x, y, uuid]) => {
+      const vertex = doc.createElementNS(SLD_NS, 'sld:Vertex');
+      vertex.setAttributeNS(SLD_NS, 'sld:x', `${x}`);
+      vertex.setAttributeNS(SLD_NS, 'sld:y', `${y}`);
+      if (uuid) {
+        vertex.setAttributeNS(SLD_NS, 'sld:uuid', uuid as string);
+      }
+      section.appendChild(vertex);
+    });
+    priv.appendChild(section);
+    cNode.appendChild(priv);
+
+    let crossed: Element | undefined;
+    if (crossing) {
+      // Lies where the second element will be dropped.
+      const other = doc.createElementNS(cNode.namespaceURI, 'ConnectivityNode');
+      other.setAttribute('name', 'W');
+      other.setAttribute('pathName', 'S1/V1/B1_1/W');
+      const otherPriv = doc.createElementNS(cNode.namespaceURI, 'Private');
+      otherPriv.setAttribute('type', 'OpenSCD-SLD-Layout');
+      crossed = doc.createElementNS(SLD_NS, 'sld:Section');
+      [3, 6].forEach((x) => {
+        const vertex = doc.createElementNS(SLD_NS, 'sld:Vertex');
+        vertex.setAttributeNS(SLD_NS, 'sld:x', `${x}`);
+        vertex.setAttributeNS(SLD_NS, 'sld:y', '7.5');
+        crossed!.appendChild(vertex);
+      });
+      otherPriv.appendChild(crossed);
+      other.appendChild(otherPriv);
+      cNode.parentElement!.appendChild(other);
+    }
+
+    const el = await mountViewer(doc);
+    return { el, doc, second, section, crossed };
+  }
+
+  it('redraws the wires of the element being placed', async () => {
+    const { el, second, section } = await wiredViewer();
+    el.interaction = interactions.placing(second, [0, 0]);
+    [el.mouseX, el.mouseY] = [4, 7];
+    await el.updateComplete;
+
+    const wires = Array.from(el.sld.querySelectorAll('polyline'));
+    expect(wires).to.have.lengthOf(1);
+    const points = wires[0].getAttribute('points')!.split(' ');
+    expect(points[0]).to.equal('3.5,3.84');
+    expect(points[points.length - 1]).to.equal('4.5,7.84');
+    expect(
+      (el as unknown as { hiddenSections: Set<Element> }).hiddenSections.has(
+        section,
+      ),
+    ).to.be.true;
+  });
+
+  it('previews a wire left under the element as a warning, like its mark', async () => {
+    const { el, second, crossed } = await wiredViewer(true);
+    el.interaction = interactions.placing(second, [0, 0]);
+    [el.mouseX, el.mouseY] = [4, 7];
+    await el.updateComplete;
+
+    const dashed = Array.from(el.sld.querySelectorAll('polyline')).filter(line =>
+      line.hasAttribute('stroke-dasharray'),
+    );
+    expect(dashed).to.have.lengthOf(1);
+    expect(dashed[0].getAttribute('points')).to.equal('3,7.5 6,7.5');
+    expect(
+      (el as unknown as { hiddenSections: Set<Element> }).hiddenSections.has(
+        crossed!,
+      ),
+    ).to.be.true;
+  });
+
+  it('draws nothing extra while the element has not moved', async () => {
+    const { el, second } = await wiredViewer();
+    el.interaction = interactions.placing(second, [0, 0]);
+    [el.mouseX, el.mouseY] = [4, 3];
+    await el.updateComplete;
+
+    expect(el.sld.querySelectorAll('polyline')).to.have.lengthOf(0);
+  });
+
+  it('does not preview anything when not placing', async () => {
+    const { el } = await wiredViewer();
+    expect(el.sld.querySelectorAll('polyline')).to.have.lengthOf(0);
+  });
+
+  it('marks wires that were routed through other elements until dismissed', async () => {
+    const { el, section } = await wiredViewer();
+    el.interaction = interactions.idle();
+    el.routingWarnings = [section];
+    await el.updateComplete;
+
+    const marker = el.sld.querySelector('.routing-warning')!;
+    expect(marker).to.exist;
+
+    const trace = marker.querySelector('polyline.trace')!;
+    expect(trace.getAttribute('points')).to.equal(
+      '3.5,3.84 3.5,5 4.5,5 4.5,3.84',
+    );
+    expect(getComputedStyle(trace).visibility).to.equal('hidden');
+
+    const events: CustomEvent[] = [];
+    el.addEventListener('oscd-sld-dismiss-routing-warning', e =>
+      events.push(e as CustomEvent),
+    );
+    marker.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(events).to.have.lengthOf(1);
+    expect(events[0].detail).to.equal(section);
+  });
+
+  it('shows no warning marks while something is being placed', async () => {
+    const { el, second, section } = await wiredViewer();
+    el.routingWarnings = [section];
+    el.interaction = interactions.placing(second, [0, 0]);
+    await el.updateComplete;
+
+    expect(el.sld.querySelector('.routing-warning')).to.not.exist;
+  });
+
+  it('lets clicks through plain wires to the equipment under them', async () => {
+    const { el } = await wiredViewer();
+    el.interaction = interactions.idle();
+    await el.updateComplete;
+
+    const lines = Array.from(el.sld.querySelectorAll('.node line'));
+    expect(lines.length).to.be.greaterThan(0);
+    lines.forEach(line =>
+      expect(line.getAttribute('pointer-events')).to.equal('none'),
+    );
   });
 });

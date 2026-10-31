@@ -276,6 +276,19 @@ export function newGroundHintEvent(): GroundHintEvent {
   });
 }
 
+/** Detail: the section whose routing warning the user dismissed. */
+export type DismissRoutingWarningEvent = CustomEvent<Element>;
+
+export function newDismissRoutingWarningEvent(
+  section: Element,
+): DismissRoutingWarningEvent {
+  return new CustomEvent('oscd-sld-dismiss-routing-warning', {
+    bubbles: true,
+    composed: true,
+    detail: section,
+  });
+}
+
 export type InActionEvent = CustomEvent<boolean>;
 
 export function newInActionEvent(active: boolean): InActionEvent {
@@ -306,5 +319,6 @@ declare global {
     ['oscd-sld-substation-export']: SubstationCommandEvent;
     ['oscd-sld-ground-hint']: GroundHintEvent;
     ['oscd-sld-in-action']: InActionEvent;
+    ['oscd-sld-dismiss-routing-warning']: DismissRoutingWarningEvent;
   }
 }

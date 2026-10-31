@@ -26,6 +26,27 @@ const STEP = 0.5;
 /** Cost of a bend, in half-grid steps. */
 const BEND_COST = 4;
 
+/** Extra cost, in half-grid steps, of crossing an obstacle or wire in a soft router. */
+const SOFT_COST = 20;
+
+/**
+ * Extra cost, in half-grid steps, of each step onto a bus. A bus is treated
+ * like elongated equipment: routes cross it only when going round costs more.
+ */
+const BUS_COST = 120;
+
+/** Extra cost, in half-grid steps, of running along an equipment border in a tight router. */
+const BORDER_COST = 3;
+
+/**
+ * How a router treats what is in its way. A `strict` router stays clear of
+ * equipment altogether, borders included, so every route leaves a terminal
+ * straight for half a grid step. A `tight` router also lets routes turn on an
+ * equipment border, which gets them out of cramped spots, but prefers not to. A
+ * `soft` router goes through anything, at a price.
+ */
+export type RouterMode = 'strict' | 'tight' | 'soft';
+
 /** 0 = travelling horizontally, 1 = travelling vertically. */
 type Axis = 0 | 1;
 
@@ -42,9 +63,14 @@ type NetGoals = {
 /**
  * An existing orthogonal polyline belonging to the net `net`. Its `terminals`
  * are the points where it is attached to equipment, which cannot be connected
- * to.
+ * to. A `bus` is thicker than a wire and is met straight on at its ends.
  */
-export type Wire = { net: unknown; points: Point[]; terminals?: Point[] };
+export type Wire = {
+  net: unknown;
+  points: Point[];
+  terminals?: Point[];
+  bus?: boolean;
+};
 
 const FREE = 0;
 const ON_HORIZONTAL_WIRE = 1;
@@ -70,21 +96,29 @@ export class ConnectionRouter {
 
   private readonly netGoals = new Map<unknown, NetGoals>();
 
+  private readonly reserved = new Set<number>();
+
+  /** Extra cost of reaching a node, by node. */
+  private readonly penalty?: Uint8Array;
+
   /**
    * @param width - routing area width in grid units
    * @param height - routing area height in grid units
    * @param obstacles - rectangles routes may not enter or touch
    * @param wires - existing wires that routes must not overlap or touch
+   * @param mode - how strictly to keep clear of what is in the way
    */
   constructor(
     width: number,
     height: number,
     obstacles: Rect[],
     wires: Wire[] = [],
+    mode: RouterMode = 'strict',
   ) {
     this.cols = Math.round(width / STEP) + 1;
     this.rows = Math.round(height / STEP) + 1;
     this.cells = new Uint8Array(this.cols * this.rows);
+    const penalty = new Uint8Array(this.cols * this.rows);
 
     obstacles.forEach(([x, y, w, h]) => {
       const ix0 = Math.max(0, Math.ceil(x / STEP));
@@ -93,12 +127,24 @@ export class ConnectionRouter {
       const iy1 = Math.min(this.rows - 1, Math.floor((y + h) / STEP));
       for (let iy = iy0; iy <= iy1; iy += 1) {
         for (let ix = ix0; ix <= ix1; ix += 1) {
-          this.cells[iy * this.cols + ix] = CLOSED;
+          const border = ix === ix0 || ix === ix1 || iy === iy0 || iy === iy1;
+          if (mode === 'tight' && border) {
+            penalty[iy * this.cols + ix] = BORDER_COST;
+          } else {
+            this.cells[iy * this.cols + ix] = CLOSED;
+          }
         }
       }
     });
 
-    this.markWires(wires);
+    this.markWires(wires, penalty);
+    if (mode === 'soft') {
+      this.cells.forEach((cell, i) => {
+        penalty[i] = cell === FREE ? 0 : Math.max(penalty[i], SOFT_COST);
+      });
+      this.cells.fill(FREE);
+    }
+    this.penalty = penalty;
     this.graph = this.buildGraph();
   }
 
@@ -143,7 +189,7 @@ export class ConnectionRouter {
     }
   }
 
-  private markWires(wires: Wire[]): void {
+  private markWires(wires: Wire[], penalty: Uint8Array): void {
     const setCell = (ix: number, iy: number, kind: number) => {
       if (ix < 0 || iy < 0 || ix >= this.cols || iy >= this.rows) {
         return;
@@ -152,11 +198,14 @@ export class ConnectionRouter {
       this.cells[i] = this.cells[i] === FREE || this.cells[i] === kind ? kind : CLOSED;
     };
 
-    wires.forEach(({ points }) => {
+    wires.forEach(({ points, bus = false }) => {
       points.slice(1).forEach((point, i) => {
-        this.interior(points[i], point, (ix, iy, horizontal) =>
-          setCell(ix, iy, horizontal ? ON_HORIZONTAL_WIRE : ON_VERTICAL_WIRE),
-        );
+        this.interior(points[i], point, (ix, iy, horizontal) => {
+          setCell(ix, iy, horizontal ? ON_HORIZONTAL_WIRE : ON_VERTICAL_WIRE);
+          if (bus && this.cell(ix, iy) !== CLOSED) {
+            penalty[iy * this.cols + ix] = BUS_COST;
+          }
+        });
       });
     });
     // Bends and free ends can only be ended on, and only by their own net;
@@ -181,15 +230,20 @@ export class ConnectionRouter {
       });
     });
 
-    // Directions of the wire segments meeting at each position.
-    const incident = new Map<number, Axis[]>();
-    wires.forEach(({ points }) =>
+    // Directions of the wire segments meeting at each position, and whether
+    // they are all bus segments.
+    const incident = new Map<number, { axes: Axis[]; bus: boolean }>();
+    wires.forEach(({ points, bus = false }) =>
       points.slice(1).forEach((point, i) => {
         const axis: Axis = points[i][1] === point[1] ? 0 : 1;
         [points[i], point].forEach(([x, y]) => {
           const key =
             Math.round(y / STEP) * this.cols + Math.round(x / STEP);
-          incident.set(key, [...(incident.get(key) ?? []), axis]);
+          const meeting = incident.get(key) ?? { axes: [], bus: true };
+          incident.set(key, {
+            axes: [...meeting.axes, axis],
+            bus: meeting.bus && bus,
+          });
         });
       }),
     );
@@ -219,9 +273,10 @@ export class ConnectionRouter {
         const [ix, iy] = [Math.round(x / STEP), Math.round(y / STEP)];
         const cellIndex = iy * this.cols + ix;
         if (this.cell(ix, iy) === VERTEX && !goals.vertices.has(cellIndex)) {
-          // A free end is met straight on, along the wire's own direction.
-          const meeting = incident.get(cellIndex) ?? [];
-          const axes: Axis[] = meeting.length === 1 ? meeting : [0, 1];
+          // A free end of a bus is met straight on, along its own direction.
+          const meeting = incident.get(cellIndex);
+          const axes: Axis[] =
+            meeting?.bus && meeting.axes.length === 1 ? meeting.axes : [0, 1];
           goals.vertices.set(
             cellIndex,
             axes.map(axis => this.id(ix, iy, axis)),
@@ -229,6 +284,16 @@ export class ConnectionRouter {
         }
       });
     });
+  }
+
+  private stepCost(ix: number, iy: number, nx: number, ny: number): number {
+    return (
+      1 +
+      Math.max(
+        this.penalty?.[iy * this.cols + ix] ?? 0,
+        this.penalty?.[ny * this.cols + nx] ?? 0,
+      )
+    );
   }
 
   private buildGraph(): Graph<GridNode, number> {
@@ -249,10 +314,18 @@ export class ConnectionRouter {
           graph.addLink(this.id(ix, iy, 0), this.id(ix, iy, 1), BEND_COST);
         }
         if (this.hasState(ix, iy, 0) && this.hasState(ix - 1, iy, 0)) {
-          graph.addLink(this.id(ix, iy, 0), this.id(ix - 1, iy, 0), 1);
+          graph.addLink(
+            this.id(ix, iy, 0),
+            this.id(ix - 1, iy, 0),
+            this.stepCost(ix, iy, ix - 1, iy),
+          );
         }
         if (this.hasState(ix, iy, 1) && this.hasState(ix, iy - 1, 1)) {
-          graph.addLink(this.id(ix, iy, 1), this.id(ix, iy - 1, 1), 1);
+          graph.addLink(
+            this.id(ix, iy, 1),
+            this.id(ix, iy - 1, 1),
+            this.stepCost(ix, iy, ix, iy - 1),
+          );
         }
       }
     }
@@ -278,6 +351,18 @@ export class ConnectionRouter {
       }
     });
     return keys;
+  }
+
+  /**
+   * Keeps all later routes off the given polyline, crossings included.
+   * @returns a function that lifts the reservation again
+   */
+  reserve(points: Point[]): () => void {
+    const added = Array.from(this.occupied(points)).filter(
+      key => !this.reserved.has(key),
+    );
+    added.forEach(key => this.reserved.add(key));
+    return () => added.forEach(key => this.reserved.delete(key));
   }
 
   /**
@@ -328,18 +413,7 @@ export class ConnectionRouter {
     if (!goals) {
       return undefined;
     }
-    const [ix, iy] = at
-      ? [Math.round(at[0] / STEP), Math.round(at[1] / STEP)]
-      : [-1, -1];
-    const vertexIds = goals.vertices.get(iy * this.cols + ix);
-    const atVertex = vertexIds
-      ? this.plan(
-        from,
-        heading,
-        { kind: 'net', ids: vertexIds, boxes: [[ix, iy, ix, iy]] },
-        own,
-      )
-      : undefined;
+    const atVertex = at ? this.routeToVertex(from, heading, net, at, own) : undefined;
     if (atVertex || !goals.ids.length) {
       return atVertex;
     }
@@ -349,6 +423,29 @@ export class ConnectionRouter {
       { kind: 'net', ids: goals.ids, boxes: goals.boxes },
       own,
     );
+  }
+
+  /**
+   * Routes to a bend or free end of `net` and ends exactly there (free ends
+   * straight on), or returns `undefined`.
+   */
+  routeToVertex(
+    from: Point,
+    heading: Point,
+    net: unknown,
+    at: Point,
+    own: Point[] = [],
+  ): Point[] | undefined {
+    const [ix, iy] = [Math.round(at[0] / STEP), Math.round(at[1] / STEP)];
+    const ids = this.netGoals.get(net)?.vertices.get(iy * this.cols + ix);
+    return ids
+      ? this.plan(
+        from,
+        heading,
+        { kind: 'net', ids, boxes: [[ix, iy, ix, iy]] },
+        own,
+      )
+      : undefined;
   }
 
   private plan(
@@ -367,11 +464,18 @@ export class ConnectionRouter {
     const [ix, iy] = startFree
       ? [startIx, startIy]
       : [startIx + Math.sign(hx), startIy + Math.sign(hy)];
-    if (!startFree && hx === 0 && hy === 0) {
+    if (
+      (!startFree && hx === 0 && hy === 0) ||
+      ix < 0 ||
+      iy < 0 ||
+      ix >= this.cols ||
+      iy >= this.rows
+    ) {
       return undefined;
     }
 
     const occupied = this.occupied(own);
+    this.reserved.forEach(key => occupied.add(key));
     occupied.delete(startIy * this.cols + startIx);
     occupied.delete(iy * this.cols + ix);
 
@@ -459,11 +563,11 @@ export class ConnectionRouter {
           return dx + dy + (needsBend ? BEND_COST : 0);
         },
         // The first argument is the node being reached, the second the one it is
-        // reached from.
-        // Bends and ends are only ever the last node of a route.
+        // reached from. Bends and ends can only be ended on (or, for a start,
+        // left).
         blocked: (a, b) =>
           (a.data.vertex && !goalIds.has(a.id)) ||
-          (b.data.vertex && a.id !== GOAL_ID) ||
+          (b.data.vertex && b.id !== startId && a.id !== GOAL_ID) ||
           (a.data.ix >= 0 && occupied.has(a.data.iy * this.cols + a.data.ix)) ||
           ((hx !== 0 || hy !== 0) &&
             ((a.id === startId && b.id === reverseId) ||

@@ -118,6 +118,62 @@ describe('routing', () => {
       expect(router.route([1, 1], [0, 1], [1, 8])).to.be.undefined;
     });
 
+    it('returns undefined when the start can only be left out of bounds', () => {
+      const router = new ConnectionRouter(10, 10, [[0, 4, 1, 1]]);
+      expect(router.route([0, 4.5], [-1, 0], [5, 5])).to.be.undefined;
+    });
+
+    it('routes through obstacles and wires at a price when soft', () => {
+      const wall: Rect[] = [[0, 4, 10, 1]];
+      expect(new ConnectionRouter(10, 10, wall).route([1, 1], [0, 1], [1, 8])).to
+        .be.undefined;
+
+      const soft = new ConnectionRouter(10, 10, wall, [], 'soft');
+      expect(soft.route([1, 1], [0, 1], [1, 8])).to.deep.equal([
+        [1, 1],
+        [1, 8],
+      ]);
+    });
+
+    it('goes round obstacles when it is cheaper than through them', () => {
+      const soft = new ConnectionRouter(10, 10, [[3, 0, 1, 8]], [], 'soft');
+      const route = soft.route([1, 4.5], [1, 0], [6, 4.5])!;
+      traversed(route).forEach((point) => {
+        expect(insideAny(point, [[3, 0, 1, 8]]), `${point}`).to.be.false;
+      });
+    });
+
+    it('turns on an equipment border in tight spots when tight', () => {
+      const stacked: Rect[] = [[3, 3, 1, 1], [3, 4, 1, 1]];
+      expect(new ConnectionRouter(10, 10, stacked).route([3.5, 4], [0, 1], [8, 4]))
+        .to.be.undefined;
+
+      const tight = new ConnectionRouter(10, 10, stacked, [], 'tight');
+      expect(tight.route([3.5, 4], [0, 1], [8, 4])).to.deep.equal([
+        [3.5, 4],
+        [8, 4],
+      ]);
+    });
+
+    it('can end on a border it shares with its start when tight', () => {
+      const stacked: Rect[] = [[3, 3, 1, 1], [3, 4, 1, 1]];
+      const tight = new ConnectionRouter(10, 10, stacked, [], 'tight');
+      expect(tight.route([3.5, 4], [0, 1], [3.5, 4])).to.deep.equal([[3.5, 4]]);
+    });
+
+    it('still leaves straight when tight if there is room', () => {
+      const tight = new ConnectionRouter(10, 10, [[3, 3, 1, 1]], [], 'tight');
+      expect(tight.route([3.5, 4], [0, 1], [3.5, 8])).to.deep.equal([
+        [3.5, 4],
+        [3.5, 8],
+      ]);
+    });
+
+    it('never enters the inside of equipment when tight', () => {
+      const tight = new ConnectionRouter(10, 10, [[3, 3, 1, 1]], [], 'tight');
+      expect(tight.route([1, 3.5], [1, 0], [3.5, 3.5])).to.be.undefined;
+    });
+
     it('returns undefined for a blocked start without a heading', () => {
       const router = new ConnectionRouter(10, 10, [[4, 4, 1, 1]]);
       expect(router.route([4.5, 4], [0, 0], [8, 1])).to.be.undefined;
@@ -200,6 +256,55 @@ describe('routing', () => {
     });
   });
 
+  describe('bus bars', () => {
+    const bus = (...points: Point[]) => ({ net: 'bus', points, bus: true });
+
+    it('are crossed like any wire when going round is not possible', () => {
+      const router = new ConnectionRouter(10, 10, [], [bus([0, 5], [10, 5])]);
+      expect(router.route([5, 1], [0, 1], [5, 9])).to.deep.equal([
+        [5, 1],
+        [5, 9],
+      ]);
+    });
+
+    it('are gone round when that is possible', () => {
+      const router = new ConnectionRouter(10, 10, [], [bus([2, 5], [8, 5])]);
+      const route = router.route([5, 1], [0, 1], [5, 9])!;
+      expect(route, 'routable').to.exist;
+      traversed(route).forEach(([x, y]) => {
+        expect(y === 5 && x > 2 && x < 8, `${x},${y}`).to.be.false;
+      });
+    });
+
+    it('still leave a route when they and a wire block the way round', () => {
+      const router = new ConnectionRouter(
+        10,
+        10,
+        [],
+        [bus([2, 5], [8, 5]), { net: 'w', points: [[2, 5.5], [8, 5.5]] }],
+      );
+      expect(router.route([5, 1], [0, 1], [5, 9])).to.exist;
+    });
+
+    it('do not stop an ordinary wire from being crossed straight', () => {
+      const router = new ConnectionRouter(10, 10, [], [
+        { net: 'w', points: [[2, 5], [8, 5]] },
+      ]);
+      expect(router.route([5, 1], [0, 1], [5, 9])).to.deep.equal([
+        [5, 1],
+        [5, 9],
+      ]);
+    });
+
+    it('can still be connected to', () => {
+      const router = new ConnectionRouter(10, 10, [], [bus([2, 5], [8, 5])]);
+      expect(router.routeToNet([5, 1], [0, 1], 'bus')).to.deep.equal([
+        [5, 1],
+        [5, 5],
+      ]);
+    });
+  });
+
   describe('routeToNet', () => {
     const net = { net: 'a', points: [[2, 6], [8, 6]] as Point[] };
 
@@ -238,7 +343,7 @@ describe('routing', () => {
         10,
         10,
         [],
-        [{ net: 'a', points: [[3, 5], [7, 5]] }],
+        [{ net: 'a', points: [[3, 5], [7, 5]], bus: true }],
       );
       expect(router.routeToNet([1, 5], [1, 0], 'a', [], [3, 5])).to.deep.equal([
         [1, 5],
@@ -246,7 +351,19 @@ describe('routing', () => {
       ]);
     });
 
-    it('meets a free end only along the wire, never across it', () => {
+    it('meets a free end of a bus only along it, never across it', () => {
+      const router = new ConnectionRouter(
+        10,
+        10,
+        [],
+        [{ net: 'a', points: [[3, 5], [7, 5]], bus: true }],
+      );
+      const route = router.routeToNet([3, 1], [0, 1], 'a', [], [3, 5])!;
+      expect(route[route.length - 1]).to.deep.equal([3, 5]);
+      expect(route[route.length - 2][1]).to.equal(5);
+    });
+
+    it('meets the free end of an ordinary wire from either direction', () => {
       const router = new ConnectionRouter(
         10,
         10,
@@ -254,8 +371,10 @@ describe('routing', () => {
         [{ net: 'a', points: [[3, 5], [7, 5]] }],
       );
       const route = router.routeToNet([3, 1], [0, 1], 'a', [], [3, 5])!;
-      expect(route[route.length - 1]).to.deep.equal([3, 5]);
-      expect(route[route.length - 2][1]).to.equal(5);
+      expect(route).to.deep.equal([
+        [3, 1],
+        [3, 5],
+      ]);
     });
 
     it('ends on a bend when it is pointed at', () => {

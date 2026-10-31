@@ -64,8 +64,13 @@ import { XMLEditor } from '@omicronenergy/oscd-editor';
 import type { EditEventV2 } from '@openscd/oscd-api';
 import { SldSubstationViewer } from './sld-substation-viewer.js';
 import { SldSubstationHeader } from './sld-substation-header.js';
-import { busSections, makeBusBar } from './foundations/connectivity.js';
 import {
+  busSections,
+  connectionPointsAt,
+  makeBusBar,
+} from './foundations/connectivity.js';
+import {
+  attributes,
   getSLDAttributes,
   setSLDAttributes,
 } from './foundations/sld-attributes.js';
@@ -1716,15 +1721,41 @@ describe('SLD Editor', () => {
       await sldSubstationViewer.updateComplete;
     });
 
-    // No wire may run along another, and no wire may end or bend on another's
-    // interior, because the diagram would then show (or hide) a connection that
-    // is not there.
+    // Wires are orthogonal and end on their terminals. No wire may run along
+    // another, and no wire may end or bend on another's interior, because the
+    // diagram would then show (or hide) a connection that is not there.
     afterEach(function checkWires(this: Mocha.Context) {
       const title = this.currentTest?.fullTitle() ?? '';
-      // Bus bar resizing is free-form placement, not routing.
+      // Bus bar resizing is free-form placement.
       if (title.includes('resizes the bus bar')) {
         return;
       }
+      element.doc.querySelectorAll('Section').forEach((section) => {
+        const vertices = Array.from(section.querySelectorAll('Vertex'));
+        vertices.slice(1).forEach((v, i) => {
+          const [x, y] = attributes(v).pos;
+          const [px, py] = attributes(vertices[i]).pos;
+          expect(x === px || y === py, `${title}: ${px},${py} ${x},${y}`).to.be.true;
+        });
+        vertices.forEach((v) => {
+          const uuid = getSLDAttributes(v, 'uuid');
+          const terminal = Array.from(
+            element.doc.querySelectorAll('Terminal, NeutralPoint'),
+          ).find(t => getSLDAttributes(t, 'uuid') === uuid);
+          if (!uuid || terminal?.parentElement?.tagName !== 'ConductingEquipment') {
+            return;
+          }
+          const { pos, rot } = attributes(terminal.parentElement);
+          const name = terminal.getAttribute('name') as 'T1' | 'T2';
+          const [x, y] = connectionPointsAt(pos, rot)[name][0];
+          const [vx, vy] = attributes(v).pos;
+          expect(
+            Math.abs(vx - x) + Math.abs(vy - y),
+            `${title}: terminal ${name} of ${terminal.parentElement.getAttribute('name')}`,
+          ).to.be.lessThan(1e-9);
+        });
+      });
+
       type Segment = [Point, Point];
       const segments = Array.from(element.doc.querySelectorAll('Section')).flatMap(
         (section) => {
@@ -2263,23 +2294,35 @@ describe('SLD Editor', () => {
           });
         });
 
-        it('disconnects equipment on rotation', async () => {
-          expect(element.doc.querySelector('[type="CTR"] > Terminal')).to.exist;
-          queryUI({ scl: '[type="CTR"]', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('auxclick', { button: 1 }),
-          );
-          expect(element.doc.querySelector('[type="CTR"] > Terminal')).to.not
-            .exist;
-          expect(element.doc.querySelectorAll('Vertex')).to.have.property(
-            'length',
-            2,
-          );
-          expect(element.doc.querySelector('[type="BAT"] > Terminal')).to.exist;
-          queryUI({ scl: '[type="BAT"]', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('auxclick', { button: 1 }),
-          );
-          expect(element.doc.querySelector('[type="BAT"] > Terminal')).to.not
-            .exist;
+        // Detaches every connected terminal through the context menu.
+        async function detach(scl: string) {
+          const count = element.doc.querySelectorAll(
+            `${scl} > Terminal`,
+          ).length;
+          for (let i = 0; i < count; i += 1) {
+            queryUI({ scl, ui: 'rect' }).dispatchEvent(
+              new PointerEvent('contextmenu'),
+            );
+            await element.updateComplete;
+            clickInteractive(
+              contextMenuItems().find(item =>
+                item.textContent?.includes('Detach'),
+              )!,
+            );
+            await element.updateComplete;
+          }
+        }
+
+        it('keeps equipment connected on rotation, rerouting its wires', async () => {
+          ['CTR', 'BAT'].forEach((type) => {
+            expect(element.doc.querySelector(`[type="${type}"] > Terminal`)).to
+              .exist;
+            queryUI({ scl: `[type="${type}"]`, ui: 'rect' }).dispatchEvent(
+              new PointerEvent('auxclick', { button: 1 }),
+            );
+            expect(element.doc.querySelector(`[type="${type}"] > Terminal`)).to
+              .exist;
+          });
           await expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esldoscd:uuid'],
           });
@@ -2312,10 +2355,7 @@ describe('SLD Editor', () => {
           await sendMouse({ type: 'click', position: gridPos(8, 4) });
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(6);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(16);
-          queryUI({ scl: '[type="CBR"]', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('auxclick', { button: 1 }),
-          );
-          element.updateComplete;
+          await detach('[type="CBR"]');
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(4);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(13);
           await expect(element.doc.documentElement).dom.to.equalSnapshot({
@@ -2330,10 +2370,7 @@ describe('SLD Editor', () => {
           await sendMouse({ type: 'click', position: svgPoint(18.5, 6.5) });
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(6);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(16);
-          queryUI({ scl: '[type="NEW"]', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('auxclick', { button: 1 }),
-          );
-          await element.updateComplete;
+          await detach('[type="NEW"]');
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(4);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(11);
           await expect(element.doc.documentElement).dom.to.equalSnapshot({
@@ -2352,9 +2389,7 @@ describe('SLD Editor', () => {
           await sendMouse({ type: 'click', position: gridPos(8, 4) });
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(8);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(22);
-          queryUI({ scl: '[type="NEW"]', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('auxclick', { button: 1 }),
-          );
+          await detach('[type="NEW"]');
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(6);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(16);
           await expect(element.doc.documentElement).dom.to.equalSnapshot({
@@ -2362,41 +2397,40 @@ describe('SLD Editor', () => {
           });
         });
 
-        it('disconnects equipment upon being moved', async () => {
+        it('keeps equipment connected when it is moved', async () => {
           queryUI({ scl: '[type="DIS"]', ui: 'rect' }).dispatchEvent(
             new PointerEvent('click'),
           );
           expect(element.doc.querySelector('[type="DIS"] > Terminal')).to.exist;
           await sendMouse({ type: 'click', position: gridPos(4, 2) });
-          expect(element.doc.querySelector('[type="DIS"] > Terminal')).to.not
-            .exist;
+          expect(element.doc.querySelector('[type="DIS"] > Terminal')).to.exist;
           await expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esldoscd:uuid'],
           });
         });
 
         it('removes superfluous connectivity nodes when disconnecting', async () => {
-          queryUI({ scl: '[type="CTR"]', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('auxclick', { button: 1 }),
-          );
-          queryUI({ scl: '[type="DIS"]', ui: 'rect' }).dispatchEvent(
-            new PointerEvent('auxclick', { button: 1 }),
-          );
+          await detach('[type="CTR"]');
+          await detach('[type="DIS"]');
           expect(element.doc.querySelector('ConnectivityNode')).to.not.exist;
           await expect(element.doc.documentElement).dom.to.equalSnapshot({
             ignoreAttributes: ['esldoscd:uuid'],
           });
         });
 
-        it('removes contained connectivity nodes when moving containers', async () => {
+        it('keeps a junction connected when moving a container squeezes it', async () => {
+          const terminals = element.doc.querySelectorAll('Terminal').length;
           await sendMouse({ type: 'click', position: gridPos(3, 5) });
           await sendMouse({ type: 'click', position: gridPos(3, 4) });
           expect(
             element.doc.querySelectorAll('ConnectivityNode'),
-          ).to.have.lengthOf(1);
+          ).to.have.lengthOf(2);
+          expect(element.doc.querySelectorAll('Terminal')).to.have.lengthOf(
+            terminals,
+          );
         });
 
-        it('removes connected connectivity nodes when moving containers', async () => {
+        it('keeps connectivity nodes connected to other containers when moving containers', async () => {
           queryUI({
             scl: '[name="V2"]',
             ui: 'rect',
@@ -2404,10 +2438,14 @@ describe('SLD Editor', () => {
           expect(
             element.doc.querySelectorAll('ConnectivityNode'),
           ).to.have.lengthOf(2);
+          const terminals = element.doc.querySelectorAll('Terminal').length;
           await sendMouse({ type: 'click', position: gridPos(18, 4) });
           expect(
             element.doc.querySelectorAll('ConnectivityNode'),
-          ).to.have.lengthOf(1);
+          ).to.have.lengthOf(2);
+          expect(element.doc.querySelectorAll('Terminal')).to.have.lengthOf(
+            terminals,
+          );
         });
 
         it('keeps internal connectivity nodes when moving containers', async () => {
@@ -2508,7 +2546,7 @@ describe('SLD Editor', () => {
             });
           });
 
-          it('keeps the bus bar when moving containers', async () => {
+          it('keeps the bus bar and its feeders when moving containers', async () => {
             const position = middleOf(
               queryUI({
                 scl: '[name="V2"] > [name="B1"]',
@@ -2530,7 +2568,8 @@ describe('SLD Editor', () => {
               element.doc
                 .querySelector('[name="L"]')
                 ?.querySelectorAll('Section'),
-            ).to.have.lengthOf(1);
+            ).to.have.lengthOf(3);
+
             await expect(element.doc.documentElement).dom.to.equalSnapshot({
               ignoreAttributes: ['esldoscd:uuid'],
             });
@@ -2786,6 +2825,91 @@ describe('SLD Editor', () => {
           });
         });
       });
+    });
+  });
+
+  describe('when a move leaves connections no way around', () => {
+    it('flags every one of them until it is dismissed', async () => {
+      const layout = (attrs: string) =>
+        `<Private type="OpenSCD-SLD-Layout"><smth:SLDAttributes ${attrs}/></Private>`;
+      const terminal = (name: string, uuid: string, cNode: string) =>
+        `<Terminal name="${name}" connectivityNode="S1/V1/B1/${cNode}">${layout(`smth:uuid="${uuid}"`)}</Terminal>`;
+      const equipment = (name: string, y: number, terminals: string) =>
+        `<ConductingEquipment name="${name}" type="DIS">${layout(`smth:x="3" smth:y="${y}" smth:rot="0"`)}${terminals}</ConductingEquipment>`;
+      const vertex = (y: number, uuid?: string) =>
+        `<smth:Vertex smth:x="3.5" smth:y="${y}"${uuid ? ` smth:uuid="${uuid}"` : ''}/>`;
+      const net = (name: string, ...sections: number[][]) =>
+        `<ConnectivityNode name="${name}" pathName="S1/V1/B1/${name}"><Private type="OpenSCD-SLD-Layout">${sections
+          .map(
+            ([a, b, ua, ub]) =>
+              `<smth:Section>${vertex(a, ua ? `u${ua}` : undefined)}${vertex(b, ub ? `u${ub}` : undefined)}</smth:Section>`,
+          )
+          .join('')}</Private></ConnectivityNode>`;
+
+      const doc = sldFixture({
+        bay: { h: 14 },
+        children:
+          equipment('Q1', 3, terminal('T2', 'u1', 'L1')) +
+          equipment(
+            'Q2',
+            8,
+            terminal('T1', 'u2', 'L1') + terminal('T2', 'u3', 'L2'),
+          ) +
+          equipment('Q4', 12, terminal('T1', 'u4', 'L2')) +
+          net('L1', [3.84, 8.16, 1, 2]) +
+          net('L2', [8.84, 12.16, 3, 4]) +
+          net('W1', [4.4, 5.9]) +
+          net('W2', [7.1, 7.6]),
+      });
+      element.doc = doc;
+      await element.updateComplete;
+      const viewer = getSldSubstationViewer(element)!;
+
+      element.handlePlace(
+        doc.querySelector('[name="Q2"]')!,
+        doc.querySelector('Bay')!,
+        3,
+        6,
+      );
+      await element.updateComplete;
+      await viewer.updateComplete;
+      const marks = () => viewer.shadowRoot!.querySelectorAll('.routing-warning');
+      expect(marks()).to.have.lengthOf(2);
+
+      marks()[0].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await element.updateComplete;
+      await viewer.updateComplete;
+      expect(marks()).to.have.lengthOf(1);
+    });
+  });
+
+  describe('when equipment is moved onto a wire', () => {
+    it('flags the wire once, in the middle of where it runs through the equipment', async () => {
+      const layout = (attrs: string) =>
+        `<Private type="OpenSCD-SLD-Layout"><smth:SLDAttributes ${attrs}/></Private>`;
+      const doc = sldFixture({
+        children: `<ConductingEquipment name="Q1" type="DIS">${layout('smth:x="3" smth:y="3" smth:rot="0"')}</ConductingEquipment>
+          <ConnectivityNode name="W" pathName="S1/V1/B1/W"><Private type="OpenSCD-SLD-Layout">
+            <smth:Section><smth:Vertex smth:x="3" smth:y="7.5"/><smth:Vertex smth:x="9" smth:y="7.5"/></smth:Section>
+          </Private></ConnectivityNode>`,
+      });
+      element.doc = doc;
+      await element.updateComplete;
+      const viewer = getSldSubstationViewer(element)!;
+
+      element.handlePlace(
+        doc.querySelector('[name="Q1"]')!,
+        doc.querySelector('Bay')!,
+        5,
+        7,
+      );
+      await element.updateComplete;
+      await viewer.updateComplete;
+      const marks = Array.from(
+        viewer.shadowRoot!.querySelectorAll('.routing-warning circle'),
+      ).map(circle => [circle.getAttribute('cx'), circle.getAttribute('cy')]);
+
+      expect(marks).to.deep.equal([['5.5', '7.5']]);
     });
   });
 

@@ -68,6 +68,7 @@ palette dark recolours the whole canvas with no SLD override.
 | `--oscd-editor-sld-groundable-terminal-color`           | brand yellow                                  | Groundable terminal                  |
 | `--oscd-editor-sld-grid-color`                          | `--oscd-base0`                                | Background placement grid            |
 | `--oscd-editor-sld-label-placeholder-color`             | `--oscd-base1`                                | Empty label placeholder text         |
+| `--oscd-editor-sld-routing-warning-color`               | `--oscd-warning`                              | Mark on connections drawn through other elements |
 
 ## Floating panels
 

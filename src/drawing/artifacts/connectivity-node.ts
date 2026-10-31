@@ -35,6 +35,8 @@ export type ConnectivityNodeContext = SldSharedContext & {
   mouseY: number;
   mouseX2: number;
   mouseY2: number;
+  /** Sections drawn elsewhere, e.g. as a live reroute preview. */
+  hiddenSections?: Set<Element>;
   /** Auto-routes the connection being drawn to where it can meet `cNode`. */
   routeToConnectivityNode?: (
     path: Point[],
@@ -86,7 +88,7 @@ export function renderConnectivityNode(
   const sections = Array.from(priv.getElementsByTagNameNS(sldNs, 'Section'));
   const bay = cNode.closest('Bay');
   const targetSize = 0.5;
-  const pointerEvents =
+  const wirePointerEvents =
     !isMode(context.interaction, 'placing', 'locked') &&
     (!isMode(context.interaction, 'resizingBR') ||
       (targetInMode(context.interaction, 'resizingBR') === bay &&
@@ -94,7 +96,15 @@ export function renderConnectivityNode(
       ? 'all'
       : 'none';
   sections.forEach((section) => {
+    if (context.hiddenSections?.has(section)) {
+      return;
+    }
     const busBar = xmlBoolean(section.getAttributeNS(sldNs, 'bus'));
+    // Plain wires only take clicks to be connected to, so they don't get in the way of equipment under them.
+    const pointerEvents =
+      busBar || isMode(context.interaction, 'connectingFrom')
+        ? wirePointerEvents
+        : 'none';
     const vertices = Array.from(
       section.getElementsByTagNameNS(sldNs, 'Vertex'),
     );

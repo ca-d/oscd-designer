@@ -10,6 +10,7 @@ import {
   createResizeTLEdits,
   createRotateEdits,
   disconnectExternalEdits,
+  leavesSubstation,
   rewireTerminalEdits,
   shiftDescendantEdits,
   shiftElementEdits,
@@ -327,30 +328,6 @@ describe('edits', () => {
       expect(updateEdit.attributesNS[sldNs]['smth:rot']).to.equal('0');
     });
 
-    it('removes non-grounded terminals from ConductingEquipment', () => {
-      const doc = sldFixture({ children: `
-              <ConductingEquipment name="Q1" type="CBR">
-                <Private type="OpenSCD-SLD-Layout">
-                  <smth:SLDAttributes smth:x="3" smth:y="3" smth:rot="0"/>
-                </Private>
-                <Terminal name="T1" connectivityNode="S1/V1/B1/L1" cNodeName="L1"/>
-                <Terminal name="T2" cNodeName="grounded"/>
-              </ConductingEquipment>
-              <ConnectivityNode name="L1" pathName="S1/V1/B1/L1">
-                <Private type="OpenSCD-SLD-Layout">
-                  <smth:Section smth:bus="false">
-                    <smth:Vertex smth:x="3" smth:y="2" smth:uuid="uid1"/>
-                    <smth:Vertex smth:x="3" smth:y="3" smth:uuid="uid2"/>
-                  </smth:Section>
-                </Private>
-              </ConnectivityNode>
-            ` });
-      const eq = doc.querySelector('ConductingEquipment')!;
-      const edits = createRotateEdits(eq, 'smth');
-      // First edit is the rotation, remaining edits remove the non-grounded terminal
-      expect(edits.length).to.be.greaterThan(1);
-    });
-
     it('does not remove grounded terminals', () => {
       const doc = sldFixture({ children: `
               <ConductingEquipment name="Q1" type="CBR">
@@ -539,7 +516,7 @@ describe('edits', () => {
       expect(edits).to.have.length(0);
     });
 
-    it('removes non-grounded terminals', () => {
+    it('keeps non-grounded terminals attached', () => {
       const doc = sldFixture({ children: `
               <ConductingEquipment name="Q1" type="CBR">
                 <Private type="OpenSCD-SLD-Layout">
@@ -559,7 +536,39 @@ describe('edits', () => {
       const eq = doc.querySelector('ConductingEquipment')!;
       const bay = doc.querySelector('Bay')!;
       const edits = rewireTerminalEdits(eq, bay, doc);
-      expect(edits.length).to.be.greaterThan(0);
+      expect(edits).to.have.length(0);
+    });
+
+    it('removes non-grounded terminals when the equipment leaves its substation', () => {
+      const doc = createSCLDoc(`
+        <Substation name="S1">
+          <VoltageLevel name="V1">
+            <Bay name="B1">
+              <ConductingEquipment name="Q1" type="CBR">
+                <Private type="OpenSCD-SLD-Layout">
+                  <smth:SLDAttributes smth:x="3" smth:y="3"/>
+                </Private>
+                <Terminal name="T1" connectivityNode="S1/V1/B1/L1" cNodeName="L1"/>
+              </ConductingEquipment>
+            </Bay>
+          </VoltageLevel>
+        </Substation>
+        <Substation name="S2">
+          <VoltageLevel name="V2"><Bay name="B2"/></VoltageLevel>
+        </Substation>
+      `);
+      const eq = doc.querySelector('ConductingEquipment')!;
+      const elsewhere = doc.querySelector('Bay[name="B2"]')!;
+      expect(leavesSubstation(eq, elsewhere)).to.be.true;
+      expect(rewireTerminalEdits(eq, elsewhere, doc).length).to.be.greaterThan(0);
+    });
+
+    it('does not consider a move within a substation as leaving it', () => {
+      const doc = sldFixture();
+      const eq = doc.createElement('ConductingEquipment');
+      doc.querySelector('Bay')!.appendChild(eq);
+      expect(leavesSubstation(eq, doc.querySelector('VoltageLevel')!)).to.be
+        .false;
     });
 
     it('re-points grounded terminals to destination bay', () => {

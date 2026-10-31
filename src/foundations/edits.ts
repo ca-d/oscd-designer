@@ -7,6 +7,8 @@ import {
   reparentElement,
 } from './connectivity-edits.js';
 import { iedReferences, isIedReferenceElement } from './ied.js';
+import { rerouteEdits } from './rerouting.js';
+import type { FlaggedSection } from './rerouting.js';
 import {
   attributes,
   getSLDAttributes,
@@ -245,7 +247,12 @@ export function createDeleteContainerEdits(container: Element): EditV2[] {
   return edits;
 }
 
-export function createRotateEdits(element: Element, nsp: string): EditV2[] {
+/** Edits turning `element`; sections that had to be rerouted through other elements are added to `fallbacks`. */
+export function createRotateEdits(
+  element: Element,
+  nsp: string,
+  fallbacks: FlaggedSection[] = [],
+): EditV2[] {
   const { rot } = attributes(element);
   const edits: EditV2[] = [
     updateSLDAttributes(element, nsp, {
@@ -256,9 +263,14 @@ export function createRotateEdits(element: Element, nsp: string): EditV2[] {
     element.tagName === 'ConductingEquipment' ||
     element.tagName === 'PowerTransformer'
   ) {
-    Array.from(element.querySelectorAll('Terminal, NeutralPoint'))
-      .filter(terminal => terminal.getAttribute('cNodeName') !== 'grounded')
-      .forEach(terminal => edits.push(...removeTerminal(terminal)));
+    edits.push(
+      ...rerouteEdits(
+        element.ownerDocument,
+        { kind: 'rotate', element },
+        nsp,
+        fallbacks,
+      ),
+    );
   }
   return edits;
 }
@@ -620,9 +632,17 @@ export function rewireTerminalEdits(
 
   const edits: EditV2[] = [];
 
-  Array.from(element.querySelectorAll('Terminal, NeutralPoint'))
-    .filter(terminal => terminal.getAttribute('cNodeName') !== 'grounded')
-    .forEach(terminal => edits.push(...removeTerminal(terminal)));
+  // A new element or a copy cannot share its source's connections, nor can
+  // equipment keep them in another substation.
+  if (element.getRootNode() !== doc) {
+    Array.from(element.querySelectorAll('Terminal, NeutralPoint'))
+      .filter(terminal => terminal.getAttribute('cNodeName') !== 'grounded')
+      .forEach(terminal => edits.push({ node: terminal }));
+  } else if (leavesSubstation(element, parent)) {
+    Array.from(element.querySelectorAll('Terminal, NeutralPoint'))
+      .filter(terminal => terminal.getAttribute('cNodeName') !== 'grounded')
+      .forEach(terminal => edits.push(...removeTerminal(terminal)));
+  }
 
   const groundedTerminals = Array.from(
     element.querySelectorAll('Terminal, NeutralPoint'),
@@ -682,6 +702,16 @@ export function rewireTerminalEdits(
   return edits;
 }
 
+/**
+ * Whether moving `element` under `parent` takes it to another substation, where
+ * its connections to what stays behind cannot be drawn.
+ */
+export function leavesSubstation(element: Element, parent: Element): boolean {
+  const current = element.closest('Substation');
+  return !!current && current !== parent.closest('Substation');
+}
+
+/** Builds edits that detach what an element in another substation was connected to. */
 export function disconnectExternalEdits(
   element: Element,
   doc: XMLDocument,

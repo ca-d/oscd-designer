@@ -67,6 +67,7 @@ export const sldThemeTokens = [
   '--oscd-sld-groundable-terminal-color',
   '--oscd-sld-grid-color',
   '--oscd-sld-label-placeholder-color',
+  '--oscd-sld-routing-warning-color',
 ];
 
 export const sldThemeStyles = css`
@@ -167,6 +168,10 @@ export const sldThemeStyles = css`
     --oscd-sld-label-placeholder-color: var(
       --oscd-editor-sld-label-placeholder-color,
       var(--oscd-base1)
+    );
+    --oscd-sld-routing-warning-color: var(
+      --oscd-editor-sld-routing-warning-color,
+      var(--oscd-warning)
     );
   }
 `;

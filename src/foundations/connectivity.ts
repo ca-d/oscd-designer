@@ -68,11 +68,19 @@ export function connectionStartPoints(equipment: Element): {
   T1: [Point, Point];
   T2: [Point, Point];
 } {
-  const {
-    pos: [x, y],
-    rot,
-  } = attributes(equipment);
+  const { pos, rot } = attributes(equipment);
+  return connectionPointsAt(pos, rot);
+}
 
+/**
+ * Anchor points of T1 and T2 for equipment at `pos` turned by `rot`: the
+ * terminal end of a connection and the point where it meets the equipment's
+ * edge.
+ */
+export function connectionPointsAt(
+  [x, y]: Point,
+  rot: 0 | 1 | 2 | 3,
+): { T1: [Point, Point]; T2: [Point, Point] } {
   const T1 = [
     [
       [x + 0.5, y + 0.16],

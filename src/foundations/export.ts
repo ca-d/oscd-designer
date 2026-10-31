@@ -66,6 +66,7 @@ function cleanXML(element: Element): void {
   if (
     cl.contains('handle') ||
     cl.contains('preview') ||
+    cl.contains('routing-warning') ||
     cl.contains('port') ||
     (cl.contains('label') && cl.contains('container'))
   ) {

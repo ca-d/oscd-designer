@@ -22,12 +22,19 @@ import {
   createResizeTLEdits,
   createRotateEdits,
   disconnectExternalEdits,
+  leavesSubstation,
   rewireTerminalEdits,
   shiftDescendantEdits,
   shiftElementEdits,
   shiftTextEdits,
   wrapIedReferenceEdits,
 } from './foundations/edits.js';
+import {
+  pointsSignature,
+  rerouteEdits,
+  sectionSignature,
+} from './foundations/rerouting.js';
+import type { FlaggedSection } from './foundations/rerouting.js';
 import {
   iedReferences,
   isIedReferenceElement,
@@ -40,6 +47,7 @@ import { copyElementForPlacement } from './foundations/placement-clone.js';
 import type {
   ConnectDetail,
   ConnectEvent,
+  DismissRoutingWarningEvent,
   ExtendConnectPointEvent,
   EditIedDetail,
   EditSclDetail,
@@ -239,11 +247,24 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
     edits.push(...shiftTextEdits(element, dx, dy, this.nsp));
     edits.push(...shiftDescendantEdits(element, dx, dy, this.nsp));
     edits.push(...rewireTerminalEdits(element, parent, this.doc));
-    edits.push(...disconnectExternalEdits(element, this.doc));
+    const fallbacks: FlaggedSection[] = [];
+    if (leavesSubstation(element, parent)) {
+      edits.push(...disconnectExternalEdits(element, this.doc));
+    } else {
+      edits.push(
+        ...rerouteEdits(
+          this.doc,
+          { kind: 'move', element, dx, dy },
+          this.nsp,
+          fallbacks,
+        ),
+      );
+    }
     edits.push(...busBarVertexEdits(element, x, y, this.nsp));
     edits.push(...wrapIedReferenceEdits(element, parent, this.doc));
 
     this.dispatchEvent(newEditEventV2(edits));
+    this.warnAbout(fallbacks);
 
     const resolve = this._resolvePlacement;
     this._resolvePlacement = undefined;
@@ -277,8 +298,45 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
   }
 
   handleRotate(element: Element) {
-    this.dispatchEvent(newEditEventV2(createRotateEdits(element, this.nsp)));
+    const fallbacks: FlaggedSection[] = [];
+    this.dispatchEvent(
+      newEditEventV2(createRotateEdits(element, this.nsp, fallbacks)),
+    );
+    this.warnAbout(fallbacks);
   }
+
+  /**
+   * Sections that had to run through other elements to stay connected, with the
+   * geometry they were given. A warning only shows while the section still has
+   * that geometry, so editing or undoing it clears the warning.
+   */
+  private routingWarnings = new Map<Element, string>();
+
+  private warnAbout(routes: FlaggedSection[]) {
+    routes.forEach(route =>
+      this.routingWarnings.set(route.section, pointsSignature(route.points)),
+    );
+    if (routes.length) {
+      this.requestUpdate();
+    }
+  }
+
+  private activeRoutingWarnings(substation: Element): Element[] {
+    return Array.from(this.routingWarnings)
+      .filter(
+        ([section, signature]) =>
+          section.closest('Substation') === substation &&
+          sectionSignature(section) === signature,
+      )
+      .map(([section]) => section);
+  }
+
+  private handleDismissRoutingWarning = ({
+    detail,
+  }: DismissRoutingWarningEvent) => {
+    this.routingWarnings.delete(detail);
+    this.requestUpdate();
+  };
 
   handleConnect(detail: ConnectDetail) {
     const edits = createConnectEdits(detail, this.doc, this.nsp);
@@ -480,6 +538,8 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
             .disabled=${this.disabled}
             .selectable=${this.selectable}
             .highlight=${this.highlight}
+            .routingWarnings=${this.activeRoutingWarnings(substation)}
+            @oscd-sld-dismiss-routing-warning=${this.handleDismissRoutingWarning}
             @oscd-sld-substation-export=${(event: SubstationCommandEvent) =>
               this.handleSubstationExport(event)}
             @oscd-sld-start-interaction=${({

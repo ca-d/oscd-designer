@@ -41,6 +41,8 @@ import type {
 import type { PowerTransformerContext } from './drawing/artifacts/power-transformer.js';
 import type { EquipmentContext } from './drawing/artifacts/conducting-equipment.js';
 import type { BusBarContext } from './drawing/artifacts/bus-bar.js';
+import { overlappedSections, planReroutes } from './foundations/rerouting.js';
+import type { PlannedRoute } from './foundations/rerouting.js';
 import {
   ConnectionRouter,
   connectHeading,
@@ -48,12 +50,14 @@ import {
   finishRoute,
   snapApproachPoint,
 } from './foundations/routing.js';
+import type { RouterMode } from './foundations/routing.js';
 import { containsRect } from './foundations/element-geometry.js';
 import { canPlaceAt } from './foundations/sld-placement.js';
 import { connectionStartPoints, isBusBar } from './foundations/connectivity.js';
 import {
   attributes,
   getSLDAttributes,
+  xmlBoolean,
 } from './foundations/sld-attributes.js';
 import { sldThemeStyles } from './theme.js';
 import { singleTerminal } from './foundations/equipment.js';
@@ -64,6 +68,7 @@ import {
 } from './foundations/ied.js';
 import {
   newConnectEvent,
+  newDismissRoutingWarningEvent,
   newExtendConnectPointEvent,
   newGroundTerminalEvent,
   newOpenContextMenuEvent,
@@ -82,13 +87,16 @@ import type {
 import type { Style } from './foundations/sld-attributes.js';
 
 /** The wires of a connectivity node; terminals are where equipment attaches. */
-function wirePolylines(cNode: Element): { points: Point[]; terminals: Point[] }[] {
+function wirePolylines(
+  cNode: Element,
+): { points: Point[]; terminals: Point[]; bus: boolean }[] {
   return Array.from(cNode.getElementsByTagNameNS(sldNs, 'Section')).map(
     (section) => {
       const vertices = Array.from(
         section.getElementsByTagNameNS(sldNs, 'Vertex'),
       );
       return {
+        bus: xmlBoolean(getSLDAttributes(section, 'bus')),
         points: vertices.map(vertex => attributes(vertex).pos),
         terminals: vertices
           .filter(vertex => vertex.hasAttributeNS(sldNs, 'uuid'))
@@ -110,6 +118,9 @@ const mouseCoordinateProperties: PropertyKey[] = [
   'mouseX2f',
   'mouseY2f',
 ];
+
+/** A section as it would run after the placement; a `fallback` is drawn as a warning. */
+type PreviewRoute = Pick<PlannedRoute, 'section' | 'points' | 'fallback'>;
 
 /** An editor [[`plugin`]] for editing the `Substation` section. */
 
@@ -181,6 +192,9 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
   @property() selectable: string[] = [];
 
   @property() highlight: { id: string; style: Style }[] = [];
+
+  /** Sections that were routed through other elements to stay connected. */
+  @property({ attribute: false }) routingWarnings: Element[] = [];
 
   @state()
   get idle(): boolean {
@@ -433,6 +447,8 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
     // the per-move re-renders that keep the placing/connect preview under the
     // cursor skip re-evaluating the whole (potentially thousands of `<g>`) base
     // stack.
+    const reroutes = this.plannedReroutes();
+    this.hideSections(reroutes);
     const baseLayerTracksMouse =
       this.interaction.mode === 'resizingBR' ||
       this.interaction.mode === 'resizingTL' ||
@@ -448,6 +464,7 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
       this.highlight,
       this.selectable,
       this.disabled,
+      this.hiddenSections,
       // Mouse coordinates only invalidate the base layers in the modes that
       // paint them from the cursor; elsewhere a constant keeps the key stable so
       // guard reuses the memoized layers across cursor moves.
@@ -503,6 +520,12 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
           g.bay > rect {
             shape-rendering: crispEdges;
           }
+          .routing-warning .trace {
+            visibility: hidden;
+          }
+          .routing-warning:hover .trace {
+            visibility: visible;
+          }
           svg:not(:hover) .preview {
             visibility: hidden;
           }
@@ -522,8 +545,10 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
           this.renderIedLayer(),
           this.renderLabelLayer(),
         ])}
+        ${this.renderReroutePreviewLayer(reroutes)}
         ${this.renderPlacingTargetsLayer()}
         ${this.renderPlacingPreview()}
+        ${this.renderRoutingWarnings()}
       </svg>
     </section>`;
   }
@@ -672,7 +697,11 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
     // terminal and then runs straight in.
     const route =
       wireRoute ??
-      this.routeConnection(path, snap ? snapApproachPoint(snap) : cursor);
+      this.routeConnection(
+        path,
+        snap ? snapApproachPoint(snap) : cursor,
+        snap?.far,
+      );
 
     // The already-committed waypoints (every point but the provisional last
     // one) continuing through the route. Without a clean route the preview stops
@@ -932,14 +961,190 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
       mouseY: this.mouseY,
       mouseX2: this.mouseX2,
       mouseY2: this.mouseY2,
+      hiddenSections: this.hiddenSections,
       routeToConnectivityNode: (path, cNode) =>
         this.routeToConnectivityNode(path, cNode),
     };
   }
 
-  private routerCache?: { key: unknown[]; router: ConnectionRouter };
+  private reroutePreview: { key: unknown[]; routes: PreviewRoute[] } = {
+    key: [],
+    routes: [],
+  };
 
-  private connectionRouter(from: Element): ConnectionRouter {
+  /**
+   * Where the connections to the element being placed would run if it were
+   * dropped where it is now.
+   */
+  private plannedReroutes(): PreviewRoute[] {
+    const { placing } = this;
+    if (
+      !placing ||
+      placing.getRootNode() !== this.doc ||
+      placing.closest('Substation') !== this.substation ||
+      placing.localName === 'Vertex'
+    ) {
+      return [];
+    }
+    const [x, y] = this.renderedPosition(placing);
+    const {
+      pos: [oldX, oldY],
+    } = attributes(placing);
+    const [dx, dy] = [x - oldX, y - oldY];
+    if (!dx && !dy) {
+      return [];
+    }
+
+    const key = [placing, this.docVersion, dx, dy];
+    if (key.some((k, i) => k !== this.reroutePreview.key[i])) {
+      const change = { kind: 'move', element: placing, dx, dy } as const;
+      const planned = planReroutes(this.doc, change);
+      this.reroutePreview = {
+        key,
+        routes: [
+          ...planned,
+          ...overlappedSections(
+            this.doc,
+            change,
+            new Set(planned.map(route => route.section)),
+          ).map(flagged => ({ ...flagged, fallback: true })),
+        ],
+      };
+    }
+    return this.reroutePreview.routes;
+  }
+
+  /** The sections drawn as previews; kept the same set while they are the same sections. */
+  private hiddenSections = new Set<Element>();
+
+  private hideSections(routes: PreviewRoute[]) {
+    const sections = routes.map(route => route.section);
+    if (
+      sections.length !== this.hiddenSections.size ||
+      sections.some(section => !this.hiddenSections.has(section))
+    ) {
+      this.hiddenSections = new Set(sections);
+    }
+  }
+
+  private renderReroutePreviewLayer(routes: PreviewRoute[]) {
+    return routes.map(
+      ({ points, fallback }) =>
+        svg`<polyline fill="none" stroke-linecap="square" pointer-events="none"
+          points="${points.map(point => point.join(',')).join(' ')}"
+          stroke="${fallback ? 'var(--oscd-sld-routing-warning-color)' : 'currentColor'}"
+          stroke-dasharray="${fallback ? '0.15 0.1' : nothing}" />`,
+    );
+  }
+
+  /** The middle of where a wire first runs through equipment, or else of its longest leg. */
+  private warningAnchor(section: Element, points: Point[]): Point {
+    const attached = new Set(
+      Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex')).flatMap(
+        (vertex) => {
+          const uuid = getSLDAttributes(vertex, 'uuid');
+          return uuid
+            ? Array.from(
+              this.substation.querySelectorAll('Terminal, NeutralPoint'),
+            )
+              .filter(terminal => getSLDAttributes(terminal, 'uuid') === uuid)
+              .map(terminal =>
+                terminal.closest('ConductingEquipment, PowerTransformer'),
+              )
+            : [];
+        },
+      ),
+    );
+    const boxes = [
+      ...Array.from(
+        this.substation.querySelectorAll('ConductingEquipment, PowerTransformer'),
+      ),
+      ...iedReferences(this.substation),
+    ]
+      .filter(element => !attached.has(element))
+      .map((element): Rect => {
+        const {
+          pos: [x, y],
+          dim: [w, h],
+        } = attributes(element);
+        return [x, y, w, h];
+      });
+    const legs = points
+      .slice(1)
+      .map((end, i): [Point, Point] => [points[i], end]);
+    const middle = ([a, b]: [Point, Point]): Point => [
+      (a[0] + b[0]) / 2,
+      (a[1] + b[1]) / 2,
+    ];
+    for (const [start, end] of legs) {
+      const [lx, hx] = [Math.min(start[0], end[0]), Math.max(start[0], end[0])];
+      const [ly, hy] = [Math.min(start[1], end[1]), Math.max(start[1], end[1])];
+      const box = boxes.find(
+        ([x, y, w, h]) => hx > x && lx < x + w && hy > y && ly < y + h,
+      );
+      if (box) {
+        const [x, y, w, h] = box;
+        return middle([
+          [Math.max(lx, x), Math.max(ly, y)],
+          [Math.min(hx, x + w), Math.min(hy, y + h)],
+        ]);
+      }
+    }
+    const [longest] = [...legs].sort(
+      ([a, b], [c, d]) =>
+        Math.abs(d[0] - c[0]) + Math.abs(d[1] - c[1]) -
+        (Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1])),
+    );
+    return middle(longest);
+  }
+
+  /** Marks wires that were routed through other elements; hovering traces the wire, a click dismisses the mark. */
+  private renderRoutingWarnings() {
+    if (this.disabled || !isMode(this.interaction, 'idle')) {
+      return nothing;
+    }
+    return this.routingWarnings
+      .filter(section => section.closest('Substation') === this.substation)
+      .flatMap((section) => {
+        const points = Array.from(
+          section.getElementsByTagNameNS(sldNs, 'Vertex'),
+        ).map(vertex => attributes(vertex).pos);
+        if (points.length < 2) {
+          return [];
+        }
+        const dismiss = (event: MouseEvent) => {
+          event.stopPropagation();
+          this.dispatchEvent(newDismissRoutingWarningEvent(section));
+        };
+        const [x, y] = this.warningAnchor(section, points);
+        return [
+          svg`<g class="routing-warning" role="button" style="cursor: pointer"
+          @click=${dismiss}>
+          <polyline class="trace" fill="none" stroke-linecap="square"
+            pointer-events="none" stroke-dasharray="0.15 0.1"
+            points="${points.map(point => point.join(',')).join(' ')}"
+            stroke="var(--oscd-sld-routing-warning-color)" />
+          <title>This connection had to be drawn through other elements to stay connected. Click to dismiss.</title>
+          <circle cx="${x}" cy="${y}" r="0.3" stroke-width="0.04"
+            style="fill: var(--oscd-sld-routing-warning-color); stroke: var(--md-sys-color-surface, var(--oscd-base3))" />
+          <text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central"
+            font-size="0.4" font-weight="bold" stroke="none" pointer-events="none"
+            style="fill: var(--md-sys-color-surface, var(--oscd-base3))">!</text>
+        </g>`,
+        ];
+      });
+  }
+
+  private routerCache?: {
+    key: unknown[];
+    build: (mode: RouterMode) => ConnectionRouter;
+    routers: Partial<Record<RouterMode, ConnectionRouter>>;
+  };
+
+  private connectionRouter(
+    from: Element,
+    mode: RouterMode = 'strict',
+  ): ConnectionRouter {
     const ownTransformer = from.closest('PowerTransformer');
     const key = [this.substation, this.docVersion, ownTransformer];
     if (!this.routerCache || key.some((k, i) => k !== this.routerCache!.key[i])) {
@@ -969,22 +1174,44 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
       } = attributes(this.substation);
       this.routerCache = {
         key,
-        router: new ConnectionRouter(w, h, obstacles, wires),
+        build: routerMode =>
+          new ConnectionRouter(w, h, obstacles, wires, routerMode),
+        routers: {},
       };
     }
-    return this.routerCache.router;
+    const { routers, build } = this.routerCache;
+    routers[mode] ??= build(mode);
+    return routers[mode]!;
   }
 
-  /** Routes the connection being drawn from its last anchor to `target`. */
-  private routeConnection(path: Point[], target: Point): Point[] | undefined {
-    return this.connecting
-      ? this.connectionRouter(this.connecting.from).route(
-        path[path.length - 2],
-        connectHeading(path),
-        target,
-        path.slice(0, -1),
+  /**
+   * Routes the connection being drawn from its last anchor to `target`. Where
+   * there is no room to leave the equipment straight, it may turn on the
+   * equipment's border instead and end at `tightTarget`.
+   */
+  private routeConnection(
+    path: Point[],
+    target: Point,
+    tightTarget: Point = target,
+  ): Point[] | undefined {
+    if (!this.connecting) {
+      return undefined;
+    }
+    const { from } = this.connecting;
+    const [anchor, direction, own] = [
+      path[path.length - 2],
+      connectHeading(path),
+      path.slice(0, -1),
+    ];
+    return (
+      this.connectionRouter(from).route(anchor, direction, target, own) ??
+      this.connectionRouter(from, 'tight').route(
+        anchor,
+        direction,
+        tightTarget,
+        own,
       )
-      : undefined;
+    );
   }
 
   /**
@@ -995,15 +1222,19 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
     path: Point[],
     cNode: Element,
   ): Point[] | undefined {
-    return this.connecting
-      ? this.connectionRouter(this.connecting.from).routeToNet(
+    if (!this.connecting) {
+      return undefined;
+    }
+    const { from } = this.connecting;
+    const route = (mode: RouterMode) =>
+      this.connectionRouter(from, mode).routeToNet(
         path[path.length - 2],
         connectHeading(path),
         cNode,
         path.slice(0, -1),
         [this.mouseX2, this.mouseY2],
-      )
-      : undefined;
+      );
+    return route('strict') ?? route('tight');
   }
 
   /** The topmost connectable connectivity node whose wire runs under `cursor`. */
