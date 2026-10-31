@@ -650,6 +650,15 @@ function pathCost(nodes: GridNode[]): number {
 }
 
 /**
+ * Where a route for the connection being drawn begins: its last anchor, or, for
+ * a connection only just started, the point where it leaves its terminal's
+ * equipment, which lies outside any larger area the terminal sits in.
+ */
+export function connectAnchor(path: Point[]): Point {
+  return path.length === 2 ? path[1] : path[path.length - 2];
+}
+
+/**
  * The direction in which a connection path is currently travelling at its last
  * committed point (its second-to-last point). The final point is provisional
  * and only reveals that direction; as in {@link elbowCorner}, a segment is

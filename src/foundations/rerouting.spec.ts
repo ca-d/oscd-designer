@@ -285,6 +285,54 @@ describe('rerouteEdits', () => {
     });
   });
 
+  describe('around a transformer', () => {
+    /** Q2 is wired to the neutral point on the left of a transformer. */
+    function wiredToNeutral() {
+      return substation({
+        wires: '',
+        secondTerminals: terminal('T1', 'u2'),
+        extra: `<PowerTransformer name="PT1">
+            ${layout('smth:x="8" smth:y="8"')}
+            <TransformerWinding name="W1">
+              <NeutralPoint name="N1" connectivityNode="S1/V1/B1/L1">${layout('smth:uuid="un1"')}</NeutralPoint>
+            </TransformerWinding>
+          </PowerTransformer>
+          <ConnectivityNode name="L1" pathName="S1/V1/B1/L1">
+            <Private type="OpenSCD-SLD-Layout">
+              <smth:Section>${vertex(3.5, 8.16, 'u2')}${vertex(3.5, 7)}${vertex(7, 7)}${vertex(7, 8.5)}${vertex(7.8, 8.5, 'un1')}</smth:Section>
+            </Private>
+          </ConnectivityNode>`,
+      });
+    }
+
+    it('keeps clear of the whole winding, not only of its square', () => {
+      const doc = wiredToNeutral();
+      moveEquipment(doc, 'Q2', 9, 2);
+
+      const wire = polyline(sections(doc)[0]);
+      expect(wire[wire.length - 1]).to.deep.equal([7.8, 8.5]);
+      // Only the last stretch, from outside the circle to the terminal, enters the area.
+      wire.slice(1, -1).forEach(([x, y], i) => {
+        const [px, py] = wire[i];
+        for (let t = 0; t <= 1; t += 0.05) {
+          const [sx, sy] = [px + (x - px) * t, py + (y - py) * t];
+          expect(
+            sx > 7.6 && sx < 9.4 && sy > 7.6 && sy < 9.4,
+            `${sx},${sy}`,
+          ).to.be.false;
+        }
+      });
+    });
+
+    it('reports nothing for a wire that keeps clear', () => {
+      const doc = wiredToNeutral();
+      const q2 = doc.querySelector('[name="Q2"]')!;
+      const routes = planReroutes(doc, { kind: 'move', element: q2, dx: 9, dy: 2 });
+
+      expect(routes.map(route => route.fallback)).to.deep.equal([false]);
+    });
+  });
+
   describe('mirroring a transformer', () => {
     /** A transformer below Q1, wired to it by its T1 terminal. */
     function transformerDoc(

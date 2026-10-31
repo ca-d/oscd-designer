@@ -4,6 +4,7 @@ import { classMap } from 'lit/directives/class-map.js';
 import { zigZag2WTransform, zigZagPath } from '../diagram-symbols.js';
 import { containsRect } from '../../foundations/element-geometry.js';
 import { attributes } from '../../foundations/sld-attributes.js';
+import { windingPort } from '../../foundations/obstacles.js';
 import { transformerWindingMeasures } from '../../foundations/transformer.js';
 import {
   newPlaceEvent,
@@ -126,8 +127,6 @@ function renderTransformerWinding(
         return;
       }
       const [x, y] = point;
-      const x1 = Number.isInteger(x * 2) ? x : x + 1;
-      const y1 = Number.isInteger(y * 2) ? y : y + 1;
       const terminal = name.startsWith('T');
       const fill = terminal
         ? 'var(--oscd-sld-terminal-color)'
@@ -154,10 +153,7 @@ function renderTransformerWinding(
                   mode: 'connecting',
                   from: winding,
                   fromTerminal: name as 'T1' | 'T2' | 'N1' | 'N2',
-                  path: [
-                    [x, y],
-                    [x1, y1],
-                  ],
+                  path: [[x, y], windingPort([cx, cy], [x, y]).approach],
                 }),
               );
             }}

@@ -3,6 +3,7 @@ import { identity } from '@openscd/scl-lib';
 
 import { SldSubstationViewer } from './sld-substation-viewer.js';
 import * as interactions from './foundations/interaction-mode.js';
+import { obstacleRects } from './foundations/obstacles.js';
 import type { Point } from './foundations/geometry.js';
 import type { Style } from './foundations/sld-attributes.js';
 
@@ -632,6 +633,94 @@ describe('SldSubstationViewer connection routing', () => {
     expect(paths).to.deep.equal([[[3.5, 3.84], [3.5, 4], [3.5, 4.5]]]);
   });
 
+  it('keeps a route from a winding clear of the whole winding', async () => {
+    const doc = contractSubstationDoc();
+    const transformer = new DOMParser().parseFromString(
+      `<PowerTransformer xmlns="http://www.iec.ch/61850/2003/SCL" xmlns:sld="${SLD_NS}" name="T1">` +
+        `<Private type="OpenSCD-SLD-Layout"><sld:SLDAttributes sld:x="8" sld:y="8"/></Private>` +
+        `<TransformerWinding name="W1"/></PowerTransformer>`,
+      'application/xml',
+    ).documentElement;
+    doc.querySelector('Bay')!.appendChild(doc.importNode(transformer, true));
+    const el = await mountViewer(doc);
+    // Leaves the neutral point on the left of the winding, heading left.
+    el.interaction = interactions.connectingFrom(
+      doc.querySelector('TransformerWinding')!,
+      'N1',
+      [
+        [7.8, 8.5],
+        [7.5, 8.5],
+      ],
+    );
+    [el.mouseX2, el.mouseY2] = [11, 8.5];
+    await el.updateComplete;
+
+    const lines = previewLines(el).map(line =>
+      ['x1', 'y1', 'x2', 'y2'].map(a => Number(line.getAttribute(a))),
+    );
+    expect(lines.length).to.be.greaterThan(1);
+    lines.slice(1).forEach(([x1, y1, x2, y2]) => {
+      for (let t = 0; t <= 1; t += 0.05) {
+        const [x, y] = [x1 + (x2 - x1) * t, y1 + (y2 - y1) * t];
+        expect(x > 7.6 && x < 9.4 && y > 7.6 && y < 9.4, `${x},${y}`).to.be.false;
+      }
+    });
+  });
+
+  describe('from a winding terminal', () => {
+    async function fromNeutral(cursor: Point) {
+      const doc = contractSubstationDoc();
+      const transformer = new DOMParser().parseFromString(
+        `<PowerTransformer xmlns="http://www.iec.ch/61850/2003/SCL" xmlns:sld="${SLD_NS}" name="T1">` +
+          `<Private type="OpenSCD-SLD-Layout"><sld:SLDAttributes sld:x="8" sld:y="8"/></Private>` +
+          `<TransformerWinding name="W1"/></PowerTransformer>`,
+        'application/xml',
+      ).documentElement;
+      doc.querySelector('Bay')!.appendChild(doc.importNode(transformer, true));
+      const el = await mountViewer(doc);
+      // Leaves the neutral point on the left of the winding, heading left.
+      el.interaction = interactions.connectingFrom(
+        doc.querySelector('TransformerWinding')!,
+        'N1',
+        [
+          [7.8, 8.5],
+          [7.5, 8.5],
+        ],
+      );
+      [el.mouseX2, el.mouseY2] = cursor;
+      await el.updateComplete;
+      return el;
+    }
+
+    function clickAnchor(el: SldSubstationViewer): Point[] {
+      const paths: Point[][] = [];
+      el.addEventListener('oscd-sld-extend-connect-point', (e) => {
+        paths.push((e as CustomEvent<{ path: Point[] }>).detail.path);
+      });
+      el.sld
+        .querySelector('rect[fill="url(#grid)"]')!
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      return paths[0];
+    }
+
+    it('can put the first anchor on the first point outside the circle', async () => {
+      const el = await fromNeutral([7.5, 8.5]);
+
+      expect(clickAnchor(el)).to.deep.equal([[7.8, 8.5], [7.5, 8.5], [7, 8.5]]);
+    });
+
+    it('can turn right there', async () => {
+      const el = await fromNeutral([7.5, 7]);
+
+      expect(clickAnchor(el)).to.deep.equal([
+        [7.8, 8.5],
+        [7.5, 8.5],
+        [7.5, 7],
+        [7.5, 6.5],
+      ]);
+    });
+  });
+
   it('previews an orthogonal route that avoids other equipment', async () => {
     const el = await connectingViewer([6.5, 3.5]);
     const lines = previewLines(el);
@@ -962,4 +1051,67 @@ describe('SldSubstationViewer live reroute preview', () => {
       expect(line.getAttribute('pointer-events')).to.equal('none'),
     );
   });
+});
+
+describe('SldSubstationViewer connecting from transformer terminals', () => {
+  const inside = ([px, py]: Point, rects: number[][]) =>
+    rects.some(
+      ([x, y, w, h]) => px >= x && px <= x + w && py >= y && py <= y + h,
+    );
+
+  [1, 2, 3].forEach(windings =>
+    [0, 1, 2, 3].forEach(rot =>
+      it(`routes from every terminal of ${windings} winding(s) turned ${rot}`, async () => {
+        const doc = contractSubstationDoc();
+        const transformer = new DOMParser().parseFromString(
+          `<PowerTransformer xmlns="http://www.iec.ch/61850/2003/SCL" xmlns:sld="${SLD_NS}" name="T1">` +
+            `<Private type="OpenSCD-SLD-Layout"><sld:SLDAttributes sld:x="20" sld:y="8" sld:rot="${rot}"/></Private>` +
+            Array.from(
+              { length: windings },
+              (_, i) => `<TransformerWinding name="W${i + 1}"/>`,
+            ).join('') +
+            `</PowerTransformer>`,
+          'application/xml',
+        ).documentElement;
+        doc.querySelector('Bay')!.appendChild(doc.importNode(transformer, true));
+        const el = await mountViewer(doc);
+        el.interaction = interactions.idle();
+        await el.updateComplete;
+
+        const starts: { from: Element; fromTerminal: 'T1'; path: Point[] }[] = [];
+        el.addEventListener('oscd-sld-start-interaction', (e) => {
+          starts.push((e as CustomEvent).detail);
+        });
+        el.sld
+          .querySelectorAll('circle.port')
+          .forEach(port => port.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+        expect(starts.length, 'terminals to start from').to.be.greaterThan(0);
+
+        const rects = obstacleRects(doc.querySelector('PowerTransformer')!);
+        for (const { from, fromTerminal, path } of starts) {
+          const label = `${from.getAttribute('name')} ${fromTerminal}`;
+          for (const cursor of [[30, 16], [12, 16], [30, 4], [12, 4]]) {
+            el.interaction = interactions.connectingFrom(from, fromTerminal, path);
+            [el.mouseX2, el.mouseY2] = cursor;
+            await el.updateComplete;
+
+            const lines = Array.from(
+              el.sld.querySelectorAll('line[stroke-linecap="square"]'),
+            )
+              .filter(line => (line.parentElement as Element) === el.sld)
+              .map(line =>
+                ['x1', 'y1', 'x2', 'y2'].map(a => Number(line.getAttribute(a))),
+              );
+            expect(lines.length, `${label} to ${cursor}`).to.be.greaterThan(1);
+            lines.slice(1).forEach(([x1, y1, x2, y2]) => {
+              for (let t = 0; t <= 1; t += 0.05) {
+                const p: Point = [x1 + (x2 - x1) * t, y1 + (y2 - y1) * t];
+                expect(inside(p, rects), `${label} to ${cursor} at ${p}`).to.be.false;
+              }
+            });
+          }
+        }
+      }),
+    ),
+  );
 });

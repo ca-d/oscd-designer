@@ -13,6 +13,7 @@
 
 import { connectionPointsAt } from './connectivity.js';
 import { iedReferences } from './ied.js';
+import { leaveRects, obstacleRects, windingPort } from './obstacles.js';
 import { transformerWindingMeasures } from './transformer.js';
 import { cleanPath } from './geometry.js';
 import { ConnectionRouter } from './routing.js';
@@ -26,7 +27,7 @@ import {
 import { sldNs } from '../foundations.js';
 
 import type { EditV2 } from '@openscd/oscd-api';
-import type { Point, Rect } from './geometry.js';
+import type { Point } from './geometry.js';
 
 /** What the user is changing: moving an element (and all it contains), turning equipment a quarter or mirroring a transformer. */
 export type LayoutChange =
@@ -56,10 +57,16 @@ const heading = (from: Point, to: Point): Point => [
   Math.sign(to[1] - from[1]),
 ];
 
-const halfGrid = ([x, y]: Point): Point => [
-  Math.round(x / STEP) * STEP,
-  Math.round(y / STEP) * STEP,
-];
+/** The point on the half-grid just beyond `point` in the direction `outward`. */
+const snapOutward = (point: Point, outward: Point): Point => {
+  const axis = outward[0] !== 0 ? 0 : 1;
+  const snapped: Point = [...point];
+  const scaled = point[axis] / STEP;
+  snapped[axis] =
+    (outward[axis] > 0 ? Math.ceil(scaled - EPSILON) : Math.floor(scaled + EPSILON)) *
+    STEP;
+  return snapped;
+};
 
 /** A quarter turn clockwise (the way `rot` increases), in a y-down plane. */
 const quarterTurn = ([x, y]: Point): Point => [-y, x];
@@ -96,11 +103,14 @@ function layoutOf(change: LayoutChange) {
 
 type Layout = ReturnType<typeof layoutOf>;
 
-/** Where a transformer terminal would be once its transformer is mirrored. */
-export function flippedTerminalPort(terminal: Element): Port | undefined {
-  const transformer = terminal.closest('PowerTransformer');
+/** Where a transformer terminal is once `layout` is applied, as drawn. */
+function measuredPort(
+  terminal: Element,
+  transformer: Element,
+  layout: Layout,
+): Port | undefined {
   const winding = terminal.closest('TransformerWinding');
-  if (!transformer || !winding) {
+  if (!winding) {
     return undefined;
   }
 
@@ -112,22 +122,24 @@ export function flippedTerminalPort(terminal: Element): Port | undefined {
   const attrs = attributes(transformer);
   const { center, terminals } = transformerWindingMeasures(
     windingsOf(copy)[windingsOf(transformer).indexOf(winding)],
-    attrs.pos,
-    { ...attrs, flip: !attrs.flip },
+    layout.position(transformer),
+    {
+      rot: layout.rotation(transformer),
+      kind: attrs.kind,
+      flip: layout.flips(transformer) ? !attrs.flip : attrs.flip,
+    },
     '',
   );
   const point = terminals[terminal.getAttribute('name') as 'T1'];
-  if (!point) {
-    return undefined;
-  }
-  const [dx, dy] = [point[0] - center[0], point[1] - center[1]];
-  const outward: Point =
-    Math.abs(dx) > Math.abs(dy) ? [Math.sign(dx), 0] : [0, Math.sign(dy)];
-  const axis = outward[0] !== 0 ? 0 : 1;
-  const approach: Point = [...point];
-  const scaled = point[axis] / STEP;
-  approach[axis] = (outward[axis] > 0 ? Math.ceil(scaled) : Math.floor(scaled)) * STEP;
-  return { point, approach, outward };
+  return point ? windingPort(center, point) : undefined;
+}
+
+/** Where a transformer terminal would be once its transformer is mirrored. */
+export function flippedTerminalPort(terminal: Element): Port | undefined {
+  const transformer = terminal.closest('PowerTransformer');
+  return transformer
+    ? measuredPort(terminal, transformer, layoutOf({ kind: 'flip', element: transformer }))
+    : undefined;
 }
 
 function terminalPort(
@@ -154,11 +166,12 @@ function terminalPort(
   if (!transformer) {
     return undefined;
   }
-  if (layout.flips(transformer)) {
-    return flippedTerminalPort(terminal);
+  const measured = measuredPort(terminal, transformer, layout);
+  if (measured) {
+    return measured;
   }
 
-  // The whole transformer drawing moves and turns rigidly about its centre.
+  // Otherwise the whole transformer drawing moves and turns rigidly about its centre.
   const { pos } = attributes(transformer);
   const centre: Point = [pos[0] + 0.5, pos[1] + 0.5];
   const turned = layout.turns(transformer);
@@ -174,7 +187,7 @@ function terminalPort(
   if (outward[0] === 0 && outward[1] === 0) {
     return undefined;
   }
-  return { point, approach: halfGrid(point), outward };
+  return { point, approach: snapOutward(point, outward), outward };
 }
 
 function describeEnd(
@@ -225,18 +238,20 @@ function connect(
   from: End,
   to: End,
   tight: boolean,
+  clear: (end: End, point: Point, outward: Point) => Point,
 ): Point[] | undefined {
   const { port: start } = from;
   const { port: end } = to;
   if (!start || !end) {
     return undefined;
   }
+  const origin = clear(from, start.approach, start.outward);
 
   // A terminal reaches a junction on a wire like any other connection to it,
   // from whichever side is free.
   const viaVertex =
     from.terminal && !to.terminal
-      ? router.routeToVertex(start.point, start.outward, cNode, end.point)
+      ? router.routeToVertex(origin, start.outward, cNode, end.point)
       : undefined;
   if (viaVertex) {
     const points = [start.point, ...viaVertex];
@@ -245,9 +260,11 @@ function connect(
   }
 
   const route = router.route(
-    start.point,
+    origin,
     start.outward,
-    tight && to.terminal ? end.approach : stubOf(end),
+    tight && to.terminal
+      ? end.approach
+      : clear(to, stubOf(end), end.outward),
   );
   if (!route) {
     return undefined;
@@ -356,13 +373,13 @@ export function overlappedSections(
       substation.querySelectorAll('ConductingEquipment, PowerTransformer'),
     ),
     ...iedReferences(substation),
-  ].map((element) => {
-    const [x, y] = layout.position(element);
-    const {
-      dim: [w, h],
-    } = attributes(element);
-    return { element, moved: moves(element), rect: [x, y, w, h] as Rect };
-  });
+  ].flatMap(element =>
+    obstacleRects(element, layout.position(element)).map(rect => ({
+      element,
+      moved: moves(element),
+      rect,
+    })),
+  );
   const owners = new Map<string, Element | null>();
   Array.from(substation.querySelectorAll('Terminal, NeutralPoint')).forEach(
     (terminal) => {
@@ -474,25 +491,29 @@ export function planReroutes(
   }
 
   const unchanged = wires.filter(wire => !affected.includes(wire));
-  const ownTransformers = new Set(
-    affected.flatMap(wire =>
-      (wire.ends ?? []).map(end => end.terminal?.closest('PowerTransformer')),
-    ),
-  );
   const obstacles = [
     ...Array.from(
       substation.querySelectorAll('ConductingEquipment, PowerTransformer'),
     ),
     ...iedReferences(substation),
-  ]
-    .filter(element => !ownTransformers.has(element))
-    .map((element): Rect => {
-      const [x, y] = layout.position(element);
-      const {
-        dim: [w, h],
-      } = attributes(element);
-      return [x, y, w, h];
-    });
+  ].flatMap(element =>
+    obstacleRects(element, layout.position(element), layout.rotation(element)),
+  );
+  /** Moves a port's point out of the areas of the transformer it belongs to. */
+  const clearOfOwn = (end: End, point: Point, outward: Point): Point => {
+    const transformer = end.terminal?.closest('PowerTransformer');
+    return transformer
+      ? leaveRects(
+        point,
+        outward,
+        obstacleRects(
+          transformer,
+          layout.position(transformer),
+          layout.rotation(transformer),
+        ),
+      )
+      : point;
+  };
   const {
     dim: [width, height],
   } = attributes(substation);
@@ -566,6 +587,7 @@ export function planReroutes(
               from,
               to,
               tight as boolean,
+              clearOfOwn,
             );
             if (found) {
               points = attempt === 0 ? found : found.reverse();

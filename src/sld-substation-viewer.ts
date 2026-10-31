@@ -41,10 +41,12 @@ import type {
 import type { PowerTransformerContext } from './drawing/artifacts/power-transformer.js';
 import type { EquipmentContext } from './drawing/artifacts/conducting-equipment.js';
 import type { BusBarContext } from './drawing/artifacts/bus-bar.js';
+import { leaveRects, obstacleRects } from './foundations/obstacles.js';
 import { overlappedSections, planReroutes } from './foundations/rerouting.js';
 import type { PlannedRoute } from './foundations/rerouting.js';
 import {
   ConnectionRouter,
+  connectAnchor,
   connectHeading,
   backtrackPath,
   extendRoute,
@@ -79,7 +81,7 @@ import {
 import { serializeForExport } from './foundations/export.js';
 import { sldNs, sldPrefix, svgNs, xlinkNs } from './foundations.js';
 
-import type { Point, Rect } from './foundations/geometry.js';
+import type { Point } from './foundations/geometry.js';
 import type { InteractionState } from './foundations/interaction-mode.js';
 import { connectDetail, isMode } from './foundations/interaction-mode.js';
 import type {
@@ -1072,13 +1074,7 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
       ...iedReferences(this.substation),
     ]
       .filter(element => !attached.has(element))
-      .map((element): Rect => {
-        const {
-          pos: [x, y],
-          dim: [w, h],
-        } = attributes(element);
-        return [x, y, w, h];
-      });
+      .flatMap(element => obstacleRects(element));
     const legs = points
       .slice(1)
       .map((end, i): [Point, Point] => [points[i], end]);
@@ -1151,12 +1147,8 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
     routers: Partial<Record<RouterMode, ConnectionRouter>>;
   };
 
-  private connectionRouter(
-    from: Element,
-    mode: RouterMode = 'strict',
-  ): ConnectionRouter {
-    const ownTransformer = from.closest('PowerTransformer');
-    const key = [this.substation, this.docVersion, ownTransformer];
+  private connectionRouter(mode: RouterMode = 'strict'): ConnectionRouter {
+    const key = [this.substation, this.docVersion];
     if (!this.routerCache || key.some((k, i) => k !== this.routerCache!.key[i])) {
       const obstacles = [
         ...Array.from(
@@ -1165,15 +1157,7 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
           ),
         ),
         ...iedReferences(this.substation),
-      ]
-        .filter(element => element !== ownTransformer)
-        .map((element): Rect => {
-          const {
-            pos: [x, y],
-            dim: [w, h],
-          } = attributes(element);
-          return [x, y, w, h];
-        });
+      ].flatMap(element => obstacleRects(element));
       const wires = Array.from(
         this.substation.querySelectorAll('ConnectivityNode'),
       ).flatMap(cNode =>
@@ -1194,6 +1178,19 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
     return routers[mode]!;
   }
 
+  /** Where a route begins; a connection just started from a winding first leaves the areas of its transformer. */
+  private routeStart(path: Point[]): Point {
+    const transformer =
+      path.length === 2 && this.connecting?.from.closest('PowerTransformer');
+    return transformer
+      ? leaveRects(
+        connectAnchor(path),
+        connectHeading(path),
+        obstacleRects(transformer),
+      )
+      : connectAnchor(path);
+  }
+
   /**
    * Routes the connection being drawn from its last anchor to `target`. Where
    * there is no room to leave the equipment straight, it may turn on the
@@ -1207,15 +1204,14 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
     if (!this.connecting) {
       return undefined;
     }
-    const { from } = this.connecting;
     const [anchor, direction, own] = [
-      path[path.length - 2],
+      this.routeStart(path),
       connectHeading(path),
       path.slice(0, -1),
     ];
     return (
-      this.connectionRouter(from).route(anchor, direction, target, own) ??
-      this.connectionRouter(from, 'tight').route(
+      this.connectionRouter().route(anchor, direction, target, own) ??
+      this.connectionRouter('tight').route(
         anchor,
         direction,
         tightTarget,
@@ -1235,10 +1231,9 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
     if (!this.connecting) {
       return undefined;
     }
-    const { from } = this.connecting;
     const route = (mode: RouterMode) =>
-      this.connectionRouter(from, mode).routeToNet(
-        path[path.length - 2],
+      this.connectionRouter(mode).routeToNet(
+        this.routeStart(path),
         connectHeading(path),
         cNode,
         path.slice(0, -1),
