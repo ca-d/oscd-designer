@@ -164,14 +164,20 @@ export declare class SldSubstationViewer extends SldSubstationViewer_base {
     private plannedReroutes;
     /** The sections drawn as previews; kept the same set while they are the same sections. */
     private hiddenSections;
+    /** The wire whose connection a new connection from its terminal replaces. */
+    private replacedSections;
     private hideSections;
     private renderReroutePreviewLayer;
+    /** Catches the click that places the point a wire being re-routed goes through. */
+    private renderRerouteTarget;
     /** The middle of where a wire first runs through equipment, or else of its longest leg. */
     private warningAnchor;
     /** Marks wires that were routed through other elements; hovering traces the wire, a click dismisses the mark. */
     private renderRoutingWarnings;
     private routerCache?;
     private connectionRouter;
+    /** Where a route begins; a connection just started from a winding first leaves the areas of its transformer. */
+    private routeStart;
     /**
      * Routes the connection being drawn from its last anchor to `target`. Where
      * there is no room to leave the equipment straight, it may turn on the

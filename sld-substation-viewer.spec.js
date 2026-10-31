@@ -2,6 +2,7 @@ import { fixture, html, expect } from '@open-wc/testing';
 import { identity } from '@openscd/scl-lib';
 import { SldSubstationViewer } from './sld-substation-viewer.js';
 import * as interactions from './foundations/interaction-mode.js';
+import { obstacleRects } from './foundations/obstacles.js';
 customElements.define('perf-sld-substation-viewer', SldSubstationViewer);
 const SLD_NS = 'https://openscd.org/SCL/SSD/SLD/v0';
 /**
@@ -476,6 +477,139 @@ describe('SldSubstationViewer connection routing', () => {
     function previewLines(el) {
         return Array.from(el.sld.querySelectorAll('line[stroke-linecap="square"]')).filter(line => line.parentElement === el.sld);
     }
+    it('drops the last anchor from the preview when the cursor goes back over it', async () => {
+        const doc = contractSubstationDoc();
+        const el = await mountViewer(doc);
+        el.interaction = interactions.connectingFrom(doc.querySelector('ConductingEquipment'), 'T2', [
+            [3.5, 3.84],
+            [3.5, 5],
+            [6.5, 5],
+            [7, 5],
+        ]);
+        [el.mouseX2, el.mouseY2] = [5, 7];
+        await el.updateComplete;
+        const ends = previewLines(el).flatMap(line => ['x2', 'y2'].map(a => line.getAttribute(a)));
+        expect(previewLines(el).length).to.be.greaterThan(1);
+        expect(ends.join(' ')).to.not.contain('6.5 5');
+        const paths = [];
+        el.addEventListener('oscd-sld-extend-connect-point', (e) => {
+            paths.push(e.detail.path);
+        });
+        el.sld
+            .querySelector('rect[fill="url(#grid)"]')
+            .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        expect(paths).to.have.lengthOf(1);
+        expect(paths[0].some(([x, y]) => x === 6.5 && y === 5)).to.be.false;
+        expect(paths[0][0]).to.deep.equal([3.5, 3.84]);
+        expect(paths[0][paths[0].length - 2]).to.deep.equal([5, 7]);
+    });
+    it('cuts the route back to where the first leg is clicked', async () => {
+        const doc = contractSubstationDoc();
+        const el = await mountViewer(doc);
+        el.interaction = interactions.connectingFrom(doc.querySelector('ConductingEquipment'), 'T2', [
+            [3.5, 3.84],
+            [3.5, 5],
+            [6.5, 5],
+            [7, 5],
+        ]);
+        [el.mouseX2, el.mouseY2] = [3.5, 4.5];
+        await el.updateComplete;
+        const ends = previewLines(el).map(line => ['x1', 'y1', 'x2', 'y2'].map(a => Number(line.getAttribute(a))));
+        expect(ends).to.deep.equal([[3.5, 3.84, 3.5, 4.5]]);
+        const paths = [];
+        el.addEventListener('oscd-sld-extend-connect-point', (e) => {
+            paths.push(e.detail.path);
+        });
+        el.sld
+            .querySelector('rect[fill="url(#grid)"]')
+            .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        expect(paths).to.deep.equal([[[3.5, 3.84], [3.5, 4.5], [3.5, 5]]]);
+    });
+    it('cuts the route back to a clicked point even where no route could end', async () => {
+        const doc = contractSubstationDoc();
+        const el = await mountViewer(doc);
+        el.interaction = interactions.connectingFrom(doc.querySelector('ConductingEquipment'), 'T2', [
+            [3.5, 3.84],
+            [3.5, 5],
+            [6.5, 5],
+            [7, 5],
+        ]);
+        // On the edge of the equipment the connection leaves from.
+        [el.mouseX2, el.mouseY2] = [3.5, 4];
+        await el.updateComplete;
+        const paths = [];
+        el.addEventListener('oscd-sld-extend-connect-point', (e) => {
+            paths.push(e.detail.path);
+        });
+        el.sld
+            .querySelector('rect[fill="url(#grid)"]')
+            .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        expect(paths).to.deep.equal([[[3.5, 3.84], [3.5, 4], [3.5, 4.5]]]);
+    });
+    it('keeps a route from a winding clear of the whole winding', async () => {
+        const doc = contractSubstationDoc();
+        const transformer = new DOMParser().parseFromString(`<PowerTransformer xmlns="http://www.iec.ch/61850/2003/SCL" xmlns:sld="${SLD_NS}" name="T1">` +
+            `<Private type="OpenSCD-SLD-Layout"><sld:SLDAttributes sld:x="8" sld:y="8"/></Private>` +
+            `<TransformerWinding name="W1"/></PowerTransformer>`, 'application/xml').documentElement;
+        doc.querySelector('Bay').appendChild(doc.importNode(transformer, true));
+        const el = await mountViewer(doc);
+        // Leaves the neutral point on the left of the winding, heading left.
+        el.interaction = interactions.connectingFrom(doc.querySelector('TransformerWinding'), 'N1', [
+            [7.8, 8.5],
+            [7.5, 8.5],
+        ]);
+        [el.mouseX2, el.mouseY2] = [11, 8.5];
+        await el.updateComplete;
+        const lines = previewLines(el).map(line => ['x1', 'y1', 'x2', 'y2'].map(a => Number(line.getAttribute(a))));
+        expect(lines.length).to.be.greaterThan(1);
+        lines.slice(1).forEach(([x1, y1, x2, y2]) => {
+            for (let t = 0; t <= 1; t += 0.05) {
+                const [x, y] = [x1 + (x2 - x1) * t, y1 + (y2 - y1) * t];
+                expect(x > 7.6 && x < 9.4 && y > 7.6 && y < 9.4, `${x},${y}`).to.be.false;
+            }
+        });
+    });
+    describe('from a winding terminal', () => {
+        async function fromNeutral(cursor) {
+            const doc = contractSubstationDoc();
+            const transformer = new DOMParser().parseFromString(`<PowerTransformer xmlns="http://www.iec.ch/61850/2003/SCL" xmlns:sld="${SLD_NS}" name="T1">` +
+                `<Private type="OpenSCD-SLD-Layout"><sld:SLDAttributes sld:x="8" sld:y="8"/></Private>` +
+                `<TransformerWinding name="W1"/></PowerTransformer>`, 'application/xml').documentElement;
+            doc.querySelector('Bay').appendChild(doc.importNode(transformer, true));
+            const el = await mountViewer(doc);
+            // Leaves the neutral point on the left of the winding, heading left.
+            el.interaction = interactions.connectingFrom(doc.querySelector('TransformerWinding'), 'N1', [
+                [7.8, 8.5],
+                [7.5, 8.5],
+            ]);
+            [el.mouseX2, el.mouseY2] = cursor;
+            await el.updateComplete;
+            return el;
+        }
+        function clickAnchor(el) {
+            const paths = [];
+            el.addEventListener('oscd-sld-extend-connect-point', (e) => {
+                paths.push(e.detail.path);
+            });
+            el.sld
+                .querySelector('rect[fill="url(#grid)"]')
+                .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+            return paths[0];
+        }
+        it('can put the first anchor on the first point outside the circle', async () => {
+            const el = await fromNeutral([7.5, 8.5]);
+            expect(clickAnchor(el)).to.deep.equal([[7.8, 8.5], [7.5, 8.5], [7, 8.5]]);
+        });
+        it('can turn right there', async () => {
+            const el = await fromNeutral([7.5, 7]);
+            expect(clickAnchor(el)).to.deep.equal([
+                [7.8, 8.5],
+                [7.5, 8.5],
+                [7.5, 7],
+                [7.5, 6.5],
+            ]);
+        });
+    });
     it('previews an orthogonal route that avoids other equipment', async () => {
         const el = await connectingViewer([6.5, 3.5]);
         const lines = previewLines(el);
@@ -722,6 +856,23 @@ describe('SldSubstationViewer live reroute preview', () => {
         expect(events).to.have.lengthOf(1);
         expect(events[0].detail).to.equal(section);
     });
+    it('previews a wire being re-routed through the cursor, and places it on click', async () => {
+        const { el, section } = await wiredViewer();
+        el.interaction = interactions.reroutingSection(section);
+        [el.mouseX2, el.mouseY2] = [8.5, 6.5];
+        await el.updateComplete;
+        const wires = Array.from(el.sld.querySelectorAll('polyline'));
+        expect(wires).to.have.lengthOf(1);
+        expect(wires[0].getAttribute('points')).to.contain('8.5,6.5');
+        expect(wires[0].hasAttribute('stroke-dasharray')).to.be.false;
+        expect(el.hiddenSections.has(section)).to.be.true;
+        const details = [];
+        el.addEventListener('oscd-sld-reroute-section', e => details.push(e.detail));
+        el.sld
+            .querySelector('rect[pointer-events="all"]')
+            .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        expect(details).to.deep.equal([{ section, via: [8.5, 6.5] }]);
+    });
     it('shows no warning marks while something is being placed', async () => {
         const { el, second, section } = await wiredViewer();
         el.routingWarnings = [section];
@@ -729,13 +880,63 @@ describe('SldSubstationViewer live reroute preview', () => {
         await el.updateComplete;
         expect(el.sld.querySelector('.routing-warning')).to.not.exist;
     });
-    it('lets clicks through plain wires to the equipment under them', async () => {
-        const { el } = await wiredViewer();
+    it('starts re-routing a plain wire when it is clicked while idle', async () => {
+        const { el, section } = await wiredViewer();
         el.interaction = interactions.idle();
         await el.updateComplete;
-        const lines = Array.from(el.sld.querySelectorAll('.node line'));
-        expect(lines.length).to.be.greaterThan(0);
-        lines.forEach(line => expect(line.getAttribute('pointer-events')).to.equal('none'));
+        const intents = [];
+        el.addEventListener('oscd-sld-start-interaction', e => intents.push(e.detail));
+        el.sld
+            .querySelector('.node line[pointer-events="all"]:not([stroke])')
+            .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        expect(intents).to.deep.equal([{ mode: 'reroutingSection', element: section }]);
     });
+    it('lets clicks through plain wires while something else is going on', async () => {
+        const { el } = await wiredViewer();
+        el.interaction = interactions.placing(el.substation.querySelector('ConductingEquipment'), [0, 0]);
+        await el.updateComplete;
+        Array.from(el.sld.querySelectorAll('.node line')).forEach(line => expect(line.getAttribute('pointer-events')).to.equal('none'));
+    });
+});
+describe('SldSubstationViewer connecting from transformer terminals', () => {
+    const inside = ([px, py], rects) => rects.some(([x, y, w, h]) => px >= x && px <= x + w && py >= y && py <= y + h);
+    [1, 2, 3].forEach(windings => [0, 1, 2, 3].forEach(rot => it(`routes from every terminal of ${windings} winding(s) turned ${rot}`, async () => {
+        const doc = contractSubstationDoc();
+        const transformer = new DOMParser().parseFromString(`<PowerTransformer xmlns="http://www.iec.ch/61850/2003/SCL" xmlns:sld="${SLD_NS}" name="T1">` +
+            `<Private type="OpenSCD-SLD-Layout"><sld:SLDAttributes sld:x="20" sld:y="8" sld:rot="${rot}"/></Private>` +
+            Array.from({ length: windings }, (_, i) => `<TransformerWinding name="W${i + 1}"/>`).join('') +
+            `</PowerTransformer>`, 'application/xml').documentElement;
+        doc.querySelector('Bay').appendChild(doc.importNode(transformer, true));
+        const el = await mountViewer(doc);
+        el.interaction = interactions.idle();
+        await el.updateComplete;
+        const starts = [];
+        el.addEventListener('oscd-sld-start-interaction', (e) => {
+            starts.push(e.detail);
+        });
+        el.sld
+            .querySelectorAll('circle.port')
+            .forEach(port => port.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+        expect(starts.length, 'terminals to start from').to.be.greaterThan(0);
+        const rects = obstacleRects(doc.querySelector('PowerTransformer'));
+        for (const { from, fromTerminal, path } of starts) {
+            const label = `${from.getAttribute('name')} ${fromTerminal}`;
+            for (const cursor of [[30, 16], [12, 16], [30, 4], [12, 4]]) {
+                el.interaction = interactions.connectingFrom(from, fromTerminal, path);
+                [el.mouseX2, el.mouseY2] = cursor;
+                await el.updateComplete;
+                const lines = Array.from(el.sld.querySelectorAll('line[stroke-linecap="square"]'))
+                    .filter(line => line.parentElement === el.sld)
+                    .map(line => ['x1', 'y1', 'x2', 'y2'].map(a => Number(line.getAttribute(a))));
+                expect(lines.length, `${label} to ${cursor}`).to.be.greaterThan(1);
+                lines.slice(1).forEach(([x1, y1, x2, y2]) => {
+                    for (let t = 0; t <= 1; t += 0.05) {
+                        const p = [x1 + (x2 - x1) * t, y1 + (y2 - y1) * t];
+                        expect(inside(p, rects), `${label} to ${cursor} at ${p}`).to.be.false;
+                    }
+                });
+            }
+        }
+    })));
 });
 //# sourceMappingURL=sld-substation-viewer.spec.js.map

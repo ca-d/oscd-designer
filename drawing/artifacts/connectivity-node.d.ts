@@ -8,7 +8,7 @@ export type ConnectivityNodeContext = SldSharedContext & {
     mouseY2: number;
     /** Sections drawn elsewhere, e.g. as a live reroute preview. */
     hiddenSections?: Set<Element>;
-    /** Auto-routes the connection being drawn to where it can meet `cNode`. */
+    /** The connection being drawn, auto-routed to where it can meet `cNode`. */
     routeToConnectivityNode?: (path: Point[], cNode: Element) => Point[] | undefined;
 };
 export declare function renderConnectivityNode(cNode: Element, context: ConnectivityNodeContext): SVGTemplateResult | typeof nothing;

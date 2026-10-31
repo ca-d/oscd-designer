@@ -12,7 +12,7 @@
  */
 import type { EditV2 } from '@openscd/oscd-api';
 import type { Point } from './geometry.js';
-/** What the user is changing: moving an element (and all it contains), turning equipment a quarter or mirroring a transformer. */
+/** What the user is changing: moving an element (and all it contains), turning equipment a quarter, mirroring a transformer or routing a wire through a point. */
 export type LayoutChange = {
     kind: 'move';
     element: Element;
@@ -24,6 +24,10 @@ export type LayoutChange = {
 } | {
     kind: 'flip';
     element: Element;
+} | {
+    kind: 'section';
+    element: Element;
+    via: Point;
 };
 /** Where a section meets its end: the point, the first point of a route there and the direction leaving it. */
 export type Port = {
@@ -37,9 +41,13 @@ export type End = {
     terminal?: Element;
     /** The terminal's vertex is not where its terminal now is. */
     detached: boolean;
+    /** Neither at a terminal nor joined to another wire. */
+    free: boolean;
 };
 /** Where a transformer terminal would be once its transformer is mirrored. */
 export declare function flippedTerminalPort(terminal: Element): Port | undefined;
+/** How the ends of `section` are held; a free end is held by nothing. */
+export declare function sectionEnds(section: Element): [End, End] | undefined;
 /** A section's new geometry. A `fallback` runs through other elements. */
 export type PlannedRoute = {
     section: Element;

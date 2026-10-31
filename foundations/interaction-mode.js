@@ -37,7 +37,18 @@ export const resizingTL = (element) => ({
     mode: 'resizingTL',
     element,
 });
-export const connectingFrom = (element, terminal, path = []) => ({ mode: 'connectingFrom', element, terminal, path });
+export const connectingFrom = (element, terminal, path = [], replacing) => ({
+    mode: 'connectingFrom',
+    element,
+    terminal,
+    path,
+    ...(replacing ? { replacing } : {}),
+});
+/** Moving the wire `section` by placing a new point on its way. */
+export const reroutingSection = (element) => ({
+    mode: 'reroutingSection',
+    element,
+});
 /**
  * Pure selectors that read an {@link InteractionState} without re-fanning it out
  * into independent fields. They keep the union the single source of truth: the

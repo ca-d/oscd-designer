@@ -12,7 +12,8 @@ import { SldContextMenu } from './context-menu/sld-context-menu.js';
 import { SldCoordinateTooltip } from './sld-coordinate-tooltip.js';
 import { attributes, getSLDAttributes } from './foundations/sld-attributes.js';
 import { createConnectEdits, createGroundTerminalEdits, createPlaceLabelEdit, createResizeEdits, createResizeTLEdits, createFlipElementEdits, createRotateEdits, disconnectExternalEdits, leavesSubstation, rewireTerminalEdits, shiftDescendantEdits, shiftElementEdits, shiftTextEdits, wrapIedReferenceEdits, } from './foundations/edits.js';
-import { pointsSignature, rerouteEdits, sectionSignature, } from './foundations/rerouting.js';
+import { removeTerminal } from './foundations/connectivity-edits.js';
+import { pointsSignature, rerouteEdits, sectionEnds, sectionSignature, } from './foundations/rerouting.js';
 import { busBarVertexEdits } from './foundations/bus-bar-edits.js';
 import { iedReferences, isIedReferenceElement, resolveIed, } from './foundations/ied.js';
 import { reparentElement, sldNs, sldPrefix } from './foundations.js';
@@ -188,6 +189,9 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
             case 'connecting':
                 this.interaction = interactions.connectingFrom(intent.from, intent.fromTerminal, intent.path);
                 break;
+            case 'reroutingSection':
+                this.startReroutingSection(intent.element);
+                break;
         }
         return undefined;
     }
@@ -272,8 +276,43 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
             sectionSignature(section) === signature)
             .map(([section]) => section);
     }
+    /**
+     * A wire held at both ends is moved by placing a point on its way. One with
+     * a free end is not allowed to stay that way: it is drawn again from its
+     * terminal, and replaced once it has found something to connect to.
+     */
+    startReroutingSection(section) {
+        const ends = sectionEnds(section);
+        if (!ends) {
+            return;
+        }
+        if (!ends.some(end => end.free)) {
+            this.interaction = interactions.reroutingSection(section);
+            return;
+        }
+        const held = ends.find(end => !end.free);
+        const terminal = held?.terminal;
+        if (held?.port && terminal) {
+            this.interaction = interactions.connectingFrom(terminal.parentElement, terminal.getAttribute('name'), [held.port.point, held.port.approach], terminal);
+        }
+    }
+    handleRerouteSection({ section, via }) {
+        const fallbacks = [];
+        const edits = rerouteEdits(this.doc, { kind: 'section', element: section, via }, this.nsp, fallbacks);
+        if (edits.length) {
+            this.dispatchEvent(newEditEventV2(edits));
+            this.warnAbout(fallbacks);
+        }
+        this.interaction = interactions.idle();
+    }
     handleConnect(detail) {
-        const edits = createConnectEdits(detail, this.doc, this.nsp);
+        const replacing = this.interaction.mode === 'connectingFrom'
+            ? this.interaction.replacing
+            : undefined;
+        const edits = [
+            ...createConnectEdits(detail, this.doc, this.nsp),
+            ...(replacing ? removeTerminal(replacing) : []),
+        ];
         if (edits.length) {
             this.dispatchEvent(newEditEventV2(edits));
         }
@@ -384,6 +423,7 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
             @oscd-sld-extend-connect-point=${({ detail, }) => this.handleExtendConnectPoint(detail.path)}
             @oscd-sld-rotate=${({ detail }) => this.handleRotate(detail)}
             @oscd-sld-flip=${({ detail }) => this.handleFlip(detail)}
+            @oscd-sld-reroute-section=${({ detail }) => this.handleRerouteSection(detail)}
           >
             <sld-substation-header
               slot="header"

@@ -12,6 +12,7 @@
  */
 import { connectionPointsAt } from './connectivity.js';
 import { iedReferences } from './ied.js';
+import { leaveRects, obstacleRects, windingPort } from './obstacles.js';
 import { transformerWindingMeasures } from './transformer.js';
 import { cleanPath } from './geometry.js';
 import { ConnectionRouter } from './routing.js';
@@ -25,10 +26,16 @@ const heading = (from, to) => [
     Math.sign(to[0] - from[0]),
     Math.sign(to[1] - from[1]),
 ];
-const halfGrid = ([x, y]) => [
-    Math.round(x / STEP) * STEP,
-    Math.round(y / STEP) * STEP,
-];
+/** The point on the half-grid just beyond `point` in the direction `outward`. */
+const snapOutward = (point, outward) => {
+    const axis = outward[0] !== 0 ? 0 : 1;
+    const snapped = [...point];
+    const scaled = point[axis] / STEP;
+    snapped[axis] =
+        (outward[axis] > 0 ? Math.ceil(scaled - EPSILON) : Math.floor(scaled + EPSILON)) *
+            STEP;
+    return snapped;
+};
 /** A quarter turn clockwise (the way `rot` increases), in a y-down plane. */
 const quarterTurn = ([x, y]) => [-y, x];
 function layoutOf(change) {
@@ -52,11 +59,10 @@ function layoutOf(change) {
         flips,
     };
 }
-/** Where a transformer terminal would be once its transformer is mirrored. */
-export function flippedTerminalPort(terminal) {
-    const transformer = terminal.closest('PowerTransformer');
+/** Where a transformer terminal is once `layout` is applied, as drawn. */
+function measuredPort(terminal, transformer, layout) {
     const winding = terminal.closest('TransformerWinding');
-    if (!transformer || !winding) {
+    if (!winding) {
         return undefined;
     }
     // Without terminals, all of the winding's terminal positions are measured.
@@ -64,18 +70,20 @@ export function flippedTerminalPort(terminal) {
     const copy = transformer.cloneNode(true);
     copy.querySelectorAll('Terminal, NeutralPoint').forEach(t => t.remove());
     const attrs = attributes(transformer);
-    const { center, terminals } = transformerWindingMeasures(windingsOf(copy)[windingsOf(transformer).indexOf(winding)], attrs.pos, { ...attrs, flip: !attrs.flip }, '');
+    const { center, terminals } = transformerWindingMeasures(windingsOf(copy)[windingsOf(transformer).indexOf(winding)], layout.position(transformer), {
+        rot: layout.rotation(transformer),
+        kind: attrs.kind,
+        flip: layout.flips(transformer) ? !attrs.flip : attrs.flip,
+    }, '');
     const point = terminals[terminal.getAttribute('name')];
-    if (!point) {
-        return undefined;
-    }
-    const [dx, dy] = [point[0] - center[0], point[1] - center[1]];
-    const outward = Math.abs(dx) > Math.abs(dy) ? [Math.sign(dx), 0] : [0, Math.sign(dy)];
-    const axis = outward[0] !== 0 ? 0 : 1;
-    const approach = [...point];
-    const scaled = point[axis] / STEP;
-    approach[axis] = (outward[axis] > 0 ? Math.ceil(scaled) : Math.floor(scaled)) * STEP;
-    return { point, approach, outward };
+    return point ? windingPort(center, point) : undefined;
+}
+/** Where a transformer terminal would be once its transformer is mirrored. */
+export function flippedTerminalPort(terminal) {
+    const transformer = terminal.closest('PowerTransformer');
+    return transformer
+        ? measuredPort(terminal, transformer, layoutOf({ kind: 'flip', element: transformer }))
+        : undefined;
 }
 function terminalPort(terminal, oldVertex, oldLeg, layout) {
     const equipment = terminal.parentElement;
@@ -91,10 +99,11 @@ function terminalPort(terminal, oldVertex, oldLeg, layout) {
     if (!transformer) {
         return undefined;
     }
-    if (layout.flips(transformer)) {
-        return flippedTerminalPort(terminal);
+    const measured = measuredPort(terminal, transformer, layout);
+    if (measured) {
+        return measured;
     }
-    // The whole transformer drawing moves and turns rigidly about its centre.
+    // Otherwise the whole transformer drawing moves and turns rigidly about its centre.
     const { pos } = attributes(transformer);
     const centre = [pos[0] + 0.5, pos[1] + 0.5];
     const turned = layout.turns(transformer);
@@ -109,9 +118,9 @@ function terminalPort(terminal, oldVertex, oldLeg, layout) {
     if (outward[0] === 0 && outward[1] === 0) {
         return undefined;
     }
-    return { point, approach: halfGrid(point), outward };
+    return { point, approach: snapOutward(point, outward), outward };
 }
-function describeEnd(vertices, index, layout, terminals) {
+function describeEnd(vertices, index, layout, terminals, joined) {
     const vertex = vertices[index];
     const inner = vertices[index === 0 ? 1 : vertices.length - 2];
     const oldVertex = attributes(vertex).pos;
@@ -129,6 +138,7 @@ function describeEnd(vertices, index, layout, terminals) {
                 outward: oldLeg,
             },
             detached: false,
+            free: !joined(vertex),
         };
     }
     const port = terminalPort(terminal, oldVertex, oldLeg, layout);
@@ -137,30 +147,69 @@ function describeEnd(vertices, index, layout, terminals) {
         terminal,
         port,
         detached: !port || !sameAs(vertexNow, port.point),
+        free: false,
     };
+}
+/** Every section of a substation with the ends it has under `layout`. */
+function collectWires(substation, layout) {
+    const terminals = new Map();
+    Array.from(substation.querySelectorAll('Terminal, NeutralPoint')).forEach((terminal) => {
+        const uuid = getSLDAttributes(terminal, 'uuid');
+        if (uuid) {
+            terminals.set(uuid, terminal);
+        }
+    });
+    return Array.from(substation.querySelectorAll('ConnectivityNode')).flatMap((cNode) => {
+        const sections = Array.from(cNode.getElementsByTagNameNS(sldNs, 'Section'));
+        const key = (vertex) => attributes(vertex).pos.join(',');
+        const sectionsAt = new Map();
+        sections.forEach(section => Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex')).forEach((vertex) => {
+            const at = sectionsAt.get(key(vertex)) ?? new Set();
+            sectionsAt.set(key(vertex), at.add(section));
+        }));
+        return sections.map((section) => {
+            const vertices = Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex'));
+            const joined = (vertex) => Array.from(sectionsAt.get(key(vertex)) ?? []).some(other => other !== section);
+            const wire = { cNode, section, vertices };
+            if (vertices.length > 1) {
+                wire.ends = [0, vertices.length - 1].map(index => describeEnd(vertices, index, layout, terminals, joined));
+            }
+            return wire;
+        });
+    });
+}
+/** How the ends of `section` are held; a free end is held by nothing. */
+export function sectionEnds(section) {
+    const substation = section.closest('Substation');
+    return substation
+        ? collectWires(substation, layoutOf({ kind: 'section', element: section, via: [0, 0] })).find(wire => wire.section === section)?.ends
+        : undefined;
 }
 /**
  * A route from one end of a section to the other. A `tight` router may turn on
  * an equipment border, so a route then ends on the border instead of in front
  * of it.
  */
-function connect(router, cNode, from, to, tight) {
+function connect(router, cNode, from, to, tight, clear) {
     const { port: start } = from;
     const { port: end } = to;
     if (!start || !end) {
         return undefined;
     }
+    const origin = clear(from, start.approach, start.outward);
     // A terminal reaches a junction on a wire like any other connection to it,
     // from whichever side is free.
     const viaVertex = from.terminal && !to.terminal
-        ? router.routeToVertex(start.point, start.outward, cNode, end.point)
+        ? router.routeToVertex(origin, start.outward, cNode, end.point)
         : undefined;
     if (viaVertex) {
         const points = [start.point, ...viaVertex];
         cleanPath(points);
         return points;
     }
-    const route = router.route(start.point, start.outward, tight && to.terminal ? end.approach : stubOf(end));
+    const route = router.route(origin, start.outward, tight && to.terminal
+        ? end.approach
+        : clear(to, stubOf(end), end.outward));
     if (!route) {
         return undefined;
     }
@@ -173,6 +222,56 @@ const stubOf = ({ approach, outward }) => [
     approach[0] + outward[0] * STEP,
     approach[1] + outward[1] * STEP,
 ];
+/** The direction a route arrives in, or `otherwise` when it is a single point. */
+const arrival = (route, otherwise) => route.length > 1
+    ? heading(route[route.length - 2], route[route.length - 1])
+    : otherwise;
+/** The route from one end of a section to the other that passes through `via`. */
+function connectVia(router, cNode, from, to, via, tight, clear) {
+    const { port: start } = from;
+    const { port: end } = to;
+    if (!start || !end) {
+        return undefined;
+    }
+    const origin = from.terminal
+        ? clear(from, start.approach, start.outward)
+        : start.point;
+    const first = router.route(origin, start.outward, via);
+    if (!first) {
+        return undefined;
+    }
+    const own = [start.point, ...first];
+    const turned = arrival(first, start.outward);
+    const last = to.terminal
+        ? router.route(via, turned, tight ? end.approach : clear(to, stubOf(end), end.outward), own)
+        : router.routeToVertex(via, turned, cNode, end.point, own);
+    if (!last) {
+        return undefined;
+    }
+    const points = [
+        start.point,
+        ...first,
+        ...last,
+        ...(to.terminal ? [end.approach, end.point] : []),
+    ];
+    cleanPath(points);
+    return points;
+}
+/** A route through `via` that goes through whatever is in the way when it has to. */
+function connectThroughVia(soft, start, end, via) {
+    const elbow = (from, outward, to) => [
+        from,
+        outward[0] !== 0 ? [to[0], from[1]] : [from[0], to[1]],
+        to,
+    ];
+    const first = soft.route(start.point, start.outward, via) ??
+        elbow(start.point, start.outward, via);
+    const turned = arrival(first, start.outward);
+    const last = soft.route(via, turned, stubOf(end)) ?? elbow(via, turned, stubOf(end));
+    const points = [...first, ...last, end.approach, end.point];
+    cleanPath(points);
+    return points;
+}
 /** A route that goes through whatever is in the way when it has to. */
 function connectThrough(soft, start, end) {
     const route = soft.route(start.point, start.outward, stubOf(end));
@@ -227,11 +326,11 @@ export function overlappedSections(doc, change, skip) {
     const boxes = [
         ...Array.from(substation.querySelectorAll('ConductingEquipment, PowerTransformer')),
         ...iedReferences(substation),
-    ].map((element) => {
-        const [x, y] = layout.position(element);
-        const { dim: [w, h], } = attributes(element);
-        return { element, moved: moves(element), rect: [x, y, w, h] };
-    });
+    ].flatMap(element => obstacleRects(element, layout.position(element)).map(rect => ({
+        element,
+        moved: moves(element),
+        rect,
+    })));
     const owners = new Map();
     Array.from(substation.querySelectorAll('Terminal, NeutralPoint')).forEach((terminal) => {
         const uuid = getSLDAttributes(terminal, 'uuid');
@@ -274,38 +373,28 @@ export function planReroutes(doc, change) {
         return [];
     }
     const layout = layoutOf(change);
-    const terminals = new Map();
-    Array.from(substation.querySelectorAll('Terminal, NeutralPoint')).forEach((terminal) => {
-        const uuid = getSLDAttributes(terminal, 'uuid');
-        if (uuid) {
-            terminals.set(uuid, terminal);
-        }
-    });
-    const wires = Array.from(substation.querySelectorAll('ConnectivityNode')).flatMap(cNode => Array.from(cNode.getElementsByTagNameNS(sldNs, 'Section')).map((section) => {
-        const vertices = Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex'));
-        const wire = { cNode, section, vertices };
-        if (vertices.length > 1) {
-            wire.ends = [0, vertices.length - 1].map(index => describeEnd(vertices, index, layout, terminals));
-        }
-        return wire;
-    }));
-    const affected = wires.filter(wire => wire.ends?.some(end => end.detached) &&
-        wire.ends.every(end => end.port));
+    const wires = collectWires(substation, layout);
+    const affected = change.kind === 'section'
+        ? wires.filter(wire => wire.section === change.element &&
+            !xmlBoolean(getSLDAttributes(wire.section, 'bus')) &&
+            wire.ends?.every(end => end.port && !end.free))
+        : wires.filter(wire => wire.ends?.some(end => end.detached) &&
+            wire.ends.every(end => end.port));
     if (!affected.length) {
         return [];
     }
     const unchanged = wires.filter(wire => !affected.includes(wire));
-    const ownTransformers = new Set(affected.flatMap(wire => (wire.ends ?? []).map(end => end.terminal?.closest('PowerTransformer'))));
     const obstacles = [
         ...Array.from(substation.querySelectorAll('ConductingEquipment, PowerTransformer')),
         ...iedReferences(substation),
-    ]
-        .filter(element => !ownTransformers.has(element))
-        .map((element) => {
-        const [x, y] = layout.position(element);
-        const { dim: [w, h], } = attributes(element);
-        return [x, y, w, h];
-    });
+    ].flatMap(element => obstacleRects(element, layout.position(element), layout.rotation(element)));
+    /** Moves a port's point out of the areas of the transformer it belongs to. */
+    const clearOfOwn = (end, point, outward) => {
+        const transformer = end.terminal?.closest('PowerTransformer');
+        return transformer
+            ? leaveRects(point, outward, obstacleRects(transformer, layout.position(transformer), layout.rotation(transformer)))
+            : point;
+    };
     const { dim: [width, height], } = attributes(substation);
     const existing = unchanged.map(({ cNode, section, vertices }) => {
         const points = vertices.map((vertex) => {
@@ -325,7 +414,9 @@ export function planReroutes(doc, change) {
     let softRouter;
     const through = (start, end) => {
         softRouter ??= new ConnectionRouter(width, height, obstacles, existing, 'soft');
-        return connectThrough(softRouter, start, end);
+        return change.kind === 'section'
+            ? connectThroughVia(softRouter, start, end, change.via)
+            : connectThrough(softRouter, start, end);
     };
     const reserve = (points) => {
         const releases = [router.reserve(points), tightRouter.reserve(points)];
@@ -349,7 +440,9 @@ export function planReroutes(doc, change) {
                 [first, last],
                 [last, first],
             ].some(([from, to], attempt) => {
-                const found = connect(candidate, cNode, from, to, tight);
+                const found = change.kind === 'section'
+                    ? connectVia(candidate, cNode, from, to, change.via, tight, clearOfOwn)
+                    : connect(candidate, cNode, from, to, tight, clearOfOwn);
                 if (found) {
                     points = attempt === 0 ? found : found.reverse();
                 }

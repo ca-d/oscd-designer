@@ -14,7 +14,7 @@
  */
 import createGraph from 'ngraph.graph';
 import { aStar } from 'ngraph.path';
-import { cleanPath } from './geometry.js';
+import { cleanPath, elbowCorner } from './geometry.js';
 const STEP = 0.5;
 /** Cost of a bend, in half-grid steps. */
 const BEND_COST = 4;
@@ -455,6 +455,14 @@ function pathCost(nodes) {
     }, 0);
 }
 /**
+ * Where a route for the connection being drawn begins: its last anchor, or, for
+ * a connection only just started, the point where it leaves its terminal's
+ * equipment, which lies outside any larger area the terminal sits in.
+ */
+export function connectAnchor(path) {
+    return path.length === 2 ? path[1] : path[path.length - 2];
+}
+/**
  * The direction in which a connection path is currently travelling at its last
  * committed point (its second-to-last point). The final point is provisional
  * and only reveals that direction; as in {@link elbowCorner}, a segment is
@@ -486,6 +494,66 @@ export function finishRoute(path, route, ...tail) {
     const next = [...path.slice(0, -1), ...route, ...tail];
     cleanPath(next);
     return next;
+}
+/**
+ * The path without the anchors that going to `target` would fold back over.
+ * Going back onto a leg already drawn, or past its anchor, takes the anchors
+ * after that point away instead of drawing over the way already drawn. The path
+ * then carries on in the direction it was travelling at the point it is cut.
+ */
+export function backtrackPath(path, target) {
+    const committed = path.slice(0, -1);
+    if (committed.length < 2) {
+        return path;
+    }
+    const same = (a, b) => a[0] === b[0] && a[1] === b[1];
+    const carryOn = (kept, from, to) => {
+        const end = kept[kept.length - 1];
+        return [
+            ...kept,
+            [
+                end[0] + Math.sign(to[0] - from[0]) * STEP,
+                end[1] + Math.sign(to[1] - from[1]) * STEP,
+            ],
+        ];
+    };
+    // Onto a leg already drawn (the latest first), or back to one of its anchors.
+    for (let i = committed.length - 2; i >= 0; i -= 1) {
+        const [a, b] = [committed[i], committed[i + 1]];
+        const onLeg = (a[0] === b[0] && target[0] === a[0] ||
+            a[1] === b[1] && target[1] === a[1]) &&
+            (target[0] - a[0]) * (target[0] - b[0]) <= 0 &&
+            (target[1] - a[1]) * (target[1] - b[1]) <= 0;
+        if (onLeg && !same(target, b)) {
+            return same(target, a)
+                ? carryOn(committed.slice(0, i + 1), ...(i > 0 ? [committed[i - 1], a] : [a, b]))
+                : carryOn([...committed.slice(0, i + 1), target], a, b);
+        }
+        if (onLeg) {
+            break;
+        }
+    }
+    // Past the last anchor, along the way it was reached.
+    const [anchor, heading] = [committed[committed.length - 1], connectHeading(path)];
+    const behind = (target[0] - anchor[0]) * heading[0] + (target[1] - anchor[1]) * heading[1];
+    if (behind >= 0) {
+        return path;
+    }
+    const folded = [...committed, elbowCorner(path, target), target];
+    for (let size = 0; size !== folded.length;) {
+        size = folded.length;
+        cleanPath(folded);
+    }
+    let keep = 0;
+    while (keep + 1 < committed.length &&
+        folded[keep + 1] &&
+        same(folded[keep + 1], committed[keep + 1])) {
+        keep += 1;
+    }
+    if (keep === committed.length - 1) {
+        return path;
+    }
+    return carryOn(committed.slice(0, keep + 1), ...(keep > 0 ? [committed[keep - 1], committed[keep]] : committed));
 }
 /**
  * Commits a route into a connection that carries on: the route's end becomes

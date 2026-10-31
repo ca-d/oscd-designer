@@ -61,6 +61,14 @@ export function newStartInteractionEvent(detail) {
         detail,
     });
 }
+/** The wire `section` is to be routed through the point `via`. */
+export function newRerouteSectionEvent(detail) {
+    return new CustomEvent('oscd-sld-reroute-section', {
+        bubbles: true,
+        composed: true,
+        detail,
+    });
+}
 export function newSelectEvent(element) {
     return new CustomEvent('oscd-sld-selected', {
         bubbles: true,

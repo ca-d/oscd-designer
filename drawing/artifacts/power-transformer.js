@@ -3,6 +3,7 @@ import { classMap } from 'lit/directives/class-map.js';
 import { zigZag2WTransform, zigZagPath } from '../diagram-symbols.js';
 import { containsRect } from '../../foundations/element-geometry.js';
 import { attributes } from '../../foundations/sld-attributes.js';
+import { windingPort } from '../../foundations/obstacles.js';
 import { transformerWindingMeasures, windingTerminalTargets, } from '../../foundations/transformer.js';
 import { canConnectToWinding, } from '../../foundations/connectivity.js';
 import { newPlaceEvent, newRotateEvent, newSelectEvent, newStartInteractionEvent, } from '../../foundations/events.js';
@@ -69,8 +70,6 @@ function renderTransformerWinding(winding, context, connect) {
                 return;
             }
             const [x, y] = point;
-            const x1 = Number.isInteger(x * 2) ? x : x + 1;
-            const y1 = Number.isInteger(y * 2) ? y : y + 1;
             const terminal = name.startsWith('T');
             const fill = terminal
                 ? 'var(--oscd-sld-terminal-color)'
@@ -96,10 +95,7 @@ function renderTransformerWinding(winding, context, connect) {
                     mode: 'connecting',
                     from: winding,
                     fromTerminal: name,
-                    path: [
-                        [x, y],
-                        [x1, y1],
-                    ],
+                    path: [[x, y], windingPort([cx, cy], [x, y]).approach],
                 }));
             }}
             style="fill: ${fill}; stroke: ${groundable && !terminal ? 'var(--oscd-sld-groundable-terminal-color)' : 'none'}" />`);

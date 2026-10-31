@@ -11,8 +11,9 @@ import { powerTransformerArtifact } from './drawing/artifacts/power-transformer.
 import { renderLabel as renderArtifactLabel } from './drawing/artifacts/label.js';
 import { renderConnectivityNode as renderArtifactConnectivityNode, } from './drawing/artifacts/connectivity-node.js';
 import { renderVoltageLevel, renderBay, } from './drawing/artifacts/equipment-container.js';
+import { leaveRects, obstacleRects } from './foundations/obstacles.js';
 import { overlappedSections, planReroutes } from './foundations/rerouting.js';
-import { ConnectionRouter, connectHeading, extendRoute, finishRoute, snapApproachPoint, } from './foundations/routing.js';
+import { ConnectionRouter, connectAnchor, connectHeading, backtrackPath, extendRoute, finishRoute, snapApproachPoint, } from './foundations/routing.js';
 import { containsRect } from './foundations/element-geometry.js';
 import { canPlaceAt, isUnsizedContainer } from './foundations/sld-placement.js';
 import { canConnectToWinding, connectionStartPoints, isBusBar, } from './foundations/connectivity.js';
@@ -22,7 +23,7 @@ import { sldThemeStyles } from './theme.js';
 import { DragToClickController } from './drag-to-click.js';
 import { singleTerminal } from './foundations/equipment.js';
 import { iedReferences, isIedReferenceElement, resolveIed as resolveReferencedIed, } from './foundations/ied.js';
-import { newConnectEvent, newDismissRoutingWarningEvent, newExtendConnectPointEvent, newGroundTerminalEvent, newOpenContextMenuEvent, newPlaceEvent, newPlaceLabelEvent, } from './foundations/events.js';
+import { newConnectEvent, newDismissRoutingWarningEvent, newExtendConnectPointEvent, newRerouteSectionEvent, newGroundTerminalEvent, newOpenContextMenuEvent, newPlaceEvent, newPlaceLabelEvent, } from './foundations/events.js';
 import { serializeForExport } from './foundations/export.js';
 import { sldNs, sldPrefix, svgNs, xlinkNs } from './foundations.js';
 import { connectDetail, isMode } from './foundations/interaction-mode.js';
@@ -318,7 +319,10 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
         // cursor skip re-evaluating the whole (potentially thousands of `<g>`) base
         // stack.
         const reroutes = this.plannedReroutes();
-        this.hideSections(reroutes);
+        this.hideSections([
+            ...reroutes.map(route => route.section),
+            ...this.replacedSections(),
+        ]);
         const baseLayerTracksMouse = this.interaction.mode === 'resizingBR' ||
             this.interaction.mode === 'resizingTL' ||
             this.interaction.mode === 'connectingFrom' ||
@@ -416,6 +420,7 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
         ${this.renderPlacingTargetsLayer()}
         ${this.renderPlacingPreview()}
         ${this.renderRoutingWarnings()}
+        ${this.renderRerouteTarget()}
       </svg>
     </section>`;
     }
@@ -541,9 +546,14 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
         if (this.connecting?.from.closest('Substation') !== this.substation) {
             return [];
         }
-        const { from, path, fromTerminal } = this.connecting;
+        const { from, fromTerminal } = this.connecting;
         const target = this.connectTarget;
         const cursor = [this.mouseX2, this.mouseY2];
+        // Going back past an anchor takes the anchor away.
+        const aim = target ? snapApproachPoint(target) : cursor;
+        const path = backtrackPath(this.connecting.path, aim);
+        const [anchor] = path.slice(-2);
+        const cutHere = anchor[0] === aim[0] && anchor[1] === aim[1];
         // Over a connectable wire the connection meets it where the route first
         // reaches it, wherever on the wire the cursor is.
         const wireNode = target ? undefined : this.connectivityNodeAt(cursor);
@@ -553,7 +563,9 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
         // Auto-routed around obstacles; a snapped route ends in front of the
         // terminal and then runs straight in.
         const route = wireRoute ??
-            this.routeConnection(path, target ? snapApproachPoint(target) : cursor, target?.far);
+            (cutHere
+                ? [aim]
+                : this.routeConnection(path, aim, target?.far));
         // The already-committed waypoints (every point but the provisional last
         // one) continuing through the route. Without a clean route the preview stops
         // at the last waypoint and clicking does nothing.
@@ -561,7 +573,7 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
             ...path.slice(0, -1),
             ...(route ?? []),
             ...(route && target ? [target.far, target.near] : []),
-        ];
+        ].filter(([x, y], i, all) => !i || x !== all[i - 1][0] || y !== all[i - 1][1]);
         const segment = (start, end) => svg `<line x1="${start[0]}" y1="${start[1]}" x2="${end[0]}" y2="${end[1]}"
                 stroke-linecap="square" stroke="currentColor" />`;
         // draw a line between each consecutive pair of points
@@ -722,7 +734,11 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
             mouseX2: this.mouseX2,
             mouseY2: this.mouseY2,
             hiddenSections: this.hiddenSections,
-            routeToConnectivityNode: (path, cNode) => this.routeToConnectivityNode(path, cNode),
+            routeToConnectivityNode: (path, cNode) => {
+                const base = backtrackPath(path, [this.mouseX2, this.mouseY2]);
+                const route = this.routeToConnectivityNode(base, cNode);
+                return route && finishRoute(base, route);
+            },
         };
     }
     /**
@@ -730,6 +746,20 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
      * dropped where it is now.
      */
     plannedReroutes() {
+        if (this.interaction.mode === 'reroutingSection') {
+            const section = this.interaction.element;
+            const via = [this.mouseX2, this.mouseY2];
+            const key = [section, this.docVersion, ...via];
+            if (key.some((k, i) => k !== this.reroutePreview.key[i])) {
+                this.reroutePreview = {
+                    key,
+                    routes: section.getRootNode() === this.doc
+                        ? planReroutes(this.doc, { kind: 'section', element: section, via })
+                        : [],
+                };
+            }
+            return this.reroutePreview.routes;
+        }
         const { placing } = this;
         if (!placing ||
             placing.getRootNode() !== this.doc ||
@@ -757,8 +787,20 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
         }
         return this.reroutePreview.routes;
     }
-    hideSections(routes) {
-        const sections = routes.map(route => route.section);
+    /** The wire whose connection a new connection from its terminal replaces. */
+    replacedSections() {
+        if (this.interaction.mode !== 'connectingFrom') {
+            return [];
+        }
+        const uuid = this.interaction.replacing
+            ? getSLDAttributes(this.interaction.replacing, 'uuid')
+            : undefined;
+        const vertex = uuid
+            ? Array.from(this.substation.getElementsByTagNameNS(sldNs, 'Vertex')).find(candidate => getSLDAttributes(candidate, 'uuid') === uuid)
+            : undefined;
+        return vertex?.parentElement ? [vertex.parentElement] : [];
+    }
+    hideSections(sections) {
         if (sections.length !== this.hiddenSections.size ||
             sections.some(section => !this.hiddenSections.has(section))) {
             this.hiddenSections = new Set(sections);
@@ -769,6 +811,18 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
           points="${points.map(point => point.join(',')).join(' ')}"
           stroke="${fallback ? 'var(--oscd-sld-routing-warning-color)' : 'currentColor'}"
           stroke-dasharray="${fallback ? '0.15 0.1' : nothing}" />`);
+    }
+    /** Catches the click that places the point a wire being re-routed goes through. */
+    renderRerouteTarget() {
+        if (this.disabled || this.interaction.mode !== 'reroutingSection') {
+            return nothing;
+        }
+        const section = this.interaction.element;
+        return svg `<rect width="100%" height="100%" fill="none" pointer-events="all"
+      @click=${() => this.dispatchEvent(newRerouteSectionEvent({
+            section,
+            via: [this.mouseX2, this.mouseY2],
+        }))} />`;
     }
     /** The middle of where a wire first runs through equipment, or else of its longest leg. */
     warningAnchor(section, points) {
@@ -785,10 +839,7 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
             ...iedReferences(this.substation),
         ]
             .filter(element => !attached.has(element))
-            .map((element) => {
-            const { pos: [x, y], dim: [w, h], } = attributes(element);
-            return [x, y, w, h];
-        });
+            .flatMap(element => obstacleRects(element));
         const legs = points
             .slice(1)
             .map((end, i) => [points[i], end]);
@@ -846,19 +897,13 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
             ];
         });
     }
-    connectionRouter(from, mode = 'strict') {
-        const ownTransformer = from.closest('PowerTransformer');
-        const key = [this.substation, this.docVersion, ownTransformer];
+    connectionRouter(mode = 'strict') {
+        const key = [this.substation, this.docVersion];
         if (!this.routerCache || key.some((k, i) => k !== this.routerCache.key[i])) {
             const obstacles = [
                 ...Array.from(this.substation.querySelectorAll('ConductingEquipment, PowerTransformer')),
                 ...iedReferences(this.substation),
-            ]
-                .filter(element => element !== ownTransformer)
-                .map((element) => {
-                const { pos: [x, y], dim: [w, h], } = attributes(element);
-                return [x, y, w, h];
-            });
+            ].flatMap(element => obstacleRects(element));
             const wires = Array.from(this.substation.querySelectorAll('ConnectivityNode')).flatMap(cNode => wirePolylines(cNode).map(wire => ({ net: cNode, ...wire })));
             const { dim: [w, h], } = attributes(this.substation);
             this.routerCache = {
@@ -871,6 +916,13 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
         routers[mode] ??= build(mode);
         return routers[mode];
     }
+    /** Where a route begins; a connection just started from a winding first leaves the areas of its transformer. */
+    routeStart(path) {
+        const transformer = path.length === 2 && this.connecting?.from.closest('PowerTransformer');
+        return transformer
+            ? leaveRects(connectAnchor(path), connectHeading(path), obstacleRects(transformer))
+            : connectAnchor(path);
+    }
     /**
      * Routes the connection being drawn from its last anchor to `target`. Where
      * there is no room to leave the equipment straight, it may turn on the
@@ -880,14 +932,13 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
         if (!this.connecting) {
             return undefined;
         }
-        const { from } = this.connecting;
         const [anchor, direction, own] = [
-            path[path.length - 2],
+            this.routeStart(path),
             connectHeading(path),
             path.slice(0, -1),
         ];
-        return (this.connectionRouter(from).route(anchor, direction, target, own) ??
-            this.connectionRouter(from, 'tight').route(anchor, direction, tightTarget, own));
+        return (this.connectionRouter().route(anchor, direction, target, own) ??
+            this.connectionRouter('tight').route(anchor, direction, tightTarget, own));
     }
     /**
      * Routes the connection being drawn to the nearest place it can meet the
@@ -897,8 +948,7 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
         if (!this.connecting) {
             return undefined;
         }
-        const { from } = this.connecting;
-        const route = (mode) => this.connectionRouter(from, mode).routeToNet(path[path.length - 2], connectHeading(path), cNode, path.slice(0, -1), [this.mouseX2, this.mouseY2]);
+        const route = (mode) => this.connectionRouter(mode).routeToNet(this.routeStart(path), connectHeading(path), cNode, path.slice(0, -1), [this.mouseX2, this.mouseY2]);
         return route('strict') ?? route('tight');
     }
     /** The topmost connectable connectivity node whose wire runs under `cursor`. */

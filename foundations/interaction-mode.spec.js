@@ -1,5 +1,5 @@
 import { expect } from '@open-wc/testing';
-import { idle, locked, placing, placingLabel, resizingBR, resizingTL, connectingFrom, isMode, targetInMode, connectDetail, } from './interaction-mode.js';
+import { idle, locked, placing, placingLabel, resizingBR, resizingTL, connectingFrom, reroutingSection, isMode, targetInMode, connectDetail, } from './interaction-mode.js';
 import { createSCLDoc } from '../test-helpers.js';
 describe('interaction-mode constructors', () => {
     const doc = createSCLDoc(`
@@ -58,6 +58,22 @@ describe('interaction-mode constructors', () => {
             element,
             terminal: 'N2',
             path: [[1, 1]],
+        });
+    });
+    it('connectingFrom() can carry the terminal whose connection it replaces', () => {
+        const bay = doc.querySelector('Bay');
+        expect(connectingFrom(element, 'T1', [], bay)).to.deep.equal({
+            mode: 'connectingFrom',
+            element,
+            terminal: 'T1',
+            path: [],
+            replacing: bay,
+        });
+    });
+    it('reroutingSection() carries only the section', () => {
+        expect(reroutingSection(element)).to.deep.equal({
+            mode: 'reroutingSection',
+            element,
         });
     });
 });

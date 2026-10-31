@@ -97,6 +97,12 @@ export declare class ConnectionRouter {
     private search;
 }
 /**
+ * Where a route for the connection being drawn begins: its last anchor, or, for
+ * a connection only just started, the point where it leaves its terminal's
+ * equipment, which lies outside any larger area the terminal sits in.
+ */
+export declare function connectAnchor(path: Point[]): Point;
+/**
  * The direction in which a connection path is currently travelling at its last
  * committed point (its second-to-last point). The final point is provisional
  * and only reveals that direction; as in {@link elbowCorner}, a segment is
@@ -117,6 +123,13 @@ export declare function snapApproachPoint(snap: {
  * points) replacing the provisional last point.
  */
 export declare function finishRoute(path: Point[], route: Point[], ...tail: Point[]): Point[];
+/**
+ * The path without the anchors that going to `target` would fold back over.
+ * Going back onto a leg already drawn, or past its anchor, takes the anchors
+ * after that point away instead of drawing over the way already drawn. The path
+ * then carries on in the direction it was travelling at the point it is cut.
+ */
+export declare function backtrackPath(path: Point[], target: Point): Point[];
 /**
  * Commits a route into a connection that carries on: the route's end becomes
  * the new anchor, and a provisional point just ahead of it keeps the direction

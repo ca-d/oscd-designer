@@ -2,7 +2,7 @@ import { expect } from '@open-wc/testing';
 import { handleEdit } from '@omicronenergy/oscd-editor';
 import { connectionPointsAt } from './connectivity.js';
 import { createFlipElementEdits, createRotateEdits, shiftDescendantEdits, shiftElementEdits, } from './edits.js';
-import { planReroutes, rerouteEdits, sectionSignature, pointsSignature } from './rerouting.js';
+import { planReroutes, rerouteEdits, sectionEnds, sectionSignature, pointsSignature } from './rerouting.js';
 import { attributes, getSLDAttributes, setSLDAttributes } from './sld-attributes.js';
 import { sldNs } from '../foundations.js';
 import { createSCLDoc } from '../test-helpers.js';
@@ -217,6 +217,94 @@ describe('rerouteEdits', () => {
             });
             moveEquipment(doc, 'Q2', 0, -4);
             expect(sectionSignature(route.section)).to.equal(pointsSignature(route.points));
+        });
+    });
+    describe('routing a wire through a point', () => {
+        const through = (doc, section, via) => planReroutes(doc, { kind: 'section', element: section, via });
+        it('keeps both ends and goes through the point', () => {
+            const doc = substation({ wires: straightWire });
+            const [section] = sections(doc);
+            handleEdit(rerouteEdits(doc, { kind: 'section', element: section, via: [8.5, 5.5] }, 'smth'));
+            expectAttached(doc);
+            const wire = polyline(section);
+            expect(wire.some(([x, y]) => x === 8.5 && y === 5.5)).to.be.true;
+            expect(wire[0]).to.deep.equal([3.5, 3.84]);
+            expect(wire[wire.length - 1]).to.deep.equal([3.5, 8.16]);
+        });
+        it('reports nothing for a point that can be gone through cleanly', () => {
+            const doc = substation({ wires: straightWire });
+            expect(through(doc, sections(doc)[0], [8.5, 5.5]).map(route => route.fallback)).to.deep.equal([false]);
+        });
+        it('reports a point it cannot be gone through cleanly', () => {
+            const doc = substation({ wires: straightWire });
+            // Inside Q2 itself.
+            expect(through(doc, sections(doc)[0], [3.5, 8.5]).map(route => route.fallback)).to.deep.equal([true]);
+        });
+        it('ends on the junction at its other end', () => {
+            const doc = substation({
+                wires: `<smth:Section>${vertex(3.5, 3.84, 'u1')}${vertex(3.5, 6)}</smth:Section>
+          <smth:Section>${vertex(3.5, 6)}${vertex(3.5, 8.16, 'u2')}</smth:Section>`,
+            });
+            const [section] = sections(doc);
+            handleEdit(rerouteEdits(doc, { kind: 'section', element: section, via: [7, 4.5] }, 'smth'));
+            const wire = polyline(section);
+            expect(wire.some(([x, y]) => x === 7 && y === 4.5)).to.be.true;
+            expect(wire[wire.length - 1]).to.deep.equal([3.5, 6]);
+            expect(polyline(sections(doc)[1])).to.deep.equal([[3.5, 6], [3.5, 8.16]]);
+        });
+        it('leaves a wire with a free end alone, and knows which end is free', () => {
+            const doc = substation({
+                wires: `<smth:Section>${vertex(3.5, 3.84, 'u1')}${vertex(3.5, 6)}</smth:Section>`,
+            });
+            const [section] = sections(doc);
+            expect(through(doc, section, [7, 4.5])).to.deep.equal([]);
+            expect(sectionEnds(section).map(end => end.free)).to.deep.equal([false, true]);
+        });
+        it('leaves bus bars alone', () => {
+            const doc = substation({
+                wires: `<smth:Section smth:bus="true">${vertex(3.5, 3.84, 'u1')}${vertex(3.5, 8.16, 'u2')}</smth:Section>`,
+            });
+            expect(through(doc, sections(doc)[0], [8.5, 5.5])).to.deep.equal([]);
+        });
+    });
+    describe('around a transformer', () => {
+        /** Q2 is wired to the neutral point on the left of a transformer. */
+        function wiredToNeutral() {
+            return substation({
+                wires: '',
+                secondTerminals: terminal('T1', 'u2'),
+                extra: `<PowerTransformer name="PT1">
+            ${layout('smth:x="8" smth:y="8"')}
+            <TransformerWinding name="W1">
+              <NeutralPoint name="N1" connectivityNode="S1/V1/B1/L1">${layout('smth:uuid="un1"')}</NeutralPoint>
+            </TransformerWinding>
+          </PowerTransformer>
+          <ConnectivityNode name="L1" pathName="S1/V1/B1/L1">
+            <Private type="OpenSCD-SLD-Layout">
+              <smth:Section>${vertex(3.5, 8.16, 'u2')}${vertex(3.5, 7)}${vertex(7, 7)}${vertex(7, 8.5)}${vertex(7.8, 8.5, 'un1')}</smth:Section>
+            </Private>
+          </ConnectivityNode>`,
+            });
+        }
+        it('keeps clear of the whole winding, not only of its square', () => {
+            const doc = wiredToNeutral();
+            moveEquipment(doc, 'Q2', 9, 2);
+            const wire = polyline(sections(doc)[0]);
+            expect(wire[wire.length - 1]).to.deep.equal([7.8, 8.5]);
+            // Only the last stretch, from outside the circle to the terminal, enters the area.
+            wire.slice(1, -1).forEach(([x, y], i) => {
+                const [px, py] = wire[i];
+                for (let t = 0; t <= 1; t += 0.05) {
+                    const [sx, sy] = [px + (x - px) * t, py + (y - py) * t];
+                    expect(sx > 7.6 && sx < 9.4 && sy > 7.6 && sy < 9.4, `${sx},${sy}`).to.be.false;
+                }
+            });
+        });
+        it('reports nothing for a wire that keeps clear', () => {
+            const doc = wiredToNeutral();
+            const q2 = doc.querySelector('[name="Q2"]');
+            const routes = planReroutes(doc, { kind: 'move', element: q2, dx: 9, dy: 2 });
+            expect(routes.map(route => route.fallback)).to.deep.equal([false]);
         });
     });
     describe('mirroring a transformer', () => {

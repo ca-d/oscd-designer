@@ -6,7 +6,7 @@ import { SldSubstationHeader } from './sld-substation-header.js';
 import { SldResizeSubstationDialog } from './sld-resize-substation-dialog.js';
 import { SldContextMenu } from './context-menu/sld-context-menu.js';
 import { SldCoordinateTooltip } from './sld-coordinate-tooltip.js';
-import type { ConnectDetail, SubstationCommandEvent, InteractionIntent } from './foundations/events.js';
+import type { ConnectDetail, RerouteSectionDetail, SubstationCommandEvent, InteractionIntent } from './foundations/events.js';
 import type { Point } from './foundations/geometry.js';
 import type { InteractionState } from './foundations/interaction-mode.js';
 import type { Style } from './foundations/sld-attributes.js';
@@ -84,6 +84,13 @@ export declare class SldEditor extends SldEditor_base {
     private warnAbout;
     private activeRoutingWarnings;
     private handleDismissRoutingWarning;
+    /**
+     * A wire held at both ends is moved by placing a point on its way. One with
+     * a free end is not allowed to stay that way: it is drawn again from its
+     * terminal, and replaced once it has found something to connect to.
+     */
+    private startReroutingSection;
+    handleRerouteSection({ section, via }: RerouteSectionDetail): void;
     handleConnect(detail: ConnectDetail): void;
     /**
      * Grow the in-progress connection path. The view reports the next path

@@ -38,6 +38,11 @@ export type InteractionState = {
     element: Element;
     terminal: Terminal;
     path: Point[];
+    /** The terminal whose connection this replaces, once it is made. */
+    replacing?: Element;
+} | {
+    mode: 'reroutingSection';
+    element: Element;
 };
 /**
  * Pure constructors for each {@link InteractionState} variant. They compute the next
@@ -64,7 +69,9 @@ export declare const placing: (element: Element, offset: Point) => InteractionSt
 export declare const placingLabel: (element: Element, offset: Point) => InteractionState;
 export declare const resizingBR: (element: Element) => InteractionState;
 export declare const resizingTL: (element: Element) => InteractionState;
-export declare const connectingFrom: (element: Element, terminal: Terminal, path?: Point[]) => InteractionState;
+export declare const connectingFrom: (element: Element, terminal: Terminal, path?: Point[], replacing?: Element) => InteractionState;
+/** Moving the wire `section` by placing a new point on its way. */
+export declare const reroutingSection: (element: Element) => InteractionState;
 /** The set of gesture-mode tags of {@link InteractionState}. */
 export type InteractionMode = InteractionState['mode'];
 /**

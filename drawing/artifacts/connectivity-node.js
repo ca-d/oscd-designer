@@ -5,7 +5,6 @@ import { isBusBar } from '../../foundations/connectivity.js';
 import { attributes, xmlBoolean } from '../../foundations/sld-attributes.js';
 import { elbowCorner, extendConnectPointPaths, findIntersection, } from '../../foundations/geometry.js';
 import { newConnectEvent, newPlaceEvent, newStartInteractionEvent, } from '../../foundations/events.js';
-import { finishRoute } from '../../foundations/routing.js';
 import { privType, sldNs } from '../../foundations.js';
 import { connectDetail, isMode, targetInMode, } from '../../foundations/interaction-mode.js';
 function preventDefault(e) {
@@ -50,8 +49,8 @@ export function renderConnectivityNode(cNode, context) {
             return;
         }
         const busBar = xmlBoolean(section.getAttributeNS(sldNs, 'bus'));
-        // Plain wires only take clicks to be connected to, so they don't get in the way of equipment under them.
-        const pointerEvents = busBar || isMode(context.interaction, 'connectingFrom')
+        // Plain wires take clicks to be connected to, or to be moved while idle.
+        const pointerEvents = busBar || isMode(context.interaction, 'idle', 'connectingFrom')
             ? wirePointerEvents
             : 'none';
         const vertices = Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex'));
@@ -83,6 +82,15 @@ export function renderConnectivityNode(cNode, context) {
                         return;
                     }
                     context.requestContextMenu(bay, e);
+                };
+            }
+            if (!busBar && !context.disabled && isMode(context.interaction, 'idle')) {
+                handleClick = (e) => {
+                    e.stopPropagation();
+                    context.dispatch(newStartInteractionEvent({
+                        mode: 'reroutingSection',
+                        element: section,
+                    }));
                 };
             }
             if (busBar && targetInMode(context.interaction, 'resizingBR') === bay && !context.disabled) {
@@ -137,14 +145,14 @@ export function renderConnectivityNode(cNode, context) {
                     // The connection meets the net where the route first reaches it, not
                     // where the user clicked on it.
                     if (context.routeToConnectivityNode) {
-                        const route = context.routeToConnectivityNode(path, cNode);
-                        if (!route) {
+                        const routed = context.routeToConnectivityNode(path, cNode);
+                        if (!routed) {
                             return;
                         }
                         context.dispatch(newConnectEvent({
                             from,
                             fromTerminal,
-                            path: finishRoute(path, route),
+                            path: routed,
                             to: cNode,
                         }));
                         return;
