@@ -35,6 +35,13 @@ const SOFT_COST = 20;
  */
 const BUS_COST = 120;
 
+/**
+ * Extra cost, in half-grid steps, of each step onto a wire. A crossing pays it
+ * on the way in and out, so routes cross a wire only when going round costs
+ * more, but much more readily than they cross equipment or a bus.
+ */
+const WIRE_COST = 30;
+
 /** Extra cost, in half-grid steps, of running along an equipment border in a tight router. */
 const BORDER_COST = 3;
 
@@ -202,8 +209,9 @@ export class ConnectionRouter {
       points.slice(1).forEach((point, i) => {
         this.interior(points[i], point, (ix, iy, horizontal) => {
           setCell(ix, iy, horizontal ? ON_HORIZONTAL_WIRE : ON_VERTICAL_WIRE);
-          if (bus && this.cell(ix, iy) !== CLOSED) {
-            penalty[iy * this.cols + ix] = BUS_COST;
+          if (this.cell(ix, iy) !== CLOSED) {
+            const at = iy * this.cols + ix;
+            penalty[at] = Math.max(penalty[at], bus ? BUS_COST : WIRE_COST);
           }
         });
       });
@@ -538,7 +546,12 @@ export class ConnectionRouter {
 
     try {
       const finder = aStar(this.graph, {
-        distance: (_from, _to, link) => link.data,
+        // Meeting the net is not crossing it, so arriving on it is free of the wire cost.
+        distance: (_from, to, link) =>
+          goalIds.has(to.id)
+            ? link.data -
+              Math.min(this.penalty![to.data.iy * this.cols + to.data.ix], link.data - 1)
+            : link.data,
         heuristic: (a) => {
           if (a.id === GOAL_ID) {
             return 0;

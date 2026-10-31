@@ -2388,7 +2388,7 @@ describe('SLD Editor', () => {
           );
           await sendMouse({ type: 'click', position: gridPos(8, 4) });
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(8);
-          expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(22);
+          expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(24);
           await detach('[type="NEW"]');
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(6);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(16);

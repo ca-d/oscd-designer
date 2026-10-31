@@ -196,6 +196,36 @@ describe('routing', () => {
   describe('existing wires', () => {
     const wire = (net: string, ...points: Point[]) => ({ net, points });
 
+    it('goes round a wire rather than crossing it, even by a long way', () => {
+      const router = new ConnectionRouter(20, 10, [], [
+        { net: 'w', points: [[2, 5], [18, 5]] },
+      ]);
+      const route = router.route([10, 1], [0, 1], [10, 9])!;
+      expect(route, 'routable').to.exist;
+      traversed(route).forEach(([x, y]) => {
+        expect(y === 5 && x > 2 && x < 18, `${x},${y}`).to.be.false;
+      });
+    });
+
+    it('prefers crossing a wire to going through equipment in a soft router', () => {
+      const router = new ConnectionRouter(
+        10,
+        10,
+        [[3, 4, 4, 2]],
+        [{ net: 'w', points: [[0, 7], [10, 7]] }],
+        'soft',
+      );
+      const route = router.route([5, 1], [0, 1], [5, 9])!;
+      expect(route, 'routable').to.exist;
+      traversed(route).forEach(([x, y]) => {
+        expect(x > 3 && x < 7 && y > 4 && y < 6, `${x},${y}`).to.be.false;
+      });
+      expect(
+        traversed(route).some(([, y]) => y === 7),
+        'crosses the wire',
+      ).to.be.true;
+    });
+
     it('crosses a wire straight through its interior', () => {
       const router = new ConnectionRouter(10, 10, [], [wire('a', [0, 5], [10, 5])]);
       expect(router.route([5, 1], [0, 1], [5, 9])).to.deep.equal([
@@ -288,7 +318,7 @@ describe('routing', () => {
 
     it('do not stop an ordinary wire from being crossed straight', () => {
       const router = new ConnectionRouter(10, 10, [], [
-        { net: 'w', points: [[2, 5], [8, 5]] },
+        { net: 'w', points: [[0, 5], [10, 5]] },
       ]);
       expect(router.route([5, 1], [0, 1], [5, 9])).to.deep.equal([
         [5, 1],
