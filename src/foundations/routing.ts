@@ -16,7 +16,7 @@
 import createGraph from 'ngraph.graph';
 import { aStar } from 'ngraph.path';
 
-import { cleanPath } from './geometry.js';
+import { cleanPath, elbowCorner } from './geometry.js';
 
 import type { Graph } from 'ngraph.graph';
 import type { Point, Rect } from './geometry.js';
@@ -687,6 +687,83 @@ export function finishRoute(
   const next: Point[] = [...path.slice(0, -1), ...route, ...tail];
   cleanPath(next);
   return next;
+}
+
+/**
+ * The path without the anchors that going to `target` would fold back over.
+ * Going back onto a leg already drawn, or past its anchor, takes the anchors
+ * after that point away instead of drawing over the way already drawn. The path
+ * then carries on in the direction it was travelling at the point it is cut.
+ */
+export function backtrackPath(path: Point[], target: Point): Point[] {
+  const committed = path.slice(0, -1);
+  if (committed.length < 2) {
+    return path;
+  }
+  const same = (a: Point, b: Point) => a[0] === b[0] && a[1] === b[1];
+  const carryOn = (kept: Point[], from: Point, to: Point): Point[] => {
+    const end = kept[kept.length - 1];
+    return [
+      ...kept,
+      [
+        end[0] + Math.sign(to[0] - from[0]) * STEP,
+        end[1] + Math.sign(to[1] - from[1]) * STEP,
+      ],
+    ];
+  };
+
+  // Onto a leg already drawn (the latest first), or back to one of its anchors.
+  for (let i = committed.length - 2; i >= 0; i -= 1) {
+    const [a, b] = [committed[i], committed[i + 1]];
+    const onLeg =
+      (a[0] === b[0] && target[0] === a[0] ||
+        a[1] === b[1] && target[1] === a[1]) &&
+      (target[0] - a[0]) * (target[0] - b[0]) <= 0 &&
+      (target[1] - a[1]) * (target[1] - b[1]) <= 0;
+    if (onLeg && !same(target, b)) {
+      return same(target, a)
+        ? carryOn(
+          committed.slice(0, i + 1),
+          ...((i > 0 ? [committed[i - 1], a] : [a, b]) as [Point, Point]),
+        )
+        : carryOn([...committed.slice(0, i + 1), target], a, b);
+    }
+    if (onLeg) {
+      break;
+    }
+  }
+
+  // Past the last anchor, along the way it was reached.
+  const [anchor, heading] = [committed[committed.length - 1], connectHeading(path)];
+  const behind =
+    (target[0] - anchor[0]) * heading[0] + (target[1] - anchor[1]) * heading[1];
+  if (behind >= 0) {
+    return path;
+  }
+
+  const folded: Point[] = [...committed, elbowCorner(path, target), target];
+  for (let size = 0; size !== folded.length; ) {
+    size = folded.length;
+    cleanPath(folded);
+  }
+  let keep = 0;
+  while (
+    keep + 1 < committed.length &&
+    folded[keep + 1] &&
+    same(folded[keep + 1], committed[keep + 1])
+  ) {
+    keep += 1;
+  }
+  if (keep === committed.length - 1) {
+    return path;
+  }
+  return carryOn(
+    committed.slice(0, keep + 1),
+    ...((keep > 0 ? [committed[keep - 1], committed[keep]] : committed) as [
+      Point,
+      Point,
+    ]),
+  );
 }
 
 /**

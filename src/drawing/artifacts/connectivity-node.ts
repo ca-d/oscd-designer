@@ -19,7 +19,6 @@ import {
   newPlaceEvent,
   newStartInteractionEvent,
 } from '../../foundations/events.js';
-import { finishRoute } from '../../foundations/routing.js';
 import { privType, sldNs } from '../../foundations.js';
 
 import type { Point } from '../../foundations/geometry.js';
@@ -37,7 +36,7 @@ export type ConnectivityNodeContext = SldSharedContext & {
   mouseY2: number;
   /** Sections drawn elsewhere, e.g. as a live reroute preview. */
   hiddenSections?: Set<Element>;
-  /** Auto-routes the connection being drawn to where it can meet `cNode`. */
+  /** The connection being drawn, auto-routed to where it can meet `cNode`. */
   routeToConnectivityNode?: (
     path: Point[],
     cNode: Element,
@@ -205,15 +204,15 @@ export function renderConnectivityNode(
           // The connection meets the net where the route first reaches it, not
           // where the user clicked on it.
           if (context.routeToConnectivityNode) {
-            const route = context.routeToConnectivityNode(path, cNode);
-            if (!route) {
+            const routed = context.routeToConnectivityNode(path, cNode);
+            if (!routed) {
               return;
             }
             context.dispatch(
               newConnectEvent({
                 from,
                 fromTerminal,
-                path: finishRoute(path, route),
+                path: routed,
                 to: cNode,
               }),
             );

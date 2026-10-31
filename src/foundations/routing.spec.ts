@@ -2,6 +2,7 @@ import { expect } from '@open-wc/testing';
 
 import {
   ConnectionRouter,
+  backtrackPath,
   connectHeading,
   extendRoute,
   finishRoute,
@@ -533,6 +534,73 @@ describe('routing', () => {
       const path: Point[] = [[0, 0], [0, 1]];
       finishRoute(path, [[0, 1], [4, 1]]);
       expect(path).to.deep.equal([[0, 0], [0, 1]]);
+    });
+  });
+
+  describe('backtrackPath', () => {
+    const path: Point[] = [[3.5, 3.84], [3.5, 5], [6.5, 5], [7, 5]];
+
+    it('keeps a path that carries on', () => {
+      expect(backtrackPath(path, [8, 7])).to.deep.equal(path);
+      expect(backtrackPath(path, [7, 5])).to.deep.equal(path);
+    });
+
+    it('drops the last anchor when going back over the leg to it', () => {
+      expect(backtrackPath(path, [5, 7])).to.deep.equal([
+        [3.5, 3.84],
+        [3.5, 5],
+        [3.5, 5.5],
+      ]);
+    });
+
+    const longer: Point[] = [[3.5, 3.84], [3.5, 5], [6.5, 5], [6.5, 8], [6.5, 8.5]];
+
+    it('cuts the last leg where it is gone back onto', () => {
+      expect(backtrackPath(longer, [6.5, 6])).to.deep.equal([
+        [3.5, 3.84],
+        [3.5, 5],
+        [6.5, 5],
+        [6.5, 6],
+        [6.5, 6.5],
+      ]);
+    });
+
+    it('drops the last two anchors when going back onto the leg before', () => {
+      expect(backtrackPath(longer, [5, 5])).to.deep.equal([
+        [3.5, 3.84],
+        [3.5, 5],
+        [5, 5],
+        [5.5, 5],
+      ]);
+    });
+
+    it('goes back to an earlier anchor itself', () => {
+      expect(backtrackPath(longer, [6.5, 5])).to.deep.equal([
+        [3.5, 3.84],
+        [3.5, 5],
+        [6.5, 5],
+        [7, 5],
+      ]);
+    });
+
+    it('goes back onto any leg drawn so far', () => {
+      const far: Point[] = [[3.5, 3.84], [3.5, 5], [6.5, 5], [6.5, 8], [9, 8], [9, 8.5]];
+      expect(backtrackPath(far, [5, 5])).to.deep.equal([
+        [3.5, 3.84],
+        [3.5, 5],
+        [5, 5],
+        [5.5, 5],
+      ]);
+      expect(backtrackPath(far, [3.5, 4.5])).to.deep.equal([
+        [3.5, 3.84],
+        [3.5, 4.5],
+        [3.5, 5],
+      ]);
+    });
+
+    it('never drops the start', () => {
+      const first: Point[] = [[3.5, 3.84], [3.5, 4]];
+      expect(backtrackPath(first, [3.5, 2])).to.deep.equal(first);
     });
   });
 

@@ -46,6 +46,7 @@ import type { PlannedRoute } from './foundations/rerouting.js';
 import {
   ConnectionRouter,
   connectHeading,
+  backtrackPath,
   extendRoute,
   finishRoute,
   snapApproachPoint,
@@ -663,7 +664,7 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
       return [];
     }
 
-    const { from, path, fromTerminal } = this.connecting;
+    const { from, fromTerminal } = this.connecting;
 
     const targetEq = Array.from(
       this.substation.querySelectorAll('ConductingEquipment'),
@@ -686,6 +687,12 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
 
     const cursor: Point = [this.mouseX2, this.mouseY2];
 
+    // Going back past an anchor takes the anchor away.
+    const aim = snap ? snapApproachPoint(snap) : cursor;
+    const path = backtrackPath(this.connecting.path, aim);
+    const [anchor] = path.slice(-2);
+    const cutHere = anchor[0] === aim[0] && anchor[1] === aim[1];
+
     // Over a connectable wire the connection meets it where the route first
     // reaches it, wherever on the wire the cursor is.
     const wireNode = snap ? undefined : this.connectivityNodeAt(cursor);
@@ -697,11 +704,9 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
     // terminal and then runs straight in.
     const route =
       wireRoute ??
-      this.routeConnection(
-        path,
-        snap ? snapApproachPoint(snap) : cursor,
-        snap?.far,
-      );
+      (cutHere
+        ? [aim]
+        : this.routeConnection(path, aim, snap?.far));
 
     // The already-committed waypoints (every point but the provisional last
     // one) continuing through the route. Without a clean route the preview stops
@@ -710,7 +715,9 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
       ...path.slice(0, -1),
       ...(route ?? []),
       ...(route && snap ? [snap.far, snap.near] : []),
-    ];
+    ].filter(
+      ([x, y], i, all) => !i || x !== all[i - 1][0] || y !== all[i - 1][1],
+    );
 
     const segment = (start: Point, end: Point) =>
       svg`<line x1="${start[0]}" y1="${start[1]}" x2="${end[0]}" y2="${end[1]}"
@@ -962,8 +969,11 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
       mouseX2: this.mouseX2,
       mouseY2: this.mouseY2,
       hiddenSections: this.hiddenSections,
-      routeToConnectivityNode: (path, cNode) =>
-        this.routeToConnectivityNode(path, cNode),
+      routeToConnectivityNode: (path, cNode) => {
+        const base = backtrackPath(path, [this.mouseX2, this.mouseY2]);
+        const route = this.routeToConnectivityNode(base, cNode);
+        return route && finishRoute(base, route);
+      },
     };
   }
 

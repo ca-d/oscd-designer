@@ -539,6 +539,99 @@ describe('SldSubstationViewer connection routing', () => {
     ).filter(line => (line.parentElement as Element) === el.sld);
   }
 
+  it('drops the last anchor from the preview when the cursor goes back over it', async () => {
+    const doc = contractSubstationDoc();
+    const el = await mountViewer(doc);
+    el.interaction = interactions.connectingFrom(
+      doc.querySelector('ConductingEquipment')!,
+      'T2',
+      [
+        [3.5, 3.84],
+        [3.5, 5],
+        [6.5, 5],
+        [7, 5],
+      ],
+    );
+    [el.mouseX2, el.mouseY2] = [5, 7];
+    await el.updateComplete;
+
+    const ends = previewLines(el).flatMap(line =>
+      ['x2', 'y2'].map(a => line.getAttribute(a)),
+    );
+    expect(previewLines(el).length).to.be.greaterThan(1);
+    expect(ends.join(' ')).to.not.contain('6.5 5');
+
+    const paths: Point[][] = [];
+    el.addEventListener('oscd-sld-extend-connect-point', (e) => {
+      paths.push((e as CustomEvent<{ path: Point[] }>).detail.path);
+    });
+    el.sld
+      .querySelector('rect[fill="url(#grid)"]')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(paths).to.have.lengthOf(1);
+    expect(paths[0].some(([x, y]) => x === 6.5 && y === 5)).to.be.false;
+    expect(paths[0][0]).to.deep.equal([3.5, 3.84]);
+    expect(paths[0][paths[0].length - 2]).to.deep.equal([5, 7]);
+  });
+
+  it('cuts the route back to where the first leg is clicked', async () => {
+    const doc = contractSubstationDoc();
+    const el = await mountViewer(doc);
+    el.interaction = interactions.connectingFrom(
+      doc.querySelector('ConductingEquipment')!,
+      'T2',
+      [
+        [3.5, 3.84],
+        [3.5, 5],
+        [6.5, 5],
+        [7, 5],
+      ],
+    );
+    [el.mouseX2, el.mouseY2] = [3.5, 4.5];
+    await el.updateComplete;
+
+    const ends = previewLines(el).map(line =>
+      ['x1', 'y1', 'x2', 'y2'].map(a => Number(line.getAttribute(a))),
+    );
+    expect(ends).to.deep.equal([[3.5, 3.84, 3.5, 4.5]]);
+
+    const paths: Point[][] = [];
+    el.addEventListener('oscd-sld-extend-connect-point', (e) => {
+      paths.push((e as CustomEvent<{ path: Point[] }>).detail.path);
+    });
+    el.sld
+      .querySelector('rect[fill="url(#grid)"]')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(paths).to.deep.equal([[[3.5, 3.84], [3.5, 4.5], [3.5, 5]]]);
+  });
+
+  it('cuts the route back to a clicked point even where no route could end', async () => {
+    const doc = contractSubstationDoc();
+    const el = await mountViewer(doc);
+    el.interaction = interactions.connectingFrom(
+      doc.querySelector('ConductingEquipment')!,
+      'T2',
+      [
+        [3.5, 3.84],
+        [3.5, 5],
+        [6.5, 5],
+        [7, 5],
+      ],
+    );
+    // On the edge of the equipment the connection leaves from.
+    [el.mouseX2, el.mouseY2] = [3.5, 4];
+    await el.updateComplete;
+
+    const paths: Point[][] = [];
+    el.addEventListener('oscd-sld-extend-connect-point', (e) => {
+      paths.push((e as CustomEvent<{ path: Point[] }>).detail.path);
+    });
+    el.sld
+      .querySelector('rect[fill="url(#grid)"]')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(paths).to.deep.equal([[[3.5, 3.84], [3.5, 4], [3.5, 4.5]]]);
+  });
+
   it('previews an orthogonal route that avoids other equipment', async () => {
     const el = await connectingViewer([6.5, 3.5]);
     const lines = previewLines(el);
