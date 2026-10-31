@@ -69,11 +69,20 @@ export declare class SldEditor extends SldEditor_base {
      * placement) can await the result; other modes return `void`.
      */
     handleStartInteraction(intent: InteractionIntent): Promise<PlacementResult | undefined> | void;
-    handlePlace(element: Element, parent: Element, x: number, y: number): void;
+    handlePlace(element: Element, parent: Element, x: number, y: number, w?: number, h?: number): void;
     handlePlaceLabel(element: Element, x: number, y: number): void;
     handleResize(element: Element, w: number, h: number): void;
     handleResizeTL(element: Element, x: number, y: number, w: number, h: number): void;
     handleRotate(element: Element): void;
+    /**
+     * Sections that had to run through other elements to stay connected, with the
+     * geometry they were given. A warning only shows while the section still has
+     * that geometry, so editing or undoing it clears the warning.
+     */
+    private routingWarnings;
+    private warnAbout;
+    private activeRoutingWarnings;
+    private handleDismissRoutingWarning;
     handleConnect(detail: ConnectDetail): void;
     /**
      * Grow the in-progress connection path. The view reports the next path

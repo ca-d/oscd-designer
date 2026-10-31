@@ -1,4 +1,5 @@
 import { nothing, LitElement, PropertyValues, SVGTemplateResult } from 'lit';
+import { DragToClickController } from './drag-to-click.js';
 import type { Point } from './foundations/geometry.js';
 import type { InteractionState } from './foundations/interaction-mode.js';
 import type { StartConnectDetail } from './foundations/events.js';
@@ -7,6 +8,10 @@ declare const SldSubstationViewer_base: typeof LitElement & import("@open-wc/ded
 /** An editor [[`plugin`]] for editing the `Substation` section. */
 export declare class SldSubstationViewer extends SldSubstationViewer_base {
     static scopedElements: {};
+    protected dragToClick: DragToClickController;
+    protected dragOut: DragToClickController;
+    /** Grid cell where a drag-out began; the opposite corner follows the cursor. */
+    dragAnchor?: Point;
     doc: XMLDocument;
     substation: Element;
     docVersion: number;
@@ -32,6 +37,8 @@ export declare class SldSubstationViewer extends SldSubstationViewer_base {
         id: string;
         style: Style;
     }[];
+    /** Sections that were routed through other elements to stay connected. */
+    routingWarnings: Element[];
     get idle(): boolean;
     /**
      * True when `element` is, or is contained by, the element currently being
@@ -45,6 +52,7 @@ export declare class SldSubstationViewer extends SldSubstationViewer_base {
     mouseX: number;
     mouseY: number;
     private iedResolutionCache;
+    private connectTarget;
     protected willUpdate(changedProperties: PropertyValues<this>): void;
     protected shouldUpdate(changedProperties: PropertyValues<this>): boolean;
     private resolveIed;
@@ -55,6 +63,8 @@ export declare class SldSubstationViewer extends SldSubstationViewer_base {
     svgCoordinates(clientX: number, clientY: number): Point;
     gridPosition(event: MouseEvent): Point;
     halfGridPosition(event: MouseEvent): Point;
+    /** Top-left of the element being placed: the cursor, or the dragged-out corner. */
+    private placingCorner;
     renderedLabelPosition(element: Element, { preview }?: {
         preview?: boolean | undefined;
     }): Point;
@@ -107,13 +117,20 @@ export declare class SldSubstationViewer extends SldSubstationViewer_base {
     private renderPlacingTargetsLayer;
     private renderPlacingPreview;
     private renderVoltageLevelLayer;
+    /**
+     * What the connection being drawn would end on at the current cursor: the
+     * hovered conducting equipment (by grid cell) with an open terminal, else the
+     * nearest open winding terminal. Resolved once per render, see `render()`.
+     */
+    private resolveConnectTarget;
     private renderConnectionPreviewLayer;
     /**
      * While a connection is being drawn in this substation, every
-     * `ConductingEquipment` is suppressed in its container layer (see
-     * conducting-equipment.ts) and re-painted here as a flat top overlay in
-     * connect mode: terminal connect-indicators on, and click-through enabled so
-     * clicks fall through to the connection drop-target beneath.
+     * `ConductingEquipment` and `PowerTransformer` is suppressed in its container
+     * layer (see conducting-equipment.ts, power-transformer.ts) and re-painted
+     * here as a flat top overlay in connect mode: terminal connect-indicators on,
+     * and click-through enabled so clicks fall through to the connection
+     * drop-target beneath.
      */
     private renderConnectModeEquipmentLayer;
     private renderConnectivityLayer;
@@ -121,7 +138,10 @@ export declare class SldSubstationViewer extends SldSubstationViewer_base {
     private renderIedLayer;
     private renderLabelLayer;
     private containerContext;
-    renderPowerTransformer(transformer: Element, preview?: boolean): SVGTemplateResult;
+    renderPowerTransformer(transformer: Element, options?: {
+        preview?: boolean;
+        connect?: boolean;
+    }): SVGTemplateResult;
     private sharedContext;
     private equipmentContext;
     private busBarContext;
@@ -136,6 +156,35 @@ export declare class SldSubstationViewer extends SldSubstationViewer_base {
     }): SVGTemplateResult;
     renderBusBar(busBar: Element): SVGTemplateResult;
     private connectivityNodeContext;
+    private reroutePreview;
+    /**
+     * Where the connections to the element being placed would run if it were
+     * dropped where it is now.
+     */
+    private plannedReroutes;
+    /** The sections drawn as previews; kept the same set while they are the same sections. */
+    private hiddenSections;
+    private hideSections;
+    private renderReroutePreviewLayer;
+    /** The middle of where a wire first runs through equipment, or else of its longest leg. */
+    private warningAnchor;
+    /** Marks wires that were routed through other elements; hovering traces the wire, a click dismisses the mark. */
+    private renderRoutingWarnings;
+    private routerCache?;
+    private connectionRouter;
+    /**
+     * Routes the connection being drawn from its last anchor to `target`. Where
+     * there is no room to leave the equipment straight, it may turn on the
+     * equipment's border instead and end at `tightTarget`.
+     */
+    private routeConnection;
+    /**
+     * Routes the connection being drawn to the nearest place it can meet the
+     * wires of `cNode`, or to the bend or free end under the cursor.
+     */
+    private routeToConnectivityNode;
+    /** The topmost connectable connectivity node whose wire runs under `cursor`. */
+    private connectivityNodeAt;
     renderConnectivityNode(cNode: Element): SVGTemplateResult | typeof nothing;
     static styles: import("lit").CSSResult[];
 }

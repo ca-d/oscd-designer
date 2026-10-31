@@ -30,6 +30,7 @@ export declare class SldToolbar extends SldToolbar_base {
         'sld-ied-menu': typeof SldIedMenu;
     };
     private aboutDialog?;
+    private dragToClick;
     doc: XMLDocument;
     docVersion: number;
     get nsp(): string;

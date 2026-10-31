@@ -15,3 +15,18 @@ export type TransformerWindingMeasures = {
     zigZagTransform?: string;
 };
 export declare function transformerWindingMeasures(winding: Element, transformerPosition: Point, { rot, kind, flip }: Pick<Attrs, 'rot' | 'kind' | 'flip'>, twoWindingEarthingZigZagTransform: string): TransformerWindingMeasures;
+/** An open winding terminal a connection can end on. */
+export type WindingTerminalTarget = {
+    winding: Element;
+    terminal: TransformerTerminalName;
+    /** The terminal point on the winding. */
+    near: Point;
+    /** The point on the half-grid just outside the terminal, where wires arrive from. */
+    far: Point;
+};
+/** How far (grid units) the cursor may be from a terminal to snap onto it. */
+export declare const windingTargetReach = 0.35;
+/** Lists the terminals of `winding` that are still free to connect to. */
+export declare function windingTerminalTargets(winding: Element, transformerPosition: Point, attrs: Pick<Attrs, 'rot' | 'kind' | 'flip'>): WindingTerminalTarget[];
+/** The target closest to `cursor`, if any lies within {@link windingTargetReach}. */
+export declare function nearestWindingTerminalTarget(targets: WindingTerminalTarget[], cursor: Point): WindingTerminalTarget | undefined;

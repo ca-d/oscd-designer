@@ -25,6 +25,9 @@ export type PlaceDetail = {
     y: number;
     element: Element;
     parent: Element;
+    /** Set when a new container was dragged out to its final size. */
+    w?: number;
+    h?: number;
 };
 export type PlaceEvent = CustomEvent<PlaceDetail>;
 export declare function newPlaceEvent(detail: PlaceDetail): PlaceEvent;
@@ -129,6 +132,9 @@ export declare function newSubstationDeleteEvent(substation: Element): Substatio
 export declare function newSubstationExportEvent(substation: Element): SubstationCommandEvent;
 export type GroundHintEvent = CustomEvent<undefined>;
 export declare function newGroundHintEvent(): GroundHintEvent;
+/** Detail: the section whose routing warning the user dismissed. */
+export type DismissRoutingWarningEvent = CustomEvent<Element>;
+export declare function newDismissRoutingWarningEvent(section: Element): DismissRoutingWarningEvent;
 export type InActionEvent = CustomEvent<boolean>;
 export declare function newInActionEvent(active: boolean): InActionEvent;
 declare global {
@@ -151,5 +157,6 @@ declare global {
         ['oscd-sld-substation-export']: SubstationCommandEvent;
         ['oscd-sld-ground-hint']: GroundHintEvent;
         ['oscd-sld-in-action']: InActionEvent;
+        ['oscd-sld-dismiss-routing-warning']: DismissRoutingWarningEvent;
     }
 }

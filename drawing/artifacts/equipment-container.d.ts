@@ -4,6 +4,8 @@ import { type Highlight } from './highlight.js';
 import { type SldSharedContext } from './artifact.js';
 export type EquipmentContainerContext = SldSharedContext & {
     highlight: Highlight[];
+    /** Grid cell a new container is being dragged out from. */
+    dragAnchor?: Point;
     mouseX: number;
     mouseY: number;
     svgCoordinates(clientX: number, clientY: number): Point;

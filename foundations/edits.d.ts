@@ -1,3 +1,4 @@
+import type { FlaggedSection } from './rerouting.js';
 import type { EditV2, SetAttributes } from '@openscd/oscd-api';
 import type { Point } from './geometry.js';
 import type { ConnectDetail } from './events.js';
@@ -33,7 +34,8 @@ export declare function createFlipElementEdits(element: Element, nsp: string): E
 export declare function createAddTextEdit(element: Element, nsp: string): EditV2;
 export declare function createDeleteBusBarEdits(busBar: Element): EditV2[];
 export declare function createDeleteContainerEdits(container: Element): EditV2[];
-export declare function createRotateEdits(element: Element, nsp: string): EditV2[];
+/** Edits turning `element`; sections that had to be rerouted through other elements are added to `fallbacks`. */
+export declare function createRotateEdits(element: Element, nsp: string, fallbacks?: FlaggedSection[]): EditV2[];
 export declare function createPlaceLabelEdit(element: Element, nsp: string, x: number, y: number): EditV2;
 export declare function createResizeEdits(element: Element, nsp: string, w: number, h: number): EditV2;
 export declare function createResizeTLEdits(element: Element, nsp: string, x: number, y: number, w: number, h: number): EditV2;
@@ -43,6 +45,12 @@ export declare function shiftElementEdits(element: Element, x: number, y: number
 export declare function shiftTextEdits(element: Element, dx: number, dy: number, nsp: string): EditV2[];
 export declare function shiftDescendantEdits(element: Element, dx: number, dy: number, nsp: string): EditV2[];
 export declare function rewireTerminalEdits(element: Element, parent: Element, doc: XMLDocument): EditV2[];
+/**
+ * Whether moving `element` under `parent` takes it to another substation, where
+ * its connections to what stays behind cannot be drawn.
+ */
+export declare function leavesSubstation(element: Element, parent: Element): boolean;
+/** Builds edits that detach what an element in another substation was connected to. */
 export declare function disconnectExternalEdits(element: Element, doc: XMLDocument): EditV2[];
 export declare function busBarVertexEdits(element: Element, x: number, y: number, nsp: string): EditV2[];
 export declare function wrapIedReferenceEdits(element: Element, parent: Element, doc: XMLDocument): EditV2[];
