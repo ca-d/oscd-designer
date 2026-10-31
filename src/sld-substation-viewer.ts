@@ -42,9 +42,12 @@ import type { PowerTransformerContext } from './drawing/artifacts/power-transfor
 import type { EquipmentContext } from './drawing/artifacts/conducting-equipment.js';
 import type { BusBarContext } from './drawing/artifacts/bus-bar.js';
 import {
-  connectPreviewElbow,
-  extendConnectPointPaths,
-} from './foundations/geometry.js';
+  ConnectionRouter,
+  connectHeading,
+  extendRoute,
+  finishRoute,
+  snapApproachPoint,
+} from './foundations/routing.js';
 import { containsRect } from './foundations/element-geometry.js';
 import { canPlaceAt } from './foundations/sld-placement.js';
 import { connectionStartPoints, isBusBar } from './foundations/connectivity.js';
@@ -68,15 +71,32 @@ import {
   newPlaceLabelEvent,
 } from './foundations/events.js';
 import { serializeForExport } from './foundations/export.js';
-import { sldPrefix, svgNs, xlinkNs } from './foundations.js';
+import { sldNs, sldPrefix, svgNs, xlinkNs } from './foundations.js';
 
-import type { Point } from './foundations/geometry.js';
+import type { Point, Rect } from './foundations/geometry.js';
 import type { InteractionState } from './foundations/interaction-mode.js';
 import { connectDetail, isMode } from './foundations/interaction-mode.js';
 import type {
   StartConnectDetail,
 } from './foundations/events.js';
 import type { Style } from './foundations/sld-attributes.js';
+
+/** The wires of a connectivity node; terminals are where equipment attaches. */
+function wirePolylines(cNode: Element): { points: Point[]; terminals: Point[] }[] {
+  return Array.from(cNode.getElementsByTagNameNS(sldNs, 'Section')).map(
+    (section) => {
+      const vertices = Array.from(
+        section.getElementsByTagNameNS(sldNs, 'Vertex'),
+      );
+      return {
+        points: vertices.map(vertex => attributes(vertex).pos),
+        terminals: vertices
+          .filter(vertex => vertex.hasAttributeNS(sldNs, 'uuid'))
+          .map(vertex => attributes(vertex).pos),
+      };
+    },
+  );
+}
 
 function isBay(element: Element) {
   return element.tagName === 'Bay' && !isBusBar(element);
@@ -639,16 +659,29 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
       snap = { near: close, far };
     }
 
-    const { corner, far, near } = connectPreviewElbow(
-      path,
-      [this.mouseX2, this.mouseY2],
-      snap,
-    );
+    const cursor: Point = [this.mouseX2, this.mouseY2];
 
-    // The whole preview is one orthogonal polyline: the already-committed
-    // waypoints (every point but the provisional last one) continuing through
-    // the live elbow lastFixed -> corner -> far -> near.
-    const previewPoints: Point[] = [...path.slice(0, -1), corner, far, near];
+    // Over a connectable wire the connection meets it where the route first
+    // reaches it, wherever on the wire the cursor is.
+    const wireNode = snap ? undefined : this.connectivityNodeAt(cursor);
+    const wireRoute = wireNode
+      ? this.routeToConnectivityNode(path, wireNode)
+      : undefined;
+
+    // Auto-routed around obstacles; a snapped route ends in front of the
+    // terminal and then runs straight in.
+    const route =
+      wireRoute ??
+      this.routeConnection(path, snap ? snapApproachPoint(snap) : cursor);
+
+    // The already-committed waypoints (every point but the provisional last
+    // one) continuing through the route. Without a clean route the preview stops
+    // at the last waypoint and clicking does nothing.
+    const previewPoints: Point[] = [
+      ...path.slice(0, -1),
+      ...(route ?? []),
+      ...(route && snap ? [snap.far, snap.near] : []),
+    ];
 
     const segment = (start: Point, end: Point) =>
       svg`<line x1="${start[0]}" y1="${start[1]}" x2="${end[0]}" y2="${end[1]}"
@@ -661,7 +694,23 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
 
     const dropTarget = svg`<rect width="100%" height="100%" fill="url(#grid)"
       @click=${() => {
-        const newPath = extendConnectPointPaths(path, corner, far, near);
+        if (wireNode && wireRoute) {
+          this.dispatchEvent(
+            newConnectEvent({
+              from,
+              fromTerminal,
+              path: finishRoute(path, wireRoute),
+              to: wireNode,
+            }),
+          );
+          return;
+        }
+        if (!route) {
+          return;
+        }
+        const newPath = snap
+          ? finishRoute(path, route, snap.far, snap.near)
+          : extendRoute(path, route);
         this.dispatchEvent(newExtendConnectPointEvent(newPath));
         if (targetEq && toTerminal) {
           this.dispatchEvent(
@@ -883,7 +932,108 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
       mouseY: this.mouseY,
       mouseX2: this.mouseX2,
       mouseY2: this.mouseY2,
+      routeToConnectivityNode: (path, cNode) =>
+        this.routeToConnectivityNode(path, cNode),
     };
+  }
+
+  private routerCache?: { key: unknown[]; router: ConnectionRouter };
+
+  private connectionRouter(from: Element): ConnectionRouter {
+    const ownTransformer = from.closest('PowerTransformer');
+    const key = [this.substation, this.docVersion, ownTransformer];
+    if (!this.routerCache || key.some((k, i) => k !== this.routerCache!.key[i])) {
+      const obstacles = [
+        ...Array.from(
+          this.substation.querySelectorAll(
+            'ConductingEquipment, PowerTransformer',
+          ),
+        ),
+        ...iedReferences(this.substation),
+      ]
+        .filter(element => element !== ownTransformer)
+        .map((element): Rect => {
+          const {
+            pos: [x, y],
+            dim: [w, h],
+          } = attributes(element);
+          return [x, y, w, h];
+        });
+      const wires = Array.from(
+        this.substation.querySelectorAll('ConnectivityNode'),
+      ).flatMap(cNode =>
+        wirePolylines(cNode).map(wire => ({ net: cNode, ...wire })),
+      );
+      const {
+        dim: [w, h],
+      } = attributes(this.substation);
+      this.routerCache = {
+        key,
+        router: new ConnectionRouter(w, h, obstacles, wires),
+      };
+    }
+    return this.routerCache.router;
+  }
+
+  /** Routes the connection being drawn from its last anchor to `target`. */
+  private routeConnection(path: Point[], target: Point): Point[] | undefined {
+    return this.connecting
+      ? this.connectionRouter(this.connecting.from).route(
+        path[path.length - 2],
+        connectHeading(path),
+        target,
+        path.slice(0, -1),
+      )
+      : undefined;
+  }
+
+  /**
+   * Routes the connection being drawn to the nearest place it can meet the
+   * wires of `cNode`, or to the bend or free end under the cursor.
+   */
+  private routeToConnectivityNode(
+    path: Point[],
+    cNode: Element,
+  ): Point[] | undefined {
+    return this.connecting
+      ? this.connectionRouter(this.connecting.from).routeToNet(
+        path[path.length - 2],
+        connectHeading(path),
+        cNode,
+        path.slice(0, -1),
+        [this.mouseX2, this.mouseY2],
+      )
+      : undefined;
+  }
+
+  /** The topmost connectable connectivity node whose wire runs under `cursor`. */
+  private connectivityNodeAt([x, y]: Point): Element | undefined {
+    const owner = this.connecting!.from.closest(
+      'ConductingEquipment, PowerTransformer',
+    );
+    return Array.from(this.substation.querySelectorAll('ConnectivityNode'))
+      .filter(
+        cNode =>
+          cNode.getAttribute('name') !== 'grounded' &&
+          !owner?.querySelector(
+            `[connectivityNode="${cNode.getAttribute('pathName')}"]`,
+          ) &&
+          wirePolylines(cNode).some(({ points }) =>
+            points.slice(1).some(([x2, y2], i) => {
+              const [x1, y1] = points[i];
+              return (
+                (y === y1 && y === y2 && (x - x1) * (x - x2) <= 0) ||
+                (x === x1 && x === x2 && (y - y1) * (y - y2) <= 0)
+              );
+            }),
+          ),
+      )
+      .sort(
+        (a, b) =>
+          Number(isBusBar(a.parentElement!)) -
+          Number(isBusBar(b.parentElement!)),
+      )
+      .pop();
   }
 
   renderConnectivityNode(cNode: Element) {

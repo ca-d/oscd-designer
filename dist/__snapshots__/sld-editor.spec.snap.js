@@ -890,12 +890,12 @@ snapshots["SLD Editor given conducting equipment connects equipment on connectio
               >
               </Vertex>
               <Vertex
-                esldoscd:x="17"
+                esldoscd:x="3.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="17"
+                esldoscd:x="3.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
@@ -1153,8 +1153,18 @@ snapshots["SLD Editor given conducting equipment connects equipment on connect m
               >
               </Vertex>
               <Vertex
-                esldoscd:x="19.5"
+                esldoscd:x="3.5"
                 esldoscd:y="4.5"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="3.5"
+                esldoscd:y="2.5"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="19.5"
+                esldoscd:y="2.5"
               >
               </Vertex>
               <Vertex
@@ -1177,12 +1187,12 @@ snapshots["SLD Editor given conducting equipment connects equipment on connect m
               >
               </Vertex>
               <Vertex
-                esldoscd:x="17"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="17"
+                esldoscd:x="16.5"
                 esldoscd:y="3.5"
               >
               </Vertex>
@@ -1262,19 +1272,6 @@ snapshots["SLD Editor given conducting equipment connects equipment on connect m
             >
             </SLDAttributes>
           </Private>
-          <Terminal
-            bayName="B1"
-            cNodeName="L2"
-            connectivityNode="S1/V2/B1/L2"
-            name="T2"
-            substationName="S1"
-            voltageLevelName="V2"
-          >
-            <Private type="OpenSCD-SLD-Layout">
-              <SLDAttributes>
-              </SLDAttributes>
-            </Private>
-          </Terminal>
           <Terminal
             bayName="B1"
             cNodeName="L1"
@@ -1363,7 +1360,7 @@ snapshots["SLD Editor given conducting equipment connects equipment on connect m
             bayName="B1"
             cNodeName="L2"
             connectivityNode="S1/V2/B1/L2"
-            name="T2"
+            name="T1"
             substationName="S1"
             voltageLevelName="V2"
           >
@@ -1404,6 +1401,19 @@ snapshots["SLD Editor given conducting equipment connects equipment on connect m
             >
             </SLDAttributes>
           </Private>
+          <Terminal
+            bayName="B1"
+            cNodeName="L2"
+            connectivityNode="S1/V2/B1/L2"
+            name="T1"
+            substationName="S1"
+            voltageLevelName="V2"
+          >
+            <Private type="OpenSCD-SLD-Layout">
+              <SLDAttributes>
+              </SLDAttributes>
+            </Private>
+          </Terminal>
         </ConductingEquipment>
         <ConnectivityNode
           name="L2"
@@ -1412,18 +1422,38 @@ snapshots["SLD Editor given conducting equipment connects equipment on connect m
           <Private type="OpenSCD-SLD-Layout">
             <Section>
               <Vertex
-                esldoscd:x="18.16"
-                esldoscd:y="4.5"
+                esldoscd:x="20.5"
+                esldoscd:y="4.16"
               >
               </Vertex>
               <Vertex
                 esldoscd:x="20.5"
-                esldoscd:y="4.5"
+                esldoscd:y="3.5"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="21.5"
+                esldoscd:y="3.5"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="21.5"
+                esldoscd:y="6.5"
               >
               </Vertex>
               <Vertex
                 esldoscd:x="20.5"
-                esldoscd:y="4.84"
+                esldoscd:y="6.5"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="20.5"
+                esldoscd:y="7.5"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="21.16"
+                esldoscd:y="7.5"
               >
               </Vertex>
             </Section>
@@ -1441,12 +1471,12 @@ snapshots["SLD Editor given conducting equipment connects equipment on connect m
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="19.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="19.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
@@ -1772,12 +1802,12 @@ snapshots["SLD Editor given conducting equipment with established connectivity u
               >
               </Vertex>
               <Vertex
-                esldoscd:x="17"
+                esldoscd:x="3.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="17"
+                esldoscd:x="3.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
@@ -2054,7 +2084,7 @@ snapshots["SLD Editor given conducting equipment with established connectivity c
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -2066,19 +2096,19 @@ snapshots["SLD Editor given conducting equipment with established connectivity c
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
             </Section>
             <Section>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -2576,7 +2606,7 @@ snapshots["SLD Editor given conducting equipment with established connectivity k
               >
               </Vertex>
               <Vertex
-                esldoscd:x="8.5"
+                esldoscd:x="10"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -2588,20 +2618,20 @@ snapshots["SLD Editor given conducting equipment with established connectivity k
               >
               </Vertex>
               <Vertex
-                esldoscd:x="8.5"
+                esldoscd:x="16.5"
                 esldoscd:y="5.5"
-              >
-              </Vertex>
-              <Vertex
-                esldoscd:x="8.5"
-                esldoscd:y="4.5"
               >
               </Vertex>
             </Section>
             <Section>
               <Vertex
-                esldoscd:x="8.5"
-                esldoscd:y="4.5"
+                esldoscd:x="16.5"
+                esldoscd:y="5.5"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="10"
+                esldoscd:y="5.5"
               >
               </Vertex>
               <Vertex
@@ -2630,12 +2660,17 @@ snapshots["SLD Editor given conducting equipment with established connectivity k
               </Vertex>
               <Vertex
                 esldoscd:x="19.5"
-                esldoscd:y="4.5"
+                esldoscd:y="6.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="8.5"
-                esldoscd:y="4.5"
+                esldoscd:x="16.5"
+                esldoscd:y="6.5"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="16.5"
+                esldoscd:y="5.5"
               >
               </Vertex>
             </Section>
@@ -3348,17 +3383,17 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
           <Private type="OpenSCD-SLD-Layout">
             <Section>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="8.5"
+                esldoscd:x="16"
                 esldoscd:y="4.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="8.5"
+                esldoscd:x="16"
                 esldoscd:y="3.5"
               >
               </Vertex>
@@ -3375,19 +3410,19 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
             </Section>
             <Section>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -3411,12 +3446,12 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="7.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
@@ -3515,7 +3550,7 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -3527,19 +3562,19 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
             </Section>
             <Section>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -3748,12 +3783,12 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="7.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
@@ -3852,19 +3887,19 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="8.5"
+                esldoscd:x="16"
                 esldoscd:y="4.5"
               >
               </Vertex>
             </Section>
             <Section>
               <Vertex
-                esldoscd:x="8.5"
+                esldoscd:x="16"
                 esldoscd:y="4.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -3876,19 +3911,19 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
             </Section>
             <Section>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -3905,12 +3940,12 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="8.5"
+                esldoscd:x="16"
                 esldoscd:y="3.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="8.5"
+                esldoscd:x="16"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -4127,12 +4162,12 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="7.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
@@ -4246,12 +4281,12 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
@@ -4432,12 +4467,12 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="7.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
@@ -4835,12 +4870,12 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="17"
+                esldoscd:x="17.5"
                 esldoscd:y="8.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="17"
+                esldoscd:x="17.5"
                 esldoscd:y="6.5"
               >
               </Vertex>
@@ -5332,12 +5367,12 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="7.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
@@ -5676,12 +5711,12 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="8.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="6.5"
               >
               </Vertex>
@@ -5984,12 +6019,12 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -6013,12 +6048,12 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="7.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
@@ -6149,7 +6184,7 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -6161,19 +6196,19 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
             </Section>
             <Section>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -6382,12 +6417,12 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="7.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
@@ -6457,7 +6492,7 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="13.5"
+                esldoscd:x="13"
                 esldoscd:y="3.5"
               >
               </Vertex>
@@ -6465,6 +6500,33 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
             <Section>
               <Vertex
                 esldoscd:x="17.16"
+                esldoscd:y="3.5"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="14"
+                esldoscd:y="3.5"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="14"
+                esldoscd:y="3"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="13"
+                esldoscd:y="3"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="13"
+                esldoscd:y="3.5"
+              >
+              </Vertex>
+            </Section>
+            <Section esldoscd:bus="true">
+              <Vertex
+                esldoscd:x="13"
                 esldoscd:y="3.5"
               >
               </Vertex>
@@ -6546,7 +6608,7 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -6558,19 +6620,19 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
             </Section>
             <Section>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -6792,12 +6854,12 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="7.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
@@ -6928,7 +6990,7 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -6940,19 +7002,19 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
             </Section>
             <Section>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -7161,12 +7223,12 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="7.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
@@ -7265,7 +7327,7 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -7277,19 +7339,19 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
             </Section>
             <Section>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -7498,12 +7560,12 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="7.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
@@ -7739,12 +7801,12 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="7"
+                esldoscd:x="7.5"
                 esldoscd:y="13.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="7"
+                esldoscd:x="7.5"
                 esldoscd:y="11.5"
               >
               </Vertex>
@@ -7781,7 +7843,7 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="13.5"
+                esldoscd:x="13"
                 esldoscd:y="3.5"
               >
               </Vertex>
@@ -7789,6 +7851,33 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
             <Section>
               <Vertex
                 esldoscd:x="17.16"
+                esldoscd:y="3.5"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="14"
+                esldoscd:y="3.5"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="14"
+                esldoscd:y="3"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="13"
+                esldoscd:y="3"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="13"
+                esldoscd:y="3.5"
+              >
+              </Vertex>
+            </Section>
+            <Section esldoscd:bus="true">
+              <Vertex
+                esldoscd:x="13"
                 esldoscd:y="3.5"
               >
               </Vertex>
@@ -7854,7 +7943,7 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -7866,19 +7955,19 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
             </Section>
             <Section>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -8100,12 +8189,12 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="7.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
@@ -8237,7 +8326,7 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="13.5"
+                esldoscd:x="13"
                 esldoscd:y="3.5"
               >
               </Vertex>
@@ -8245,6 +8334,33 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
             <Section>
               <Vertex
                 esldoscd:x="17.16"
+                esldoscd:y="3.5"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="14"
+                esldoscd:y="3.5"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="14"
+                esldoscd:y="3"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="13"
+                esldoscd:y="3"
+              >
+              </Vertex>
+              <Vertex
+                esldoscd:x="13"
+                esldoscd:y="3.5"
+              >
+              </Vertex>
+            </Section>
+            <Section esldoscd:bus="true">
+              <Vertex
+                esldoscd:x="13"
                 esldoscd:y="3.5"
               >
               </Vertex>
@@ -8310,7 +8426,7 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -8322,19 +8438,19 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="5.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
             </Section>
             <Section>
               <Vertex
-                esldoscd:x="11.5"
+                esldoscd:x="16.5"
                 esldoscd:y="4.5"
               >
               </Vertex>
@@ -8556,12 +8672,12 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="7.5"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="18"
+                esldoscd:x="18.5"
                 esldoscd:y="5.5"
               >
               </Vertex>

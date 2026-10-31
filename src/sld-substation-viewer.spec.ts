@@ -3,6 +3,7 @@ import { identity } from '@openscd/scl-lib';
 
 import { SldSubstationViewer } from './sld-substation-viewer.js';
 import * as interactions from './foundations/interaction-mode.js';
+import type { Point } from './foundations/geometry.js';
 import type { Style } from './foundations/sld-attributes.js';
 
 customElements.define('perf-sld-substation-viewer', SldSubstationViewer);
@@ -134,7 +135,7 @@ async function measureMoves(
         bubbles: true,
       }),
     );
-     
+
     await el.updateComplete;
     times.push(performance.now() - start);
   }
@@ -176,7 +177,7 @@ describe('SldSubstationViewer large-file render performance', () => {
     el.interaction = interactions.idle();
     await el.updateComplete;
 
-     
+
     console.log('\n=== SldSubstationViewer render baseline ===');
     console.log(
       `substation: ${substation.querySelectorAll('VoltageLevel').length} VLs, ` +
@@ -185,7 +186,7 @@ describe('SldSubstationViewer large-file render performance', () => {
     console.log(`initial render: ${initialRenderMs.toFixed(1)} ms`);
     console.log('per-move (ms) idle hover:', stats(idle));
     console.log('per-move (ms) bay move :', stats(placing));
-     
+
 
     // Sanity only — no timing thresholds (machine-dependent).
     expect(gCount).to.be.greaterThan(bayCount);
@@ -511,5 +512,153 @@ describe('SldSubstationViewer read-only locked default', () => {
 
     expect(counts.render, 'locked mouse move is dropped by shouldUpdate').to.equal(0);
     expect(counts.base, 'locked never re-runs the base layers on a mouse move').to.equal(0);
+  });
+});
+
+describe('SldSubstationViewer connection routing', () => {
+  // The neighbouring equipment cell; the source's own terminal stub is inside its cell.
+  const obstacles = [[4, 3, 1, 1]];
+
+  async function connectingViewer(cursor: [number, number]) {
+    const doc = contractSubstationDoc();
+    const el = await mountViewer(doc);
+    const from = doc.querySelector('ConductingEquipment')!;
+    // Leaves the lower terminal of the first equipment, heading down.
+    el.interaction = interactions.connectingFrom(from, 'T2', [
+      [3.5, 3.84],
+      [3.5, 4],
+    ]);
+    [el.mouseX2, el.mouseY2] = cursor;
+    await el.updateComplete;
+    return el;
+  }
+
+  function previewLines(el: SldSubstationViewer) {
+    return Array.from(
+      el.sld.querySelectorAll('line[stroke-linecap="square"]'),
+    ).filter(line => (line.parentElement as Element) === el.sld);
+  }
+
+  it('previews an orthogonal route that avoids other equipment', async () => {
+    const el = await connectingViewer([6.5, 3.5]);
+    const lines = previewLines(el);
+    expect(lines.length).to.be.greaterThan(1);
+
+    lines.forEach((line) => {
+      const [x1, y1, x2, y2] = ['x1', 'y1', 'x2', 'y2'].map(a =>
+        Number(line.getAttribute(a)),
+      );
+      expect(x1 === x2 || y1 === y2, 'segment is orthogonal').to.be.true;
+      obstacles.forEach(([x, y, w, h]) => {
+        const crosses =
+          Math.max(x1, x2) > x &&
+          Math.min(x1, x2) < x + w &&
+          Math.max(y1, y2) > y &&
+          Math.min(y1, y2) < y + h;
+        expect(crosses, `segment ${x1},${y1} ${x2},${y2} enters equipment`).to
+          .be.false;
+      });
+    });
+  });
+
+  it('commits the routed leg and keeps its direction on click', async () => {
+    const el = await connectingViewer([6.5, 3.5]);
+    const paths: Point[][] = [];
+    el.addEventListener('oscd-sld-extend-connect-point', (e) => {
+      paths.push((e as CustomEvent<{ path: Point[] }>).detail.path);
+    });
+
+    el.sld.querySelector<SVGRectElement>('rect[fill="url(#grid)"]')!.dispatchEvent(
+      new MouseEvent('click', { bubbles: true }),
+    );
+
+    const [path] = paths;
+    const last = path[path.length - 1];
+    const anchor = path[path.length - 2];
+    expect(anchor).to.deep.equal([6.5, 3.5]);
+    expect(last[0] === anchor[0] || last[1] === anchor[1]).to.be.true;
+    expect(Math.abs(last[0] - anchor[0]) + Math.abs(last[1] - anchor[1])).to.equal(
+      0.5,
+    );
+  });
+
+  it('shows no route and ignores clicks where the cursor cannot be reached', async () => {
+    const el = await connectingViewer([4.5, 3.5]);
+    expect(previewLines(el)).to.have.lengthOf(0);
+
+    const events: Event[] = [];
+    el.addEventListener('oscd-sld-extend-connect-point', e => events.push(e));
+    el.addEventListener('oscd-sld-connect', e => events.push(e));
+    el.sld
+      .querySelector('rect[fill="url(#grid)"]')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(events).to.be.empty;
+  });
+
+  describe('towards an existing connectivity node', () => {
+    async function viewerWithWire(cursor: [number, number]) {
+      const doc = contractSubstationDoc();
+      const cNode = doc.querySelector('ConnectivityNode')!;
+      const priv = doc.createElementNS(cNode.namespaceURI, 'Private');
+      priv.setAttribute('type', 'OpenSCD-SLD-Layout');
+      const section = doc.createElementNS(SLD_NS, 'sld:Section');
+      [2.5, 10.5].forEach((x) => {
+        const vertex = doc.createElementNS(SLD_NS, 'sld:Vertex');
+        vertex.setAttributeNS(SLD_NS, 'sld:x', `${x}`);
+        vertex.setAttributeNS(SLD_NS, 'sld:y', '7.5');
+        section.appendChild(vertex);
+      });
+      priv.appendChild(section);
+      cNode.appendChild(priv);
+
+      const el = await mountViewer(doc);
+      el.interaction = interactions.connectingFrom(
+        doc.querySelector('ConductingEquipment')!,
+        'T2',
+        [
+          [3.5, 3.84],
+          [3.5, 4],
+        ],
+      );
+      [el.mouseX2, el.mouseY2] = cursor;
+      await el.updateComplete;
+      return { el, cNode };
+    }
+
+    function meetingPoint(el: SldSubstationViewer): Point {
+      const lines = previewLines(el);
+      const last = lines[lines.length - 1];
+      return [Number(last.getAttribute('x2')), Number(last.getAttribute('y2'))];
+    }
+
+    it('meets the wire where the route first reaches it, wherever it is hovered', async () => {
+      const near = await viewerWithWire([3.5, 7.5]);
+      const far = await viewerWithWire([9.5, 7.5]);
+      expect(meetingPoint(near.el)).to.deep.equal([3.5, 7.5]);
+      expect(meetingPoint(far.el)).to.deep.equal([3.5, 7.5]);
+    });
+
+    it('meets a free end of the wire straight on when the cursor is on it', async () => {
+      const { el } = await viewerWithWire([10.5, 7.5]);
+      const lines = previewLines(el);
+      const last = lines[lines.length - 1];
+      expect(['x2', 'y2'].map(a => Number(last.getAttribute(a)))).to.deep.equal([
+        10.5, 7.5,
+      ]);
+      expect(last.getAttribute('y1')).to.equal('7.5');
+    });
+
+    it('connects at that point on click', async () => {
+      const { el, cNode } = await viewerWithWire([9.5, 7.5]);
+      const events: CustomEvent[] = [];
+      el.addEventListener('oscd-sld-connect', e => events.push(e as CustomEvent));
+      el.sld
+        .querySelector('rect[fill="url(#grid)"]')!
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+      const [{ detail }] = events;
+      expect(detail.to).to.equal(cNode);
+      expect(detail.path[detail.path.length - 1]).to.deep.equal([3.5, 7.5]);
+    });
   });
 });

@@ -19,6 +19,7 @@ import {
   newPlaceEvent,
   newStartInteractionEvent,
 } from '../../foundations/events.js';
+import { finishRoute } from '../../foundations/routing.js';
 import { privType, sldNs } from '../../foundations.js';
 
 import type { Point } from '../../foundations/geometry.js';
@@ -34,6 +35,11 @@ export type ConnectivityNodeContext = SldSharedContext & {
   mouseY: number;
   mouseX2: number;
   mouseY2: number;
+  /** Auto-routes the connection being drawn to where it can meet `cNode`. */
+  routeToConnectivityNode?: (
+    path: Point[],
+    cNode: Element,
+  ) => Point[] | undefined;
 };
 
 function preventDefault(e: MouseEvent) {
@@ -186,6 +192,24 @@ export function renderConnectivityNode(
           ) {
             return;
           }
+          // The connection meets the net where the route first reaches it, not
+          // where the user clicked on it.
+          if (context.routeToConnectivityNode) {
+            const route = context.routeToConnectivityNode(path, cNode);
+            if (!route) {
+              return;
+            }
+            context.dispatch(
+              newConnectEvent({
+                from,
+                fromTerminal,
+                path: finishRoute(path, route),
+                to: cNode,
+              }),
+            );
+            return;
+          }
+
           const cursor: Point = [context.mouseX2, context.mouseY2];
 
           // The final drawn segment approaches the busbar from the elbow bend,

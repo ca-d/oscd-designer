@@ -80,6 +80,7 @@ import {
   targetInMode,
 } from './foundations/interaction-mode.js';
 import { defaultSldNsPrefix, sldNs } from './foundations.js';
+import type { Point } from './foundations/geometry.js';
 
 import { SldEditor } from './sld-editor.js';
 import {
@@ -1715,6 +1716,52 @@ describe('SLD Editor', () => {
       await sldSubstationViewer.updateComplete;
     });
 
+    // No wire may run along another, and no wire may end or bend on another's
+    // interior, because the diagram would then show (or hide) a connection that
+    // is not there.
+    afterEach(function checkWires(this: Mocha.Context) {
+      const title = this.currentTest?.fullTitle() ?? '';
+      // Bus bar resizing is free-form placement, not routing.
+      if (title.includes('resizes the bus bar')) {
+        return;
+      }
+      type Segment = [Point, Point];
+      const segments = Array.from(element.doc.querySelectorAll('Section')).flatMap(
+        (section) => {
+          const points = Array.from(section.querySelectorAll('Vertex')).map(
+            v => ['x', 'y'].map(a => Number(v.getAttributeNS(sldNs, a))) as Point,
+          );
+          return points.slice(1).map((p, i): Segment => [points[i], p]);
+        },
+      );
+      const horizontal = ([[, y1], [, y2]]: Segment) => y1 === y2;
+      const range = (a: number, b: number): [number, number] => [Math.min(a, b), Math.max(a, b)];
+      const strictlyInside = (v: number, [lo, hi]: [number, number]) => lo < v && v < hi;
+
+      segments.forEach((a, i) => {
+        segments.slice(i + 1).forEach((b) => {
+          if (horizontal(a) && horizontal(b) && a[0][1] === b[0][1]) {
+            const [a0, a1] = range(a[0][0], a[1][0]);
+            const [b0, b1] = range(b[0][0], b[1][0]);
+            expect(Math.max(a0, b0) < Math.min(a1, b1), `${title}: overlap ${a} ${b}`).to.be.false;
+          }
+          if (!horizontal(a) && !horizontal(b) && a[0][0] === b[0][0]) {
+            const [a0, a1] = range(a[0][1], a[1][1]);
+            const [b0, b1] = range(b[0][1], b[1][1]);
+            expect(Math.max(a0, b0) < Math.min(a1, b1), `${title}: overlap ${a} ${b}`).to.be.false;
+          }
+        });
+        segments.forEach((b) => {
+          [a[0], a[1]].forEach(([x, y]) => {
+            const touches = horizontal(b)
+              ? y === b[0][1] && strictlyInside(x, range(b[0][0], b[1][0]))
+              : x === b[0][0] && strictlyInside(y, range(b[0][1], b[1][1]));
+            expect(touches, `${title}: ${x},${y} touches the inside of ${b}`).to.be.false;
+          });
+        });
+      });
+    });
+
     it('routes terminal grounding from the viewer through the editor', async () => {
       const equipment = element.doc.querySelector('ConductingEquipment')!;
 
@@ -2009,16 +2056,16 @@ describe('SLD Editor', () => {
       await sendMouse({ type: 'click', position });
       expect(equipment.querySelector('Terminal[name="T1"]')).to.exist;
 
-      queryUI({ scl: '[type="DIS"]', ui: 'rect' }).dispatchEvent(
+      equipment = element.doc.querySelector('[name="DIS2"]')!;
+      queryUI({ scl: '[name="DIS2"]', ui: 'rect' }).dispatchEvent(
         new PointerEvent('contextmenu'),
       );
       await element.updateComplete;
-      clickInteractive(menuItem(1));
-      expect(equipment.querySelector('Terminal[name="T2"]')).to.not.exist;
-      position = middleOf(queryUI({ scl: '[name="DIS2"]', ui: 'rect' }));
-      position[1] += 1;
+      clickInteractive(menuItem(0));
+      expect(equipment.querySelector('Terminal[name="T1"]')).to.not.exist;
+      position = middleOf(queryUI({ scl: '[type="SMC"]', ui: 'rect' }));
       await sendMouse({ type: 'click', position });
-      expect(equipment.querySelector('Terminal[name="T2"]')).to.exist;
+      expect(equipment.querySelector('Terminal[name="T1"]')).to.exist;
       await expect(element.doc.documentElement).dom.to.equalSnapshot({
         ignoreAttributes: ['esldoscd:uuid'],
       });
@@ -2172,7 +2219,6 @@ describe('SLD Editor', () => {
         eqClickTarget.dispatchEvent(new PointerEvent('click'));
         await sendMouse({ type: 'click', position: svgPoint(12.0, 5.5) });
         await sendMouse({ type: 'click', position: svgPoint(10.0, 5.5) });
-        await sendMouse({ type: 'click', position: svgPoint(8.5, 4.0) });
         await sendMouse({ type: 'click', position: svgPoint(8.5, 4.5) });
         const equipment2 = element.doc.querySelector(
           'ConductingEquipment[type="NEW"]',
@@ -2192,7 +2238,7 @@ describe('SLD Editor', () => {
         await sendMouse({ type: 'click', position: svgPoint(10.0, 4.5) });
         expect(element.doc.querySelectorAll('Vertex')).to.have.property(
           'length',
-          15,
+          16,
         );
         await expect(element.doc.documentElement).dom.to.equalSnapshot({
           ignoreAttributes: ['esldoscd:uuid'],
@@ -2281,7 +2327,7 @@ describe('SLD Editor', () => {
           queryUI({ scl: '[type="NEW"]', ui: 'circle' }).dispatchEvent(
             new PointerEvent('click'),
           );
-          await sendMouse({ type: 'click', position: svgPoint(18.0, 6.5) });
+          await sendMouse({ type: 'click', position: svgPoint(18.5, 6.5) });
           expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(6);
           expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(16);
           queryUI({ scl: '[type="NEW"]', ui: 'rect' }).dispatchEvent(
@@ -2304,8 +2350,8 @@ describe('SLD Editor', () => {
             new PointerEvent('click'),
           );
           await sendMouse({ type: 'click', position: gridPos(8, 4) });
-          expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(7);
-          expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(19);
+          expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(8);
+          expect(element.doc.querySelectorAll('Vertex')).to.have.lengthOf(22);
           queryUI({ scl: '[type="NEW"]', ui: 'rect' }).dispatchEvent(
             new PointerEvent('auxclick', { button: 1 }),
           );
@@ -2473,7 +2519,7 @@ describe('SLD Editor', () => {
               element.doc
                 .querySelector('[name="L"]')
                 ?.querySelectorAll('Section'),
-            ).to.have.lengthOf(2);
+            ).to.have.lengthOf(3);
             position[1] += 120;
             await sendMouse({ position, type: 'click' });
             await element.updateComplete;
