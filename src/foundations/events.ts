@@ -149,6 +149,7 @@ export type InteractionIntent =
   | { mode: 'placingLabel'; element: Element; offset?: Point }
   | { mode: 'resizingBR'; element: Element }
   | { mode: 'resizingTL'; element: Element }
+  | { mode: 'reroutingSection'; element: Element }
   | ({ mode: 'connecting' } & StartConnectDetail);
 
 export type StartInteractionEvent = CustomEvent<InteractionIntent>;
@@ -157,6 +158,21 @@ export function newStartInteractionEvent(
   detail: InteractionIntent,
 ): StartInteractionEvent {
   return new CustomEvent('oscd-sld-start-interaction', {
+    bubbles: true,
+    composed: true,
+    detail,
+  });
+}
+
+export type RerouteSectionDetail = { section: Element; via: Point };
+
+export type RerouteSectionEvent = CustomEvent<RerouteSectionDetail>;
+
+/** The wire `section` is to be routed through the point `via`. */
+export function newRerouteSectionEvent(
+  detail: RerouteSectionDetail,
+): RerouteSectionEvent {
+  return new CustomEvent('oscd-sld-reroute-section', {
     bubbles: true,
     composed: true,
     detail,
@@ -317,6 +333,7 @@ declare global {
     ['oscd-sld-extend-connect-point']: ExtendConnectPointEvent;
     ['oscd-sld-rotate']: StartEvent;
     ['oscd-sld-flip']: StartEvent;
+    ['oscd-sld-reroute-section']: RerouteSectionEvent;
     ['oscd-sld-start-interaction']: StartInteractionEvent;
     ['oscd-sld-selected']: SelectEvent;
     ['oscd-sld-edit-scl']: EditSclEvent;

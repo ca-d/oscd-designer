@@ -2918,6 +2918,110 @@ describe('SLD Editor', () => {
     });
   });
 
+  describe('re-routing a wire', () => {
+    const layout = (attrs: string) =>
+      `<Private type="OpenSCD-SLD-Layout"><smth:SLDAttributes ${attrs}/></Private>`;
+    const terminal = (name: string, uuid: string) =>
+      `<Terminal name="${name}" connectivityNode="S1/V1/B1/L1">${layout(`smth:uuid="${uuid}"`)}</Terminal>`;
+    const equipment = (name: string, y: number, inner: string) =>
+      `<ConductingEquipment name="${name}" type="DIS">${layout(`smth:x="3" smth:y="${y}" smth:rot="0"`)}${inner}</ConductingEquipment>`;
+    const vertex = (x: number, y: number, uuid?: string) =>
+      `<smth:Vertex smth:x="${x}" smth:y="${y}"${uuid ? ` smth:uuid="${uuid}"` : ''}/>`;
+    const wiredDoc = (wire: string, second = terminal('T1', 'u2')) =>
+      sldFixture({
+        bay: { h: 14 },
+        children:
+          equipment('Q1', 3, terminal('T2', 'u1')) +
+          equipment('Q2', 8, second) +
+          `<ConnectivityNode name="L1" pathName="S1/V1/B1/L1"><Private type="OpenSCD-SLD-Layout"><smth:Section>${wire}</smth:Section></Private></ConnectivityNode>`,
+      });
+    const points = (section: Element) =>
+      Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex')).map(v => [
+        Number(v.getAttributeNS(sldNs, 'x')),
+        Number(v.getAttributeNS(sldNs, 'y')),
+      ]);
+    const straight = `${vertex(3.5, 3.84, 'u1')}${vertex(3.5, 8.16, 'u2')}`;
+
+    async function load(doc: XMLDocument) {
+      element.doc = doc;
+      await element.updateComplete;
+      const viewer = getSldSubstationViewer(element)!;
+      await viewer.updateComplete;
+      return viewer;
+    }
+
+    it('moves a wire clicked while idle through the next point clicked', async () => {
+      const doc = wiredDoc(straight);
+      const viewer = await load(doc);
+      const section = doc.querySelector('Section')!;
+
+      await sendMouse({ type: 'click', position: gridPos(3, 5) });
+      expect(element.interaction.mode).to.equal('reroutingSection');
+
+      await sendMouse({ type: 'click', position: gridPos(8, 6) });
+      await element.updateComplete;
+      await viewer.updateComplete;
+
+      expect(element.interaction.mode).to.equal('idle');
+      expect(points(section).some(([x, y]) => x === 8.5 && y === 6.5)).to.be.true;
+      expect(points(section)[0]).to.deep.equal([3.5, 3.84]);
+      expect(points(section).slice(-1)[0]).to.deep.equal([3.5, 8.16]);
+      expect(doc.querySelectorAll('Terminal')).to.have.lengthOf(2);
+    });
+
+    it('changes nothing when escape is pressed instead', async () => {
+      const doc = wiredDoc(straight);
+      await load(doc);
+      const before = new XMLSerializer().serializeToString(doc);
+
+      await sendMouse({ type: 'click', position: gridPos(3, 5) });
+      expect(element.interaction.mode).to.equal('reroutingSection');
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      await element.updateComplete;
+
+      expect(element.interaction.mode).to.equal('idle');
+      expect(new XMLSerializer().serializeToString(doc)).to.equal(before);
+    });
+
+    it('draws a wire with a free end again from its terminal and replaces the old one', async () => {
+      const doc = wiredDoc(`${vertex(3.5, 3.84, 'u1')}${vertex(3.5, 6)}`, '');
+      await load(doc);
+      const section = doc.querySelector('Section')!;
+
+      element.handleStartInteraction({ mode: 'reroutingSection', element: section });
+      const { interaction } = element;
+      expect(interaction.mode).to.equal('connectingFrom');
+      expect(
+        interaction.mode === 'connectingFrom' && interaction.path,
+      ).to.deep.equal([[3.5, 3.84], [3.5, 4]]);
+      expect(doc.querySelectorAll('Terminal')).to.have.lengthOf(1);
+
+      element.handleConnect({
+        from: doc.querySelector('[name="Q1"]')!,
+        fromTerminal: 'T2',
+        path: [[3.5, 3.84], [3.5, 4], [3.5, 8], [3.5, 8.16]],
+        to: doc.querySelector('[name="Q2"]')!,
+        toTerminal: 'T1',
+      });
+
+      expect(doc.querySelector('Section')).to.not.equal(section);
+      expect(doc.querySelectorAll('Terminal')).to.have.lengthOf(2);
+      expect(doc.querySelectorAll('Section')).to.have.lengthOf(1);
+    });
+
+    it('does nothing for a wire with a free end at a junction', async () => {
+      const doc = wiredDoc(`${vertex(3.5, 5)}${vertex(3.5, 6)}`, '');
+      await load(doc);
+
+      element.handleStartInteraction({
+        mode: 'reroutingSection',
+        element: doc.querySelector('Section')!,
+      });
+
+      expect(element.interaction.mode).to.equal('idle');
+    });
+  });
+
   describe('when disabled', () => {
     beforeEach(async () => {
       element.disabled = true;

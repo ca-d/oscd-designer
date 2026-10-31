@@ -8,7 +8,7 @@ import {
   shiftDescendantEdits,
   shiftElementEdits,
 } from './edits.js';
-import { planReroutes, rerouteEdits, sectionSignature, pointsSignature } from './rerouting.js';
+import { planReroutes, rerouteEdits, sectionEnds, sectionSignature, pointsSignature } from './rerouting.js';
 import type { FlaggedSection } from './rerouting.js';
 import { attributes, getSLDAttributes, setSLDAttributes } from './sld-attributes.js';
 import { sldNs } from '../foundations.js';
@@ -282,6 +282,76 @@ describe('rerouteEdits', () => {
       expect(sectionSignature(route.section)).to.equal(
         pointsSignature(route.points),
       );
+    });
+  });
+
+  describe('routing a wire through a point', () => {
+    const through = (doc: XMLDocument, section: Element, via: Point) =>
+      planReroutes(doc, { kind: 'section', element: section, via });
+
+    it('keeps both ends and goes through the point', () => {
+      const doc = substation({ wires: straightWire });
+      const [section] = sections(doc);
+      handleEdit(
+        rerouteEdits(doc, { kind: 'section', element: section, via: [8.5, 5.5] }, 'smth'),
+      );
+
+      expectAttached(doc);
+      const wire = polyline(section);
+      expect(wire.some(([x, y]) => x === 8.5 && y === 5.5)).to.be.true;
+      expect(wire[0]).to.deep.equal([3.5, 3.84]);
+      expect(wire[wire.length - 1]).to.deep.equal([3.5, 8.16]);
+    });
+
+    it('reports nothing for a point that can be gone through cleanly', () => {
+      const doc = substation({ wires: straightWire });
+
+      expect(
+        through(doc, sections(doc)[0], [8.5, 5.5]).map(route => route.fallback),
+      ).to.deep.equal([false]);
+    });
+
+    it('reports a point it cannot be gone through cleanly', () => {
+      const doc = substation({ wires: straightWire });
+
+      // Inside Q2 itself.
+      expect(
+        through(doc, sections(doc)[0], [3.5, 8.5]).map(route => route.fallback),
+      ).to.deep.equal([true]);
+    });
+
+    it('ends on the junction at its other end', () => {
+      const doc = substation({
+        wires: `<smth:Section>${vertex(3.5, 3.84, 'u1')}${vertex(3.5, 6)}</smth:Section>
+          <smth:Section>${vertex(3.5, 6)}${vertex(3.5, 8.16, 'u2')}</smth:Section>`,
+      });
+      const [section] = sections(doc);
+      handleEdit(
+        rerouteEdits(doc, { kind: 'section', element: section, via: [7, 4.5] }, 'smth'),
+      );
+
+      const wire = polyline(section);
+      expect(wire.some(([x, y]) => x === 7 && y === 4.5)).to.be.true;
+      expect(wire[wire.length - 1]).to.deep.equal([3.5, 6]);
+      expect(polyline(sections(doc)[1])).to.deep.equal([[3.5, 6], [3.5, 8.16]]);
+    });
+
+    it('leaves a wire with a free end alone, and knows which end is free', () => {
+      const doc = substation({
+        wires: `<smth:Section>${vertex(3.5, 3.84, 'u1')}${vertex(3.5, 6)}</smth:Section>`,
+      });
+      const [section] = sections(doc);
+
+      expect(through(doc, section, [7, 4.5])).to.deep.equal([]);
+      expect(sectionEnds(section)!.map(end => end.free)).to.deep.equal([false, true]);
+    });
+
+    it('leaves bus bars alone', () => {
+      const doc = substation({
+        wires: `<smth:Section smth:bus="true">${vertex(3.5, 3.84, 'u1')}${vertex(3.5, 8.16, 'u2')}</smth:Section>`,
+      });
+
+      expect(through(doc, sections(doc)[0], [8.5, 5.5])).to.deep.equal([]);
     });
   });
 

@@ -29,7 +29,10 @@ export type InteractionState =
     element: Element;
     terminal: Terminal;
     path: Point[];
-  };
+    /** The terminal whose connection this replaces, once it is made. */
+    replacing?: Element;
+  }
+  | { mode: 'reroutingSection'; element: Element };
 
 /**
  * Pure constructors for each {@link InteractionState} variant. They compute the next
@@ -80,7 +83,20 @@ export const connectingFrom = (
   element: Element,
   terminal: Terminal,
   path: Point[] = [],
-): InteractionState => ({ mode: 'connectingFrom', element, terminal, path });
+  replacing?: Element,
+): InteractionState => ({
+  mode: 'connectingFrom',
+  element,
+  terminal,
+  path,
+  ...(replacing ? { replacing } : {}),
+});
+
+/** Moving the wire `section` by placing a new point on its way. */
+export const reroutingSection = (element: Element): InteractionState => ({
+  mode: 'reroutingSection',
+  element,
+});
 
 /** The set of gesture-mode tags of {@link InteractionState}. */
 export type InteractionMode = InteractionState['mode'];

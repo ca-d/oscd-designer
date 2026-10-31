@@ -1031,6 +1031,30 @@ describe('SldSubstationViewer live reroute preview', () => {
     expect(events[0].detail).to.equal(section);
   });
 
+  it('previews a wire being re-routed through the cursor, and places it on click', async () => {
+    const { el, section } = await wiredViewer();
+    el.interaction = interactions.reroutingSection(section);
+    [el.mouseX2, el.mouseY2] = [8.5, 6.5];
+    await el.updateComplete;
+
+    const wires = Array.from(el.sld.querySelectorAll('polyline'));
+    expect(wires).to.have.lengthOf(1);
+    expect(wires[0].getAttribute('points')).to.contain('8.5,6.5');
+    expect(wires[0].hasAttribute('stroke-dasharray')).to.be.false;
+    expect(
+      (el as unknown as { hiddenSections: Set<Element> }).hiddenSections.has(section),
+    ).to.be.true;
+
+    const details: unknown[] = [];
+    el.addEventListener('oscd-sld-reroute-section', e =>
+      details.push((e as CustomEvent).detail),
+    );
+    el.sld
+      .querySelector('rect[pointer-events="all"]')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(details).to.deep.equal([{ section, via: [8.5, 6.5] }]);
+  });
+
   it('shows no warning marks while something is being placed', async () => {
     const { el, second, section } = await wiredViewer();
     el.routingWarnings = [section];
@@ -1040,14 +1064,28 @@ describe('SldSubstationViewer live reroute preview', () => {
     expect(el.sld.querySelector('.routing-warning')).to.not.exist;
   });
 
-  it('lets clicks through plain wires to the equipment under them', async () => {
-    const { el } = await wiredViewer();
+  it('starts re-routing a plain wire when it is clicked while idle', async () => {
+    const { el, section } = await wiredViewer();
     el.interaction = interactions.idle();
     await el.updateComplete;
 
-    const lines = Array.from(el.sld.querySelectorAll('.node line'));
-    expect(lines.length).to.be.greaterThan(0);
-    lines.forEach(line =>
+    const intents: unknown[] = [];
+    el.addEventListener('oscd-sld-start-interaction', e =>
+      intents.push((e as CustomEvent).detail),
+    );
+    el.sld
+      .querySelector('.node line[pointer-events="all"]:not([stroke])')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(intents).to.deep.equal([{ mode: 'reroutingSection', element: section }]);
+  });
+
+  it('lets clicks through plain wires while something else is going on', async () => {
+    const { el } = await wiredViewer();
+    el.interaction = interactions.placing(el.substation.querySelector('ConductingEquipment')!, [0, 0]);
+    await el.updateComplete;
+
+    Array.from(el.sld.querySelectorAll('.node line')).forEach(line =>
       expect(line.getAttribute('pointer-events')).to.equal('none'),
     );
   });

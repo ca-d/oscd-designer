@@ -73,6 +73,7 @@ import {
   newConnectEvent,
   newDismissRoutingWarningEvent,
   newExtendConnectPointEvent,
+  newRerouteSectionEvent,
   newGroundTerminalEvent,
   newOpenContextMenuEvent,
   newPlaceEvent,
@@ -451,7 +452,10 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
     // cursor skip re-evaluating the whole (potentially thousands of `<g>`) base
     // stack.
     const reroutes = this.plannedReroutes();
-    this.hideSections(reroutes);
+    this.hideSections([
+      ...reroutes.map(route => route.section),
+      ...this.replacedSections(),
+    ]);
     const baseLayerTracksMouse =
       this.interaction.mode === 'resizingBR' ||
       this.interaction.mode === 'resizingTL' ||
@@ -552,6 +556,7 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
         ${this.renderPlacingTargetsLayer()}
         ${this.renderPlacingPreview()}
         ${this.renderRoutingWarnings()}
+        ${this.renderRerouteTarget()}
       </svg>
     </section>`;
   }
@@ -989,6 +994,22 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
    * dropped where it is now.
    */
   private plannedReroutes(): PreviewRoute[] {
+    if (this.interaction.mode === 'reroutingSection') {
+      const section = this.interaction.element;
+      const via: Point = [this.mouseX2, this.mouseY2];
+      const key = [section, this.docVersion, ...via];
+      if (key.some((k, i) => k !== this.reroutePreview.key[i])) {
+        this.reroutePreview = {
+          key,
+          routes:
+            section.getRootNode() === this.doc
+              ? planReroutes(this.doc, { kind: 'section', element: section, via })
+              : [],
+        };
+      }
+      return this.reroutePreview.routes;
+    }
+
     const { placing } = this;
     if (
       !placing ||
@@ -1029,8 +1050,23 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
   /** The sections drawn as previews; kept the same set while they are the same sections. */
   private hiddenSections = new Set<Element>();
 
-  private hideSections(routes: PreviewRoute[]) {
-    const sections = routes.map(route => route.section);
+  /** The wire whose connection a new connection from its terminal replaces. */
+  private replacedSections(): Element[] {
+    if (this.interaction.mode !== 'connectingFrom') {
+      return [];
+    }
+    const uuid = this.interaction.replacing
+      ? getSLDAttributes(this.interaction.replacing, 'uuid')
+      : undefined;
+    const vertex = uuid
+      ? Array.from(this.substation.getElementsByTagNameNS(sldNs, 'Vertex')).find(
+        candidate => getSLDAttributes(candidate, 'uuid') === uuid,
+      )
+      : undefined;
+    return vertex?.parentElement ? [vertex.parentElement] : [];
+  }
+
+  private hideSections(sections: Element[]) {
     if (
       sections.length !== this.hiddenSections.size ||
       sections.some(section => !this.hiddenSections.has(section))
@@ -1047,6 +1083,22 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
           stroke="${fallback ? 'var(--oscd-sld-routing-warning-color)' : 'currentColor'}"
           stroke-dasharray="${fallback ? '0.15 0.1' : nothing}" />`,
     );
+  }
+
+  /** Catches the click that places the point a wire being re-routed goes through. */
+  private renderRerouteTarget() {
+    if (this.disabled || this.interaction.mode !== 'reroutingSection') {
+      return nothing;
+    }
+    const section = this.interaction.element;
+    return svg`<rect width="100%" height="100%" fill="none" pointer-events="all"
+      @click=${() =>
+        this.dispatchEvent(
+          newRerouteSectionEvent({
+            section,
+            via: [this.mouseX2, this.mouseY2],
+          }),
+        )} />`;
   }
 
   /** The middle of where a wire first runs through equipment, or else of its longest leg. */

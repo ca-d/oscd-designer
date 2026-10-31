@@ -29,11 +29,12 @@ import { sldNs } from '../foundations.js';
 import type { EditV2 } from '@openscd/oscd-api';
 import type { Point } from './geometry.js';
 
-/** What the user is changing: moving an element (and all it contains), turning equipment a quarter or mirroring a transformer. */
+/** What the user is changing: moving an element (and all it contains), turning equipment a quarter, mirroring a transformer or routing a wire through a point. */
 export type LayoutChange =
   | { kind: 'move'; element: Element; dx: number; dy: number }
   | { kind: 'rotate'; element: Element }
-  | { kind: 'flip'; element: Element };
+  | { kind: 'flip'; element: Element }
+  | { kind: 'section'; element: Element; via: Point };
 
 /** Where a section meets its end: the point, the first point of a route there and the direction leaving it. */
 export type Port = { point: Point; approach: Point; outward: Point };
@@ -44,6 +45,8 @@ export type End = {
   terminal?: Element;
   /** The terminal's vertex is not where its terminal now is. */
   detached: boolean;
+  /** Neither at a terminal nor joined to another wire. */
+  free: boolean;
 };
 
 const STEP = 0.5;
@@ -195,6 +198,7 @@ function describeEnd(
   index: number,
   layout: Layout,
   terminals: Map<string, Element>,
+  joined: (vertex: Element) => boolean,
 ): End {
   const vertex = vertices[index];
   const inner = vertices[index === 0 ? 1 : vertices.length - 2];
@@ -215,6 +219,7 @@ function describeEnd(
         outward: oldLeg,
       },
       detached: false,
+      free: !joined(vertex),
     };
   }
 
@@ -224,7 +229,73 @@ function describeEnd(
     terminal,
     port,
     detached: !port || !sameAs(vertexNow, port.point),
+    free: false,
   };
+}
+
+type Wire = {
+  cNode: Element;
+  section: Element;
+  vertices: Element[];
+  ends?: [End, End];
+};
+
+/** Every section of a substation with the ends it has under `layout`. */
+function collectWires(substation: Element, layout: Layout): Wire[] {
+  const terminals = new Map<string, Element>();
+  Array.from(substation.querySelectorAll('Terminal, NeutralPoint')).forEach(
+    (terminal) => {
+      const uuid = getSLDAttributes(terminal, 'uuid');
+      if (uuid) {
+        terminals.set(uuid, terminal);
+      }
+    },
+  );
+
+  return Array.from(substation.querySelectorAll('ConnectivityNode')).flatMap(
+    (cNode) => {
+      const sections = Array.from(
+        cNode.getElementsByTagNameNS(sldNs, 'Section'),
+      );
+      const key = (vertex: Element) => attributes(vertex).pos.join(',');
+      const sectionsAt = new Map<string, Set<Element>>();
+      sections.forEach(section =>
+        Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex')).forEach(
+          (vertex) => {
+            const at = sectionsAt.get(key(vertex)) ?? new Set<Element>();
+            sectionsAt.set(key(vertex), at.add(section));
+          },
+        ),
+      );
+
+      return sections.map((section) => {
+        const vertices = Array.from(
+          section.getElementsByTagNameNS(sldNs, 'Vertex'),
+        );
+        const joined = (vertex: Element) =>
+          Array.from(sectionsAt.get(key(vertex)) ?? []).some(
+            other => other !== section,
+          );
+        const wire: Wire = { cNode, section, vertices };
+        if (vertices.length > 1) {
+          wire.ends = [0, vertices.length - 1].map(index =>
+            describeEnd(vertices, index, layout, terminals, joined),
+          ) as [End, End];
+        }
+        return wire;
+      });
+    },
+  );
+}
+
+/** How the ends of `section` are held; a free end is held by nothing. */
+export function sectionEnds(section: Element): [End, End] | undefined {
+  const substation = section.closest('Substation');
+  return substation
+    ? collectWires(substation, layoutOf({ kind: 'section', element: section, via: [0, 0] })).find(
+      wire => wire.section === section,
+    )?.ends
+    : undefined;
 }
 
 /**
@@ -279,6 +350,81 @@ const stubOf = ({ approach, outward }: Port): Point => [
   approach[0] + outward[0] * STEP,
   approach[1] + outward[1] * STEP,
 ];
+
+/** The direction a route arrives in, or `otherwise` when it is a single point. */
+const arrival = (route: Point[], otherwise: Point): Point =>
+  route.length > 1
+    ? heading(route[route.length - 2], route[route.length - 1])
+    : otherwise;
+
+/** The route from one end of a section to the other that passes through `via`. */
+function connectVia(
+  router: ConnectionRouter,
+  cNode: Element,
+  from: End,
+  to: End,
+  via: Point,
+  tight: boolean,
+  clear: (end: End, point: Point, outward: Point) => Point,
+): Point[] | undefined {
+  const { port: start } = from;
+  const { port: end } = to;
+  if (!start || !end) {
+    return undefined;
+  }
+
+  const origin = from.terminal
+    ? clear(from, start.approach, start.outward)
+    : start.point;
+  const first = router.route(origin, start.outward, via);
+  if (!first) {
+    return undefined;
+  }
+  const own: Point[] = [start.point, ...first];
+  const turned = arrival(first, start.outward);
+  const last = to.terminal
+    ? router.route(
+      via,
+      turned,
+      tight ? end.approach : clear(to, stubOf(end), end.outward),
+      own,
+    )
+    : router.routeToVertex(via, turned, cNode, end.point, own);
+  if (!last) {
+    return undefined;
+  }
+  const points = [
+    start.point,
+    ...first,
+    ...last,
+    ...(to.terminal ? [end.approach, end.point] : []),
+  ];
+  cleanPath(points);
+  return points;
+}
+
+/** A route through `via` that goes through whatever is in the way when it has to. */
+function connectThroughVia(
+  soft: ConnectionRouter,
+  start: Port,
+  end: Port,
+  via: Point,
+): Point[] {
+  const elbow = (from: Point, outward: Point, to: Point): Point[] => [
+    from,
+    outward[0] !== 0 ? [to[0], from[1]] : [from[0], to[1]],
+    to,
+  ];
+  const first =
+    soft.route(start.point, start.outward, via) ??
+    elbow(start.point, start.outward, via);
+  const turned = arrival(first, start.outward);
+  const last =
+    soft.route(via, turned, stubOf(end)) ?? elbow(via, turned, stubOf(end));
+  const points = [...first, ...last, end.approach, end.point];
+  cleanPath(points);
+  return points;
+}
 
 /** A route that goes through whatever is in the way when it has to. */
 function connectThrough(soft: ConnectionRouter, start: Port, end: Port): Point[] {
@@ -445,47 +591,21 @@ export function planReroutes(
     return [];
   }
   const layout = layoutOf(change);
+  const wires = collectWires(substation, layout);
 
-  const terminals = new Map<string, Element>();
-  Array.from(substation.querySelectorAll('Terminal, NeutralPoint')).forEach(
-    (terminal) => {
-      const uuid = getSLDAttributes(terminal, 'uuid');
-      if (uuid) {
-        terminals.set(uuid, terminal);
-      }
-    },
-  );
-
-  type Wire = {
-    cNode: Element;
-    section: Element;
-    vertices: Element[];
-    ends?: [End, End];
-  };
-  const wires: Wire[] = Array.from(
-    substation.querySelectorAll('ConnectivityNode'),
-  ).flatMap(cNode =>
-    Array.from(cNode.getElementsByTagNameNS(sldNs, 'Section')).map(
-      (section) => {
-        const vertices = Array.from(
-          section.getElementsByTagNameNS(sldNs, 'Vertex'),
-        );
-        const wire: Wire = { cNode, section, vertices };
-        if (vertices.length > 1) {
-          wire.ends = [0, vertices.length - 1].map(index =>
-            describeEnd(vertices, index, layout, terminals),
-          ) as [End, End];
-        }
-        return wire;
-      },
-    ),
-  );
-
-  const affected = wires.filter(
-    wire =>
-      wire.ends?.some(end => end.detached) &&
-      wire.ends.every(end => end.port),
-  );
+  const affected =
+    change.kind === 'section'
+      ? wires.filter(
+        wire =>
+          wire.section === change.element &&
+          !xmlBoolean(getSLDAttributes(wire.section, 'bus')) &&
+          wire.ends?.every(end => end.port && !end.free),
+      )
+      : wires.filter(
+        wire =>
+          wire.ends?.some(end => end.detached) &&
+          wire.ends.every(end => end.port),
+      );
   if (!affected.length) {
     return [];
   }
@@ -549,7 +669,9 @@ export function planReroutes(
       existing,
       'soft',
     );
-    return connectThrough(softRouter, start, end);
+    return change.kind === 'section'
+      ? connectThroughVia(softRouter, start, end, change.via)
+      : connectThrough(softRouter, start, end);
   };
   const reserve = (points: Point[]) => {
     const releases = [router.reserve(points), tightRouter.reserve(points)];
@@ -581,14 +703,25 @@ export function planReroutes(
             [first, last],
             [last, first],
           ].some(([from, to], attempt) => {
-            const found = connect(
-              candidate as ConnectionRouter,
-              cNode,
-              from,
-              to,
-              tight as boolean,
-              clearOfOwn,
-            );
+            const found =
+              change.kind === 'section'
+                ? connectVia(
+                  candidate as ConnectionRouter,
+                  cNode,
+                  from,
+                  to,
+                  change.via,
+                  tight as boolean,
+                  clearOfOwn,
+                )
+                : connect(
+                  candidate as ConnectionRouter,
+                  cNode,
+                  from,
+                  to,
+                  tight as boolean,
+                  clearOfOwn,
+                );
             if (found) {
               points = attempt === 0 ? found : found.reverse();
             }

@@ -8,6 +8,7 @@ import {
   resizingBR,
   resizingTL,
   connectingFrom,
+  reroutingSection,
   isMode,
   targetInMode,
   connectDetail,
@@ -79,6 +80,24 @@ describe('interaction-mode constructors', () => {
       element,
       terminal: 'N2',
       path: [[1, 1]],
+    });
+  });
+
+  it('connectingFrom() can carry the terminal whose connection it replaces', () => {
+    const bay = doc.querySelector('Bay')!;
+    expect(connectingFrom(element, 'T1', [], bay)).to.deep.equal({
+      mode: 'connectingFrom',
+      element,
+      terminal: 'T1',
+      path: [],
+      replacing: bay,
+    });
+  });
+
+  it('reroutingSection() carries only the section', () => {
+    expect(reroutingSection(element)).to.deep.equal({
+      mode: 'reroutingSection',
+      element,
     });
   });
 });

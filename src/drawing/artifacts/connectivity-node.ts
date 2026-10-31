@@ -99,9 +99,9 @@ export function renderConnectivityNode(
       return;
     }
     const busBar = xmlBoolean(section.getAttributeNS(sldNs, 'bus'));
-    // Plain wires only take clicks to be connected to, so they don't get in the way of equipment under them.
+    // Plain wires take clicks to be connected to, or to be moved while idle.
     const pointerEvents =
-      busBar || isMode(context.interaction, 'connectingFrom')
+      busBar || isMode(context.interaction, 'idle', 'connectingFrom')
         ? wirePointerEvents
         : 'none';
     const vertices = Array.from(
@@ -141,6 +141,17 @@ export function renderConnectivityNode(
             return;
           }
           context.requestContextMenu(bay, e);
+        };
+      }
+      if (!busBar && !context.disabled && isMode(context.interaction, 'idle')) {
+        handleClick = (e: MouseEvent) => {
+          e.stopPropagation();
+          context.dispatch(
+            newStartInteractionEvent({
+              mode: 'reroutingSection',
+              element: section,
+            }),
+          );
         };
       }
       if (busBar && targetInMode(context.interaction, 'resizingBR') === bay && !context.disabled) {
