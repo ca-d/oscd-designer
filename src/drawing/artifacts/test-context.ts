@@ -41,6 +41,7 @@ export function makeArtifactContext(
     dispatched,
     grounded,
     renderedChildren,
+    connectTarget: undefined,
     interaction: idle(),
     disabled: false,
     dispatch(event: Event) {

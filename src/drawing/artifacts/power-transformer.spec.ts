@@ -2,11 +2,12 @@ import { expect } from '@open-wc/testing';
 import { identity } from '@openscd/scl-lib';
 
 import { powerTransformerArtifact } from './power-transformer.js';
+import { windingTerminalTargets } from '../../foundations/transformer.js';
 import {
   makeArtifactContext,
   renderToSvg,
 } from './test-context.js';
-import { placing } from '../../foundations/interaction-mode.js';
+import { connectingFrom, placing } from '../../foundations/interaction-mode.js';
 import { sldFixture } from '../../test-helpers.js';
 
 function transformerDoc() {
@@ -290,6 +291,107 @@ describe('powerTransformerArtifact', () => {
     it('hides connect ports while disabled', () => {
       const { host } = renderWinding(earthingSingle(), { disabled: true });
       expect(host.querySelector('circle.port')).to.be.null;
+    });
+  });
+
+  describe('connect mode', () => {
+    let from: Element;
+    let target: Element;
+    let targetSubstation: Element;
+
+    beforeEach(() => {
+      const localDoc = sldFixture({
+        children: `
+          <ConductingEquipment name="Q1" type="CBR"/>
+          <PowerTransformer name="T1">
+            <Private type="OpenSCD-SLD-Layout">
+              <smth:SLDAttributes smth:x="4" smth:y="4"/>
+            </Private>
+            <TransformerWinding name="W1"/>
+            <TransformerWinding name="W2"/>
+          </PowerTransformer>`,
+      });
+      from = localDoc.querySelector('ConductingEquipment')!;
+      target = localDoc.querySelector('PowerTransformer')!;
+      targetSubstation = localDoc.querySelector('Substation')!;
+    });
+
+    function renderConnect(
+      overrides: Parameters<typeof makeArtifactContext>[0] = {},
+      fromElement = from,
+    ) {
+      const context = makeArtifactContext({
+        interaction: connectingFrom(fromElement, 'T1', [[1, 1]]),
+        substation: targetSubstation,
+        ...overrides,
+      });
+      const state = powerTransformerArtifact.state(target, context, {
+        connect: true,
+      })!;
+      const actions = powerTransformerArtifact.actions(target, context, state);
+      return renderToSvg(
+        powerTransformerArtifact.render(target, state, actions, context, {
+          connect: true,
+        }),
+      );
+    }
+
+    it('is suppressed in the base layer while connecting', () => {
+      const context = makeArtifactContext({
+        interaction: connectingFrom(from, 'T1', [[1, 1]]),
+        substation: targetSubstation,
+      });
+      expect(powerTransformerArtifact.state(target, context)).to.be.undefined;
+    });
+
+    it('lets clicks through to the connection drop-target', () => {
+      const host = renderConnect();
+      expect(
+        host.querySelector('g.transformer')!.getAttribute('pointer-events'),
+      ).to.equal('none');
+    });
+
+    it('shows an indicator on every open winding terminal', () => {
+      const host = renderConnect();
+      expect(host.querySelectorAll('polygon.connect-indicator')).to.have.lengthOf(
+        windingTerminalTargets(
+          target.querySelectorAll('TransformerWinding')[0],
+          [4, 4],
+          { rot: 0, kind: 'default', flip: false },
+        ).length +
+          windingTerminalTargets(
+            target.querySelectorAll('TransformerWinding')[1],
+            [4, 4],
+            { rot: 0, kind: 'default', flip: false },
+          ).length,
+      );
+      expect(host.querySelector('circle.port')).to.be.null;
+    });
+
+    it('hides the indicator of the terminal being targeted', () => {
+      const winding = target.querySelectorAll('TransformerWinding')[0];
+      const [first] = windingTerminalTargets(winding, [4, 4], {
+        rot: 0,
+        kind: 'default',
+        flip: false,
+      });
+      const all = renderConnect().querySelectorAll('polygon.connect-indicator');
+      const withTarget = renderConnect({
+        connectTarget: {
+          to: winding,
+          toTerminal: first.terminal,
+          near: first.near,
+          far: first.far,
+        },
+      }).querySelectorAll('polygon.connect-indicator');
+      expect(withTarget).to.have.lengthOf(all.length - 1);
+    });
+
+    it('shows no indicators when connecting from a winding', () => {
+      const winding = target.querySelectorAll('TransformerWinding')[0];
+      expect(
+        renderConnect({}, winding).querySelectorAll('polygon.connect-indicator'),
+      ).to.have.lengthOf(0);
     });
   });
 

@@ -1,6 +1,10 @@
 import { expect } from '@open-wc/testing';
 
-import { transformerWindingMeasures } from './transformer.js';
+import {
+  nearestWindingTerminalTarget,
+  transformerWindingMeasures,
+  windingTerminalTargets,
+} from './transformer.js';
 import type { TransformerKind } from './sld-attributes.js';
 import { createSCLDoc } from '../test-helpers.js';
 
@@ -561,6 +565,68 @@ describe('transformer', () => {
         expect(result.terminals.T1).to.not.be.undefined;
         expect(result.zigZagTransform).to.be.undefined;
       });
+    });
+  });
+  describe('winding connection targets', () => {
+    function targetsOf(inner: string, index = 0, rot: 0 | 1 | 2 | 3 = 0) {
+      const doc = createSCLDoc(`
+        <Substation name="S1"><VoltageLevel name="V1"><Bay name="B1">
+          <PowerTransformer name="T1">${inner}</PowerTransformer>
+        </Bay></VoltageLevel></Substation>
+      `);
+      return windingTerminalTargets(
+        doc.querySelectorAll('TransformerWinding')[index],
+        [5, 3],
+        { rot, kind: 'default', flip: false },
+      );
+    }
+
+    it('lists every open terminal with a half-grid approach point', () => {
+      const targets = targetsOf(windingXml(1));
+      expect(targets.map(t => t.terminal).sort()).to.deep.equal([
+        'N1',
+        'N2',
+        'T1',
+        'T2',
+      ]);
+      targets.forEach(({ near, far }) => {
+        expect(Number.isInteger(far[0] * 2) && Number.isInteger(far[1] * 2)).to
+          .be.true;
+        expect(near[0] === far[0] || near[1] === far[1]).to.be.true;
+      });
+    });
+
+    it('approaches each terminal from outside the winding', () => {
+      const [first] = targetsOf(windingXml(2), 0).filter(t => t.terminal === 'T1');
+      // T1 of the top winding of an upright 2-winding transformer faces up
+      expect(first.near[0]).to.equal(first.far[0]);
+      expect(first.far[1]).to.be.lessThan(first.near[1]);
+    });
+
+    it('omits terminals that are already connected', () => {
+      const targets = targetsOf(
+        '<TransformerWinding name="W1"><Terminal name="T1"/></TransformerWinding>',
+      );
+      expect(targets.map(t => t.terminal)).to.not.include.members(['T1', 'T2']);
+    });
+
+    it('omits neutral terminals once a neutral exists', () => {
+      const targets = targetsOf(windingXml(1, 0, groundedN1));
+      expect(targets.map(t => t.terminal)).to.not.include.members(['N1', 'N2']);
+    });
+
+    it('picks the nearest target within reach', () => {
+      const targets = targetsOf(windingXml(1));
+      const t1 = targets.find(t => t.terminal === 'T1')!;
+      expect(
+        nearestWindingTerminalTarget(targets, [t1.near[0], t1.near[1] + 0.2])
+          ?.terminal,
+      ).to.equal('T1');
+    });
+
+    it('picks nothing when the cursor is out of reach', () => {
+      const targets = targetsOf(windingXml(1));
+      expect(nearestWindingTerminalTarget(targets, [100, 100])).to.be.undefined;
     });
   });
 });

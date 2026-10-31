@@ -256,3 +256,68 @@ export function transformerWindingMeasures(
 
   return { center, size, terminals, grounded, arc, zigZagTransform };
 }
+
+/** An open winding terminal a connection can end on. */
+export type WindingTerminalTarget = {
+  winding: Element;
+  terminal: TransformerTerminalName;
+  /** The terminal point on the winding. */
+  near: Point;
+  /** The point on the half-grid just outside the terminal, where wires arrive from. */
+  far: Point;
+};
+
+/** How far (grid units) the cursor may be from a terminal to snap onto it. */
+export const windingTargetReach = 0.35;
+
+/** Terminals sit on the winding's axes, so the approach runs straight outward from the center. */
+function approachPoint(center: Point, terminal: Point): Point {
+  const [dx, dy] = [terminal[0] - center[0], terminal[1] - center[1]];
+  const outward = (value: number, delta: number) =>
+    delta > 0 ? Math.ceil(value * 2) / 2 : Math.floor(value * 2) / 2;
+  return Math.abs(dx) > Math.abs(dy)
+    ? [outward(terminal[0], dx), terminal[1]]
+    : [terminal[0], outward(terminal[1], dy)];
+}
+
+/** Lists the terminals of `winding` that are still free to connect to. */
+export function windingTerminalTargets(
+  winding: Element,
+  transformerPosition: Point,
+  attrs: Pick<Attrs, 'rot' | 'kind' | 'flip'>,
+): WindingTerminalTarget[] {
+  const { center, terminals } = transformerWindingMeasures(
+    winding,
+    transformerPosition,
+    attrs,
+    '',
+  );
+  return (
+    Object.entries(terminals) as [TransformerTerminalName, Point][]
+  ).map(([terminal, near]) => ({
+    winding,
+    terminal,
+    near,
+    far: approachPoint(center, near),
+  }));
+}
+
+/** The target closest to `cursor`, if any lies within {@link windingTargetReach}. */
+export function nearestWindingTerminalTarget(
+  targets: WindingTerminalTarget[],
+  cursor: Point,
+): WindingTerminalTarget | undefined {
+  let nearest: WindingTerminalTarget | undefined;
+  let nearestDistance = windingTargetReach;
+  targets.forEach((target) => {
+    const distance = Math.hypot(
+      target.near[0] - cursor[0],
+      target.near[1] - cursor[1],
+    );
+    if (distance <= nearestDistance) {
+      nearest = target;
+      nearestDistance = distance;
+    }
+  });
+  return nearest;
+}

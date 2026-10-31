@@ -476,7 +476,10 @@ export function createConnectEdits(
     parent: from,
     reference: getReference(from, fromTagName),
   });
-  if (to.tagName === 'ConductingEquipment') {
+  if (
+    to.tagName === 'ConductingEquipment' ||
+    to.tagName === 'TransformerWinding'
+  ) {
     const toTagName = toTerminal!.startsWith('T')
       ? 'Terminal'
       : 'NeutralPoint';
