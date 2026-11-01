@@ -37,7 +37,8 @@ import {
   sectionSignature,
 } from './foundations/rerouting.js';
 import type { FlaggedSection } from './foundations/rerouting.js';
-import { busBarVertexEdits } from './foundations/bus-bar-edits.js';
+import { busBarResizeEdits } from './foundations/bus-bar-edits.js';
+import { isBusBar } from './foundations/connectivity.js';
 import {
   iedReferences,
   isIedReferenceElement,
@@ -68,7 +69,7 @@ import type {
   StartInteractionEvent,
 } from './foundations/events.js';
 import { newInActionEvent } from './foundations/events.js';
-import type { Point } from './foundations/geometry.js';
+import type { Point, Rect } from './foundations/geometry.js';
 import * as interactions from './foundations/interaction-mode.js';
 import type { InteractionState } from './foundations/interaction-mode.js';
 import type { Style } from './foundations/sld-attributes.js';
@@ -115,6 +116,7 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
     if (
       i.mode === 'connectingFrom' ||
       (i.mode === 'resizingBR' && !i.element.parentElement) ||
+      (i.mode === 'resizingTL' && !i.element.parentElement) ||
       (i.mode === 'placingLabel' && !i.element.parentElement)
     ) {
       this.interaction = interactions.idle();
@@ -244,19 +246,9 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
     } = attributes(element);
     const dx = x - oldX;
     const dy = y - oldY;
+    const isNew = this.isNewBayOrVL(element);
 
     const edits: EditV2[] = [];
-
-    // Resizing a bus bar moves its end, not the section vertex it was grabbed by.
-    const resize = busBarVertexEdits(element, x, y, this.nsp);
-    if (resize.length) {
-      this.dispatchEvent(newEditEventV2(resize));
-      const resolve = this._resolvePlacement;
-      this._resolvePlacement = undefined;
-      this.interaction = interactions.idle();
-      resolve?.({ element, parent, x, y });
-      return;
-    }
 
     if (element.parentElement !== parent && !isIedReferenceElement(element)) {
       edits.push(...reparentElement(element, parent));
@@ -280,6 +272,10 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
       );
     }
     edits.push(...wrapIedReferenceEdits(element, parent, this.doc));
+    if (isNew && isBusBar(element)) {
+      // Sized right away, so that giving up on resizing leaves a proper bus bar.
+      edits.push(createResizeEdits(element, this.nsp, 2, 1));
+    }
 
     this.dispatchEvent(newEditEventV2(edits));
     this.warnAbout(fallbacks);
@@ -287,7 +283,7 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
     const resolve = this._resolvePlacement;
     this._resolvePlacement = undefined;
 
-    if (this.isNewBayOrVL(element)) {
+    if (isNew) {
       this.interaction = interactions.resizingBR(element);
     } else {
       this.interaction = interactions.idle();
@@ -304,14 +300,36 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
   }
 
   handleResize(element: Element, w: number, h: number) {
+    if (isBusBar(element)) {
+      const {
+        pos: [x, y],
+      } = attributes(element);
+      this.resizeBusBar(element, [x, y, w, h]);
+      return;
+    }
     this.dispatchEvent(newEditEventV2(createResizeEdits(element, this.nsp, w, h)));
     this.interaction = interactions.idle();
   }
 
   handleResizeTL(element: Element, x: number, y: number, w: number, h: number) {
+    if (isBusBar(element)) {
+      this.resizeBusBar(element, [x, y, w, h]);
+      return;
+    }
     this.dispatchEvent(
       newEditEventV2(createResizeTLEdits(element, this.nsp, x, y, w, h)),
     );
+    this.interaction = interactions.idle();
+  }
+
+  private resizeBusBar(busBar: Element, rect: Rect) {
+    const fallbacks: FlaggedSection[] = [];
+    this.dispatchEvent(
+      newEditEventV2(
+        busBarResizeEdits(this.doc, busBar, rect, this.nsp, fallbacks),
+      ),
+    );
+    this.warnAbout(fallbacks);
     this.interaction = interactions.idle();
   }
 

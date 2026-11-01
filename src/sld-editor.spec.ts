@@ -972,6 +972,51 @@ describe('SLD Editor', () => {
       expect(sldAttribute(bay, 'h')).to.equal('8');
     });
 
+    describe('placing a new bus bar', () => {
+      function busLine(bus: Element) {
+        const [section, ...others] = busSections(bus);
+        expect(others).to.have.lengthOf(0);
+        return Array.from(section.querySelectorAll('Vertex')).map(vertex => [
+          getSLDAttributes(vertex, 'x'),
+          getSLDAttributes(vertex, 'y'),
+        ]);
+      }
+
+      it('is a sized bus bar even when resizing it is given up', async () => {
+        element.startPlacing(makeBusBar(element.doc, element.nsp));
+        await sendMouse({ type: 'click', position: gridPos(...placeTL) });
+        element.cancelInteraction();
+
+        const bus = element.doc.querySelector('Bay')!;
+        expect(
+          ['x', 'y', 'w', 'h'].map(name => sldAttribute(bus, name)),
+        ).to.deep.equal(['5', '3', '2', '1']);
+        expect(busLine(bus)).to.deep.equal([
+          ['5.5', '3.5'],
+          ['6.5', '3.5'],
+        ]);
+      });
+
+      it('can then be resized from the top', async () => {
+        element.startPlacing(makeBusBar(element.doc, element.nsp));
+        await sendMouse({ type: 'click', position: gridPos(...placeTL) });
+        await sendMouse({ type: 'click', position: gridPos(...placeBR) });
+        const bus = element.doc.querySelector('Bay')!;
+
+        element.handleStartInteraction({ mode: 'resizingTL', element: bus });
+        await sendMouse({ type: 'click', position: gridPos(5, 6) });
+
+        expect(element.interaction.mode).to.equal('idle');
+        expect(
+          ['x', 'y', 'w', 'h'].map(name => sldAttribute(bus, name)),
+        ).to.deep.equal(['5', '6', '1', '5']);
+        expect(busLine(bus)).to.deep.equal([
+          ['5.5', '6.5'],
+          ['5.5', '10.5'],
+        ]);
+      });
+    });
+
     it('allows placing a new bus bar', async () => {
       const busBar = makeBusBar(element.doc, element.nsp);
       element.startPlacing(busBar);
@@ -1250,13 +1295,19 @@ describe('SLD Editor', () => {
 
       it('resizes the bus bar on middle mouse button click', async () => {
         const bus = element.doc.querySelector('[name="BB1"]');
-        const currentX = parseInt(sldAttribute(bus!, 'x')!, 10);
-        const currentY = parseInt(sldAttribute(bus!, 'y')!, 10);
+        const lastX =
+          parseInt(sldAttribute(bus!, 'x')!, 10) +
+          parseInt(sldAttribute(bus!, 'w')!, 10) -
+          1;
+        const lastY =
+          parseInt(sldAttribute(bus!, 'y')!, 10) +
+          parseInt(sldAttribute(bus!, 'h')!, 10) -
+          1;
 
-        // Move mouse to bus bar position to establish offset
+        // The end of the bus bar nearest to the mouse is resized
         await sendMouse({
           type: 'move',
-          position: gridPos(currentX, currentY),
+          position: gridPos(lastX, lastY),
         });
         await element.updateComplete;
 
@@ -2600,13 +2651,19 @@ describe('SLD Editor', () => {
 
           it('resizes the bus bar on resize menu item select', async () => {
             const bus = element.doc.querySelector('[name="BB1"]');
-            const currentX = parseInt(sldAttribute(bus!, 'x')!, 10);
-            const currentY = parseInt(sldAttribute(bus!, 'y')!, 10);
+            const lastX =
+              parseInt(sldAttribute(bus!, 'x')!, 10) +
+              parseInt(sldAttribute(bus!, 'w')!, 10) -
+              1;
+            const lastY =
+              parseInt(sldAttribute(bus!, 'y')!, 10) +
+              parseInt(sldAttribute(bus!, 'h')!, 10) -
+              1;
 
-            // Move mouse to bus bar position to establish offset
+            // The end of the bus bar nearest to the mouse is resized
             await sendMouse({
               type: 'move',
-              position: gridPos(currentX, currentY),
+              position: gridPos(lastX, lastY),
             });
             await element.updateComplete;
 

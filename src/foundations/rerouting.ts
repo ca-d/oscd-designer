@@ -11,7 +11,7 @@
  * as fallbacks.
  */
 
-import { connectionPointsAt } from './connectivity.js';
+import { busSections, connectionPointsAt } from './connectivity.js';
 import { iedReferences } from './ied.js';
 import { leaveRects, obstacleRects, windingPort } from './obstacles.js';
 import { transformerWindingMeasures } from './transformer.js';
@@ -29,12 +29,17 @@ import { sldNs } from '../foundations.js';
 import type { EditV2 } from '@openscd/oscd-api';
 import type { Point } from './geometry.js';
 
-/** What the user is changing: moving an element (and all it contains), turning equipment a quarter, mirroring a transformer or routing a wire through a point. */
+/**
+ * What the user is changing: moving an element (and all it contains), turning
+ * equipment a quarter, mirroring a transformer, routing a wire through a point
+ * or running a bus bar (the `element`) along a new line from `start` to `end`.
+ */
 export type LayoutChange =
   | { kind: 'move'; element: Element; dx: number; dy: number }
   | { kind: 'rotate'; element: Element }
   | { kind: 'flip'; element: Element }
-  | { kind: 'section'; element: Element; via: Point };
+  | { kind: 'section'; element: Element; via: Point }
+  | { kind: 'bus'; element: Element; start: Point; end: Point };
 
 /** Where a section meets its end: the point, the first point of a route there and the direction leaving it. */
 export type Port = { point: Point; approach: Point; outward: Point };
@@ -575,6 +580,225 @@ export function overlappedSections(
     });
 }
 
+type Segment = [Point, Point];
+
+/** Whether `point` lies on or between the ends of an axis-aligned segment. */
+const alongSegment = ([x, y]: Point, [[x0, y0], [x1, y1]]: Segment) =>
+  x >= Math.min(x0, x1) - EPSILON &&
+  x <= Math.max(x0, x1) + EPSILON &&
+  y >= Math.min(y0, y1) - EPSILON &&
+  y <= Math.max(y0, y1) + EPSILON;
+
+/** A section joining a bus bar at the end `join` of its vertices. */
+type BusFeeder = { wire: Wire; join: 0 | 1 };
+
+type BusPlan = {
+  net: Element;
+  /** The sections of the bus bar as they are. */
+  old: Wire[];
+  /** Where the bus bar will run. */
+  line: Segment;
+  /** The sections that no longer meet it the way they should. */
+  moving: BusFeeder[];
+};
+
+/**
+ * The sections that join a bus bar and must be routed to it anew when it runs
+ * along `line` instead: those joining it where it will not be any more, or
+ * running along it where they would now overlap it.
+ */
+function busFeeders(
+  wires: Wire[],
+  bay: Element,
+  line: Segment,
+): BusPlan | undefined {
+  const net = busSections(bay)[0]?.closest('ConnectivityNode');
+  if (!net) {
+    return undefined;
+  }
+  const isBus = (wire: Wire) =>
+    xmlBoolean(getSLDAttributes(wire.section, 'bus'));
+  const inNet = wires.filter(wire => wire.cNode === net);
+  const old = inNet.filter(isBus);
+  const busPoints = old.flatMap(wire =>
+    wire.vertices.map(vertex => attributes(vertex).pos),
+  );
+  const previous: Segment = [
+    [
+      Math.min(...busPoints.map(([x]) => x)),
+      Math.min(...busPoints.map(([, y]) => y)),
+    ],
+    [
+      Math.max(...busPoints.map(([x]) => x)),
+      Math.max(...busPoints.map(([, y]) => y)),
+    ],
+  ];
+  const axis = line[0][1] === line[1][1] ? 0 : 1;
+
+  const moving = inNet
+    .filter(wire => !isBus(wire) && wire.ends)
+    .flatMap((wire): BusFeeder[] => {
+      const ends = wire.ends!;
+      const last = wire.vertices.length - 1;
+      const positions = [0, last].map(i => attributes(wire.vertices[i]).pos);
+      const joins = ([0, 1] as const).filter(
+        i => !ends[i].terminal && alongSegment(positions[i], previous),
+      );
+      if (joins.length !== 1) {
+        return [];
+      }
+      const [join] = joins;
+      const far = ends[1 - join];
+      if (!far.port || far.detached) {
+        return [];
+      }
+      const inner = attributes(wire.vertices[join === 0 ? 1 : last - 1]).pos;
+      const leg = heading(positions[join], inner);
+      const stays = alongSegment(positions[join], line) && leg[axis] === 0;
+      return stays ? [] : [{ wire, join }];
+    });
+  return { net, old, line, moving };
+}
+
+/**
+ * Routes each section of `bus.moving` from its far end to the bus bar,
+ * arriving straight on. A section joins where its far end lies along the bus
+ * bar when it can, and otherwise at the nearest place not already joined, so
+ * that several of them spread out along its length.
+ */
+function planBus({
+  bus,
+  routers: [strict, tight],
+  soft,
+  reserve,
+  clear,
+  kept,
+}: {
+  bus: BusPlan;
+  routers: [ConnectionRouter, ConnectionRouter];
+  soft: () => ConnectionRouter;
+  reserve: (points: Point[]) => () => void;
+  clear: (end: End, point: Point, outward: Point) => Point;
+  kept: Wire[];
+}): PlannedRoute[] {
+  const {
+    net,
+    line: [start, end],
+    moving,
+  } = bus;
+  const axis = start[1] === end[1] ? 0 : 1;
+  const pointAt = (t: number): Point =>
+    axis === 0 ? [t, start[1]] : [start[0], t];
+
+  const taken = new Set(
+    kept
+      .filter(wire => wire.cNode === net)
+      .flatMap(wire => wire.vertices.map(vertex => attributes(vertex).pos))
+      .filter(point => alongSegment(point, [start, end]))
+      .map(point => Math.round(point[axis] / STEP)),
+  );
+  const free: number[] = [];
+  for (
+    let i = Math.round(start[axis] / STEP) + 1;
+    i < Math.round(end[axis] / STEP);
+    i += 1
+  ) {
+    if (!taken.has(i)) {
+      free.push(i * STEP);
+    }
+  }
+  const centred = (t: number) =>
+    Math.abs(t - start[axis] - Math.round(t - start[axis])) < EPSILON;
+
+  const projection = ({ wire, join }: BusFeeder) =>
+    wire.ends![1 - join].port!.point[axis];
+  const order = [...moving].sort((a, b) => projection(a) - projection(b));
+  const guards = order.map(({ wire, join }) =>
+    reserve([stubOf(wire.ends![1 - join].port!)]),
+  );
+
+  return order.map((feeder, index): PlannedRoute => {
+    guards[index]();
+    const { wire, join } = feeder;
+    const far = wire.ends![1 - join];
+    const port = far.port!;
+    const target = projection(feeder);
+    const nearest = free
+      .map(t => ({
+        t,
+        cost: Math.abs(t - target) + (centred(t) ? 0 : 0.3),
+      }))
+      .sort((a, b) => a.cost - b.cost)
+      .map(({ t }) => t);
+    const origin = clear(far, port.approach, port.outward);
+
+    // The simplest of the clean routes to the best few places wins.
+    const routesVia = (router: ConnectionRouter) =>
+      nearest.slice(0, 6).flatMap((candidate) => {
+        const route = router.routeToBus(
+          origin,
+          port.outward,
+          net,
+          pointAt(candidate),
+        );
+        return route
+          ? [
+            {
+              route,
+              slot: candidate,
+              score:
+                  route
+                    .slice(1)
+                    .reduce(
+                      (sum, [x, y], i) =>
+                        sum + Math.abs(x - route[i][0]) + Math.abs(y - route[i][1]),
+                      0,
+                    ) +
+                  2 * (route.length - 2) +
+                  Math.abs(candidate - target) / 2,
+            },
+          ]
+          : [];
+      });
+    const strictRoutes = routesVia(strict);
+    const [found] = (strictRoutes.length ? strictRoutes : routesVia(tight)).sort(
+      (a, b) => a.score - b.score,
+    );
+
+    // Through whatever is in the way, at the best place, when there is no clean route.
+    const slot = found?.slot ?? nearest[0];
+    const at = slot === undefined ? end : pointAt(slot);
+    const routed =
+      found?.route ??
+      (slot === undefined
+        ? undefined
+        : soft().routeToBus(origin, port.outward, net, at));
+    const corner: Point =
+      port.outward[0] !== 0
+        ? [at[0], port.approach[1]]
+        : [port.approach[0], at[1]];
+    const points: Point[] = routed
+      ? [port.point, ...routed]
+      : [port.point, port.approach, corner, at];
+    cleanPath(points);
+    if (slot !== undefined) {
+      free.splice(free.indexOf(slot), 1);
+    }
+    reserve(points);
+
+    return {
+      section: wire.section,
+      cNode: wire.cNode,
+      vertices: wire.vertices,
+      ends: wire.ends!.map((end2, i) =>
+        i === join ? { ...end2, detached: true } : end2,
+      ) as [End, End],
+      points: join === 0 ? [...points].reverse() : points,
+      fallback: !found,
+    };
+  });
+}
+
 /**
  * Where the sections left off their terminals by `change` would run
  * afterwards. Nothing is changed in the document.
@@ -594,8 +818,13 @@ export function planReroutes(
   const layout = layoutOf(change);
   const wires = collectWires(substation, layout);
 
-  const affected =
-    change.kind === 'section'
+  const bus =
+    change.kind === 'bus'
+      ? busFeeders(wires, change.element, [change.start, change.end])
+      : undefined;
+  const affected = bus
+    ? bus.moving.map(({ wire }) => wire)
+    : change.kind === 'section'
       ? wires.filter(
         wire =>
           wire.section === change.element &&
@@ -611,7 +840,9 @@ export function planReroutes(
     return [];
   }
 
-  const unchanged = wires.filter(wire => !affected.includes(wire));
+  const unchanged = wires.filter(
+    wire => !affected.includes(wire) && !bus?.old.includes(wire),
+  );
   const obstacles = [
     ...Array.from(
       substation.querySelectorAll('ConductingEquipment, PowerTransformer'),
@@ -653,6 +884,14 @@ export function planReroutes(
       ),
     };
   });
+  if (bus) {
+    existing.push({
+      net: bus.net,
+      bus: true,
+      points: [...bus.line],
+      terminals: [],
+    });
+  }
   const router = new ConnectionRouter(width, height, obstacles, existing);
   const tightRouter = new ConnectionRouter(
     width,
@@ -662,7 +901,7 @@ export function planReroutes(
     'tight',
   );
   let softRouter: ConnectionRouter | undefined;
-  const through = (start: Port, end: Port) => {
+  const soft = () => {
     softRouter ??= new ConnectionRouter(
       width,
       height,
@@ -670,14 +909,27 @@ export function planReroutes(
       existing,
       'soft',
     );
-    return change.kind === 'section'
-      ? connectThroughVia(softRouter, start, end, change.via)
-      : connectThrough(softRouter, start, end);
+    return softRouter;
   };
+  const through = (start: Port, end: Port) =>
+    change.kind === 'section'
+      ? connectThroughVia(soft(), start, end, change.via)
+      : connectThrough(soft(), start, end);
   const reserve = (points: Point[]) => {
     const releases = [router.reserve(points), tightRouter.reserve(points)];
     return () => releases.forEach(release => release());
   };
+
+  if (bus) {
+    return planBus({
+      bus,
+      routers: [router, tightRouter],
+      soft,
+      reserve,
+      clear: clearOfOwn,
+      kept: unchanged,
+    });
+  }
 
   /** Plans every wire of a group in order; routes that keep clear reserve their way. */
   const planGroup = (group: Wire[]) => {
@@ -811,6 +1063,16 @@ export function rerouteEdits(
   fallbacks.push(
     ...overlappedSections(doc, change, new Set(routes.map(r => r.section))),
   );
+  return routeEdits(doc, routes, nsp, fallbacks);
+}
+
+/** Edits that give the sections of `routes` their planned geometry; the fallbacks among them are added to `fallbacks`. */
+export function routeEdits(
+  doc: XMLDocument,
+  routes: PlannedRoute[],
+  nsp: string,
+  fallbacks: FlaggedSection[] = [],
+): EditV2[] {
   return routes.flatMap((route) => {
     const { section, vertices, ends, points } = route;
     if (route.fallback) {

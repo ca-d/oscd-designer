@@ -110,6 +110,6 @@ If you have a question about using the plugin or want to discuss potential for i
 Current limitations are:
 
 - Power Transformers cannot be connected directly to other Power Transformers
-- Resizing or moving busbars results in a loss of other Conducting Equipment connections
+- Moving a busbar may re-route its connections, and resizing one re-routes the connections that no longer reach it
 - Copying Voltage Levels and Bays results in a loss of connections of the same Connectivity Node
 - Only 3 phase functionality is provided (no single phase modelling)

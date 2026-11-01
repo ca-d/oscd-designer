@@ -74,6 +74,9 @@ export function interactionReadout({
 
     case 'resizingTL': {
       const resizingTL = interaction.element;
+      if (isBusBar(resizingTL)) {
+        return hidden;
+      }
       const {
         pos: [x, y],
         dim: [resW, resH],

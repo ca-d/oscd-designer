@@ -3,6 +3,7 @@ import { expect } from '@open-wc/testing';
 import { createContextMenuItems } from './sld-context-menu-factory.js';
 import type { ContextMenuAction, ContextMenuItem, MenuItemContext } from './sld-context-menu.js';
 import { createSCLDoc, sldFixture } from '../test-helpers.js';
+import { attributes } from '../foundations/sld-attributes.js';
 import { sldNs } from '../foundations.js';
 
 function actions(items: ContextMenuItem[]): ContextMenuAction[] {
@@ -565,7 +566,32 @@ describe('sld-context-menu-factory', () => {
         'BB1',
       );
       const bay = doc.querySelector('Bay')!;
-      expectHandlerSignatures(bay);
+      expectHandlerSignatures(bay, { gridX: 50, gridY: 50 });
+    });
+
+    it('resizes the end of the bus bar nearest to where the menu was opened', () => {
+      const doc = bayDoc(
+        `
+          <ConnectivityNode name="L1" pathName="S1/V1/BB1/L1">
+            <Private type="OpenSCD-SLD-Layout">
+              <smth:Section smth:bus="true">
+                <smth:Vertex smth:x="1.5" smth:y="1.5"/>
+                <smth:Vertex smth:x="5.5" smth:y="1.5"/>
+              </smth:Section>
+            </Private>
+          </ConnectivityNode>
+        `,
+        'BB1',
+      );
+      const bay = doc.querySelector('Bay')!;
+      const {
+        pos: [x, y],
+      } = attributes(bay);
+      const modeAt = (gridX: number, gridY: number) =>
+        signature(invoke(bay, 'Resize', { gridX, gridY })[0]);
+
+      expect(modeAt(x, y)).to.equal('oscd-sld-start-interaction/resizingTL');
+      expect(modeAt(x + 40, y)).to.equal('oscd-sld-start-interaction/resizingBR');
     });
   });
 

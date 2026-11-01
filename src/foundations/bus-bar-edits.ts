@@ -1,287 +1,169 @@
 /**
- * Resizing a bus bar without disconnecting what is attached to it.
+ * Sizing a bus bar without disconnecting what is attached to it.
  *
- * A bus bar is a run of thick sections along a straight line, cut wherever a
- * feeder joins. Where the bus bar no longer reaches a feeder, the part of the
- * line in between becomes thin wire instead, so the feeder stays connected; and
- * where the bus bar grows over such wire again, that wire becomes thick again.
+ * A bus bar is a straight run of thick sections along the middle of its bay,
+ * cut wherever a feeder joins. Running it along another line leaves the
+ * feeders that no longer meet it (or that would now run along it) to be routed
+ * to it anew, each joining where it can arrive straight on and spread out
+ * along its length.
  */
 
 import { sldNs } from '../foundations.js';
-import { busSections, isBusBar } from './connectivity.js';
-import { updateSLDAttributes } from './sld-attribute-edits.js';
-import { attributes, setSLDAttributes } from './sld-attributes.js';
+import { busSections } from './connectivity.js';
+import { createResizeEdits, createResizeTLEdits } from './edits.js';
+import { planReroutes, routeEdits } from './rerouting.js';
+import {
+  attributes,
+  getSLDAttributes,
+  setSLDAttributes,
+  xmlBoolean,
+} from './sld-attributes.js';
 
 import type { EditV2 } from '@openscd/oscd-api';
-import type { Point } from './geometry.js';
+import type { FlaggedSection } from './rerouting.js';
+import type { Point, Rect } from './geometry.js';
 
 const EPSILON = 1e-9;
 
-type Axis = 0 | 1;
+/** The ends of the line through the middle of the cells of a bus bar. */
+export const busBarLine = ([x, y, w, h]: Rect): [Point, Point] => [
+  [x + 0.5, y + 0.5],
+  [x + w - 0.5, y + h - 0.5],
+];
 
-/** A section and where it lies along the line of the bus bar. */
-type Run = {
-  section: Element;
-  vertices: Element[];
-  points: Point[];
-  from: number;
-  to: number;
-};
-
-const sameAs = (a: number, b: number) => Math.abs(a - b) < EPSILON;
-
-const axisOf = (a: Point, b: Point): Axis | undefined => {
-  if (a[1] === b[1] && a[0] !== b[0]) {
-    return 0;
+/** The cells of a bus bar running the longer of the two distances, at least two cells long, within the room it has. */
+function runFor(
+  dx: number,
+  dy: number,
+  roomX: number,
+  roomY: number,
+): [number, number] {
+  const clamp = (n: number, room: number) => Math.max(1, Math.min(n, room));
+  const [w, h] =
+    dx > dy ? [clamp(dx + 1, roomX), 1] : [1, clamp(dy + 1, roomY)];
+  if (w * h > 1) {
+    return [w, h];
   }
-  return a[0] === b[0] && a[1] !== b[1] ? 1 : undefined;
-};
-
-function newVertex(doc: Document, nsp: string, [x, y]: Point): Element {
-  const vertex = doc.createElementNS(sldNs, `${nsp}:Vertex`);
-  setSLDAttributes(vertex, nsp, { x: x.toString(), y: y.toString() });
-  return vertex;
+  return roomX >= 2 ? [2, 1] : [1, 2];
 }
 
-function newBusSection(doc: Document, nsp: string, points: Point[]): Element {
+/**
+ * The cells a bus bar covers after the end `handle` of it is dragged to the
+ * cell `cursor`: the other end stays and the bus bar keeps to the voltage level
+ * around it. `BR` is the bottom or right end, `TL` the top or left one.
+ */
+export function resizedBusBarRect(
+  bay: Element,
+  handle: 'BR' | 'TL',
+  [cursorX, cursorY]: Point,
+): Rect {
+  const {
+    pos: [x, y],
+    dim: [w, h],
+  } = attributes(bay);
+  const parent = bay.parentElement;
+  const [left, top, width, height] =
+    parent?.tagName === 'VoltageLevel'
+      ? [...attributes(parent).pos, ...attributes(parent).dim]
+      : [0, 0, Infinity, Infinity];
+
+  if (handle === 'BR') {
+    const [newW, newH] = runFor(
+      Math.max(cursorX - x, 0),
+      Math.max(cursorY - y, 0),
+      left + width - x,
+      top + height - y,
+    );
+    return [x, y, newW, newH];
+  }
+
+  const [lastX, lastY] = [x + w - 1, y + h - 1];
+  const [newW, newH] = runFor(
+    Math.max(lastX - cursorX, 0),
+    Math.max(lastY - cursorY, 0),
+    lastX - left + 1,
+    lastY - top + 1,
+  );
+  return [lastX - newW + 1, lastY - newH + 1, newW, newH];
+}
+
+function newBusSection(doc: Document, nsp: string, from: Point, to: Point) {
   const section = doc.createElementNS(sldNs, `${nsp}:Section`);
   setSLDAttributes(section, nsp, { bus: 'true' });
-  points.forEach(point => section.appendChild(newVertex(doc, nsp, point)));
+  [from, to].forEach(([x, y]) => {
+    const vertex = doc.createElementNS(sldNs, `${nsp}:Vertex`);
+    setSLDAttributes(vertex, nsp, { x: x.toString(), y: y.toString() });
+    section.appendChild(vertex);
+  });
   return section;
 }
 
 /**
- * Cuts a run at `at`, strictly inside it. The run keeps the part before; the
- * part after is kept as a new thin section when `keepTail`.
+ * Edits that size the bus bar `bay` to the cells `rect`, keeping every feeder
+ * connected. Feeders that had to be drawn through other elements are added to
+ * `fallbacks`.
  */
-function cutRun(
-  { section, vertices, points }: Run,
-  axis: Axis,
-  at: number,
-  keepTail: boolean,
+export function busBarResizeEdits(
+  doc: XMLDocument,
+  bay: Element,
+  rect: Rect,
   nsp: string,
+  fallbacks: FlaggedSection[] = [],
 ): EditV2[] {
-  const doc = section.ownerDocument;
-  const next = points.findIndex(point => point[axis] >= at - EPSILON);
-  const exact = sameAs(points[next][axis], at);
-  const cut: Point = [...points[next]];
-  cut[axis] = at;
-
-  const edits: EditV2[] = vertices
-    .slice(exact ? next + 1 : next)
-    .map(vertex => ({ node: vertex }));
-  if (!exact) {
-    edits.push({
-      parent: section,
-      node: newVertex(doc, nsp, cut),
-      reference: null,
-    });
-  }
-  if (keepTail) {
-    const tail = section.cloneNode(false) as Element;
-    tail.removeAttributeNS(sldNs, 'bus');
-    [cut, ...points.slice(exact ? next + 1 : next)].forEach(point =>
-      tail.appendChild(newVertex(doc, nsp, point)),
-    );
-    edits.push({
-      parent: section.parentElement!,
-      node: tail,
-      reference: section.nextElementSibling,
-    });
-  }
-  return edits;
-}
-
-/**
- * Edits that resize the bus bar of `element` so that it ends at `(x, y)`,
- * keeping every feeder connected.
- */
-export function busBarVertexEdits(
-  element: Element,
-  x: number,
-  y: number,
-  nsp: string,
-): EditV2[] {
-  const bay = element.localName === 'Vertex' ? element.closest('Bay') : null;
-  if (!bay || !isBusBar(bay)) {
+  const buses = busSections(bay);
+  if (!buses.length) {
     return [];
   }
+  const [x, y, w, h] = rect;
+  const [start, end] = busBarLine(rect);
+  const axis = start[1] === end[1] ? 0 : 1;
+  const pointAt = (t: number): Point =>
+    axis === 0 ? [t, start[1]] : [start[0], t];
 
-  const buses = busSections(bay);
-  const cNode = buses[0].closest('ConnectivityNode')!;
-  const pointsOf = (section: Element) =>
-    Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex')).map(
-      vertex => attributes(vertex).pos,
-    );
-  const firstPoints = pointsOf(buses[0]);
-  const lastPoints = pointsOf(buses[buses.length - 1]);
-  const start = firstPoints[0];
-  const end = lastPoints[lastPoints.length - 1];
-  const target: Point = [x, y];
+  const routes = planReroutes(doc, { kind: 'bus', element: bay, start, end });
+  const planned = new Set(routes.map(route => route.section));
 
-  const edits: EditV2[] = [
-    updateSLDAttributes(bay, nsp, {
-      w: (x - start[0] + 1).toString(),
-      h: (y - start[1] + 1).toString(),
-    }),
-  ];
-  const newAxis = axisOf(start, target);
-  if (newAxis === undefined) {
-    return edits;
-  }
-  const axis = axisOf(start, end) ?? newAxis;
-  const across = (1 - axis) as Axis;
-  const onLine = (point: Point) => sameAs(point[across], start[across]);
-  const t0 = start[axis];
-  const tOld = end[axis];
-
-  const runs = Array.from(cNode.getElementsByTagNameNS(sldNs, 'Section')).map(
-    (section): Run => {
-      const vertices = Array.from(
-        section.getElementsByTagNameNS(sldNs, 'Vertex'),
-      );
-      const points = vertices.map(vertex => attributes(vertex).pos);
-      const along = points.map(point => point[axis]);
-      return {
-        section,
-        vertices,
-        points,
-        from: Math.min(...along),
-        to: Math.max(...along),
-      };
-    },
-  );
-  const busRuns = runs
-    .filter(r => buses.includes(r.section))
-    .sort((a, b) => a.from - b.from);
-
-  // The wire that carries on along the line from the end of the bus bar.
-  const chain = [...busRuns];
-  let chainEnd = tOld;
-  for (let next = true; next; ) {
-    const run = runs.find(
-      r =>
-        !chain.includes(r) &&
-        r.points.every(onLine) &&
-        sameAs(r.from, chainEnd) &&
-        r.to > chainEnd,
-    );
-    next = !!run;
-    if (run) {
-      chain.push(run);
-      chainEnd = run.to;
-    }
-  }
-  const thinRuns = chain.filter(r => !busRuns.includes(r));
-
-  // The furthest place along the line where something else joins.
-  const furthestJoin = Math.max(
-    t0,
-    ...runs
-      .filter(r => !chain.includes(r))
-      .flatMap(r => r.points)
+  // Where anything joins the new line, in the middle of it.
+  const net = buses[0].closest('ConnectivityNode')!;
+  const joins = [
+    ...routes.map(({ ends, points }) =>
+      ends[0].detached ? points[0] : points[points.length - 1],
+    ),
+    ...Array.from(net.getElementsByTagNameNS(sldNs, 'Section'))
       .filter(
-        point =>
-          onLine(point) &&
-          point[axis] >= t0 - EPSILON &&
-          point[axis] <= chainEnd + EPSILON,
+        section =>
+          !xmlBoolean(getSLDAttributes(section, 'bus')) &&
+          !planned.has(section),
       )
-      .map(point => point[axis]),
-  );
+      .flatMap(section =>
+        Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex')).map(
+          vertex => attributes(vertex).pos,
+        ),
+      ),
+  ]
+    .filter(point => Math.abs(point[1 - axis] - start[1 - axis]) < EPSILON)
+    .map(point => point[axis])
+    .filter(t => t > start[axis] + EPSILON && t < end[axis] - EPSILON);
+  const stops = [
+    start[axis],
+    ...[...new Set(joins)].sort((a, b) => a - b),
+    end[axis],
+  ];
 
-  /** Thins the bus bar beyond `keep` as far as a feeder needs it, and removes the rest. */
-  const thinBeyond = (keep: number) => {
-    const needed = furthestJoin > keep + EPSILON;
-    busRuns.forEach((r) => {
-      if (r.to <= keep + EPSILON) {
-        return;
-      }
-      if (r.from >= keep - EPSILON) {
-        edits.push(
-          needed && r.from < furthestJoin - EPSILON
-            ? updateSLDAttributes(r.section, nsp, { bus: null })
-            : { node: r.section },
-        );
-      } else {
-        edits.push(...cutRun(r, axis, keep, needed, nsp));
-      }
-    });
-  };
-
-  if (newAxis !== axis) {
-    // The bus bar turns about its start, leaving the old line as wire.
-    if (furthestJoin > t0 + EPSILON) {
-      thinBeyond(t0);
-      edits.push({
-        parent: busRuns[0].section.parentElement!,
-        node: newBusSection(busRuns[0].section.ownerDocument, nsp, [
-          start,
-          target,
-        ]),
-        reference: busRuns[0].section.parentElement!.firstElementChild,
-      });
-    } else {
-      const [turning, ...others] = busRuns;
-      edits.push(
-        ...turning.vertices.slice(2).map(vertex => ({ node: vertex })),
-        updateSLDAttributes(turning.vertices[1], nsp, {
-          x: x.toString(),
-          y: y.toString(),
-        }),
-        ...others.map(r => ({ node: r.section })),
-      );
-    }
-    return edits;
-  }
-
-  const tNew = target[axis];
-  if (tNew < tOld - EPSILON) {
-    thinBeyond(tNew);
-    return edits;
-  }
-  if (tNew <= tOld + EPSILON) {
-    return edits;
-  }
-
-  // Growing: wire in the way becomes bus bar, then the line is extended.
-  let busEnd = tOld;
-  let lastRun = busRuns[busRuns.length - 1];
-  for (const r of thinRuns) {
-    if (r.to <= tNew + EPSILON) {
-      edits.push(updateSLDAttributes(r.section, nsp, { bus: 'true' }));
-    } else if (r.from < tNew - EPSILON) {
-      edits.push(
-        updateSLDAttributes(r.section, nsp, { bus: 'true' }),
-        ...cutRun(r, axis, tNew, true, nsp),
-      );
-    } else {
-      break;
-    }
-    busEnd = Math.min(r.to, tNew);
-    lastRun = r;
-  }
-  if (busEnd < tNew - EPSILON) {
-    const joined = runs.some(
-      r =>
-        r !== lastRun &&
-        r.points.some(point => onLine(point) && sameAs(point[axis], busEnd)),
-    );
-    if (joined) {
-      const from: Point = [...start];
-      from[axis] = busEnd;
-      edits.push({
-        parent: lastRun.section.parentElement!,
-        node: newBusSection(lastRun.section.ownerDocument, nsp, [from, target]),
-        reference: lastRun.section.nextElementSibling,
-      });
-    } else {
-      edits.push(
-        updateSLDAttributes(lastRun.vertices[lastRun.vertices.length - 1], nsp, {
-          x: x.toString(),
-          y: y.toString(),
-        }),
-      );
-    }
-  }
-  return edits;
+  const priv = buses[0].parentElement!;
+  const { pos } = attributes(bay);
+  return [
+    pos[0] !== x || pos[1] !== y
+      ? createResizeTLEdits(bay, nsp, x, y, w, h)
+      : createResizeEdits(bay, nsp, w, h),
+    ...routeEdits(doc, routes, nsp, fallbacks),
+    ...stops.slice(1).map(
+      (stop, i): EditV2 => ({
+        parent: priv,
+        node: newBusSection(doc, nsp, pointAt(stops[i]), pointAt(stop)),
+        reference: priv.firstElementChild,
+      }),
+    ),
+    ...buses.map((section): EditV2 => ({ node: section })),
+  ];
 }

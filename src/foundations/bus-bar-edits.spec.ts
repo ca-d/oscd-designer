@@ -1,10 +1,15 @@
 import { expect } from '@open-wc/testing';
 import { handleEdit } from '@omicronenergy/oscd-editor';
 
-import { busBarVertexEdits } from './bus-bar-edits.js';
+import {
+  busBarResizeEdits,
+  resizedBusBarRect,
+} from './bus-bar-edits.js';
 import { attributes, getSLDAttributes } from './sld-attributes.js';
 import { sldNs } from '../foundations.js';
 import { sldFixture } from '../test-helpers.js';
+
+import type { Point, Rect } from './geometry.js';
 
 const vertex = (x: number, y: number, uuid?: string) =>
   `<smth:Vertex smth:x="${x}" smth:y="${y}"${uuid ? ` smth:uuid="${uuid}"` : ''}/>`;
@@ -15,233 +20,281 @@ const bus = (...points: [number, number][]) =>
 const wire = (...points: [number, number, string?][]) =>
   `<smth:Section>${points.map(([x, y, uuid]) => vertex(x, y, uuid)).join('')}</smth:Section>`;
 
-/** A bus bar along y = 3 with the given sections, and a piece of equipment hanging off its feeder at `x`. */
+const equipment = (name: string, x: number, uuid: string) => `
+  <ConductingEquipment name="${name}" type="CBR">
+    <Private type="OpenSCD-SLD-Layout"><smth:SLDAttributes smth:x="${x}" smth:y="6"/></Private>
+    <Terminal name="T1" connectivityNode="S1/V1/BB1/L1">
+      <Private type="OpenSCD-SLD-Layout"><smth:SLDAttributes smth:uuid="${uuid}"/></Private>
+    </Terminal>
+  </ConductingEquipment>`;
+
+/**
+ * A bus bar through the cells (2,3) to (6,3), on the line from (2.5,3.5) to
+ * (6.5,3.5), and circuit breakers at x = 3, 5 and 7 below it (their top
+ * terminals at x = 3.5, 5.5 and 7.5), wired up as `sections` say.
+ */
 function busBar(sections: string[]) {
   return sldFixture({
+    bay: { x: 2, y: 3, w: 5, h: 1 },
     bayName: 'BB1',
     children: `
-      <ConductingEquipment name="Q1" type="CBR">
-        <Private type="OpenSCD-SLD-Layout"><smth:SLDAttributes smth:x="1" smth:y="7"/></Private>
-        <Terminal name="T1" connectivityNode="S1/V1/BB1/L1">
-          <Private type="OpenSCD-SLD-Layout"><smth:SLDAttributes smth:uuid="u1"/></Private>
-        </Terminal>
-      </ConductingEquipment>
+      ${equipment('Q1', 3, 'u1')}
+      ${equipment('Q2', 5, 'u2')}
+      ${equipment('Q3', 7, 'u3')}
       <ConnectivityNode name="L1" pathName="S1/V1/BB1/L1">
         <Private type="OpenSCD-SLD-Layout">${sections.join('')}</Private>
       </ConnectivityNode>`,
   });
 }
 
-function sectionsOf(doc: XMLDocument): string[] {
-  return Array.from(doc.getElementsByTagNameNS(sldNs, 'Section')).map(
-    section =>
-      `${getSLDAttributes(section, 'bus') === 'true' ? 'bus' : 'wire'} ${Array.from(
-        section.getElementsByTagNameNS(sldNs, 'Vertex'),
-      )
-        .map(v => attributes(v).pos.join(','))
-        .join(' ')}`,
+/** Feeders of Q1 and Q2 joining the bus bar, which is cut where they join. */
+const wired = () =>
+  busBar([
+    bus([2.5, 3.5], [3.5, 3.5]),
+    bus([3.5, 3.5], [5.5, 3.5]),
+    bus([5.5, 3.5], [6.5, 3.5]),
+    wire([3.5, 3.5], [3.5, 6.16, 'u1']),
+    wire([5.5, 3.5], [5.5, 6.16, 'u2']),
+  ]);
+
+function sectionsOf(doc: XMLDocument): Element[] {
+  return Array.from(doc.getElementsByTagNameNS(sldNs, 'Section'));
+}
+
+function pointsOf(section: Element): Point[] {
+  return Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex')).map(
+    v => attributes(v).pos,
   );
 }
 
-function resize(doc: XMLDocument, x: number, y: number) {
-  const first = doc.getElementsByTagNameNS(sldNs, 'Vertex')[1];
-  handleEdit(busBarVertexEdits(first, x, y, 'smth'));
+const isBus = (section: Element) => getSLDAttributes(section, 'bus') === 'true';
+
+const buses = (doc: XMLDocument) =>
+  sectionsOf(doc)
+    .filter(isBus)
+    .map(pointsOf);
+
+const wires = (doc: XMLDocument) =>
+  sectionsOf(doc)
+    .filter(section => !isBus(section))
+    .map(pointsOf);
+
+function resize(doc: XMLDocument, rect: Rect) {
+  handleEdit(
+    busBarResizeEdits(doc, doc.querySelector('Bay[name="BB1"]')!, rect, 'smth'),
+  );
 }
 
-const feeder = (x: number, uuid?: string): string =>
-  wire([x, 3], [x, 6, uuid]);
+/** Every wire is orthogonal and every terminal is where its vertex is. */
+function expectOrthogonal(doc: XMLDocument) {
+  sectionsOf(doc).forEach((section) => {
+    const points = pointsOf(section);
+    points.slice(1).forEach(([x, y], i) => {
+      expect(x === points[i][0] || y === points[i][1], `${points}`).to.be.true;
+    });
+  });
+}
 
-describe('busBarVertexEdits', () => {
-  it('does nothing for other elements than vertices', () => {
-    const doc = busBar([bus([2, 3], [6, 3])]);
+/** Where the feeders of the terminals `u1`, `u2` meet the bus bar. */
+function joins(doc: XMLDocument, ...uuids: string[]): Point[] {
+  return uuids.map((uuid) => {
+    const section = sectionsOf(doc).find(s =>
+      Array.from(s.getElementsByTagNameNS(sldNs, 'Vertex')).some(
+        v => getSLDAttributes(v, 'uuid') === uuid,
+      ),
+    )!;
+    const [first, last] = [
+      section.getElementsByTagNameNS(sldNs, 'Vertex')[0],
+      Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex')).pop()!,
+    ];
+    return attributes(getSLDAttributes(first, 'uuid') === uuid ? last : first)
+      .pos;
+  });
+}
 
-    expect(busBarVertexEdits(doc.querySelector('Bay')!, 9, 3, 'smth')).to.deep.equal([]);
+describe('resizedBusBarRect', () => {
+  const bay = () => busBar([bus([2.5, 3.5], [6.5, 3.5])]).querySelector('Bay')!;
+
+  it('runs the bottom or right end to the cursor, along the longer distance', () => {
+    expect(resizedBusBarRect(bay(), 'BR', [9, 3])).to.deep.equal([2, 3, 8, 1]);
+    expect(resizedBusBarRect(bay(), 'BR', [3, 7])).to.deep.equal([2, 3, 1, 5]);
+    expect(resizedBusBarRect(bay(), 'BR', [3, 4])).to.deep.equal([2, 3, 1, 2]);
   });
 
-  it('does nothing for vertices of other than bus bars', () => {
-    const doc = sldFixture({
-      children: `<ConnectivityNode name="L1" pathName="S1/V1/B1/L1">
-        <Private type="OpenSCD-SLD-Layout">${wire([2, 3], [6, 3])}</Private>
-      </ConnectivityNode>`,
-    });
-    const first = doc.getElementsByTagNameNS(sldNs, 'Vertex')[0];
+  it('runs the top or left end to the cursor, along the longer distance', () => {
+    expect(resizedBusBarRect(bay(), 'TL', [4, 3])).to.deep.equal([4, 3, 3, 1]);
+    expect(resizedBusBarRect(bay(), 'TL', [6, 1])).to.deep.equal([6, 1, 1, 3]);
+  });
 
-    expect(busBarVertexEdits(first, 9, 3, 'smth')).to.deep.equal([]);
+  it('keeps a bus bar two cells long', () => {
+    expect(resizedBusBarRect(bay(), 'BR', [2, 3])).to.deep.equal([2, 3, 2, 1]);
+    expect(resizedBusBarRect(bay(), 'TL', [8, 3])).to.deep.equal([5, 3, 2, 1]);
+  });
+
+  it('keeps to its voltage level', () => {
+    // The voltage level covers 1,1 to 20,20.
+    expect(resizedBusBarRect(bay(), 'BR', [30, 3])).to.deep.equal([2, 3, 19, 1]);
+    expect(resizedBusBarRect(bay(), 'TL', [6, -4])).to.deep.equal([6, 1, 1, 3]);
+    expect(resizedBusBarRect(bay(), 'BR', [3, 30])).to.deep.equal([2, 3, 1, 18]);
+  });
+});
+
+describe('busBarResizeEdits', () => {
+  it('does nothing for other elements than bus bars', () => {
+    const doc = sldFixture();
+
+    expect(
+      busBarResizeEdits(doc, doc.querySelector('Bay')!, [2, 3, 5, 1], 'smth'),
+    ).to.deep.equal([]);
   });
 
   it('resizes a bus bar without feeders', () => {
-    const doc = busBar([bus([2, 3], [6, 3])]);
-    resize(doc, 9, 3);
+    const doc = busBar([bus([2.5, 3.5], [6.5, 3.5])]);
+    resize(doc, [2, 3, 8, 1]);
 
-    expect(sectionsOf(doc)).to.deep.equal(['bus 2,3 9,3']);
-    const bay = doc.querySelector('Bay')!;
-    expect(attributes(bay).dim).to.deep.equal([8, 1]);
+    expect(buses(doc)).to.deep.equal([[[2.5, 3.5], [9.5, 3.5]]]);
+    expect(attributes(doc.querySelector('Bay')!).dim).to.deep.equal([8, 1]);
   });
 
   describe('growing', () => {
-    it('keeps the feeders attached', () => {
-      const doc = busBar([
-        bus([2, 3], [4, 3]),
-        bus([4, 3], [6, 3]),
-        feeder(4, 'u1'),
+    it('keeps the feeders where they are and cuts the bus bar there', () => {
+      const doc = wired();
+      resize(doc, [2, 3, 8, 1]);
+
+      expect(buses(doc)).to.deep.equal([
+        [[2.5, 3.5], [3.5, 3.5]],
+        [[3.5, 3.5], [5.5, 3.5]],
+        [[5.5, 3.5], [9.5, 3.5]],
       ]);
-      resize(doc, 9, 3);
-
-      expect(sectionsOf(doc)).to.deep.equal([
-        'bus 2,3 4,3',
-        'bus 4,3 9,3',
-        'wire 4,3 4,6',
-      ]);
-      expect(doc.querySelectorAll('Terminal')).to.have.lengthOf(1);
-    });
-
-    it('cuts the bus bar where a feeder joins at its end', () => {
-      const doc = busBar([bus([2, 3], [6, 3]), feeder(6, 'u1')]);
-      resize(doc, 9, 3);
-
-      expect(sectionsOf(doc)).to.deep.equal([
-        'bus 2,3 6,3',
-        'bus 6,3 9,3',
-        'wire 6,3 6,6',
+      expect(wires(doc)).to.deep.equal([
+        [[3.5, 3.5], [3.5, 6.16]],
+        [[5.5, 3.5], [5.5, 6.16]],
       ]);
     });
 
-    it('takes wire left where the bus bar was shrunk back over it', () => {
+    it('routes a feeder that ran into the end of it along it to join straight on', () => {
       const doc = busBar([
-        bus([2, 3], [5, 3]),
-        wire([5, 3], [7, 3]),
-        feeder(7, 'u1'),
+        bus([2.5, 3.5], [6.5, 3.5]),
+        wire([6.5, 3.5], [7.5, 3.5], [7.5, 6.16, 'u3']),
       ]);
-      resize(doc, 10, 3);
+      resize(doc, [2, 3, 8, 1]);
 
-      expect(sectionsOf(doc)).to.deep.equal([
-        'bus 2,3 5,3',
-        'bus 5,3 7,3',
-        'bus 7,3 10,3',
-        'wire 7,3 7,6',
-      ]);
-    });
-
-    it('takes only as much wire as it grows over', () => {
-      const doc = busBar([
-        bus([2, 3], [5, 3]),
-        wire([5, 3], [9, 3]),
-        feeder(9, 'u1'),
-      ]);
-      resize(doc, 7, 3);
-
-      expect(sectionsOf(doc)).to.deep.equal([
-        'bus 2,3 5,3',
-        'bus 5,3 7,3',
-        'wire 7,3 9,3',
-        'wire 9,3 9,6',
+      expectOrthogonal(doc);
+      expect(wires(doc)).to.deep.equal([[[7.5, 3.5], [7.5, 6.16]]]);
+      expect(buses(doc)).to.deep.equal([
+        [[2.5, 3.5], [7.5, 3.5]],
+        [[7.5, 3.5], [9.5, 3.5]],
       ]);
     });
   });
 
   describe('shrinking', () => {
-    it('keeps a feeder beyond the new end connected with wire', () => {
-      const doc = busBar([
-        bus([2, 3], [7, 3]),
-        bus([7, 3], [10, 3]),
-        feeder(7, 'u1'),
-      ]);
-      resize(doc, 5, 3);
+    it('keeps the feeders that still join it', () => {
+      const doc = wired();
+      resize(doc, [2, 3, 4, 1]);
 
-      expect(sectionsOf(doc)).to.deep.equal([
-        'bus 2,3 5,3',
-        'wire 5,3 7,3',
-        'wire 7,3 7,6',
+      expect(buses(doc)).to.deep.equal([
+        [[2.5, 3.5], [3.5, 3.5]],
+        [[3.5, 3.5], [5.5, 3.5]],
       ]);
-      expect(doc.querySelectorAll('Terminal')).to.have.lengthOf(1);
-      expect(attributes(doc.querySelector('Bay')!).dim).to.deep.equal([4, 1]);
-    });
-
-    it('keeps every feeder beyond the new end connected', () => {
-      const doc = busBar([
-        bus([2, 3], [4, 3]),
-        bus([4, 3], [7, 3]),
-        bus([7, 3], [10, 3]),
-        feeder(4),
-        feeder(7, 'u1'),
-      ]);
-      resize(doc, 3, 3);
-
-      expect(sectionsOf(doc)).to.deep.equal([
-        'bus 2,3 3,3',
-        'wire 3,3 4,3',
-        'wire 4,3 7,3',
-        'wire 4,3 4,6',
-        'wire 7,3 7,6',
+      expect(wires(doc)).to.deep.equal([
+        [[3.5, 3.5], [3.5, 6.16]],
+        [[5.5, 3.5], [5.5, 6.16]],
       ]);
     });
 
-    it('removes what is beyond the furthest feeder', () => {
-      const doc = busBar([
-        bus([2, 3], [4, 3]),
-        bus([4, 3], [10, 3]),
-        feeder(4),
-      ]);
-      resize(doc, 6, 3);
+    it('routes a feeder beyond the end of it to join it again', () => {
+      const doc = wired();
+      resize(doc, [2, 3, 3, 1]);
 
-      expect(sectionsOf(doc)).to.deep.equal([
-        'bus 2,3 4,3',
-        'bus 4,3 6,3',
-        'wire 4,3 4,6',
-      ]);
+      expectOrthogonal(doc);
+      const [, [q2]] = [joins(doc, 'u1'), joins(doc, 'u2')];
+      // The line now runs from 2.5 to 4.5; Q1 keeps 3.5.
+      expect(q2[1]).to.equal(3.5);
+      expect(q2[0]).to.be.greaterThan(2.5);
+      expect(q2[0]).to.be.lessThan(4.5);
+      expect(q2[0]).to.not.equal(3.5);
+      expect(joins(doc, 'u1')[0]).to.deep.equal([3.5, 3.5]);
+
+      const cuts = buses(doc).map(([from]) => from[0]);
+      expect(cuts).to.include(3.5);
+      expect(cuts).to.include(q2[0]);
+      const ends = buses(doc).flat();
+      expect(Math.min(...ends.map(([x]) => x))).to.equal(2.5);
+      expect(Math.max(...ends.map(([x]) => x))).to.equal(4.5);
     });
 
-    it('keeps a feeder at the new end where it is', () => {
-      const doc = busBar([
-        bus([2, 3], [7, 3]),
-        bus([7, 3], [10, 3]),
-        feeder(7),
-      ]);
-      resize(doc, 7, 3);
+    it('leaves the terminals of rerouted feeders where they are', () => {
+      const doc = wired();
+      resize(doc, [2, 3, 3, 1]);
 
-      expect(sectionsOf(doc)).to.deep.equal(['bus 2,3 7,3', 'wire 7,3 7,6']);
+      const feeder = sectionsOf(doc).find(
+        section =>
+          !isBus(section) &&
+          Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex')).some(
+            v => getSLDAttributes(v, 'uuid') === 'u2',
+          ),
+      )!;
+      const points = pointsOf(feeder);
+      expect(points[points.length - 1]).to.deep.equal([5.5, 6.16]);
+      // It leaves the terminal straight, along the stub.
+      expect(points[points.length - 2][0]).to.equal(5.5);
     });
 
-    it('keeps wire already beyond the bus bar', () => {
+    it('spreads the feeders it had to move over the length of it', () => {
       const doc = busBar([
-        bus([2, 3], [5, 3]),
-        wire([5, 3], [7, 3]),
-        feeder(7),
+        bus([2.5, 3.5], [3.5, 3.5]),
+        bus([3.5, 3.5], [5.5, 3.5]),
+        bus([5.5, 3.5], [7.5, 3.5]),
+        wire([3.5, 3.5], [3.5, 6.16, 'u1']),
+        wire([5.5, 3.5], [5.5, 6.16, 'u2']),
+        wire([7.5, 3.5], [7.5, 6.16, 'u3']),
       ]);
-      resize(doc, 3, 3);
+      resize(doc, [2, 3, 3, 1]);
 
-      expect(sectionsOf(doc)).to.deep.equal([
-        'bus 2,3 3,3',
-        'wire 3,3 5,3',
-        'wire 5,3 7,3',
-        'wire 7,3 7,6',
-      ]);
+      expectOrthogonal(doc);
+      const at = joins(doc, 'u1', 'u2', 'u3').map(([x]) => x);
+      expect(new Set(at).size).to.equal(3);
+      at.forEach((x) => {
+        expect(x).to.be.greaterThan(2.5);
+        expect(x).to.be.lessThan(4.5);
+      });
+    });
+  });
+
+  describe('resizing from the top or left', () => {
+    it('moves the start and routes the feeders it leaves behind', () => {
+      const doc = wired();
+      resize(doc, [4, 3, 3, 1]);
+
+      expectOrthogonal(doc);
+      expect(attributes(doc.querySelector('Bay[name="BB1"]')!).pos).to.deep.equal([4, 3]);
+      const [[q1x, q1y]] = joins(doc, 'u1');
+      expect(q1y).to.equal(3.5);
+      expect(q1x).to.be.greaterThan(4.5);
+      expect(q1x).to.be.lessThan(6.5);
+      expect(joins(doc, 'u2')[0]).to.deep.equal([5.5, 3.5]);
     });
   });
 
   describe('turning', () => {
-    it('turns a bus bar without feeders', () => {
-      const doc = busBar([bus([2, 3], [6, 3])]);
-      resize(doc, 2, 7);
+    it('routes all the feeders to the new line', () => {
+      const doc = wired();
+      resize(doc, [2, 3, 1, 4]);
 
-      expect(sectionsOf(doc)).to.deep.equal(['bus 2,3 2,7']);
-      expect(attributes(doc.querySelector('Bay')!).dim).to.deep.equal([1, 5]);
-    });
-
-    it('leaves the old line as wire to its feeders', () => {
-      const doc = busBar([
-        bus([2, 3], [4, 3]),
-        bus([4, 3], [6, 3]),
-        feeder(4, 'u1'),
-      ]);
-      resize(doc, 2, 7);
-
-      expect(sectionsOf(doc)).to.deep.equal([
-        'bus 2,3 2,7',
-        'wire 2,3 4,3',
-        'wire 4,3 4,6',
-      ]);
-      expect(doc.querySelectorAll('Terminal')).to.have.lengthOf(1);
+      expectOrthogonal(doc);
+      expect(buses(doc).flat().every(([x]) => x === 2.5)).to.be.true;
+      joins(doc, 'u1', 'u2').forEach(([x, y]) => {
+        expect(x).to.equal(2.5);
+        expect(y).to.be.greaterThan(3.5);
+        expect(y).to.be.lessThan(6.5);
+      });
+      // Each arrives sideways on the vertical bus bar.
+      wires(doc).forEach((points) => {
+        const [a, b] = points[0][0] === 2.5 ? points : [...points].reverse();
+        expect(a[0]).to.equal(2.5);
+        expect(b[1]).to.equal(a[1]);
+      });
     });
   });
 });

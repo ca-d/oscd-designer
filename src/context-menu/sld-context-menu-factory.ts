@@ -466,14 +466,25 @@ function busBarMenuItems(
   const text = busBar.querySelector(':scope > Text');
   const {
     pos: [x, y],
+    dim: [w, h],
   } = attributes(busBar);
   const offset: Point = [context.gridX - x, context.gridY - y];
+  // The end of the bus bar nearer to where the menu was opened is the one that is resized.
+  const nearStart =
+    Math.hypot(context.gridX - x, context.gridY - y) <
+    Math.hypot(context.gridX - (x + w - 1), context.gridY - (y + h - 1));
 
   return [
     {
       headline: 'Resize',
       icon: 'sld_resize',
-      handler: () => context.dispatch(newStartInteractionEvent({ mode: 'resizingBR', element: busBar })),
+      handler: () =>
+        context.dispatch(
+          newStartInteractionEvent({
+            mode: nearStart ? 'resizingTL' : 'resizingBR',
+            element: busBar,
+          }),
+        ),
     },
     {
       headline: 'Move',

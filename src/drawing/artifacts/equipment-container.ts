@@ -257,10 +257,13 @@ function renderResizingTargetLayer(
   h: number,
 ) {
   const resizingBRTarget = targetInMode(context.interaction, 'resizingBR');
+  const resizingTLTarget = targetInMode(context.interaction, 'resizingTL');
   if (
     resizingBRTarget !== element &&
-    targetInMode(context.interaction, 'resizingTL') !== element &&
-    !(resizingBRTarget?.parentElement === element && isBusBar(resizingBRTarget))
+    resizingTLTarget !== element &&
+    ![resizingBRTarget, resizingTLTarget].some(
+      target => target?.parentElement === element && isBusBar(target),
+    )
   ) {
     return nothing;
   }

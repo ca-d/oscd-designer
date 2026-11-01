@@ -7,7 +7,6 @@ import {
 import { classMap } from 'lit/directives/class-map.js';
 import { identity } from '@openscd/scl-lib';
 
-import { isBusBar } from '../../foundations/connectivity.js';
 import { attributes, xmlBoolean } from '../../foundations/sld-attributes.js';
 import {
   elbowCorner,
@@ -16,18 +15,13 @@ import {
 } from '../../foundations/geometry.js';
 import {
   newConnectEvent,
-  newPlaceEvent,
   newStartInteractionEvent,
 } from '../../foundations/events.js';
 import { privType, sldNs } from '../../foundations.js';
 
 import type { Point } from '../../foundations/geometry.js';
 import type { SldSharedContext } from './artifact.js';
-import {
-  connectDetail,
-  isMode,
-  targetInMode,
-} from '../../foundations/interaction-mode.js';
+import { connectDetail, isMode } from '../../foundations/interaction-mode.js';
 
 export type ConnectivityNodeContext = SldSharedContext & {
   mouseX: number;
@@ -87,13 +81,15 @@ export function renderConnectivityNode(
   const sections = Array.from(priv.getElementsByTagNameNS(sldNs, 'Section'));
   const bay = cNode.closest('Bay');
   const targetSize = 0.6;
-  const wirePointerEvents =
-    !isMode(context.interaction, 'placing', 'locked') &&
-    (!isMode(context.interaction, 'resizingBR') ||
-      (targetInMode(context.interaction, 'resizingBR') === bay &&
-        isBusBar(bay)))
-      ? 'all'
-      : 'none';
+  const wirePointerEvents = isMode(
+    context.interaction,
+    'placing',
+    'locked',
+    'resizingBR',
+    'resizingTL',
+  )
+    ? 'none'
+    : 'all';
   sections.forEach((section) => {
     if (context.hiddenSections?.has(section)) {
       return;
@@ -110,7 +106,7 @@ export function renderConnectivityNode(
     let i = 0;
     while (i < vertices.length - 1) {
       const [x1, y1] = context.renderedPosition(vertices[i]);
-      let [x2, y2] = context.renderedPosition(vertices[i + 1]);
+      const [x2, y2] = context.renderedPosition(vertices[i + 1]);
       let handleClick: ((e: MouseEvent) => void) | symbol = nothing;
       let handleAuxClick: ((e: MouseEvent) => void) | symbol = nothing;
       let handleContextMenu: ((e: MouseEvent) => void) | symbol = nothing;
@@ -128,12 +124,24 @@ export function renderConnectivityNode(
             }),
           );
         };
-        handleAuxClick = ({ button }: MouseEvent) => {
-          if (button === 1) {
-            context.dispatch(
-              newStartInteractionEvent({ mode: 'resizingBR', element: bay }),
-            );
+        // The end of the bus bar nearer to the click is the one that is resized.
+        handleAuxClick = (e: MouseEvent) => {
+          if (e.button !== 1) {
+            return;
           }
+          const [mouseX, mouseY] = context.gridPosition(e);
+          const {
+            dim: [w, h],
+          } = attributes(bay);
+          const nearStart =
+            Math.hypot(mouseX - x, mouseY - y) <
+            Math.hypot(mouseX - (x + w - 1), mouseY - (y + h - 1));
+          context.dispatch(
+            newStartInteractionEvent({
+              mode: nearStart ? 'resizingTL' : 'resizingBR',
+              element: bay,
+            }),
+          );
         };
         handleContextMenu = (e: MouseEvent) => {
           e.preventDefault();
@@ -153,52 +161,6 @@ export function renderConnectivityNode(
             }),
           );
         };
-      }
-      if (busBar && targetInMode(context.interaction, 'resizingBR') === bay && !context.disabled) {
-        if (
-          section !==
-          sections.find(s => xmlBoolean(s.getAttributeNS(sldNs, 'bus')))
-        ) {
-          return;
-        }
-        circles.length = 0;
-        const {
-          pos: [vX, vY],
-          dim: [vW, vH],
-        } = attributes(bay.parentElement!);
-        const maxX = vX + vW - 0.5;
-        const maxY = vY + vH - 0.5;
-        if (i === 0) {
-          const dx = Math.max(context.mouseX - x1, 0);
-          const dy = Math.max(context.mouseY - y1, 0);
-          if (dx > dy) {
-            x2 = Math.max(x1, Math.min(maxX, context.mouseX + 0.5));
-            y2 = y1;
-          } else {
-            y2 = Math.max(y1, Math.min(maxY, context.mouseY + 0.5));
-            x2 = x1;
-          }
-          if (x1 === x2 && y1 === y2) {
-            if (x2 >= maxX) {
-              y2 += 1;
-            } else {
-              x2 += 1;
-            }
-          }
-        }
-        handleClick = () => {
-          context.dispatch(
-            newPlaceEvent({
-              parent: section,
-              element: vertices[vertices.length - 1],
-              x: x2,
-              y: y2,
-            }),
-          );
-        };
-        lines.push(svg`<rect x="${context.mouseX}" y="${context.mouseY}"
-            width="1" height="1" fill="none" pointer-events="${pointerEvents}"
-            @click=${handleClick} />`);
       }
       if (isMode(context.interaction, 'connectingFrom') && !context.disabled) {
         handleClick = () => {

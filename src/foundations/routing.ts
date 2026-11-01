@@ -445,12 +445,12 @@ export class ConnectionRouter {
   }
 
   /** Routes to the bus bar of `net` at `at`, arriving straight on, or returns `undefined`. */
-  private routeToBus(
+  routeToBus(
     from: Point,
     heading: Point,
     net: unknown,
     at: Point,
-    own: Point[],
+    own: Point[] = [],
   ): Point[] | undefined {
     const [ix, iy] = [Math.round(at[0] / STEP), Math.round(at[1] / STEP)];
     const id = this.netGoals.get(net)?.bus.get(iy * this.cols + ix);
