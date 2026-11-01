@@ -1,5 +1,6 @@
 import { html } from 'lit';
-import { fixture, expect } from '@open-wc/testing';
+import { fixture, expect, waitUntil } from '@open-wc/testing';
+import { setViewport } from '@web/test-runner-commands';
 
 import { SldContextMenu } from './sld-context-menu.js';
 
@@ -136,6 +137,65 @@ describe('SldContextMenu', () => {
       ) as HTMLElement;
       // CBR1 has type="CBR" → height=73, top = 200-73 = 127
       expect(anchor.style.top).to.equal('127px');
+    });
+  });
+
+  describe('placement', () => {
+    beforeEach(async () => {
+      await setViewport({ width: 800, height: 600 });
+    });
+
+    async function openAt(element: Element, y: number) {
+      el.open({ element, x: 100, y, gridX: 4, gridY: 4 });
+      await el.updateComplete;
+      const menu = oscdMenu(el);
+      await waitUntil(
+        () => menu.hasAttribute('open') && menu.style.visibility === '',
+        'menu was not placed',
+      );
+      const surface = menu.shadowRoot!.querySelector<HTMLElement>('.menu')!;
+      const list = menu.shadowRoot!.querySelector<HTMLElement>('.items')!;
+      return {
+        rect: surface.getBoundingClientRect(),
+        firstAction: el
+          .shadowRoot!.querySelector('oscd-menu-item')!
+          .getBoundingClientRect(),
+        scrolls: list.scrollHeight > list.clientHeight,
+      };
+    }
+
+    /** A bay has a menu of seven actions, which fits the window below or above. */
+    const bay = () => doc.querySelector('Bay')!;
+
+    it('puts the first action at the cursor where there is room', async () => {
+      const { firstAction, scrolls } = await openAt(bay(), 100);
+
+      expect(firstAction.top).to.be.closeTo(100, 1);
+      expect(scrolls).to.be.false;
+    });
+
+    it('ends at the cursor where there is no room below', async () => {
+      const { rect, scrolls } = await openAt(bay(), 560);
+
+      expect(rect.bottom).to.be.closeTo(560, 1);
+      expect(scrolls).to.be.false;
+    });
+
+    it('starts at the top of the window and does not scroll where it fits neither', async () => {
+      const { rect, scrolls } = await openAt(bay(), 300);
+
+      expect(rect.top).to.be.closeTo(0, 1);
+      expect(rect.bottom).to.be.greaterThan(300);
+      expect(scrolls).to.be.false;
+    });
+
+    it('only scrolls once it is as high as the window', async () => {
+      await setViewport({ width: 800, height: 300 });
+      const { rect, scrolls } = await openAt(bay(), 150);
+
+      expect(rect.top).to.be.closeTo(0, 1);
+      expect(rect.bottom).to.be.closeTo(300, 1);
+      expect(scrolls).to.be.true;
     });
   });
 

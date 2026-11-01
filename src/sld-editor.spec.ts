@@ -1215,6 +1215,41 @@ describe('SLD Editor', () => {
       await sldSubstationViewer.updateComplete;
     });
 
+    describe('right clicking', () => {
+      function shownHeader() {
+        const menu = contextMenu();
+        return menu?.open && menu.style.visibility === ''
+          ? menu
+            .querySelector('oscd-list-item [slot="headline"]')
+            ?.textContent?.trim()
+          : undefined;
+      }
+
+      async function rightClick(at: [number, number], header: string) {
+        await sendMouse({ type: 'click', position: gridPos(...at), button: 'right' });
+        await waitUntil(
+          () => shownHeader() === header,
+          `the menu of ${header} did not show`,
+        );
+      }
+
+      // The menus open to the right of the cursor, so these are clicked left of them.
+      it('opens another menu while one is open', async () => {
+        await rightClick([10, 12], 'V1');
+        await rightClick([3, 3], 'B1');
+        await rightClick([1, 12], 'V1');
+      });
+
+      it('only closes the menu on the next left click', async () => {
+        await rightClick([3, 3], 'B1');
+        await sendMouse({ type: 'click', position: gridPos(2, 3) });
+        await waitForMenuClose();
+
+        expect(element.interaction.mode).to.equal('idle');
+        await rightClick([3, 3], 'B1');
+      });
+    });
+
     it('allows resizing bays', async () => {
       const moveHandle =
         sldSubstationViewer.shadowRoot!.querySelectorAll<SVGElement>(
