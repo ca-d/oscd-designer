@@ -465,7 +465,7 @@ describe('SLD Editor', () => {
         });
         it('allows resizing substations', async () => {
             getSldSubstationHeader(element)
-                ?.shadowRoot?.querySelectorAll('h2 > oscd-icon-button')[1]
+                ?.shadowRoot?.querySelectorAll('h2 > oscd-icon-button')[0]
                 ?.shadowRoot?.querySelector('#button')
                 ?.click();
             await element.updateComplete;
@@ -489,7 +489,7 @@ describe('SLD Editor', () => {
         });
         it('routes substation deletion from the header through the editor', async () => {
             getSldSubstationHeader(element)
-                ?.shadowRoot?.querySelectorAll('h2 > oscd-icon-button')[2]
+                ?.shadowRoot?.querySelectorAll('h2 > oscd-icon-button')[3]
                 ?.shadowRoot?.querySelector('#button')
                 ?.click();
             await element.updateComplete;
@@ -509,15 +509,15 @@ describe('SLD Editor', () => {
             it('opens on the background with the commands of the substation', async () => {
                 await openBackgroundMenu();
                 expect(headlines()).to.deep.equal([
-                    'Edit',
                     'Resize',
                     'Download SVG',
+                    'Edit',
                     'Delete',
                 ]);
             });
             it('resizes the substation', async () => {
                 await openBackgroundMenu();
-                clickInteractive(menuItem(1));
+                clickInteractive(menuItem(0));
                 await element.updateComplete;
                 await element.resizeDialog.updateComplete;
                 expect(element.resizeDialog.substation).to.equal(element.doc.querySelector('Substation'));
@@ -576,7 +576,7 @@ describe('SLD Editor', () => {
         });
         it('forbids undersizing the substation', async () => {
             getSldSubstationHeader(element)
-                ?.shadowRoot?.querySelectorAll('h2 > oscd-icon-button')[1]
+                ?.shadowRoot?.querySelectorAll('h2 > oscd-icon-button')[0]
                 ?.shadowRoot?.querySelector('#button')
                 ?.click();
             await element.updateComplete;

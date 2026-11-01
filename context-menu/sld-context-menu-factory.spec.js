@@ -619,9 +619,9 @@ describe('sld-context-menu-factory', () => {
         const substation = () => createSCLDoc(`<Substation name="S1"/>`).querySelector('Substation');
         it('returns the commands of the substation header', () => {
             expect(headlines(createContextMenuItems(makeContext(substation())))).to.deep.equal([
-                'Edit',
                 'Resize',
                 'Download SVG',
+                'Edit',
                 'Delete',
             ]);
         });

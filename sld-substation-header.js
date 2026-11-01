@@ -11,7 +11,7 @@ import { svgNs } from './foundations.js';
 import { newSclEditDialogEvent, newSubstationDeleteEvent, newSubstationExportEvent, newSubstationResizeEvent, } from './foundations/events.js';
 /**
  * Editor-owned chrome for a single substation: its name plus the
- * Edit / Resize / Delete / Export commands. Rendered by `SldEditor` and slotted
+ * Resize / Export / Edit / Delete commands. Rendered by `SldEditor` and slotted
  * into `SldSubstationViewer`'s `header` slot so the viewer stays free of
  * editing concerns. Reports intent only — the editor decides what each command
  * means (Export is delegated back to the viewer, which owns the SVG).
@@ -24,13 +24,6 @@ export class SldSubstationHeader extends ScopedElementsMixin(LitElement) {
     render() {
         return html `<h2 class="${classMap({ disabled: this.disabled })}">
       ${this.substation.getAttribute('name')}
-      <oscd-icon-button
-        label="Edit Substation"
-        title="Edit Substation"
-        @click=${() => this.dispatchEvent(newSclEditDialogEvent(this.substation))}
-      >
-        <oscd-icon>edit</oscd-icon>
-      </oscd-icon-button>
       <oscd-icon-button
         label="Resize Substation"
         title="Resize Substation"
@@ -48,18 +41,25 @@ export class SldSubstationHeader extends ScopedElementsMixin(LitElement) {
         </svg>
       </oscd-icon-button>
       <oscd-icon-button
-        label="Delete Substation"
-        title="Delete Substation"
-        @click=${() => this.dispatchEvent(newSubstationDeleteEvent(this.substation))}
-      >
-        <oscd-icon>delete</oscd-icon>
-      </oscd-icon-button>
-      <oscd-icon-button
         label="Export Single Line Diagram SVG"
         title="Export Single Line Diagram SVG"
         @click=${() => this.dispatchEvent(newSubstationExportEvent(this.substation))}
       >
         <oscd-icon>file_download</oscd-icon>
+      </oscd-icon-button>
+      <oscd-icon-button
+        label="Edit Substation"
+        title="Edit Substation"
+        @click=${() => this.dispatchEvent(newSclEditDialogEvent(this.substation))}
+      >
+        <oscd-icon>edit</oscd-icon>
+      </oscd-icon-button>
+      <oscd-icon-button
+        label="Delete Substation"
+        title="Delete Substation"
+        @click=${() => this.dispatchEvent(newSubstationDeleteEvent(this.substation))}
+      >
+        <oscd-icon>delete</oscd-icon>
       </oscd-icon-button>
     </h2>`;
     }

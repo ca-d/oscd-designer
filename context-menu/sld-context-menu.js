@@ -90,7 +90,7 @@ function renderHeader({ element }) {
         footerGraphic = renderSldStartIcon('sld_voltage_level');
     }
     else if (element.tagName === 'Substation') {
-        footerGraphic = html `<oscd-icon slot="start">location_city</oscd-icon>`;
+        footerGraphic = html `<oscd-icon slot="start">margin</oscd-icon>`;
     }
     else if (isIedReferenceElement(element)) {
         name = 'IED';

@@ -36,7 +36,7 @@ describe('sld-substation-header', () => {
         element.addEventListener('oscd-sld-edit-scl', (event) => {
             detail = event.detail.element;
         });
-        click(buttons(element)[0]);
+        click(buttons(element)[2]);
         expect(detail).to.equal(substation);
     });
     it('emits oscd-sld-substation-resize when the resize button is clicked', async () => {
@@ -45,7 +45,7 @@ describe('sld-substation-header', () => {
         element.addEventListener('oscd-sld-substation-resize', () => {
             fired = true;
         });
-        click(buttons(element)[1]);
+        click(buttons(element)[0]);
         expect(fired).to.be.true;
     });
     it('emits oscd-sld-substation-delete when the delete button is clicked', async () => {
@@ -54,7 +54,7 @@ describe('sld-substation-header', () => {
         element.addEventListener('oscd-sld-substation-delete', () => {
             fired = true;
         });
-        click(buttons(element)[2]);
+        click(buttons(element)[3]);
         expect(fired).to.be.true;
     });
     it('emits oscd-sld-substation-export when the export button is clicked', async () => {
@@ -63,14 +63,14 @@ describe('sld-substation-header', () => {
         element.addEventListener('oscd-sld-substation-export', () => {
             fired = true;
         });
-        click(buttons(element)[3]);
+        click(buttons(element)[1]);
         expect(fired).to.be.true;
     });
     it('emits header events that bubble and cross shadow boundaries', async () => {
         const element = await headerFixture();
         const event = await new Promise((resolve) => {
             element.addEventListener('oscd-sld-edit-scl', resolve, { once: true });
-            click(buttons(element)[0]);
+            click(buttons(element)[2]);
         });
         expect(event.bubbles).to.be.true;
         expect(event.composed).to.be.true;

@@ -8971,6 +8971,21 @@ snapshots["SLD Editor when disabled given a substation disables substation butto
 `<h2 class="disabled">
   S1
   <oscd-icon-button
+    label="Resize Substation"
+    title="Resize Substation"
+    value=""
+  >
+  </oscd-icon-button>
+  <oscd-icon-button
+    label="Export Single Line Diagram SVG"
+    title="Export Single Line Diagram SVG"
+    value=""
+  >
+    <oscd-icon aria-hidden="true">
+      file_download
+    </oscd-icon>
+  </oscd-icon-button>
+  <oscd-icon-button
     label="Edit Substation"
     title="Edit Substation"
     value=""
@@ -8980,27 +8995,12 @@ snapshots["SLD Editor when disabled given a substation disables substation butto
     </oscd-icon>
   </oscd-icon-button>
   <oscd-icon-button
-    label="Resize Substation"
-    title="Resize Substation"
-    value=""
-  >
-  </oscd-icon-button>
-  <oscd-icon-button
     label="Delete Substation"
     title="Delete Substation"
     value=""
   >
     <oscd-icon aria-hidden="true">
       delete
-    </oscd-icon>
-  </oscd-icon-button>
-  <oscd-icon-button
-    label="Export Single Line Diagram SVG"
-    title="Export Single Line Diagram SVG"
-    value=""
-  >
-    <oscd-icon aria-hidden="true">
-      file_download
     </oscd-icon>
   </oscd-icon-button>
 </h2>

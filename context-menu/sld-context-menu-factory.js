@@ -543,11 +543,6 @@ function wireMenuItems(section, context) {
 function substationMenuItems(substation, context) {
     return [
         {
-            headline: 'Edit',
-            icon: 'edit',
-            handler: () => context.dispatch(newSclEditDialogEvent(substation)),
-        },
-        {
             headline: 'Resize',
             icon: 'sld_resize',
             handler: () => context.dispatch(newSubstationResizeEvent(substation)),
@@ -556,6 +551,11 @@ function substationMenuItems(substation, context) {
             headline: 'Download SVG',
             icon: 'file_download',
             handler: () => context.dispatch(newSubstationExportEvent(substation)),
+        },
+        {
+            headline: 'Edit',
+            icon: 'edit',
+            handler: () => context.dispatch(newSclEditDialogEvent(substation)),
         },
         {
             headline: 'Delete',

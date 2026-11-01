@@ -4,7 +4,7 @@ import { OscdIconButton } from '@omicronenergy/oscd-ui/iconbutton/OscdIconButton
 declare const SldSubstationHeader_base: typeof LitElement & import("@open-wc/dedupe-mixin").Constructor<import("@open-wc/scoped-elements/types.js").ScopedElementsHost> & import("@open-wc/scoped-elements/types.js").ScopedElementsHostConstructor;
 /**
  * Editor-owned chrome for a single substation: its name plus the
- * Edit / Resize / Delete / Export commands. Rendered by `SldEditor` and slotted
+ * Resize / Export / Edit / Delete commands. Rendered by `SldEditor` and slotted
  * into `SldSubstationViewer`'s `header` slot so the viewer stays free of
  * editing concerns. Reports intent only — the editor decides what each command
  * means (Export is delegated back to the viewer, which owns the SVG).
