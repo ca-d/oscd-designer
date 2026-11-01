@@ -2,6 +2,7 @@ import { privType, sldNs } from '../foundations.js';
 import { attributes, getSLDAttributes, setSLDAttributes } from './sld-attributes.js';
 
 import type { Point } from './geometry.js';
+import type { Terminal } from './interaction-mode.js';
 
 function sections(element: Element): Element[] {
   const privates = element.querySelectorAll(
@@ -111,4 +112,17 @@ export function connectionPointsAt(
   ] as [Point, Point];
 
   return { T1, T2 };
+}
+
+/** The element and terminal a connection being drawn would end on, with its wire approach points. */
+export type ConnectTarget = {
+  to: Element;
+  toTerminal: Terminal;
+  near: Point;
+  far: Point;
+};
+
+/** Windings may not connect directly to each other; a line equipment in between models that within a Bay. */
+export function canConnectToWinding(from: Element): boolean {
+  return from.tagName !== 'TransformerWinding';
 }

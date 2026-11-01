@@ -5,7 +5,14 @@ import { zigZag2WTransform, zigZagPath } from '../diagram-symbols.js';
 import { containsRect } from '../../foundations/element-geometry.js';
 import { attributes } from '../../foundations/sld-attributes.js';
 import { windingPort } from '../../foundations/obstacles.js';
-import { transformerWindingMeasures } from '../../foundations/transformer.js';
+import {
+  transformerWindingMeasures,
+  windingTerminalTargets,
+} from '../../foundations/transformer.js';
+import {
+  canConnectToWinding,
+  type ConnectTarget,
+} from '../../foundations/connectivity.js';
 import {
   newPlaceEvent,
   newRotateEvent,
@@ -26,9 +33,14 @@ import {
   type SldSharedContext,
 } from './artifact.js';
 import { renderLabel } from './label.js';
-import { isMode, targetInMode } from '../../foundations/interaction-mode.js';
+import {
+  connectDetail,
+  isMode,
+  targetInMode,
+} from '../../foundations/interaction-mode.js';
 
 export type PowerTransformerContext = SldSharedContext & {
+  connectTarget: ConnectTarget | undefined;
   groundTerminal(
     element: Element,
     terminal: 'T1' | 'T2' | 'N1' | 'N2',
@@ -39,6 +51,7 @@ export type PowerTransformerContext = SldSharedContext & {
 };
 
 type PowerTransformerRenderState = {
+  clickthrough: boolean;
   disabled: boolean;
   highlight: TemplateResult | '';
   placingSelf: boolean;
@@ -83,9 +96,46 @@ function transformerHighlight(
   }" width="1.6" height="1.6" style="${style}" pointer-events="none" />`;
 }
 
+function renderConnectIndicators(
+  winding: Element,
+  context: PowerTransformerContext,
+): TemplateResult<2>[] {
+  const from = connectDetail(context.interaction)?.from;
+  if (!from || !canConnectToWinding(from)) {
+    return [];
+  }
+  const transformer = winding.parentElement!;
+  return windingTerminalTargets(
+    winding,
+    context.renderedPosition(transformer),
+    attributes(transformer),
+  )
+    .filter(
+      ({ terminal }) =>
+        !(
+          context.connectTarget?.to === winding &&
+          context.connectTarget.toTerminal === terminal
+        ),
+    )
+    .map(({ terminal, near, far }) => {
+      const length = Math.hypot(far[0] - near[0], far[1] - near[1]);
+      const half = 0.2;
+      const [px, py] = [
+        (-(far[1] - near[1]) / length) * half,
+        ((far[0] - near[0]) / length) * half,
+      ];
+      const fill = terminal.startsWith('T')
+        ? 'var(--oscd-sld-terminal-color)'
+        : 'var(--oscd-sld-neutral-terminal-color)';
+      return svg`<polygon class="connect-indicator" opacity="0.4" style="fill: ${fill}"
+        points="${near[0]},${near[1]} ${far[0] + px},${far[1] + py} ${far[0] - px},${far[1] - py}" />`;
+    });
+}
+
 function renderTransformerWinding(
   winding: Element,
   context: PowerTransformerContext,
+  connect: boolean,
 ): TemplateResult<2> {
   const {
     size,
@@ -108,7 +158,9 @@ function renderTransformerWinding(
   });
   const groundable = winding.closest('Bay');
   const placingTarget = targetInMode(context.interaction, 'placing');
-  if (
+  if (connect) {
+    ports.push(...renderConnectIndicators(winding, context));
+  } else if (
     !(
       isMode(
         context.interaction,
@@ -207,13 +259,21 @@ function renderTransformerWinding(
 function powerTransformerState(
   transformer: Element,
   context: PowerTransformerContext,
-  { preview = false }: ArtifactRenderOptions = {},
+  { preview = false, connect = false }: ArtifactRenderOptions = {},
 ): PowerTransformerRenderState | undefined {
   if (targetInMode(context.interaction, 'placing') === transformer && !preview) {
     return undefined;
   }
+  if (
+    connectDetail(context.interaction)?.from.closest('Substation') ===
+      context.substation &&
+    !connect
+  ) {
+    return undefined;
+  }
 
   return {
+    clickthrough: connect,
     disabled: context.disabled,
     highlight: isToBeHighlighted(transformer, context.highlight)
       ? transformerHighlight(transformer, context.highlight)
@@ -321,11 +381,13 @@ function renderPowerTransformer(
     disabled: state.disabled,
     selectable: state.selectable,
   })}"
-      pointer-events="all"
+      pointer-events="${state.clickthrough ? 'none' : 'all'}"
       @mousedown=${preventDefault}
       @auxclick=${actions.onAuxClick}
       @click=${actions.onClick}>
-      ${state.windings.map(w => renderTransformerWinding(w, context))}
+      ${state.windings.map(w =>
+        renderTransformerWinding(w, context, state.clickthrough),
+      )}
       ${clickTarget}
     </g>
     <g class="preview">${

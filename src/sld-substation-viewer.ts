@@ -64,9 +64,15 @@ import {
 } from './foundations/bus-bar-edits.js';
 import {
   busSections,
+  canConnectToWinding,
   connectionStartPoints,
   isBusBar,
+  type ConnectTarget,
 } from './foundations/connectivity.js';
+import {
+  nearestWindingTerminalTarget,
+  windingTerminalTargets,
+} from './foundations/transformer.js';
 import {
   attributes,
   getSLDAttributes,
@@ -300,6 +306,8 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
 
   private iedResolutionCache = new Map<Element, Element | null>();
 
+  private connectTarget: ConnectTarget | undefined;
+
   protected override willUpdate(changedProperties: PropertyValues<this>) {
     if (
       changedProperties.has('doc') ||
@@ -525,6 +533,8 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
       dim: [w, h],
     } = attributes(this.substation);
 
+    this.connectTarget = this.resolveConnectTarget();
+
     // The five base layers (voltage levels, connectivity, power transformers,
     // IEDs, labels) are position-independent: their geometry derives from the
     // document and interaction, never from the live cursor — except in the four
@@ -738,7 +748,7 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
       return this.renderIed(this.placing, { preview: true });
     }
     if (this.placing.tagName === 'PowerTransformer') {
-      return this.renderPowerTransformer(this.placing, true);
+      return this.renderPowerTransformer(this.placing, { preview: true });
     }
     if (isBusBar(this.placing)) {
       return this.dragAnchor
@@ -817,12 +827,16 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
       .map(vl => svg`${renderVoltageLevel(vl, this.containerContext())}`);
   }
 
-  private renderConnectionPreviewLayer() {
-    if (this.connecting?.from.closest('Substation') !== this.substation) {
-      return [];
+  /**
+   * What the connection being drawn would end on at the current cursor: the
+   * hovered conducting equipment (by grid cell) with an open terminal, else the
+   * nearest open winding terminal. Resolved once per render, see `render()`.
+   */
+  private resolveConnectTarget(): ConnectTarget | undefined {
+    const from = this.connecting?.from;
+    if (!from || from.closest('Substation') !== this.substation) {
+      return undefined;
     }
-
-    const { from, fromTerminal } = this.connecting;
 
     const targetEq = Array.from(
       this.substation.querySelectorAll('ConductingEquipment'),
@@ -836,24 +850,57 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
       });
 
     const toTerminal = this.nearestOpenTerminal(targetEq);
-
-    let snap: { near: Point; far: Point } | undefined;
     if (targetEq && toTerminal) {
-      const [close, far] = connectionStartPoints(targetEq)[toTerminal];
-      snap = { near: close, far };
+      const [near, far] = connectionStartPoints(targetEq)[toTerminal];
+      return { to: targetEq, toTerminal, near, far };
     }
 
+    const nearest = nearestWindingTerminalTarget(
+      canConnectToWinding(from)
+        ? Array.from(this.substation.querySelectorAll('PowerTransformer')).flatMap(
+          transformer =>
+            Array.from(transformer.children)
+              .filter(child => child.tagName === 'TransformerWinding')
+              .flatMap(winding =>
+                windingTerminalTargets(
+                  winding,
+                  this.renderedPosition(transformer),
+                  attributes(transformer),
+                ),
+              ),
+        )
+        : [],
+      [this.mouseX2, this.mouseY2],
+    );
+    return nearest
+      ? {
+        to: nearest.winding,
+        toTerminal: nearest.terminal,
+        near: nearest.near,
+        far: nearest.far,
+      }
+      : undefined;
+  }
+
+  private renderConnectionPreviewLayer() {
+    if (this.connecting?.from.closest('Substation') !== this.substation) {
+      return [];
+    }
+
+    const { from, fromTerminal } = this.connecting;
+
+    const target = this.connectTarget;
     const cursor: Point = [this.mouseX2, this.mouseY2];
 
     // Going back past an anchor takes the anchor away.
-    const aim = snap ? snapApproachPoint(snap) : cursor;
+    const aim = target ? snapApproachPoint(target) : cursor;
     const path = backtrackPath(this.connecting.path, aim);
     const [anchor] = path.slice(-2);
     const cutHere = anchor[0] === aim[0] && anchor[1] === aim[1];
 
     // Over a connectable wire the connection meets it where the route first
     // reaches it, wherever on the wire the cursor is.
-    const wireNode = snap ? undefined : this.connectivityNodeAt(cursor);
+    const wireNode = target ? undefined : this.connectivityNodeAt(cursor);
     const wireRoute = wireNode
       ? this.routeToConnectivityNode(path, wireNode)
       : undefined;
@@ -864,7 +911,7 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
       wireRoute ??
       (cutHere
         ? [aim]
-        : this.routeConnection(path, aim, snap?.far));
+        : this.routeConnection(path, aim, target?.far));
 
     // The already-committed waypoints (every point but the provisional last
     // one) continuing through the route. Without a clean route the preview stops
@@ -872,7 +919,7 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
     const previewPoints: Point[] = [
       ...path.slice(0, -1),
       ...(route ?? []),
-      ...(route && snap ? [snap.far, snap.near] : []),
+      ...(route && target ? [target.far, target.near] : []),
     ].filter(
       ([x, y], i, all) => !i || x !== all[i - 1][0] || y !== all[i - 1][1],
     );
@@ -902,18 +949,18 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
         if (!route) {
           return;
         }
-        const newPath = snap
-          ? finishRoute(path, route, snap.far, snap.near)
+        const newPath = target
+          ? finishRoute(path, route, target.far, target.near)
           : extendRoute(path, route);
         this.dispatchEvent(newExtendConnectPointEvent(newPath));
-        if (targetEq && toTerminal) {
+        if (target) {
           this.dispatchEvent(
             newConnectEvent({
               from,
               fromTerminal,
               path: newPath,
-              to: targetEq,
-              toTerminal,
+              to: target.to,
+              toTerminal: target.toTerminal,
             }),
           );
         }
@@ -924,18 +971,25 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
 
   /**
    * While a connection is being drawn in this substation, every
-   * `ConductingEquipment` is suppressed in its container layer (see
-   * conducting-equipment.ts) and re-painted here as a flat top overlay in
-   * connect mode: terminal connect-indicators on, and click-through enabled so
-   * clicks fall through to the connection drop-target beneath.
+   * `ConductingEquipment` and `PowerTransformer` is suppressed in its container
+   * layer (see conducting-equipment.ts, power-transformer.ts) and re-painted
+   * here as a flat top overlay in connect mode: terminal connect-indicators on,
+   * and click-through enabled so clicks fall through to the connection
+   * drop-target beneath.
    */
   private renderConnectModeEquipmentLayer() {
     if (this.connecting?.from.closest('Substation') !== this.substation) {
       return nothing;
     }
-    return Array.from(
-      this.substation.querySelectorAll('ConductingEquipment'),
-    ).map(eq => this.renderEquipment(eq, { connect: true }));
+    return [
+      ...Array.from(
+        this.substation.querySelectorAll('ConductingEquipment'),
+      ).map(eq => this.renderEquipment(eq, { connect: true })),
+      ...Array.from(this.substation.querySelectorAll('PowerTransformer')).map(
+        transformer =>
+          this.renderPowerTransformer(transformer, { connect: true }),
+      ),
+    ];
   }
 
   private renderConnectivityLayer() {
@@ -1009,13 +1063,13 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
 
   renderPowerTransformer(
     transformer: Element,
-    preview = false,
+    options: { preview?: boolean; connect?: boolean } = {},
   ): SVGTemplateResult {
     return this.renderArtifact(
       powerTransformerArtifact,
       transformer,
       this.powerTransformerContext(),
-      { preview },
+      options,
     );
   }
 
@@ -1060,6 +1114,7 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
   private powerTransformerContext(): PowerTransformerContext {
     return {
       ...this.sharedContext(),
+      connectTarget: this.connectTarget,
       groundTerminal: (element, terminal) =>
         this.groundTerminal(element, terminal),
       highlight: this.highlight,

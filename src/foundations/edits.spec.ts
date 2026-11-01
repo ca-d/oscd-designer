@@ -6,6 +6,7 @@ import {
   createFlipElementEdits,
   createGroundTerminalEdits,
   createAddTextEdit,
+  createConnectEdits,
   createResizeTLEdits,
   createRotateEdits,
   disconnectExternalEdits,
@@ -16,6 +17,7 @@ import {
   shiftTextEdits,
   wrapIedReferenceEdits,
 } from './edits.js';
+import type { EditV2 } from '@openscd/oscd-api';
 import { sldNs } from '../foundations.js';
 import { createSCLDoc, sldFixture } from '../test-helpers.js';
 
@@ -863,6 +865,75 @@ describe('edits', () => {
       // lx = 0 + (3-0) = 3, ly = 0 + (2-0) = 2
       expect(ns['smth:lx']).to.equal('3');
       expect(ns['smth:ly']).to.equal('2');
+    });
+  });
+  describe('createConnectEdits', () => {
+    function connectDoc() {
+      return sldFixture({
+        children: `
+          <ConductingEquipment name="Q1" type="CBR"/>
+          <PowerTransformer name="T1">
+            <TransformerWinding name="W1"/>
+            <TransformerWinding name="W2"/>
+          </PowerTransformer>
+          <PowerTransformer name="T2">
+            <TransformerWinding name="W1"/>
+          </PowerTransformer>`,
+      });
+    }
+
+    function insertedTerminals(edits: EditV2[]) {
+      return edits.flat().filter(
+        (e): e is { parent: Element; node: Element; reference: Element | null } =>
+          'parent' in e &&
+          'node' in e &&
+          ['Terminal', 'NeutralPoint'].includes((e.node as Element).tagName),
+      );
+    }
+
+    it('terminates on a TransformerWinding terminal', () => {
+      const doc = connectDoc();
+      const eq = doc.querySelector('ConductingEquipment')!;
+      const winding = doc.querySelector('TransformerWinding')!;
+      const edits = createConnectEdits(
+        { from: eq, fromTerminal: 'T2', to: winding, toTerminal: 'T1', path: [[3, 3], [3, 5]] },
+        doc,
+        'smth',
+      );
+      const terminals = insertedTerminals(edits);
+      expect(terminals.map(t => t.parent)).to.deep.equal([eq, winding]);
+      expect(terminals[1].node.tagName).to.equal('Terminal');
+      expect(terminals[1].node.getAttribute('name')).to.equal('T1');
+      expect(terminals[1].node.getAttribute('connectivityNode')).to.equal(
+        terminals[0].node.getAttribute('connectivityNode'),
+      );
+    });
+
+    it('terminates on a TransformerWinding neutral point', () => {
+      const doc = connectDoc();
+      const eq = doc.querySelector('ConductingEquipment')!;
+      const winding = doc.querySelector('TransformerWinding')!;
+      const edits = createConnectEdits(
+        { from: eq, fromTerminal: 'T2', to: winding, toTerminal: 'N2', path: [[3, 3], [3, 5]] },
+        doc,
+        'smth',
+      );
+      const [, end] = insertedTerminals(edits);
+      expect(end.node.tagName).to.equal('NeutralPoint');
+      expect(end.node.getAttribute('name')).to.equal('N2');
+    });
+
+    it('rejects connecting one winding directly to another', () => {
+      const doc = connectDoc();
+      const [from] = Array.from(doc.querySelectorAll('TransformerWinding'));
+      const to = doc.querySelectorAll('PowerTransformer')[1].querySelector('TransformerWinding')!;
+      expect(
+        createConnectEdits(
+          { from, fromTerminal: 'N1', to, toTerminal: 'T1', path: [[3, 3], [3, 5]] },
+          doc,
+          'smth',
+        ),
+      ).to.deep.equal([]);
     });
   });
 });

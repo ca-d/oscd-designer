@@ -516,6 +516,82 @@ describe('SldSubstationViewer read-only locked default', () => {
   });
 });
 
+describe('SldSubstationViewer connecting to a transformer winding', () => {
+  async function connectingViewer() {
+    const doc = contractSubstationDoc();
+    const bay = doc.querySelector('Bay')!;
+    const transformer = new DOMParser().parseFromString(
+      `<PowerTransformer xmlns="http://www.iec.ch/61850/2003/SCL" xmlns:sld="${SLD_NS}" name="T1">` +
+        `<Private type="OpenSCD-SLD-Layout"><sld:SLDAttributes sld:x="3" sld:y="8"/></Private>` +
+        `<TransformerWinding name="W1"/></PowerTransformer>`,
+      'application/xml',
+    ).documentElement;
+    bay.appendChild(doc.importNode(transformer, true));
+
+    const from = doc.querySelectorAll('ConductingEquipment')[1];
+    const el = await mountViewer(doc);
+    el.interaction = interactions.connectingFrom(from, 'T2', [
+      [4.5, 3.84],
+      [4.5, 4],
+    ]);
+    await el.updateComplete;
+    return { el, from, winding: doc.querySelector('TransformerWinding')! };
+  }
+
+  async function hover(el: SldSubstationViewer, x: number, y: number) {
+    Object.assign(el, {
+      mouseX: Math.floor(x),
+      mouseY: Math.floor(y),
+      mouseX2: x,
+      mouseY2: y,
+    });
+    await el.updateComplete;
+  }
+
+  function clickDropTarget(el: SldSubstationViewer) {
+    const events: CustomEvent[] = [];
+    el.addEventListener('oscd-sld-connect', e => events.push(e as CustomEvent));
+    el.sld
+      .querySelector('rect[fill="url(#grid)"]')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    return events;
+  }
+
+  it('connects to a winding terminal under the cursor', async () => {
+    const { el, from, winding } = await connectingViewer();
+    await hover(el, 3.5, 7.5);
+
+    const [event] = clickDropTarget(el);
+    expect(event.detail.from).to.equal(from);
+    expect(event.detail.to).to.equal(winding);
+    expect(event.detail.toTerminal).to.equal('T1');
+    expect(event.detail.path.at(-1)).to.deep.equal([3.5, 7.3]);
+  });
+
+  it('shows connect indicators on open winding terminals', async () => {
+    const { el } = await connectingViewer();
+    expect(
+      el.sld.querySelectorAll('polygon.connect-indicator').length,
+    ).to.be.greaterThan(0);
+  });
+
+  it('does not snap to winding terminals when connecting from a winding', async () => {
+    const { el, winding } = await connectingViewer();
+    el.interaction = interactions.connectingFrom(winding, 'N1', [
+      [3.5, 8.5],
+      [3.5, 9],
+    ]);
+    await hover(el, 3.5, 7.5);
+    expect(clickDropTarget(el)).to.have.lengthOf(0);
+  });
+
+  it('does not connect when no winding terminal is near the cursor', async () => {
+    const { el } = await connectingViewer();
+    await hover(el, 10, 10);
+    expect(clickDropTarget(el)).to.have.lengthOf(0);
+  });
+});
+
 describe('SldSubstationViewer connection routing', () => {
   // The neighbouring equipment cell; the source's own terminal stub is inside its cell.
   const obstacles = [[4, 3, 1, 1]];
