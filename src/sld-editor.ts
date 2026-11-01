@@ -38,7 +38,10 @@ import {
   sectionSignature,
 } from './foundations/rerouting.js';
 import type { FlaggedSection } from './foundations/rerouting.js';
-import { busBarResizeEdits } from './foundations/bus-bar-edits.js';
+import {
+  busBarLineEdits,
+  busBarResizeEdits,
+} from './foundations/bus-bar-edits.js';
 import { isBusBar } from './foundations/connectivity.js';
 import {
   iedReferences,
@@ -292,6 +295,9 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
     edits.push(...wrapIedReferenceEdits(element, parent, this.doc));
     if (sized) {
       edits.push(createResizeEdits(element, this.nsp, w, h));
+      if (isBusBar(element)) {
+        edits.push(...busBarLineEdits(element, [x, y, w, h], this.nsp));
+      }
     } else if (isNew && isBusBar(element)) {
       // Sized right away, so that giving up on resizing leaves a proper bus bar.
       edits.push(createResizeEdits(element, this.nsp, 2, 1));

@@ -55,10 +55,11 @@ import {
 } from './foundations/routing.js';
 import type { RouterMode } from './foundations/routing.js';
 import { containsRect } from './foundations/element-geometry.js';
-import { canPlaceAt, isUnsizedContainer } from './foundations/sld-placement.js';
+import { canPlaceAt, isUnsizedBusBar, isUnsizedContainer } from './foundations/sld-placement.js';
 import {
   busBarJunctions,
   busBarLine,
+  draggedBusBarRect,
   resizedBusBarRect,
 } from './foundations/bus-bar-edits.js';
 import {
@@ -154,12 +155,12 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
     isActive: () => !isMode(this.interaction, 'idle', 'locked'),
   });
 
-  // Dragging out a new VoltageLevel or Bay between any two corners.
+  // Dragging out a new VoltageLevel, Bay or bus bar between any two corners.
   protected dragOut = new DragToClickController(this, {
     canStart: event =>
       !this.disabled &&
       !!this.placing &&
-      isUnsizedContainer(this.placing) &&
+      (isUnsizedContainer(this.placing) || isUnsizedBusBar(this.placing)) &&
       event.composedPath().includes(this.sld),
     isActive: () => !!this.placing,
     begin: (press) => {
@@ -740,7 +741,9 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
       return this.renderPowerTransformer(this.placing, true);
     }
     if (isBusBar(this.placing)) {
-      return this.renderBusBar(this.placing);
+      return this.dragAnchor
+        ? this.renderDraggedBusBar(this.placing, this.dragAnchor)
+        : this.renderBusBar(this.placing);
     }
     return svg``;
   }
@@ -751,6 +754,24 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
     return svg`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
       stroke-width="0.12" stroke-linecap="round" pointer-events="none"
       stroke="${invalid ? 'var(--oscd-sld-invalid-placement-color)' : 'currentColor'}" />`;
+  }
+
+  /** A new bus bar being dragged out from the cell `anchor` to the cursor. */
+  private renderDraggedBusBar(busBar: Element, anchor: Point) {
+    const rect = draggedBusBarRect(anchor, [this.mouseX, this.mouseY]);
+    const [x, y, w, h] = rect;
+    const parent = Array.from(
+      this.substation.querySelectorAll(':root > Substation > VoltageLevel'),
+    ).find(vl => containsRect(vl, x, y, w, h));
+    return svg`<g class="bus preview">
+      ${this.renderBusBarLine(rect, !parent)}
+      <rect width="100%" height="100%" fill="none" pointer-events="all"
+        @click=${() =>
+          parent &&
+          this.dispatchEvent(
+            newPlaceEvent({ x, y, element: busBar, parent, w, h }),
+          )} />
+    </g>`;
   }
 
   /** The bus bar as it would run with its end at the cursor, and its junctions. */

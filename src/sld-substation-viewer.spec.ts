@@ -1308,6 +1308,28 @@ describe('SldSubstationViewer bus bar sizing', () => {
 
     expect(thick(el)).to.have.lengthOf(0);
   });
+
+  it('draws a new bus bar between the corner it was dragged out from and the cursor', async () => {
+    const { el, doc } = await busViewer();
+    const nsp = 'sld';
+    const busBar = doc.createElementNS(doc.documentElement.namespaceURI, 'Bay');
+    busBar.setAttribute('name', 'BB2');
+    busBar.innerHTML = `<ConnectivityNode name="L" xmlns="http://www.iec.ch/61850/2003/SCL"><Private type="OpenSCD-SLD-Layout"><${nsp}:Section xmlns:${nsp}="${SLD_NS}" ${nsp}:bus="true"/></Private></ConnectivityNode>`;
+    el.interaction = interactions.placing(busBar, [0, 0]);
+    el.dragAnchor = [8, 9];
+    [el.mouseX, el.mouseY] = [12, 10];
+    await el.updateComplete;
+
+    const line = thick(el).pop()!;
+    expect(
+      ['x1', 'y1', 'x2', 'y2'].map(name => line.getAttribute(name)),
+    ).to.deep.equal(['8.5', '9.5', '12.5', '9.5']);
+
+    const placed = details(el, 'oscd-sld-place');
+    click(el);
+    expect(placed).to.have.lengthOf(1);
+    expect(placed[0]).to.deep.include({ x: 8, y: 9, w: 5, h: 1, element: busBar });
+  });
 });
 
 describe('SldSubstationViewer junctions and branches', () => {

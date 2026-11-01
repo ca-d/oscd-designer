@@ -12,6 +12,7 @@ import { sldNs } from '../foundations.js';
 import { busSections } from './connectivity.js';
 import { createResizeEdits, createResizeTLEdits } from './edits.js';
 import { planReroutes, routeEdits } from './rerouting.js';
+import { updateSLDAttributes } from './sld-attribute-edits.js';
 import {
   attributes,
   getSLDAttributes,
@@ -85,6 +86,18 @@ export function resizedBusBarRect(
     lastY - top + 1,
   );
   return [lastX - newW + 1, lastY - newH + 1, newW, newH];
+}
+
+/** The cells of a new bus bar dragged out from the cell `anchor` to the cell `cursor`. */
+export function draggedBusBarRect(
+  [anchorX, anchorY]: Point,
+  [cursorX, cursorY]: Point,
+): Rect {
+  const [dx, dy] = [Math.abs(cursorX - anchorX), Math.abs(cursorY - anchorY)];
+  if (dx >= dy) {
+    return [Math.min(anchorX, cursorX), anchorY, Math.max(dx + 1, 2), 1];
+  }
+  return [anchorX, Math.min(anchorY, cursorY), 1, dy + 1];
 }
 
 function newBusSection(doc: Document, nsp: string, from: Point, to: Point) {
@@ -179,4 +192,20 @@ export function busBarResizeEdits(
     ),
     ...buses.map((section): EditV2 => ({ node: section })),
   ];
+}
+
+/** Edits that run a freshly made bus bar along the line through the cells `rect`. */
+export function busBarLineEdits(
+  bay: Element,
+  rect: Rect,
+  nsp: string,
+): EditV2[] {
+  const [section] = busSections(bay);
+  const vertices = Array.from(section.getElementsByTagNameNS(sldNs, 'Vertex'));
+  return busBarLine(rect).map(([x, y], i) =>
+    updateSLDAttributes(vertices[i === 0 ? 0 : vertices.length - 1], nsp, {
+      x: x.toString(),
+      y: y.toString(),
+    }),
+  );
 }

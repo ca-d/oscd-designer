@@ -3,6 +3,7 @@ import { handleEdit } from '@omicronenergy/oscd-editor';
 
 import {
   busBarResizeEdits,
+  draggedBusBarRect,
   resizedBusBarRect,
 } from './bus-bar-edits.js';
 import { attributes, getSLDAttributes } from './sld-attributes.js';
@@ -136,6 +137,20 @@ describe('resizedBusBarRect', () => {
     expect(resizedBusBarRect(bay(), 'BR', [30, 3])).to.deep.equal([2, 3, 19, 1]);
     expect(resizedBusBarRect(bay(), 'TL', [6, -4])).to.deep.equal([6, 1, 1, 3]);
     expect(resizedBusBarRect(bay(), 'BR', [3, 30])).to.deep.equal([2, 3, 1, 18]);
+  });
+});
+
+describe('draggedBusBarRect', () => {
+  it('runs along the longer distance from the anchor to the cursor', () => {
+    expect(draggedBusBarRect([3, 4], [7, 5])).to.deep.equal([3, 4, 5, 1]);
+    expect(draggedBusBarRect([7, 4], [3, 5])).to.deep.equal([3, 4, 5, 1]);
+    expect(draggedBusBarRect([3, 4], [4, 8])).to.deep.equal([3, 4, 1, 5]);
+    expect(draggedBusBarRect([3, 8], [4, 4])).to.deep.equal([3, 4, 1, 5]);
+  });
+
+  it('is two cells long at least', () => {
+    expect(draggedBusBarRect([3, 4], [3, 4])).to.deep.equal([3, 4, 2, 1]);
+    expect(draggedBusBarRect([3, 4], [2, 4])).to.deep.equal([2, 4, 2, 1]);
   });
 });
 

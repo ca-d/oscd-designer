@@ -1059,6 +1059,72 @@ describe('SLD Editor', () => {
       });
     });
 
+    describe('dragging out a new bus bar', () => {
+      async function dragOut(from: [number, number], to: [number, number]) {
+        element.startPlacing(makeBusBar(element.doc, element.nsp));
+        await sendMouse({ type: 'move', position: gridPos(...from) });
+        await sendMouse({ type: 'down' });
+        await sendMouse({ type: 'move', position: gridPos(...to) });
+        await sendMouse({ type: 'up' });
+        await aTimeout(10);
+        return element.doc.querySelector('Bay')!;
+      }
+
+      function busVertices(bus: Element) {
+        const [section, ...others] = busSections(bus);
+        expect(others).to.have.lengthOf(0);
+        return Array.from(section.querySelectorAll('Vertex')).map(vertex => [
+          getSLDAttributes(vertex, 'x'),
+          getSLDAttributes(vertex, 'y'),
+        ]);
+      }
+
+      function expectBusBar(
+        bus: Element,
+        [x, y, w, h]: [number, number, number, number],
+      ) {
+        expect(element.interaction.mode).to.equal('idle');
+        expect(
+          ['x', 'y', 'w', 'h'].map(name => sldAttribute(bus, name)),
+        ).to.deep.equal([x, y, w, h].map(String));
+        expect(busVertices(bus)).to.deep.equal([
+          [`${x + 0.5}`, `${y + 0.5}`],
+          [`${x + w - 0.5}`, `${y + h - 0.5}`],
+        ]);
+      }
+
+      it('downwards along the longer distance', async () => {
+        expectBusBar(await dragOut(placeTL, placeBR), [5, 3, 1, 8]);
+      });
+
+      it('upwards', async () => {
+        expectBusBar(await dragOut(placeBR, placeTL), [11, 3, 1, 8]);
+      });
+
+      it('sideways', async () => {
+        expectBusBar(
+          await dragOut(placeTL, [placeBR[0], placeTL[1] + 1]),
+          [5, 3, 7, 1],
+        );
+      });
+
+      it('to the left', async () => {
+        expectBusBar(
+          await dragOut([placeBR[0], placeTL[1]], [placeTL[0], placeTL[1] + 1]),
+          [5, 3, 7, 1],
+        );
+      });
+
+      it('and then from the top by clicking', async () => {
+        const bus = await dragOut(placeTL, placeBR);
+
+        element.handleStartInteraction({ mode: 'resizingTL', element: bus });
+        await sendMouse({ type: 'click', position: gridPos(5, 6) });
+
+        expectBusBar(bus, [5, 6, 1, 5]);
+      });
+    });
+
     it('allows placing a new bus bar', async () => {
       const busBar = makeBusBar(element.doc, element.nsp);
       element.startPlacing(busBar);

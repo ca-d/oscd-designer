@@ -30,6 +30,11 @@ export function isUnsizedContainer(element: Element): boolean {
   );
 }
 
+/** A new bus bar that has not been sized yet, so it can be dragged out. */
+export function isUnsizedBusBar(element: Element): boolean {
+  return isBusBar(element) && !getSLDAttributes(element, 'h');
+}
+
 export function canPlaceAt(
   root: Element,
   element: Element,
