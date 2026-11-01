@@ -68,6 +68,7 @@ export function newPlaceLabelEvent(detail: PlaceLabelDetail): PlaceLabelEvent {
 }
 
 export type ConnectDetail = {
+  /** Equipment or a winding, or a wire (a Section) the new one branches off; `fromTerminal` is then unused. */
   from: Element;
   path: Point[];
   fromTerminal: 'T1' | 'T2' | 'N1' | 'N2';
@@ -150,6 +151,7 @@ export type InteractionIntent =
   | { mode: 'resizingBR'; element: Element }
   | { mode: 'resizingTL'; element: Element }
   | { mode: 'reroutingSection'; element: Element }
+  | { mode: 'movingJunction'; element: Element; point: Point }
   | ({ mode: 'connecting' } & StartConnectDetail);
 
 export type StartInteractionEvent = CustomEvent<InteractionIntent>;
@@ -173,6 +175,21 @@ export function newRerouteSectionEvent(
   detail: RerouteSectionDetail,
 ): RerouteSectionEvent {
   return new CustomEvent('oscd-sld-reroute-section', {
+    bubbles: true,
+    composed: true,
+    detail,
+  });
+}
+
+export type MoveJunctionDetail = { cNode: Element; from: Point; to: Point };
+
+export type MoveJunctionEvent = CustomEvent<MoveJunctionDetail>;
+
+/** The junction at `from` of the connectivity node `cNode` is to go to `to`. */
+export function newMoveJunctionEvent(
+  detail: MoveJunctionDetail,
+): MoveJunctionEvent {
+  return new CustomEvent('oscd-sld-move-junction', {
     bubbles: true,
     composed: true,
     detail,
@@ -334,6 +351,7 @@ declare global {
     ['oscd-sld-rotate']: StartEvent;
     ['oscd-sld-flip']: StartEvent;
     ['oscd-sld-reroute-section']: RerouteSectionEvent;
+    ['oscd-sld-move-junction']: MoveJunctionEvent;
     ['oscd-sld-start-interaction']: StartInteractionEvent;
     ['oscd-sld-selected']: SelectEvent;
     ['oscd-sld-edit-scl']: EditSclEvent;

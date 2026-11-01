@@ -52,13 +52,16 @@ export function renderConnectivityNode(
     return nothing;
   }
   const circles = [] as TemplateResult<2>[];
-  const intersections = Object.entries(
+  const handles = [] as TemplateResult<2>[];
+  const hidden = (vertex: Element) =>
+    !!context.hiddenSections?.has(vertex.parentElement!);
+  const intersections = Object.values(
     Array.from(priv.querySelectorAll('Vertex'))
       // A bus bar drawn elsewhere as a preview leaves no junctions behind.
       .filter(
         vertex =>
           !(
-            context.hiddenSections?.has(vertex.parentElement!) &&
+            hidden(vertex) &&
             xmlBoolean(vertex.parentElement!.getAttributeNS(sldNs, 'bus'))
           ),
       )
@@ -75,17 +78,39 @@ export function renderConnectivityNode(
         },
         {} as Record<string, Element[]>,
       ),
-  )
-    .filter(
-      ([_, vertices]) =>
-        vertices.length > 2 ||
+  ).filter(
+    vertices =>
+      !vertices.every(hidden) &&
+      (vertices.length > 2 ||
         (vertices.length === 2 &&
-          vertices.find(v => v.hasAttributeNS(sldNs, 'uuid'))),
-    )
-    .map(([_, [vertex]]) => context.renderedPosition(vertex));
-  intersections.forEach(([x, y]) =>
-    circles.push(svg`<circle fill="currentColor" cx="${x}" cy="${y}" r="0.15" />`),
+          vertices.find(v => v.hasAttributeNS(sldNs, 'uuid')))),
   );
+  intersections.forEach((vertices) => {
+    const [x, y] = context.renderedPosition(vertices[0]);
+    circles.push(svg`<circle fill="currentColor" cx="${x}" cy="${y}" r="0.15" />`);
+    // A junction of plain wires can be picked up and moved.
+    const movable =
+      vertices.length > 2 &&
+      vertices.every(
+        v =>
+          !v.hasAttributeNS(sldNs, 'uuid') &&
+          !xmlBoolean(v.parentElement!.getAttributeNS(sldNs, 'bus')),
+      );
+    if (movable && isMode(context.interaction, 'idle') && !context.disabled) {
+      handles.push(svg`<circle class="junction" cx="${x}" cy="${y}" r="0.35"
+        fill="transparent" pointer-events="all" style="cursor: move"
+        @click=${(e: MouseEvent) => {
+          e.stopPropagation();
+          context.dispatch(
+            newStartInteractionEvent({
+              mode: 'movingJunction',
+              element: cNode,
+              point: [x, y],
+            }),
+          );
+        }} />`);
+    }
+  });
   const lines = [] as TemplateResult<2>[];
   const sections = Array.from(priv.getElementsByTagNameNS(sldNs, 'Section'));
   const bay = cNode.closest('Bay');
@@ -180,9 +205,10 @@ export function renderConnectivityNode(
         handleClick = () => {
           const { from, path, fromTerminal } = connectDetail(context.interaction)!;
           if (
+            from.closest('ConnectivityNode') === cNode ||
             from
-              .closest('ConductingEquipment, PowerTransformer')!
-              .querySelector(
+              .closest('ConductingEquipment, PowerTransformer')
+              ?.querySelector(
                 `[connectivityNode="${cNode.getAttribute('pathName')}"]`,
               )
           ) {
@@ -286,5 +312,6 @@ export function renderConnectivityNode(
       <title>${cNode.getAttribute('pathName')}</title>
       ${circles}
       ${lines}
+      ${handles}
     </g>`;
 }

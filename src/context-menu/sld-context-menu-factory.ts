@@ -19,6 +19,11 @@ import {
 } from '../foundations/connectivity-edits.js';
 import { singleTerminal } from '../foundations/equipment.js';
 import {
+  disconnectSectionEdits,
+  joinPoint,
+  sectionTerminals,
+} from '../foundations/node-edits.js';
+import {
   isIedReferenceElement,
   resolveIed,
 } from '../foundations/ied.js';
@@ -688,36 +693,28 @@ function wireMenuItems(
   section: Element,
   context: MenuItemContext,
 ): ContextMenuItem[] {
-  const cNode = section.closest('ConnectivityNode');
-  const pathName = cNode?.getAttribute('pathName');
-  const terminals = pathName
-    ? Array.from(
-      context.doc.querySelectorAll('Terminal, NeutralPoint'),
-    ).filter(terminal => terminal.getAttribute('connectivityNode') === pathName)
-    : [];
-  const nameOf = (terminal: Element) => {
-    const owner = terminal.closest('ConductingEquipment, PowerTransformer');
-    const winding = terminal.closest('TransformerWinding');
-    return [owner, winding]
-      .filter(element => element)
-      .map(element => element!.getAttribute('name'))
-      .join(' ');
-  };
-  const names = terminals.map(nameOf);
+  const terminals = sectionTerminals(section);
+  const owner = terminals[0]?.closest('ConductingEquipment, PowerTransformer');
+  const join = joinPoint(section, [context.gridX + 0.5, context.gridY + 0.5]);
 
   return [
-    ...terminals.map(
-      (terminal, i): ContextMenuItem => ({
-        headline: `Disconnect ${names[i]}${
-          names.indexOf(names[i]) !== names.lastIndexOf(names[i])
-            ? ` (${terminal.getAttribute('name')})`
-            : ''
-        }`,
-        icon: 'cancel',
-        handler: () =>
-          context.dispatch(newEditEventV2(removeTerminal(terminal))),
-      }),
-    ),
+    ...(join
+      ? [
+        {
+          headline: 'Connect',
+          icon: 'add_link',
+          handler: () =>
+            context.dispatch(
+              newStartInteractionEvent({
+                mode: 'connecting',
+                from: section,
+                fromTerminal: 'T1',
+                path: [join, join],
+              }),
+            ),
+        },
+      ]
+      : []),
     {
       headline: 'Re-route',
       icon: 'route',
@@ -728,6 +725,15 @@ function wireMenuItems(
             element: section,
           }),
         ),
+    },
+    {
+      headline:
+        terminals.length === 1 && owner
+          ? `Disconnect ${owner.getAttribute('name')}`
+          : 'Disconnect',
+      icon: 'link_off',
+      handler: () =>
+        context.dispatch(newEditEventV2(disconnectSectionEdits(section))),
     },
   ];
 }

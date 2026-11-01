@@ -30,6 +30,7 @@ import {
   wrapIedReferenceEdits,
 } from './foundations/edits.js';
 import { removeTerminal } from './foundations/connectivity-edits.js';
+import { wireConnectEdits } from './foundations/node-edits.js';
 import {
   pointsSignature,
   rerouteEdits,
@@ -53,6 +54,8 @@ import type {
   ConnectEvent,
   RerouteSectionDetail,
   RerouteSectionEvent,
+  MoveJunctionDetail,
+  MoveJunctionEvent,
   DismissRoutingWarningEvent,
   ExtendConnectPointEvent,
   EditIedDetail,
@@ -117,7 +120,8 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
       i.mode === 'connectingFrom' ||
       (i.mode === 'resizingBR' && !i.element.parentElement) ||
       (i.mode === 'resizingTL' && !i.element.parentElement) ||
-      (i.mode === 'placingLabel' && !i.element.parentElement)
+      (i.mode === 'placingLabel' && !i.element.parentElement) ||
+      (i.mode === 'movingJunction' && !i.element.parentElement)
     ) {
       this.interaction = interactions.idle();
     }
@@ -235,6 +239,12 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
         break;
       case 'reroutingSection':
         this.startReroutingSection(intent.element);
+        break;
+      case 'movingJunction':
+        this.interaction = interactions.movingJunction(
+          intent.element,
+          intent.point,
+        );
         break;
     }
     return undefined;
@@ -424,13 +434,30 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
     this.interaction = interactions.idle();
   }
 
+  handleMoveJunction({ cNode, from, to }: MoveJunctionDetail) {
+    const fallbacks: FlaggedSection[] = [];
+    const edits = rerouteEdits(
+      this.doc,
+      { kind: 'junction', element: cNode, from, to },
+      this.nsp,
+      fallbacks,
+    );
+    if (edits.length) {
+      this.dispatchEvent(newEditEventV2(edits));
+      this.warnAbout(fallbacks);
+    }
+    this.interaction = interactions.idle();
+  }
+
   handleConnect(detail: ConnectDetail) {
     const replacing =
       this.interaction.mode === 'connectingFrom'
         ? this.interaction.replacing
         : undefined;
     const edits = [
-      ...createConnectEdits(detail, this.doc, this.nsp),
+      ...(detail.from.localName === 'Section'
+        ? wireConnectEdits(detail, this.doc, this.nsp)
+        : createConnectEdits(detail, this.doc, this.nsp)),
       ...(replacing ? removeTerminal(replacing) : []),
     ];
     if (edits.length) {
@@ -674,6 +701,8 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
               this.handleFlip(detail)}
             @oscd-sld-reroute-section=${({ detail }: RerouteSectionEvent) =>
               this.handleRerouteSection(detail)}
+            @oscd-sld-move-junction=${({ detail }: MoveJunctionEvent) =>
+              this.handleMoveJunction(detail)}
           >
             <sld-substation-header
               slot="header"

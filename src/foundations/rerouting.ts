@@ -32,14 +32,16 @@ import type { Point } from './geometry.js';
 /**
  * What the user is changing: moving an element (and all it contains), turning
  * equipment a quarter, mirroring a transformer, routing a wire through a point
- * or running a bus bar (the `element`) along a new line from `start` to `end`.
+ * running a bus bar (the `element`) along a new line from `start` to `end`, or
+ * moving a junction of the connectivity node `element` from `from` to `to`.
  */
 export type LayoutChange =
   | { kind: 'move'; element: Element; dx: number; dy: number }
   | { kind: 'rotate'; element: Element }
   | { kind: 'flip'; element: Element }
   | { kind: 'section'; element: Element; via: Point }
-  | { kind: 'bus'; element: Element; start: Point; end: Point };
+  | { kind: 'bus'; element: Element; start: Point; end: Point }
+  | { kind: 'junction'; element: Element; from: Point; to: Point };
 
 /** Where a section meets its end: the point, the first point of a route there and the direction leaving it. */
 export type Port = { point: Point; approach: Point; outward: Point };
@@ -840,6 +842,106 @@ function planBus({
   });
 }
 
+/** A section ending at a junction that is being moved; `join` is the index of that end. */
+type JunctionWire = { wire: Wire; join: 0 | 1 };
+
+/**
+ * The sections of `cNode` that meet at the junction at `at`, or nothing when
+ * there is no junction of plain wires there.
+ */
+function junctionWires(
+  wires: Wire[],
+  cNode: Element,
+  at: Point,
+): JunctionWire[] | undefined {
+  const meeting = wires
+    .filter(wire => wire.cNode === cNode && wire.ends)
+    .flatMap((wire): JunctionWire[] =>
+      ([0, 1] as const)
+        .filter(i => !wire.ends![i].terminal && sameAs(attributes(wire.ends![i].vertex).pos, at))
+        .map(join => ({ wire, join })),
+    );
+  const touching = wires.filter(
+    wire =>
+      wire.cNode === cNode &&
+      wire.vertices.some(vertex => sameAs(attributes(vertex).pos, at)),
+  );
+  return meeting.length >= 3 &&
+    touching.length === meeting.length &&
+    touching.every(wire => !xmlBoolean(getSLDAttributes(wire.section, 'bus'))) &&
+    meeting.every(({ wire, join }) => wire.ends![1 - join].port)
+    ? meeting
+    : undefined;
+}
+
+/**
+ * Routes each section meeting at a junction from its other end to the new
+ * place `to` of the junction, each arriving there from another side.
+ */
+function planJunction({
+  wires,
+  to,
+  routers,
+  soft,
+  reserve,
+  clear,
+}: {
+  wires: JunctionWire[];
+  to: Point;
+  routers: [ConnectionRouter, ConnectionRouter];
+  soft: () => ConnectionRouter;
+  reserve: (points: Point[]) => () => void;
+  clear: (end: End, point: Point, outward: Point) => Point;
+}): PlannedRoute[] {
+  const farOf = ({ wire, join }: JunctionWire) => wire.ends![1 - join];
+  const order = [...wires].sort((a, b) => {
+    const distance = (j: JunctionWire) => {
+      const [x, y] = farOf(j).port!.point;
+      return Math.abs(x - to[0]) + Math.abs(y - to[1]);
+    };
+    return distance(a) - distance(b);
+  });
+  const guards = order.map(j =>
+    farOf(j).terminal ? reserve([stubOf(farOf(j).port!)]) : () => {},
+  );
+
+  return order.map((j, index): PlannedRoute => {
+    guards[index]();
+    const { wire, join } = j;
+    const far = farOf(j);
+    const port = far.port!;
+    const [origin, heading]: [Point, Point] = far.terminal
+      ? [clear(far, port.approach, port.outward), port.outward]
+      : [port.point, [0, 0]];
+    const found = routers
+      .map(router => router.route(origin, heading, to))
+      .find(route => route);
+    const route = found ?? soft().route(origin, heading, to);
+    const points: Point[] = route
+      ? [port.point, ...route]
+      : [port.point, port.approach, [to[0], port.approach[1]], to];
+    cleanPath(points);
+    // The junction itself stays free for the others to arrive at.
+    const [before] = points.slice(-2);
+    const last: Point = [
+      to[0] + Math.sign(before[0] - to[0]) * STEP,
+      to[1] + Math.sign(before[1] - to[1]) * STEP,
+    ];
+    reserve([...points.slice(0, -1), last]);
+
+    return {
+      section: wire.section,
+      cNode: wire.cNode,
+      vertices: wire.vertices,
+      ends: wire.ends!.map((end, i) =>
+        i === join ? { ...end, detached: true } : end,
+      ) as [End, End],
+      points: join === 0 ? [...points].reverse() : points,
+      fallback: !found,
+    };
+  });
+}
+
 /**
  * Where the sections left off their terminals by `change` would run
  * afterwards. Nothing is changed in the document.
@@ -863,20 +965,26 @@ export function planReroutes(
     change.kind === 'bus'
       ? busFeeders(wires, change.element, [change.start, change.end])
       : undefined;
+  const junction =
+    change.kind === 'junction'
+      ? junctionWires(wires, change.element, change.from)
+      : undefined;
   const affected = bus
     ? bus.moving.map(({ wire }) => wire)
-    : change.kind === 'section'
-      ? wires.filter(
-        wire =>
-          wire.section === change.element &&
+    : junction
+      ? junction.map(({ wire }) => wire)
+      : change.kind === 'section'
+        ? wires.filter(
+          wire =>
+            wire.section === change.element &&
           !xmlBoolean(getSLDAttributes(wire.section, 'bus')) &&
           wire.ends?.every(end => end.port && !end.free),
-      )
-      : wires.filter(
-        wire =>
-          wire.ends?.some(end => end.detached) &&
+        )
+        : wires.filter(
+          wire =>
+            wire.ends?.some(end => end.detached) &&
           wire.ends.every(end => end.port),
-      );
+        );
   if (!affected.length) {
     return [];
   }
@@ -970,6 +1078,17 @@ export function planReroutes(
     const releases = [router.reserve(points), tightRouter.reserve(points)];
     return () => releases.forEach(release => release());
   };
+
+  if (junction && change.kind === 'junction') {
+    return planJunction({
+      wires: junction,
+      to: change.to,
+      routers: [router, tightRouter],
+      soft,
+      reserve,
+      clear: clearOfOwn,
+    });
+  }
 
   if (bus) {
     return planBus({

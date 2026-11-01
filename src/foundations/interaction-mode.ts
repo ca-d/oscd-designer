@@ -32,7 +32,8 @@ export type InteractionState =
     /** The terminal whose connection this replaces, once it is made. */
     replacing?: Element;
   }
-  | { mode: 'reroutingSection'; element: Element };
+  | { mode: 'reroutingSection'; element: Element }
+  | { mode: 'movingJunction'; element: Element; point: Point };
 
 /**
  * Pure constructors for each {@link InteractionState} variant. They compute the next
@@ -96,6 +97,16 @@ export const connectingFrom = (
 export const reroutingSection = (element: Element): InteractionState => ({
   mode: 'reroutingSection',
   element,
+});
+
+/** Moving the junction at `point` of the connectivity node `element`. */
+export const movingJunction = (
+  element: Element,
+  point: Point,
+): InteractionState => ({
+  mode: 'movingJunction',
+  element,
+  point,
 });
 
 /** The set of gesture-mode tags of {@link InteractionState}. */

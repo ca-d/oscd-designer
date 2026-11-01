@@ -285,6 +285,54 @@ describe('rerouteEdits', () => {
     });
   });
 
+  describe('moving a junction', () => {
+    /** Q1 above, Q2 below and Q3 to the right meet at the junction (3.5, 6). */
+    function star() {
+      return substation({
+        wires: `<smth:Section>${vertex(3.5, 3.84, 'u1')}${vertex(3.5, 6)}</smth:Section>
+          <smth:Section>${vertex(3.5, 6)}${vertex(3.5, 8.16, 'u2')}</smth:Section>
+          <smth:Section>${vertex(3.5, 6)}${vertex(9.5, 6)}${vertex(9.5, 7.16, 'u3')}</smth:Section>`,
+        extra: `<ConductingEquipment name="Q3" type="DIS">
+            ${layout('smth:x="9" smth:y="7" smth:rot="0"')}
+            ${terminal('T1', 'u3')}
+          </ConductingEquipment>`,
+      });
+    }
+
+    const move = (doc: XMLDocument, to: Point) => ({
+      kind: 'junction' as const,
+      element: doc.querySelector('ConnectivityNode')!,
+      from: [3.5, 6] as Point,
+      to,
+    });
+
+    it('routes every wire meeting there to the new place', () => {
+      const doc = star();
+      handleEdit(rerouteEdits(doc, move(doc, [6.5, 5]), 'smth'));
+
+      expectAttached(doc);
+      // The junction stays the last point of the first wire and the first of the others.
+      const all = sections(doc)
+        .map(polyline)
+        .map((points, i) => (i === 0 ? [...points].reverse() : points));
+      expect(all).to.have.lengthOf(3);
+      all.forEach((points) => {
+        expect(points[0]).to.deep.equal([6.5, 5]);
+      });
+      // Each arrives from another side.
+      const sides = all.map(([, next]) => `${Math.sign(next[0] - 6.5)},${Math.sign(next[1] - 5)}`);
+      expect(new Set(sides).size).to.equal(3);
+    });
+
+    it('reports nothing where there is no junction of plain wires', () => {
+      const doc = star();
+
+      expect(
+        planReroutes(doc, { ...move(doc, [6.5, 5]), from: [3.5, 8.16] }),
+      ).to.deep.equal([]);
+    });
+  });
+
   describe('routing a wire through a point', () => {
     const through = (doc: XMLDocument, section: Element, via: Point) =>
       planReroutes(doc, { kind: 'section', element: section, via });

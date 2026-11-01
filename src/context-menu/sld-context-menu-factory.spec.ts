@@ -545,7 +545,33 @@ describe('sld-context-menu-factory', () => {
       `);
     }
 
-    it('offers to disconnect each piece of equipment and to re-route the wire', () => {
+    /** Q3 hangs off the wire between Q1 and Q2 at (3.5, 4.5). */
+    function starDoc() {
+      return bayDoc(`
+        <ConductingEquipment name="Q1" type="CBR">${terminal('T2', 'u1')}</ConductingEquipment>
+        <ConductingEquipment name="Q2" type="DIS">${terminal('T1', 'u2')}</ConductingEquipment>
+        <ConductingEquipment name="Q3" type="DIS">${terminal('T1', 'u3')}</ConductingEquipment>
+        <ConnectivityNode name="L1" pathName="S1/V1/B1/L1">
+          <Private type="OpenSCD-SLD-Layout">
+            <smth:Section>
+              <smth:Vertex smth:x="3.5" smth:y="3.84" smth:uuid="u1"/>
+              <smth:Vertex smth:x="3.5" smth:y="4.5"/>
+            </smth:Section>
+            <smth:Section>
+              <smth:Vertex smth:x="3.5" smth:y="4.5"/>
+              <smth:Vertex smth:x="3.5" smth:y="5.16" smth:uuid="u2"/>
+            </smth:Section>
+            <smth:Section>
+              <smth:Vertex smth:x="3.5" smth:y="4.5"/>
+              <smth:Vertex smth:x="6.5" smth:y="4.5"/>
+              <smth:Vertex smth:x="6.5" smth:y="5.16" smth:uuid="u3"/>
+            </smth:Section>
+          </Private>
+        </ConnectivityNode>
+      `);
+    }
+
+    it('offers to connect, re-route and disconnect the wire', () => {
       const doc = wiredDoc();
       const section = doc.getElementsByTagNameNS(sldNs, 'Section')[0];
       const items = createContextMenuItems(makeContext(section));
@@ -554,54 +580,50 @@ describe('sld-context-menu-factory', () => {
         type: 'header',
         element: doc.querySelector('ConnectivityNode'),
       });
-      expect(headlines(items)).to.deep.equal([
-        'Disconnect Q1',
-        'Disconnect Q2',
+      expect(headlines(items)).to.deep.equal(['Connect', 'Re-route', 'Disconnect']);
+    });
+
+    it('names the one piece of equipment a wire would disconnect', () => {
+      const section = starDoc().getElementsByTagNameNS(sldNs, 'Section')[2];
+
+      expect(headlines(createContextMenuItems(makeContext(section)))).to.deep.equal([
+        'Connect',
         'Re-route',
+        'Disconnect Q3',
       ]);
     });
 
     it('dispatches the correct event from every action handler', () => {
-      const section = wiredDoc().getElementsByTagNameNS(sldNs, 'Section')[0];
+      const section = starDoc().getElementsByTagNameNS(sldNs, 'Section')[2];
       expectHandlerSignatures(section, {}, {
-        'Disconnect Q1': 'oscd-edit-v2',
-        'Disconnect Q2': 'oscd-edit-v2',
+        Connect: 'oscd-sld-start-interaction/connecting',
         'Re-route': 'oscd-sld-start-interaction/reroutingSection',
+        'Disconnect Q3': 'oscd-edit-v2',
+      });
+    });
+
+    it('connects from the point of the wire nearest to where it was clicked', () => {
+      const section = starDoc().getElementsByTagNameNS(sldNs, 'Section')[2];
+      const [event] = invoke(section, 'Connect', { gridX: 5, gridY: 4 }) as CustomEvent[];
+
+      expect(event.detail).to.deep.include({
+        mode: 'connecting',
+        from: section,
+        path: [[5.5, 4.5], [5.5, 4.5]],
       });
     });
 
     it('disconnects the equipment by removing its terminal', () => {
-      const doc = wiredDoc();
-      const section = doc.getElementsByTagNameNS(sldNs, 'Section')[0];
-      const [event] = invoke(section, 'Disconnect Q2') as CustomEvent[];
+      const doc = starDoc();
+      const section = doc.getElementsByTagNameNS(sldNs, 'Section')[2];
+      const [event] = invoke(section, 'Disconnect Q3') as CustomEvent[];
       const edits = [event.detail.edit].flat(Infinity) as { node?: Node }[];
 
       expect(
         edits.some(
-          edit => edit.node === doc.querySelector('[name="Q2"] > Terminal'),
+          edit => edit.node === doc.querySelector('[name="Q3"] > Terminal'),
         ),
       ).to.be.true;
-    });
-
-    it('tells the terminals of one piece of equipment apart', () => {
-      const doc = bayDoc(`
-        <ConductingEquipment name="Q1" type="CBR">${terminal('T1', 'u1')}${terminal('T2', 'u2')}</ConductingEquipment>
-        <ConnectivityNode name="L1" pathName="S1/V1/B1/L1">
-          <Private type="OpenSCD-SLD-Layout">
-            <smth:Section>
-              <smth:Vertex smth:x="3.5" smth:y="3.16" smth:uuid="u1"/>
-              <smth:Vertex smth:x="3.5" smth:y="3.84" smth:uuid="u2"/>
-            </smth:Section>
-          </Private>
-        </ConnectivityNode>
-      `);
-      const section = doc.getElementsByTagNameNS(sldNs, 'Section')[0];
-
-      expect(headlines(createContextMenuItems(makeContext(section)))).to.deep.equal([
-        'Disconnect Q1 (T1)',
-        'Disconnect Q1 (T2)',
-        'Re-route',
-      ]);
     });
   });
 
