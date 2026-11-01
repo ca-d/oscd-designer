@@ -35,6 +35,9 @@ import {
   newRotateEvent,
   newSclEditDialogEvent,
   newStartInteractionEvent,
+  newSubstationDeleteEvent,
+  newSubstationExportEvent,
+  newSubstationResizeEvent,
 } from '../foundations/events.js';
 
 import type { Point } from '../foundations/geometry.js';
@@ -671,6 +674,35 @@ function textMenuItems(
   return items;
 }
 
+/** The commands also offered next to the name of the substation. */
+function substationMenuItems(
+  substation: Element,
+  context: MenuItemContext,
+): ContextMenuItem[] {
+  return [
+    {
+      headline: 'Resize',
+      icon: 'sld_resize',
+      handler: () => context.dispatch(newSubstationResizeEvent(substation)),
+    },
+    {
+      headline: 'Download SVG',
+      icon: 'file_download',
+      handler: () => context.dispatch(newSubstationExportEvent(substation)),
+    },
+    {
+      headline: 'Edit',
+      icon: 'edit',
+      handler: () => context.dispatch(newSclEditDialogEvent(substation)),
+    },
+    {
+      headline: 'Delete',
+      icon: 'delete',
+      handler: () => context.dispatch(newSubstationDeleteEvent(substation)),
+    },
+  ];
+}
+
 export function createContextMenuItems(
   context: MenuItemContext,
 ): ContextMenuItem[] {
@@ -683,8 +715,10 @@ export function createContextMenuItems(
     items.push(...transformerMenuItems(element, context));
   } else if (element.tagName === 'Bay' && isBusBar(element)) {
     items.push(...busBarMenuItems(element, context));
-  } else if (element.tagName === 'Bay' || element.tagName === 'VoltageLevel') {
+  } else if (element.tagName === 'VoltageLevel' || element.tagName === 'Bay') {
     items.push(...containerMenuItems(element, context));
+  } else if (element.tagName === 'Substation') {
+    items.push(...substationMenuItems(element, context));
   } else if (element.tagName === 'TransformerWinding') {
     items.push(...transformerWindingMenuItems(element, context));
     const transformer = element.parentElement!;

@@ -491,7 +491,13 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
           }
         </style>
         ${symbols}
-        <rect width="100%" height="100%" style="fill: var(--md-sys-color-surface, var(--oscd-base3))" />
+        <rect width="100%" height="100%" style="fill: var(--md-sys-color-surface, var(--oscd-base3))"
+          @contextmenu=${(event: MouseEvent) => {
+            event.preventDefault();
+            if (!this.disabled && isMode(this.interaction, 'idle')) {
+              this.requestContextMenu(this.substation, event);
+            }
+          }} />
         ${this.renderVoltageLevelPlacingTarget()}
         ${guard(baseLayerKey, () => this.renderVoltageLevelLayer())}
         ${this.renderConnectionPreviewLayer()}

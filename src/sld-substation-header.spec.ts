@@ -62,7 +62,7 @@ describe('sld-substation-header', () => {
       detail = (event as CustomEvent<{ element: Element }>).detail.element;
     });
 
-    click(buttons(element)[0]);
+    click(buttons(element)[2]);
 
     expect(detail).to.equal(substation);
   });
@@ -74,7 +74,7 @@ describe('sld-substation-header', () => {
       fired = true;
     });
 
-    click(buttons(element)[1]);
+    click(buttons(element)[0]);
 
     expect(fired).to.be.true;
   });
@@ -86,7 +86,7 @@ describe('sld-substation-header', () => {
       fired = true;
     });
 
-    click(buttons(element)[2]);
+    click(buttons(element)[3]);
 
     expect(fired).to.be.true;
   });
@@ -98,7 +98,7 @@ describe('sld-substation-header', () => {
       fired = true;
     });
 
-    click(buttons(element)[3]);
+    click(buttons(element)[1]);
 
     expect(fired).to.be.true;
   });
@@ -107,7 +107,7 @@ describe('sld-substation-header', () => {
     const element = await headerFixture();
     const event = await new Promise<Event>((resolve) => {
       element.addEventListener('oscd-sld-edit-scl', resolve, { once: true });
-      click(buttons(element)[0]);
+      click(buttons(element)[2]);
     });
 
     expect(event.bubbles).to.be.true;

@@ -653,7 +653,7 @@ describe('SLD Editor', () => {
 
     it('allows resizing substations', async () => {
       getSldSubstationHeader(element)
-        ?.shadowRoot?.querySelectorAll<OscdIconButton>('h2 > oscd-icon-button')[1]
+        ?.shadowRoot?.querySelectorAll<OscdIconButton>('h2 > oscd-icon-button')[0]
         ?.shadowRoot?.querySelector<HTMLElement>('#button')
         ?.click();
       await element.updateComplete;
@@ -690,12 +690,67 @@ describe('SLD Editor', () => {
 
     it('routes substation deletion from the header through the editor', async () => {
       getSldSubstationHeader(element)
-        ?.shadowRoot?.querySelectorAll<OscdIconButton>('h2 > oscd-icon-button')[2]
+        ?.shadowRoot?.querySelectorAll<OscdIconButton>('h2 > oscd-icon-button')[3]
         ?.shadowRoot?.querySelector<HTMLElement>('#button')
         ?.click();
       await element.updateComplete;
 
       expect(element.doc.querySelector('Substation')).to.be.null;
+    });
+
+    describe('its context menu', () => {
+      async function openBackgroundMenu() {
+        sldSubstationViewer.shadowRoot!
+          .querySelector('svg#sld > rect')!
+          .dispatchEvent(new PointerEvent('contextmenu', { cancelable: true }));
+        await element.updateComplete;
+        await element.contextMenu.updateComplete;
+      }
+
+      function headlines() {
+        return contextMenuItems().map(item =>
+          item.querySelector('[slot="headline"]')!.textContent!.trim(),
+        );
+      }
+
+      it('opens on the background with the commands of the substation', async () => {
+        await openBackgroundMenu();
+
+        expect(headlines()).to.deep.equal([
+          'Resize',
+          'Download SVG',
+          'Edit',
+          'Delete',
+        ]);
+      });
+
+      it('resizes the substation', async () => {
+        await openBackgroundMenu();
+        clickInteractive(menuItem(0));
+        await element.updateComplete;
+        await element.resizeDialog.updateComplete;
+
+        expect(element.resizeDialog.substation).to.equal(
+          element.doc.querySelector('Substation'),
+        );
+      });
+
+      it('deletes the substation', async () => {
+        await openBackgroundMenu();
+        clickInteractive(menuItem(-1));
+        await element.updateComplete;
+
+        expect(element.doc.querySelector('Substation')).to.be.null;
+      });
+
+      it('does not open while something else is going on', async () => {
+        element.startPlacing(element.doc.createElement('VoltageLevel'));
+        await element.updateComplete;
+        await sldSubstationViewer.updateComplete;
+        await openBackgroundMenu();
+
+        expect(contextMenuItems()).to.have.lengthOf(0);
+      });
     });
 
     it('allows placing a new voltage level', async () => {
@@ -746,7 +801,7 @@ describe('SLD Editor', () => {
 
     it('forbids undersizing the substation', async () => {
       getSldSubstationHeader(element)
-        ?.shadowRoot?.querySelectorAll<OscdIconButton>('h2 > oscd-icon-button')[1]
+        ?.shadowRoot?.querySelectorAll<OscdIconButton>('h2 > oscd-icon-button')[0]
         ?.shadowRoot?.querySelector<HTMLElement>('#button')
         ?.click();
       await element.updateComplete;
