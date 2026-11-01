@@ -8,6 +8,7 @@ snapshots["SLD Editor given a voltage level opens a menu on voltage level right 
   no-vertical-flip=""
   positioning="fixed"
   quick=""
+  stay-open-on-focusout=""
 >
   <oscd-list-item type="text">
     <div slot="headline">
@@ -440,6 +441,7 @@ snapshots["SLD Editor given conducting equipment opens a menu on equipment right
   no-vertical-flip=""
   positioning="fixed"
   quick=""
+  stay-open-on-focusout=""
 >
   <oscd-list-item type="text">
     <div slot="headline">

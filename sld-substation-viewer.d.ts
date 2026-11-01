@@ -105,7 +105,7 @@ export declare class SldSubstationViewer extends SldSubstationViewer_base {
     render(): import("lit-html").TemplateResult<1>;
     renderLabel(element: Element, { preview }?: {
         preview?: boolean | undefined;
-    }): SVGTemplateResult | typeof nothing;
+    }): typeof nothing | SVGTemplateResult;
     /**
      * The VoltageLevel drop-zone, painted near the BACK of the stack (behind
      * existing voltage levels) — a VL is dropped *behind* the diagram. Mutually
@@ -203,7 +203,7 @@ export declare class SldSubstationViewer extends SldSubstationViewer_base {
     private routeToConnectivityNode;
     /** The topmost connectable connectivity node whose wire runs under `cursor`. */
     private connectivityNodeAt;
-    renderConnectivityNode(cNode: Element): SVGTemplateResult | typeof nothing;
+    renderConnectivityNode(cNode: Element): typeof nothing | SVGTemplateResult;
     static styles: import("lit").CSSResult[];
 }
 export {};

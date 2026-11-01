@@ -47,7 +47,9 @@ export declare class SldContextMenu extends SldContextMenu_base {
     private context?;
     private anchor;
     menu: OscdMenu;
-    open(context: MenuContext): void;
+    /** The context of the latest request to open, which wins over earlier ones still opening. */
+    private requested?;
+    open(context: MenuContext): Promise<void>;
     /**
      * Puts the first action at the cursor height `y`. A menu that does not fit
      * below that ends at the cursor instead, and one that does not fit above it
@@ -56,6 +58,8 @@ export declare class SldContextMenu extends SldContextMenu_base {
      */
     private place;
     private handleClosed;
+    /** Right-clicking outside the menu opens the menu of what is under the cursor instead. */
+    private handleScrimContextMenu;
     private buildItems;
     private renderAction;
     private renderMenuItem;
