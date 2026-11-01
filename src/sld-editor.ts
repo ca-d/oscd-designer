@@ -39,6 +39,10 @@ import {
 } from './foundations/rerouting.js';
 import type { FlaggedSection } from './foundations/rerouting.js';
 import {
+  autoLayoutEdits,
+  needsLayout,
+} from './foundations/auto-layout.js';
+import {
   busBarLineEdits,
   busBarResizeEdits,
 } from './foundations/bus-bar-edits.js';
@@ -525,6 +529,14 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
     this.dispatchEvent(newEditEventV2({ node: substation }));
   }
 
+  handleSubstationAutoLayout(substation: Element) {
+    this.dispatchEvent(
+      newEditEventV2(autoLayoutEdits(substation, this.nsp), {
+        title: 'Lay out substation automatically',
+      }),
+    );
+  }
+
   handleSubstationExport(substation: Element) {
     const viewer = Array.from(
       this.renderRoot.querySelectorAll<SldSubstationViewer>(
@@ -731,7 +743,12 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
             <sld-substation-header
               slot="header"
               .substation=${substation}
+              .needsLayout=${needsLayout(substation)}
               ?disabled=${this.disabled}
+              @oscd-sld-substation-auto-layout=${({
+                detail,
+              }: SubstationCommandEvent) =>
+                this.handleSubstationAutoLayout(detail)}
               @oscd-sld-substation-resize=${({
                 detail,
               }: SubstationCommandEvent) => this.handleSubstationResize(detail)}

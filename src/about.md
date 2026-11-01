@@ -147,6 +147,13 @@ When an item is deleted, any unnecessary Connectivity Nodes are removed.
 
 ## Other Features
 
+### Automatic Layout
+
+A Substation from a file without any single line diagram (none of its Voltage Levels, Bays or equipment have been placed yet) offers "Lay out automatically" below its name.
+This stacks the Voltage Levels, draws Bays holding nothing but a Connectivity Node as bus bars across the top of their Voltage Level, lines up the other Bays below, and places the equipment of each Bay in rows by how it is connected, with a free cell around every item.
+Transformers outside of Bays are placed to the right.
+All connections are then routed automatically, the shortest first. The result can be undone like any other edit.
+
 ### Zoom
 
 The "Zoom In" and "Zoom Out" buttons on the palette change the size of the drawing.

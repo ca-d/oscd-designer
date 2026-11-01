@@ -311,6 +311,16 @@ export function newSubstationExportEvent(
   });
 }
 
+export function newSubstationAutoLayoutEvent(
+  substation: Element,
+): SubstationCommandEvent {
+  return new CustomEvent('oscd-sld-substation-auto-layout', {
+    bubbles: true,
+    composed: true,
+    detail: substation,
+  });
+}
+
 export type GroundHintEvent = CustomEvent<undefined>;
 
 export function newGroundHintEvent(): GroundHintEvent {
@@ -364,6 +374,7 @@ declare global {
     ['oscd-sld-substation-resize']: SubstationCommandEvent;
     ['oscd-sld-substation-delete']: SubstationCommandEvent;
     ['oscd-sld-substation-export']: SubstationCommandEvent;
+    ['oscd-sld-substation-auto-layout']: SubstationCommandEvent;
     ['oscd-sld-ground-hint']: GroundHintEvent;
     ['oscd-sld-in-action']: InActionEvent;
     ['oscd-sld-dismiss-routing-warning']: DismissRoutingWarningEvent;

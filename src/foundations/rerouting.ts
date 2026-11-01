@@ -152,6 +152,22 @@ export function flippedTerminalPort(terminal: Element): Port | undefined {
     : undefined;
 }
 
+/** Where a terminal is with its equipment or transformer at the given `positions`, unturned. */
+export function terminalPortAt(
+  terminal: Element,
+  positions: Map<Element, Point>,
+): Port | undefined {
+  const at = (element: Element): Point =>
+    positions.get(element) ?? attributes(element).pos;
+  return terminalPort(terminal, [0, 0], [0, 1], {
+    delta: () => [0, 0],
+    position: at,
+    rotation: element => attributes(element).rot,
+    turns: () => false,
+    flips: () => false,
+  });
+}
+
 function terminalPort(
   terminal: Element,
   oldVertex: Point,
