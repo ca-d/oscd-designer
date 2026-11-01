@@ -540,6 +540,72 @@ function planBus({ bus, routers: [strict, tight], soft, reserve, clear, kept, })
     });
 }
 /**
+ * The sections of `cNode` that meet at the junction at `at`, or nothing when
+ * there is no junction of plain wires there.
+ */
+function junctionWires(wires, cNode, at) {
+    const meeting = wires
+        .filter(wire => wire.cNode === cNode && wire.ends)
+        .flatMap((wire) => [0, 1]
+        .filter(i => !wire.ends[i].terminal && sameAs(attributes(wire.ends[i].vertex).pos, at))
+        .map(join => ({ wire, join })));
+    const touching = wires.filter(wire => wire.cNode === cNode &&
+        wire.vertices.some(vertex => sameAs(attributes(vertex).pos, at)));
+    return meeting.length >= 3 &&
+        touching.length === meeting.length &&
+        touching.every(wire => !xmlBoolean(getSLDAttributes(wire.section, 'bus'))) &&
+        meeting.every(({ wire, join }) => wire.ends[1 - join].port)
+        ? meeting
+        : undefined;
+}
+/**
+ * Routes each section meeting at a junction from its other end to the new
+ * place `to` of the junction, each arriving there from another side.
+ */
+function planJunction({ wires, to, routers, soft, reserve, clear, }) {
+    const farOf = ({ wire, join }) => wire.ends[1 - join];
+    const order = [...wires].sort((a, b) => {
+        const distance = (j) => {
+            const [x, y] = farOf(j).port.point;
+            return Math.abs(x - to[0]) + Math.abs(y - to[1]);
+        };
+        return distance(a) - distance(b);
+    });
+    const guards = order.map(j => farOf(j).terminal ? reserve([stubOf(farOf(j).port)]) : () => { });
+    return order.map((j, index) => {
+        guards[index]();
+        const { wire, join } = j;
+        const far = farOf(j);
+        const port = far.port;
+        const [origin, heading] = far.terminal
+            ? [clear(far, port.approach, port.outward), port.outward]
+            : [port.point, [0, 0]];
+        const found = routers
+            .map(router => router.route(origin, heading, to))
+            .find(route => route);
+        const route = found ?? soft().route(origin, heading, to);
+        const points = route
+            ? [port.point, ...route]
+            : [port.point, port.approach, [to[0], port.approach[1]], to];
+        cleanPath(points);
+        // The junction itself stays free for the others to arrive at.
+        const [before] = points.slice(-2);
+        const last = [
+            to[0] + Math.sign(before[0] - to[0]) * STEP,
+            to[1] + Math.sign(before[1] - to[1]) * STEP,
+        ];
+        reserve([...points.slice(0, -1), last]);
+        return {
+            section: wire.section,
+            cNode: wire.cNode,
+            vertices: wire.vertices,
+            ends: wire.ends.map((end, i) => i === join ? { ...end, detached: true } : end),
+            points: join === 0 ? [...points].reverse() : points,
+            fallback: !found,
+        };
+    });
+}
+/**
  * Where the sections left off their terminals by `change` would run
  * afterwards. Nothing is changed in the document.
  */
@@ -555,14 +621,19 @@ export function planReroutes(doc, change) {
     const bus = change.kind === 'bus'
         ? busFeeders(wires, change.element, [change.start, change.end])
         : undefined;
+    const junction = change.kind === 'junction'
+        ? junctionWires(wires, change.element, change.from)
+        : undefined;
     const affected = bus
         ? bus.moving.map(({ wire }) => wire)
-        : change.kind === 'section'
-            ? wires.filter(wire => wire.section === change.element &&
-                !xmlBoolean(getSLDAttributes(wire.section, 'bus')) &&
-                wire.ends?.every(end => end.port && !end.free))
-            : wires.filter(wire => wire.ends?.some(end => end.detached) &&
-                wire.ends.every(end => end.port));
+        : junction
+            ? junction.map(({ wire }) => wire)
+            : change.kind === 'section'
+                ? wires.filter(wire => wire.section === change.element &&
+                    !xmlBoolean(getSLDAttributes(wire.section, 'bus')) &&
+                    wire.ends?.every(end => end.port && !end.free))
+                : wires.filter(wire => wire.ends?.some(end => end.detached) &&
+                    wire.ends.every(end => end.port));
     if (!affected.length) {
         return [];
     }
@@ -622,6 +693,16 @@ export function planReroutes(doc, change) {
         const releases = [router.reserve(points), tightRouter.reserve(points)];
         return () => releases.forEach(release => release());
     };
+    if (junction && change.kind === 'junction') {
+        return planJunction({
+            wires: junction,
+            to: change.to,
+            routers: [router, tightRouter],
+            soft,
+            reserve,
+            clear: clearOfOwn,
+        });
+    }
     if (bus) {
         return planBus({
             bus,

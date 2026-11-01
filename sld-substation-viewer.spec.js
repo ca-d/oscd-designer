@@ -1071,4 +1071,88 @@ describe('SldSubstationViewer bus bar sizing', () => {
         expect(placed[0]).to.deep.include({ x: 8, y: 9, w: 5, h: 1, element: busBar });
     });
 });
+describe('SldSubstationViewer junctions and branches', () => {
+    const attrs = (values) => `<Private type="OpenSCD-SLD-Layout"><sld:SLDAttributes ${values}/></Private>`;
+    const vertex = (x, y, uuid = '') => `<sld:Vertex sld:x="${x}" sld:y="${y}"${uuid ? ` sld:uuid="${uuid}"` : ''}/>`;
+    const equipment = (name, x, y, uuid) => `<ConductingEquipment name="${name}" type="DIS">
+      ${attrs(`sld:x="${x}" sld:y="${y}"`)}
+      <Terminal name="T1" connectivityNode="S1/V1/B1/L1">${attrs(`sld:uuid="${uuid}"`)}</Terminal>
+    </ConductingEquipment>`;
+    /** Q1, Q2 and Q3 meet at the junction (3.5, 6). */
+    async function starViewer() {
+        const doc = new DOMParser().parseFromString(`<SCL xmlns="http://www.iec.ch/61850/2003/SCL" xmlns:sld="${SLD_NS}" version="2007" revision="B">
+        <Substation name="S1">
+          ${attrs('sld:w="30" sld:h="20"')}
+          <VoltageLevel name="V1">
+            ${attrs('sld:x="1" sld:y="1" sld:w="20" sld:h="15"')}
+            <Bay name="B1">
+              ${attrs('sld:x="2" sld:y="2" sld:w="15" sld:h="12"')}
+              ${equipment('Q1', 3, 3, 'u1')}
+              ${equipment('Q2', 3, 8, 'u2')}
+              ${equipment('Q3', 9, 7, 'u3')}
+              <ConnectivityNode name="L1" pathName="S1/V1/B1/L1">
+                <Private type="OpenSCD-SLD-Layout">
+                  <sld:Section>${vertex(3.5, 3.16, 'u1')}${vertex(3.5, 2.5)}${vertex(2.5, 2.5)}${vertex(2.5, 6)}${vertex(3.5, 6)}</sld:Section>
+                  <sld:Section>${vertex(3.5, 6)}${vertex(3.5, 8.16, 'u2')}</sld:Section>
+                  <sld:Section>${vertex(3.5, 6)}${vertex(9.5, 6)}${vertex(9.5, 7.16, 'u3')}</sld:Section>
+                </Private>
+              </ConnectivityNode>
+            </Bay>
+          </VoltageLevel>
+        </Substation>
+      </SCL>`, 'application/xml');
+        const el = await mountViewer(doc);
+        el.interaction = interactions.idle();
+        await el.updateComplete;
+        return { el, doc, cNode: doc.querySelector('ConnectivityNode') };
+    }
+    it('starts moving a junction when it is clicked', async () => {
+        const { el, cNode } = await starViewer();
+        const intents = [];
+        el.addEventListener('oscd-sld-start-interaction', e => intents.push(e.detail));
+        el.sld
+            .querySelector('circle.junction')
+            .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        expect(intents).to.deep.equal([
+            { mode: 'movingJunction', element: cNode, point: [3.5, 6] },
+        ]);
+    });
+    it('previews the wires meeting at a junction being moved, and moves it on click', async () => {
+        const { el, doc, cNode } = await starViewer();
+        el.interaction = interactions.movingJunction(cNode, [3.5, 6]);
+        [el.mouseX2, el.mouseY2] = [6.5, 5];
+        await el.updateComplete;
+        const hidden = el
+            .hiddenSections;
+        expect(hidden.size).to.equal(3);
+        const wires = Array.from(el.sld.querySelectorAll('polyline'));
+        expect(wires).to.have.lengthOf(3);
+        wires.forEach(wire => expect(wire.getAttribute('points')).to.contain('6.5,5'));
+        expect(Array.from(el.sld.querySelectorAll('circle')).some(circle => circle.getAttribute('cx') === '3.5' &&
+            circle.getAttribute('cy') === '6'), 'no dot is left behind').to.be.false;
+        const moves = [];
+        el.addEventListener('oscd-sld-move-junction', e => moves.push(e.detail));
+        el.sld
+            .querySelector('rect[width="100%"][pointer-events="all"]')
+            .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        expect(moves).to.deep.equal([{ cNode, from: [3.5, 6], to: [6.5, 5] }]);
+        expect(doc.querySelectorAll('Section')).to.have.lengthOf(3);
+    });
+    it('draws a new branch from the wire it starts on', async () => {
+        const { el, doc } = await starViewer();
+        const [, , branch] = Array.from(doc.querySelectorAll('Section'));
+        el.interaction = interactions.connectingFrom(branch, 'T1', [
+            [6.5, 6],
+            [6.5, 6],
+        ]);
+        [el.mouseX2, el.mouseY2] = [6.5, 10];
+        await el.updateComplete;
+        const lines = Array.from(el.sld.querySelectorAll('line[stroke-linecap="square"][stroke="currentColor"]')).filter(line => !line.closest('g.node'));
+        expect(lines.length).to.be.greaterThan(0);
+        expect([lines[0].getAttribute('x1'), lines[0].getAttribute('y1')]).to.deep.equal([
+            '6.5',
+            '6',
+        ]);
+    });
+});
 //# sourceMappingURL=sld-substation-viewer.spec.js.map

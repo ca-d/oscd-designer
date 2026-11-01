@@ -69,6 +69,14 @@ export function newRerouteSectionEvent(detail) {
         detail,
     });
 }
+/** The junction at `from` of the connectivity node `cNode` is to go to `to`. */
+export function newMoveJunctionEvent(detail) {
+    return new CustomEvent('oscd-sld-move-junction', {
+        bubbles: true,
+        composed: true,
+        detail,
+    });
+}
 export function newSelectEvent(element) {
     return new CustomEvent('oscd-sld-selected', {
         bubbles: true,

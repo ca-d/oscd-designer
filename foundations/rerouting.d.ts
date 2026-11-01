@@ -15,7 +15,8 @@ import type { Point } from './geometry.js';
 /**
  * What the user is changing: moving an element (and all it contains), turning
  * equipment a quarter, mirroring a transformer, routing a wire through a point
- * or running a bus bar (the `element`) along a new line from `start` to `end`.
+ * running a bus bar (the `element`) along a new line from `start` to `end`, or
+ * moving a junction of the connectivity node `element` from `from` to `to`.
  */
 export type LayoutChange = {
     kind: 'move';
@@ -37,6 +38,11 @@ export type LayoutChange = {
     element: Element;
     start: Point;
     end: Point;
+} | {
+    kind: 'junction';
+    element: Element;
+    from: Point;
+    to: Point;
 };
 /** Where a section meets its end: the point, the first point of a route there and the direction leaving it. */
 export type Port = {

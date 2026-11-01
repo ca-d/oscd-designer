@@ -4,6 +4,7 @@ import { createAddTextEdit, createDeleteBusBarEdits, createDeleteContainerEdits,
 import { connectionStartPoints, isBusBar, } from '../foundations/connectivity.js';
 import { removeTerminal, uniqueName, } from '../foundations/connectivity-edits.js';
 import { singleTerminal } from '../foundations/equipment.js';
+import { disconnectSectionEdits, joinPoint, sectionTerminals, } from '../foundations/node-edits.js';
 import { isIedReferenceElement, resolveIed, } from '../foundations/ied.js';
 import { createRemoveIedReferenceEdit } from '../foundations/ied-edits.js';
 import { attributes, DEFAULT_LABEL_COLOR, getSLDAttributes, } from '../foundations/sld-attributes.js';
@@ -501,6 +502,43 @@ function textMenuItems(text, context) {
     }
     return items;
 }
+/** The menu of a plain wire, a section of the connectivity node it belongs to. */
+function wireMenuItems(section, context) {
+    const terminals = sectionTerminals(section);
+    const owner = terminals[0]?.closest('ConductingEquipment, PowerTransformer');
+    const join = joinPoint(section, [context.gridX + 0.5, context.gridY + 0.5]);
+    return [
+        ...(join
+            ? [
+                {
+                    headline: 'Connect',
+                    icon: 'add_link',
+                    handler: () => context.dispatch(newStartInteractionEvent({
+                        mode: 'connecting',
+                        from: section,
+                        fromTerminal: 'T1',
+                        path: [join, join],
+                    })),
+                },
+            ]
+            : []),
+        {
+            headline: 'Re-route',
+            icon: 'route',
+            handler: () => context.dispatch(newStartInteractionEvent({
+                mode: 'reroutingSection',
+                element: section,
+            })),
+        },
+        {
+            headline: terminals.length === 1 && owner
+                ? `Disconnect ${owner.getAttribute('name')}`
+                : 'Disconnect',
+            icon: 'link_off',
+            handler: () => context.dispatch(newEditEventV2(disconnectSectionEdits(section))),
+        },
+    ];
+}
 /** The commands also offered next to the name of the substation. */
 function substationMenuItems(substation, context) {
     return [
@@ -523,40 +561,6 @@ function substationMenuItems(substation, context) {
             headline: 'Delete',
             icon: 'delete',
             handler: () => context.dispatch(newSubstationDeleteEvent(substation)),
-        },
-    ];
-}
-/** The menu of a plain wire, a section of the connectivity node it belongs to. */
-function wireMenuItems(section, context) {
-    const cNode = section.closest('ConnectivityNode');
-    const pathName = cNode?.getAttribute('pathName');
-    const terminals = pathName
-        ? Array.from(context.doc.querySelectorAll('Terminal, NeutralPoint')).filter(terminal => terminal.getAttribute('connectivityNode') === pathName)
-        : [];
-    const nameOf = (terminal) => {
-        const owner = terminal.closest('ConductingEquipment, PowerTransformer');
-        const winding = terminal.closest('TransformerWinding');
-        return [owner, winding]
-            .filter(element => element)
-            .map(element => element.getAttribute('name'))
-            .join(' ');
-    };
-    const names = terminals.map(nameOf);
-    return [
-        ...terminals.map((terminal, i) => ({
-            headline: `Disconnect ${names[i]}${names.indexOf(names[i]) !== names.lastIndexOf(names[i])
-                ? ` (${terminal.getAttribute('name')})`
-                : ''}`,
-            icon: 'cancel',
-            handler: () => context.dispatch(newEditEventV2(removeTerminal(terminal))),
-        })),
-        {
-            headline: 'Re-route',
-            icon: 'route',
-            handler: () => context.dispatch(newStartInteractionEvent({
-                mode: 'reroutingSection',
-                element: section,
-            })),
         },
     ];
 }

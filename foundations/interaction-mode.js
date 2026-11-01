@@ -49,6 +49,12 @@ export const reroutingSection = (element) => ({
     mode: 'reroutingSection',
     element,
 });
+/** Moving the junction at `point` of the connectivity node `element`. */
+export const movingJunction = (element, point) => ({
+    mode: 'movingJunction',
+    element,
+    point,
+});
 /**
  * Pure selectors that read an {@link InteractionState} without re-fanning it out
  * into independent fields. They keep the union the single source of truth: the

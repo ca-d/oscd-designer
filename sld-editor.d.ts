@@ -6,7 +6,7 @@ import { SldSubstationHeader } from './sld-substation-header.js';
 import { SldResizeSubstationDialog } from './sld-resize-substation-dialog.js';
 import { SldContextMenu } from './context-menu/sld-context-menu.js';
 import { SldCoordinateTooltip } from './sld-coordinate-tooltip.js';
-import type { ConnectDetail, RerouteSectionDetail, InteractionIntent } from './foundations/events.js';
+import type { ConnectDetail, RerouteSectionDetail, MoveJunctionDetail, InteractionIntent } from './foundations/events.js';
 import type { Point } from './foundations/geometry.js';
 import type { InteractionState } from './foundations/interaction-mode.js';
 import type { Style } from './foundations/sld-attributes.js';
@@ -92,6 +92,7 @@ export declare class SldEditor extends SldEditor_base {
      */
     private startReroutingSection;
     handleRerouteSection({ section, via }: RerouteSectionDetail): void;
+    handleMoveJunction({ cNode, from, to }: MoveJunctionDetail): void;
     handleConnect(detail: ConnectDetail): void;
     /**
      * Grow the in-progress connection path. The view reports the next path

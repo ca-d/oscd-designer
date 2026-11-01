@@ -24,7 +24,7 @@ import { sldThemeStyles } from './theme.js';
 import { DragToClickController } from './drag-to-click.js';
 import { singleTerminal } from './foundations/equipment.js';
 import { iedReferences, isIedReferenceElement, resolveIed as resolveReferencedIed, } from './foundations/ied.js';
-import { newConnectEvent, newDismissRoutingWarningEvent, newExtendConnectPointEvent, newRerouteSectionEvent, newGroundTerminalEvent, newOpenContextMenuEvent, newPlaceEvent, newPlaceLabelEvent, newResizeEvent, newResizeTLEvent, } from './foundations/events.js';
+import { newConnectEvent, newDismissRoutingWarningEvent, newExtendConnectPointEvent, newRerouteSectionEvent, newMoveJunctionEvent, newGroundTerminalEvent, newOpenContextMenuEvent, newPlaceEvent, newPlaceLabelEvent, newResizeEvent, newResizeTLEvent, } from './foundations/events.js';
 import { serializeForExport } from './foundations/export.js';
 import { sldNs, sldPrefix, svgNs, xlinkNs } from './foundations.js';
 import { connectDetail, isMode } from './foundations/interaction-mode.js';
@@ -452,6 +452,7 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
         ${this.renderPlacingPreview()}
         ${this.renderRoutingWarnings()}
         ${this.renderRerouteTarget()}
+        ${this.renderJunctionTarget()}
         ${this.renderBusBarResizeTarget()}
       </svg>
     </section>`;
@@ -840,6 +841,20 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
             }
             return this.reroutePreview.routes;
         }
+        if (this.interaction.mode === 'movingJunction') {
+            const { element: cNode, point: from } = this.interaction;
+            const to = [this.mouseX2, this.mouseY2];
+            const key = [cNode, this.docVersion, ...from, ...to];
+            if (key.some((k, i) => k !== this.reroutePreview.key[i])) {
+                this.reroutePreview = {
+                    key,
+                    routes: cNode.getRootNode() === this.doc
+                        ? planReroutes(this.doc, { kind: 'junction', element: cNode, from, to })
+                        : [],
+                };
+            }
+            return this.reroutePreview.routes;
+        }
         if (this.interaction.mode === 'reroutingSection') {
             const section = this.interaction.element;
             const via = [this.mouseX2, this.mouseY2];
@@ -921,6 +936,21 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
             section,
             via: [this.mouseX2, this.mouseY2],
         }))} />`;
+    }
+    /** The junction being moved, at the cursor, and the click that puts it there. */
+    renderJunctionTarget() {
+        if (this.disabled || this.interaction.mode !== 'movingJunction') {
+            return nothing;
+        }
+        const { element: cNode, point: from } = this.interaction;
+        if (cNode.closest('Substation') !== this.substation) {
+            return nothing;
+        }
+        const to = [this.mouseX2, this.mouseY2];
+        return svg `<circle fill="currentColor" cx="${to[0]}" cy="${to[1]}" r="0.15"
+        pointer-events="none" />
+      <rect width="100%" height="100%" fill="none" pointer-events="all"
+        @click=${() => this.dispatchEvent(newMoveJunctionEvent({ cNode, from, to }))} />`;
     }
     /** The middle of where a wire first runs through equipment, or else of its longest leg. */
     warningAnchor(section, points) {
@@ -1052,8 +1082,10 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
     /** The topmost connectable connectivity node whose wire runs under `cursor`. */
     connectivityNodeAt([x, y]) {
         const owner = this.connecting.from.closest('ConductingEquipment, PowerTransformer');
+        const own = this.connecting.from.closest('ConnectivityNode');
         return Array.from(this.substation.querySelectorAll('ConnectivityNode'))
             .filter(cNode => cNode.getAttribute('name') !== 'grounded' &&
+            cNode !== own &&
             !owner?.querySelector(`[connectivityNode="${cNode.getAttribute('pathName')}"]`) &&
             wirePolylines(cNode).some(({ points }) => points.slice(1).some(([x2, y2], i) => {
                 const [x1, y1] = points[i];

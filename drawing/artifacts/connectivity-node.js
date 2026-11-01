@@ -17,9 +17,11 @@ export function renderConnectivityNode(cNode, context) {
         return nothing;
     }
     const circles = [];
-    const intersections = Object.entries(Array.from(priv.querySelectorAll('Vertex'))
+    const handles = [];
+    const hidden = (vertex) => !!context.hiddenSections?.has(vertex.parentElement);
+    const intersections = Object.values(Array.from(priv.querySelectorAll('Vertex'))
         // A bus bar drawn elsewhere as a preview leaves no junctions behind.
-        .filter(vertex => !(context.hiddenSections?.has(vertex.parentElement) &&
+        .filter(vertex => !(hidden(vertex) &&
         xmlBoolean(vertex.parentElement.getAttributeNS(sldNs, 'bus'))))
         .reduce((record, vertex) => {
         const ret = record;
@@ -31,12 +33,30 @@ export function renderConnectivityNode(cNode, context) {
             ret[key] = [vertex];
         }
         return ret;
-    }, {}))
-        .filter(([_, vertices]) => vertices.length > 2 ||
-        (vertices.length === 2 &&
-            vertices.find(v => v.hasAttributeNS(sldNs, 'uuid'))))
-        .map(([_, [vertex]]) => context.renderedPosition(vertex));
-    intersections.forEach(([x, y]) => circles.push(svg `<circle fill="currentColor" cx="${x}" cy="${y}" r="0.15" />`));
+    }, {})).filter(vertices => !vertices.every(hidden) &&
+        (vertices.length > 2 ||
+            (vertices.length === 2 &&
+                vertices.find(v => v.hasAttributeNS(sldNs, 'uuid')))));
+    intersections.forEach((vertices) => {
+        const [x, y] = context.renderedPosition(vertices[0]);
+        circles.push(svg `<circle fill="currentColor" cx="${x}" cy="${y}" r="0.15" />`);
+        // A junction of plain wires can be picked up and moved.
+        const movable = vertices.length > 2 &&
+            vertices.every(v => !v.hasAttributeNS(sldNs, 'uuid') &&
+                !xmlBoolean(v.parentElement.getAttributeNS(sldNs, 'bus')));
+        if (movable && isMode(context.interaction, 'idle') && !context.disabled) {
+            handles.push(svg `<circle class="junction" cx="${x}" cy="${y}" r="0.35"
+        fill="transparent" pointer-events="all" style="cursor: move"
+        @click=${(e) => {
+                e.stopPropagation();
+                context.dispatch(newStartInteractionEvent({
+                    mode: 'movingJunction',
+                    element: cNode,
+                    point: [x, y],
+                }));
+            }} />`);
+        }
+    });
     const lines = [];
     const sections = Array.from(priv.getElementsByTagNameNS(sldNs, 'Section'));
     const bay = cNode.closest('Bay');
@@ -110,9 +130,10 @@ export function renderConnectivityNode(cNode, context) {
             if (isMode(context.interaction, 'connectingFrom') && !context.disabled) {
                 handleClick = () => {
                     const { from, path, fromTerminal } = connectDetail(context.interaction);
-                    if (from
-                        .closest('ConductingEquipment, PowerTransformer')
-                        .querySelector(`[connectivityNode="${cNode.getAttribute('pathName')}"]`)) {
+                    if (from.closest('ConnectivityNode') === cNode ||
+                        from
+                            .closest('ConductingEquipment, PowerTransformer')
+                            ?.querySelector(`[connectivityNode="${cNode.getAttribute('pathName')}"]`)) {
                         return;
                     }
                     // The connection meets the net where the route first reaches it, not
@@ -190,6 +211,7 @@ export function renderConnectivityNode(cNode, context) {
       <title>${cNode.getAttribute('pathName')}</title>
       ${circles}
       ${lines}
+      ${handles}
     </g>`;
 }
 //# sourceMappingURL=connectivity-node.js.map

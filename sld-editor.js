@@ -13,6 +13,7 @@ import { SldCoordinateTooltip } from './sld-coordinate-tooltip.js';
 import { attributes, getSLDAttributes } from './foundations/sld-attributes.js';
 import { createConnectEdits, createGroundTerminalEdits, createPlaceLabelEdit, createResizeEdits, createResizeTLEdits, createFlipElementEdits, createRotateEdits, disconnectExternalEdits, leavesSubstation, rewireTerminalEdits, shiftDescendantEdits, shiftElementEdits, shiftTextEdits, wrapIedReferenceEdits, } from './foundations/edits.js';
 import { removeTerminal } from './foundations/connectivity-edits.js';
+import { wireConnectEdits } from './foundations/node-edits.js';
 import { pointsSignature, rerouteEdits, sectionEnds, sectionSignature, } from './foundations/rerouting.js';
 import { busBarLineEdits, busBarResizeEdits, } from './foundations/bus-bar-edits.js';
 import { isBusBar } from './foundations/connectivity.js';
@@ -120,7 +121,8 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
         if (i.mode === 'connectingFrom' ||
             (i.mode === 'resizingBR' && !i.element.parentElement) ||
             (i.mode === 'resizingTL' && !i.element.parentElement) ||
-            (i.mode === 'placingLabel' && !i.element.parentElement)) {
+            (i.mode === 'placingLabel' && !i.element.parentElement) ||
+            (i.mode === 'movingJunction' && !i.element.parentElement)) {
             this.interaction = interactions.idle();
         }
         this._docVersion = value;
@@ -193,6 +195,9 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
                 break;
             case 'reroutingSection':
                 this.startReroutingSection(intent.element);
+                break;
+            case 'movingJunction':
+                this.interaction = interactions.movingJunction(intent.element, intent.point);
                 break;
         }
         return undefined;
@@ -319,12 +324,23 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
         }
         this.interaction = interactions.idle();
     }
+    handleMoveJunction({ cNode, from, to }) {
+        const fallbacks = [];
+        const edits = rerouteEdits(this.doc, { kind: 'junction', element: cNode, from, to }, this.nsp, fallbacks);
+        if (edits.length) {
+            this.dispatchEvent(newEditEventV2(edits));
+            this.warnAbout(fallbacks);
+        }
+        this.interaction = interactions.idle();
+    }
     handleConnect(detail) {
         const replacing = this.interaction.mode === 'connectingFrom'
             ? this.interaction.replacing
             : undefined;
         const edits = [
-            ...createConnectEdits(detail, this.doc, this.nsp),
+            ...(detail.from.localName === 'Section'
+                ? wireConnectEdits(detail, this.doc, this.nsp)
+                : createConnectEdits(detail, this.doc, this.nsp)),
             ...(replacing ? removeTerminal(replacing) : []),
         ];
         if (edits.length) {
@@ -442,6 +458,7 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
             @oscd-sld-rotate=${({ detail }) => this.handleRotate(detail)}
             @oscd-sld-flip=${({ detail }) => this.handleFlip(detail)}
             @oscd-sld-reroute-section=${({ detail }) => this.handleRerouteSection(detail)}
+            @oscd-sld-move-junction=${({ detail }) => this.handleMoveJunction(detail)}
           >
             <sld-substation-header
               slot="header"

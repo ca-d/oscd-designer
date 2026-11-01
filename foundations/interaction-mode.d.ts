@@ -43,6 +43,10 @@ export type InteractionState = {
 } | {
     mode: 'reroutingSection';
     element: Element;
+} | {
+    mode: 'movingJunction';
+    element: Element;
+    point: Point;
 };
 /**
  * Pure constructors for each {@link InteractionState} variant. They compute the next
@@ -72,6 +76,8 @@ export declare const resizingTL: (element: Element) => InteractionState;
 export declare const connectingFrom: (element: Element, terminal: Terminal, path?: Point[], replacing?: Element) => InteractionState;
 /** Moving the wire `section` by placing a new point on its way. */
 export declare const reroutingSection: (element: Element) => InteractionState;
+/** Moving the junction at `point` of the connectivity node `element`. */
+export declare const movingJunction: (element: Element, point: Point) => InteractionState;
 /** The set of gesture-mode tags of {@link InteractionState}. */
 export type InteractionMode = InteractionState['mode'];
 /**

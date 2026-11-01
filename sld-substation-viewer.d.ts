@@ -182,6 +182,8 @@ export declare class SldSubstationViewer extends SldSubstationViewer_base {
     private renderReroutePreviewLayer;
     /** Catches the click that places the point a wire being re-routed goes through. */
     private renderRerouteTarget;
+    /** The junction being moved, at the cursor, and the click that puts it there. */
+    private renderJunctionTarget;
     /** The middle of where a wire first runs through equipment, or else of its longest leg. */
     private warningAnchor;
     /** Marks wires that were routed through other elements; hovering traces the wire, a click dismisses the mark. */
