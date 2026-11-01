@@ -56,7 +56,11 @@ import {
 import type { RouterMode } from './foundations/routing.js';
 import { containsRect } from './foundations/element-geometry.js';
 import { canPlaceAt } from './foundations/sld-placement.js';
-import { busBarLine, resizedBusBarRect } from './foundations/bus-bar-edits.js';
+import {
+  busBarJunctions,
+  busBarLine,
+  resizedBusBarRect,
+} from './foundations/bus-bar-edits.js';
 import {
   busSections,
   connectionStartPoints,
@@ -131,7 +135,8 @@ const mouseCoordinateProperties: PropertyKey[] = [
 ];
 
 /** A section as it would run after the placement; a `fallback` is drawn as a warning. */
-type PreviewRoute = Pick<PlannedRoute, 'section' | 'points' | 'fallback'>;
+type PreviewRoute = Pick<PlannedRoute, 'section' | 'points' | 'fallback'> &
+  Partial<Pick<PlannedRoute, 'ends'>>;
 
 /** An editor [[`plugin`]] for editing the `Substation` section. */
 
@@ -708,10 +713,24 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
       stroke="${invalid ? 'var(--oscd-sld-invalid-placement-color)' : 'currentColor'}" />`;
   }
 
-  /** The bus bar as it would run with its end at the cursor. */
+  /** The bus bar as it would run with its end at the cursor, and its junctions. */
   private renderBusBarResizePreview() {
     const rect = this.busBarResizeRect();
-    return rect ? this.renderBusBarLine(rect) : nothing;
+    const resizing = this.resizingBusBar;
+    if (!rect || !resizing) {
+      return nothing;
+    }
+    const line = busBarLine(rect);
+    return svg`${this.renderBusBarLine(rect)}${busBarJunctions(
+      resizing.bay,
+      this.plannedReroutes().flatMap(({ ends, ...route }) =>
+        ends ? [{ ...route, ends }] : [],
+      ),
+      line,
+    ).map(
+      ([x, y]) =>
+        svg`<circle fill="currentColor" cx="${x}" cy="${y}" r="0.15" pointer-events="none" />`,
+    )}`;
   }
 
   /** Catches the click that sizes the bus bar being resized. */

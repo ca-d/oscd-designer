@@ -53,19 +53,28 @@ export function renderConnectivityNode(
   }
   const circles = [] as TemplateResult<2>[];
   const intersections = Object.entries(
-    Array.from(priv.querySelectorAll('Vertex')).reduce(
-      (record, vertex) => {
-        const ret = record;
-        const key = JSON.stringify(context.renderedPosition(vertex));
-        if (ret[key]) {
-          ret[key].push(vertex);
-        } else {
-          ret[key] = [vertex];
-        }
-        return ret;
-      },
-      {} as Record<string, Element[]>,
-    ),
+    Array.from(priv.querySelectorAll('Vertex'))
+      // A bus bar drawn elsewhere as a preview leaves no junctions behind.
+      .filter(
+        vertex =>
+          !(
+            context.hiddenSections?.has(vertex.parentElement!) &&
+            xmlBoolean(vertex.parentElement!.getAttributeNS(sldNs, 'bus'))
+          ),
+      )
+      .reduce(
+        (record, vertex) => {
+          const ret = record;
+          const key = JSON.stringify(context.renderedPosition(vertex));
+          if (ret[key]) {
+            ret[key].push(vertex);
+          } else {
+            ret[key] = [vertex];
+          }
+          return ret;
+        },
+        {} as Record<string, Element[]>,
+      ),
   )
     .filter(
       ([_, vertices]) =>

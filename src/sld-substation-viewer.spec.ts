@@ -1256,6 +1256,33 @@ describe('SldSubstationViewer bus bar sizing', () => {
     expect(points[points.length - 1]).to.equal('3.5,6.16');
   });
 
+  it('moves the junction dots along with the feeders it previews', async () => {
+    const { el, bay } = await busViewer();
+    const dots = () =>
+      Array.from(
+        el.sld.querySelectorAll('g.node > circle, svg#sld > circle'),
+      ).map(circle =>
+        [circle.getAttribute('cx'), circle.getAttribute('cy')].join(','),
+      );
+    el.interaction = interactions.idle();
+    await el.updateComplete;
+    expect(dots()).to.deep.equal(['3.5,3.5']);
+
+    el.interaction = interactions.resizingTL(bay);
+    [el.mouseX, el.mouseY] = [4, 3];
+    await el.updateComplete;
+
+    const [dot, ...others] = dots();
+    expect(others).to.have.lengthOf(0);
+    expect(dot).to.not.equal('3.5,3.5');
+    const [x, y] = dot.split(',').map(Number);
+    expect(y).to.equal(3.5);
+    expect(x).to.be.greaterThan(4.5);
+    expect(x).to.be.lessThan(6.5);
+    const [wire] = Array.from(el.sld.querySelectorAll('polyline'));
+    expect(wire.getAttribute('points')).to.contain(dot);
+  });
+
   it('previews nothing for a bus bar that is not being resized', async () => {
     const { el } = await busViewer();
     el.interaction = interactions.idle();
