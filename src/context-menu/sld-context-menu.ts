@@ -70,6 +70,8 @@ function renderHeader({ element }: ContextMenuHeader): TemplateResult {
     footerGraphic = renderSldStartIcon('sld_bay');
   } else if (element.tagName === 'VoltageLevel') {
     footerGraphic = renderSldStartIcon('sld_voltage_level');
+  } else if (element.tagName === 'Substation') {
+    footerGraphic = html`<oscd-icon slot="start">margin</oscd-icon>`;
   } else if (isIedReferenceElement(element)) {
     name = 'IED';
     footerGraphic = html`<oscd-icon slot="start">developer_board</oscd-icon>`;

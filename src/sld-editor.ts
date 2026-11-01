@@ -525,10 +525,18 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
     this.dispatchEvent(newEditEventV2({ node: substation }));
   }
 
-  handleSubstationExport(event: SubstationCommandEvent) {
+  handleSubstationExport(substation: Element) {
+    const viewer = Array.from(
+      this.renderRoot.querySelectorAll<SldSubstationViewer>(
+        'sld-substation-viewer',
+      ),
+    ).find(candidate => candidate.substation === substation);
+    if (!viewer) {
+      return;
+    }
     downloadSvg(
-      (event.currentTarget as SldSubstationViewer).exportableSvg(),
-      `${event.detail.getAttribute('name')}.svg`,
+      viewer.exportableSvg(),
+      `${substation.getAttribute('name')}.svg`,
     );
   }
 
@@ -676,8 +684,8 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
             .highlight=${this.highlight}
             .routingWarnings=${this.activeRoutingWarnings(substation)}
             @oscd-sld-dismiss-routing-warning=${this.handleDismissRoutingWarning}
-            @oscd-sld-substation-export=${(event: SubstationCommandEvent) =>
-              this.handleSubstationExport(event)}
+            @oscd-sld-substation-export=${({ detail }: SubstationCommandEvent) =>
+              this.handleSubstationExport(detail)}
             @oscd-sld-start-interaction=${({
               detail,
             }: StartInteractionEvent) => this.handleStartInteraction(detail)}
@@ -754,6 +762,12 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
       @oscd-sld-ground-hint=${() => {
         this.handleGroundHint();
       }}
+      @oscd-sld-substation-resize=${({ detail }: SubstationCommandEvent) =>
+        this.handleSubstationResize(detail)}
+      @oscd-sld-substation-delete=${({ detail }: SubstationCommandEvent) =>
+        this.handleSubstationDelete(detail)}
+      @oscd-sld-substation-export=${({ detail }: SubstationCommandEvent) =>
+        this.handleSubstationExport(detail)}
     ></sld-context-menu>
     <oscd-snackbar></oscd-snackbar>
     <oscd-scl-dialogs></oscd-scl-dialogs>`;

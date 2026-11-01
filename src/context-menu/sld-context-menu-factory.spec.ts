@@ -698,6 +698,28 @@ describe('sld-context-menu-factory', () => {
     });
   });
 
+  describe('Substation', () => {
+    const substation = () =>
+      createSCLDoc(`<Substation name="S1"/>`).querySelector('Substation')!;
+
+    it('returns the commands of the substation header', () => {
+      expect(headlines(createContextMenuItems(makeContext(substation())))).to.deep.equal([
+        'Resize',
+        'Download SVG',
+        'Edit',
+        'Delete',
+      ]);
+    });
+
+    it('dispatches the correct event from every action handler', () => {
+      expectHandlerSignatures(substation(), {}, {
+        Resize: 'oscd-sld-substation-resize',
+        'Download SVG': 'oscd-sld-substation-export',
+        Delete: 'oscd-sld-substation-delete',
+      });
+    });
+  });
+
   describe('Bay / VoltageLevel (container)', () => {
     it('returns container menu items for Bay', () => {
       const doc = bayDoc();
