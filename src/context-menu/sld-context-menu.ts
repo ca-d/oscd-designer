@@ -76,6 +76,8 @@ function renderHeader({ element }: ContextMenuHeader): TemplateResult {
   } else if (element.tagName === 'Text') {
     footerGraphic = html`<oscd-icon slot="start">title</oscd-icon>`;
     detail = element.textContent;
+  } else if (element.tagName === 'ConnectivityNode') {
+    footerGraphic = html`<oscd-icon slot="start">cable</oscd-icon>`;
   }
 
   return html`<oscd-list-item type="text">

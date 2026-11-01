@@ -683,10 +683,66 @@ function textMenuItems(
   return items;
 }
 
+/** The menu of a plain wire, a section of the connectivity node it belongs to. */
+function wireMenuItems(
+  section: Element,
+  context: MenuItemContext,
+): ContextMenuItem[] {
+  const cNode = section.closest('ConnectivityNode');
+  const pathName = cNode?.getAttribute('pathName');
+  const terminals = pathName
+    ? Array.from(
+      context.doc.querySelectorAll('Terminal, NeutralPoint'),
+    ).filter(terminal => terminal.getAttribute('connectivityNode') === pathName)
+    : [];
+  const nameOf = (terminal: Element) => {
+    const owner = terminal.closest('ConductingEquipment, PowerTransformer');
+    const winding = terminal.closest('TransformerWinding');
+    return [owner, winding]
+      .filter(element => element)
+      .map(element => element!.getAttribute('name'))
+      .join(' ');
+  };
+  const names = terminals.map(nameOf);
+
+  return [
+    ...terminals.map(
+      (terminal, i): ContextMenuItem => ({
+        headline: `Disconnect ${names[i]}${
+          names.indexOf(names[i]) !== names.lastIndexOf(names[i])
+            ? ` (${terminal.getAttribute('name')})`
+            : ''
+        }`,
+        icon: 'cancel',
+        handler: () =>
+          context.dispatch(newEditEventV2(removeTerminal(terminal))),
+      }),
+    ),
+    {
+      headline: 'Re-route',
+      icon: 'route',
+      handler: () =>
+        context.dispatch(
+          newStartInteractionEvent({
+            mode: 'reroutingSection',
+            element: section,
+          }),
+        ),
+    },
+  ];
+}
+
 export function createContextMenuItems(
   context: MenuItemContext,
 ): ContextMenuItem[] {
   const { element } = context;
+  if (element.localName === 'Section' && element.closest('ConnectivityNode')) {
+    return [
+      { type: 'header', element: element.closest('ConnectivityNode')! },
+      { type: 'divider' },
+      ...wireMenuItems(element, context),
+    ];
+  }
   const items: ContextMenuItem[] = [{ type: 'header', element: context.element}, { type: 'divider' }];
 
   if (element.tagName === 'ConductingEquipment') {

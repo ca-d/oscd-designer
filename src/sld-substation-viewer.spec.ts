@@ -1080,6 +1080,24 @@ describe('SldSubstationViewer live reroute preview', () => {
     expect(intents).to.deep.equal([{ mode: 'reroutingSection', element: section }]);
   });
 
+  it('opens the context menu of a plain wire on right click while idle', async () => {
+    const { el, section } = await wiredViewer();
+    el.interaction = interactions.idle();
+    await el.updateComplete;
+
+    const requests: { element: Element }[] = [];
+    el.addEventListener('oscd-sld-open-context-menu', e =>
+      requests.push((e as CustomEvent).detail),
+    );
+    const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    el.sld
+      .querySelector('.node line[pointer-events="all"]:not([stroke])')!
+      .dispatchEvent(event);
+
+    expect(requests.map(request => request.element)).to.deep.equal([section]);
+    expect(event.defaultPrevented).to.be.true;
+  });
+
   it('lets clicks through plain wires while something else is going on', async () => {
     const { el } = await wiredViewer();
     el.interaction = interactions.placing(el.substation.querySelector('ConductingEquipment')!, [0, 0]);

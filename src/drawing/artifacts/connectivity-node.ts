@@ -170,6 +170,11 @@ export function renderConnectivityNode(
             }),
           );
         };
+        handleContextMenu = (e: MouseEvent) => {
+          e.preventDefault();
+          e.stopPropagation();
+          context.requestContextMenu(section, e);
+        };
       }
       if (isMode(context.interaction, 'connectingFrom') && !context.disabled) {
         handleClick = () => {
