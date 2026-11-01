@@ -61,6 +61,8 @@ export type End = {
 };
 /** Where a transformer terminal would be once its transformer is mirrored. */
 export declare function flippedTerminalPort(terminal: Element): Port | undefined;
+/** Where a terminal is with its equipment or transformer at the given `positions`, unturned. */
+export declare function terminalPortAt(terminal: Element, positions: Map<Element, Point>): Port | undefined;
 /** How the ends of `section` are held; a free end is held by nothing. */
 export declare function sectionEnds(section: Element): [End, End] | undefined;
 /** A section's new geometry. A `fallback` runs through other elements. */

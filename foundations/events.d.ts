@@ -154,6 +154,7 @@ export type SubstationCommandEvent = CustomEvent<Element>;
 export declare function newSubstationResizeEvent(substation: Element): SubstationCommandEvent;
 export declare function newSubstationDeleteEvent(substation: Element): SubstationCommandEvent;
 export declare function newSubstationExportEvent(substation: Element): SubstationCommandEvent;
+export declare function newSubstationAutoLayoutEvent(substation: Element): SubstationCommandEvent;
 export type GroundHintEvent = CustomEvent<undefined>;
 export declare function newGroundHintEvent(): GroundHintEvent;
 /** Detail: the section whose routing warning the user dismissed. */
@@ -182,6 +183,7 @@ declare global {
         ['oscd-sld-substation-resize']: SubstationCommandEvent;
         ['oscd-sld-substation-delete']: SubstationCommandEvent;
         ['oscd-sld-substation-export']: SubstationCommandEvent;
+        ['oscd-sld-substation-auto-layout']: SubstationCommandEvent;
         ['oscd-sld-ground-hint']: GroundHintEvent;
         ['oscd-sld-in-action']: InActionEvent;
         ['oscd-sld-dismiss-routing-warning']: DismissRoutingWarningEvent;

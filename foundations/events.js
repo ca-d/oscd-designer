@@ -133,6 +133,13 @@ export function newSubstationExportEvent(substation) {
         detail: substation,
     });
 }
+export function newSubstationAutoLayoutEvent(substation) {
+    return new CustomEvent('oscd-sld-substation-auto-layout', {
+        bubbles: true,
+        composed: true,
+        detail: substation,
+    });
+}
 export function newGroundHintEvent() {
     return new CustomEvent('oscd-sld-ground-hint', {
         bubbles: true,

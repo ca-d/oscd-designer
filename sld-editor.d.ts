@@ -105,6 +105,7 @@ export declare class SldEditor extends SldEditor_base {
     private handleGroundHint;
     handleSubstationResize(substation: Element): void;
     handleSubstationDelete(substation: Element): void;
+    handleSubstationAutoLayout(substation: Element): void;
     handleSubstationExport(substation: Element): void;
     private handleOpenContextMenu;
     private handleEditScl;

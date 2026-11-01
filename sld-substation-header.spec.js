@@ -27,6 +27,29 @@ describe('sld-substation-header', () => {
         const element = await headerFixture();
         expect(buttons(element)).to.have.lengthOf(4);
     });
+    describe('offering an automatic layout', () => {
+        async function layoutFixture(needsLayout, disabled = false) {
+            return fixture(html `<sld-substation-header
+        .substation=${substationElement()}
+        .needsLayout=${needsLayout}
+        ?disabled=${disabled}
+      ></sld-substation-header>`);
+        }
+        const offer = (element) => element.shadowRoot.querySelector('.layout oscd-filled-button');
+        it('offers it when nothing has been placed yet', async () => {
+            const element = await layoutFixture(true);
+            let fired;
+            element.addEventListener('oscd-sld-substation-auto-layout', (event) => {
+                fired = event.detail;
+            });
+            offer(element).click();
+            expect(fired).to.equal(element.substation);
+        });
+        it('does not offer it otherwise', async () => {
+            expect(offer(await layoutFixture(false))).to.be.null;
+            expect(offer(await layoutFixture(true, true))).to.be.null;
+        });
+    });
     it('emits oscd-sld-edit-scl for the substation when the edit button is clicked', async () => {
         const substation = substationElement();
         const element = await fixture(html `<sld-substation-header

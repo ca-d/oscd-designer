@@ -448,6 +448,39 @@ describe('SLD Editor', () => {
             expectActiveMode(undefined);
         });
     });
+    describe('given a substation without any layout', () => {
+        beforeEach(async () => {
+            element.doc = new DOMParser().parseFromString(`<SCL xmlns="http://www.iec.ch/61850/2003/SCL" xmlns:esldoscd="https://openscd.org/SCL/SSD/SLD/v0" version="2007" revision="B">
+          <Substation name="S1">
+            <VoltageLevel name="V1">
+              <Bay name="B1">
+                <ConductingEquipment name="QA1" type="CBR">
+                  <Terminal name="T2" connectivityNode="S1/V1/B1/L1" substationName="S1" voltageLevelName="V1" bayName="B1" cNodeName="L1"/>
+                </ConductingEquipment>
+                <ConductingEquipment name="QB1" type="DIS">
+                  <Terminal name="T1" connectivityNode="S1/V1/B1/L1" substationName="S1" voltageLevelName="V1" bayName="B1" cNodeName="L1"/>
+                </ConductingEquipment>
+                <ConnectivityNode name="L1" pathName="S1/V1/B1/L1"/>
+              </Bay>
+            </VoltageLevel>
+          </Substation>
+        </SCL>`, 'application/xml');
+            await element.updateComplete;
+        });
+        it('lays it out on request', async () => {
+            const header = getSldSubstationHeader(element);
+            await header.updateComplete;
+            header.shadowRoot
+                .querySelector('.layout oscd-filled-button')
+                .click();
+            await element.updateComplete;
+            await header.updateComplete;
+            const [qa1, qb1] = Array.from(element.doc.querySelectorAll('ConductingEquipment')).map(equipment => attributes(equipment).pos);
+            expect(qa1).to.not.deep.equal(qb1);
+            expect(element.doc.querySelectorAll('Section')).to.have.lengthOf(1);
+            expect(header.shadowRoot.querySelector('.layout')).to.be.null;
+        });
+    });
     describe('given a substation', () => {
         let sldSubstationViewer;
         beforeEach(async () => {

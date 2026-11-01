@@ -15,6 +15,7 @@ import { createConnectEdits, createGroundTerminalEdits, createPlaceLabelEdit, cr
 import { removeTerminal } from './foundations/connectivity-edits.js';
 import { wireConnectEdits } from './foundations/node-edits.js';
 import { pointsSignature, rerouteEdits, sectionEnds, sectionSignature, } from './foundations/rerouting.js';
+import { autoLayoutEdits, needsLayout, } from './foundations/auto-layout.js';
 import { busBarLineEdits, busBarResizeEdits, } from './foundations/bus-bar-edits.js';
 import { isBusBar } from './foundations/connectivity.js';
 import { iedReferences, isIedReferenceElement, resolveIed, } from './foundations/ied.js';
@@ -372,6 +373,11 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
     handleSubstationDelete(substation) {
         this.dispatchEvent(newEditEventV2({ node: substation }));
     }
+    handleSubstationAutoLayout(substation) {
+        this.dispatchEvent(newEditEventV2(autoLayoutEdits(substation, this.nsp), {
+            title: 'Lay out substation automatically',
+        }));
+    }
     handleSubstationExport(substation) {
         const viewer = Array.from(this.renderRoot.querySelectorAll('sld-substation-viewer')).find(candidate => candidate.substation === substation);
         if (!viewer) {
@@ -463,7 +469,9 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
             <sld-substation-header
               slot="header"
               .substation=${substation}
+              .needsLayout=${needsLayout(substation)}
               ?disabled=${this.disabled}
+              @oscd-sld-substation-auto-layout=${({ detail, }) => this.handleSubstationAutoLayout(detail)}
               @oscd-sld-substation-resize=${({ detail, }) => this.handleSubstationResize(detail)}
               @oscd-sld-substation-delete=${({ detail, }) => this.handleSubstationDelete(detail)}
             ></sld-substation-header>

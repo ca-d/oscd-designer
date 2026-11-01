@@ -1,6 +1,7 @@
 import { LitElement } from 'lit';
 import { OscdIcon } from '@omicronenergy/oscd-ui/icon/OscdIcon.js';
 import { OscdIconButton } from '@omicronenergy/oscd-ui/iconbutton/OscdIconButton.js';
+import { OscdFilledButton } from '@omicronenergy/oscd-ui/button/OscdFilledButton.js';
 declare const SldSubstationHeader_base: typeof LitElement & import("@open-wc/dedupe-mixin").Constructor<import("@open-wc/scoped-elements/types.js").ScopedElementsHost> & import("@open-wc/scoped-elements/types.js").ScopedElementsHostConstructor;
 /**
  * Editor-owned chrome for a single substation: its name plus the
@@ -11,11 +12,14 @@ declare const SldSubstationHeader_base: typeof LitElement & import("@open-wc/ded
  */
 export declare class SldSubstationHeader extends SldSubstationHeader_base {
     static scopedElements: {
+        'oscd-filled-button': typeof OscdFilledButton;
         'oscd-icon': typeof OscdIcon;
         'oscd-icon-button': typeof OscdIconButton;
     };
     substation: Element;
     disabled: boolean;
+    /** Nothing in the substation has been placed yet. */
+    needsLayout: boolean;
     render(): import("lit-html").TemplateResult<1>;
     static styles: import("lit").CSSResult[];
 }

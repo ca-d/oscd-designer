@@ -85,6 +85,17 @@ export function flippedTerminalPort(terminal) {
         ? measuredPort(terminal, transformer, layoutOf({ kind: 'flip', element: transformer }))
         : undefined;
 }
+/** Where a terminal is with its equipment or transformer at the given `positions`, unturned. */
+export function terminalPortAt(terminal, positions) {
+    const at = (element) => positions.get(element) ?? attributes(element).pos;
+    return terminalPort(terminal, [0, 0], [0, 1], {
+        delta: () => [0, 0],
+        position: at,
+        rotation: element => attributes(element).rot,
+        turns: () => false,
+        flips: () => false,
+    });
+}
 function terminalPort(terminal, oldVertex, oldLeg, layout) {
     const equipment = terminal.parentElement;
     if (equipment.tagName === 'ConductingEquipment') {

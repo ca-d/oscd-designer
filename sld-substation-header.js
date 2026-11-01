@@ -1,14 +1,15 @@
 import { __decorate } from "tslib";
-import { css, html, LitElement } from 'lit';
+import { css, html, LitElement, nothing } from 'lit';
 import { property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements/lit-element.js';
 import { OscdIcon } from '@omicronenergy/oscd-ui/icon/OscdIcon.js';
 import { OscdIconButton } from '@omicronenergy/oscd-ui/iconbutton/OscdIconButton.js';
+import { OscdFilledButton } from '@omicronenergy/oscd-ui/button/OscdFilledButton.js';
 import { resizePath } from './drawing/diagram-symbols.js';
 import { sldThemeStyles } from './theme.js';
 import { svgNs } from './foundations.js';
-import { newSclEditDialogEvent, newSubstationDeleteEvent, newSubstationExportEvent, newSubstationResizeEvent, } from './foundations/events.js';
+import { newSclEditDialogEvent, newSubstationAutoLayoutEvent, newSubstationDeleteEvent, newSubstationExportEvent, newSubstationResizeEvent, } from './foundations/events.js';
 /**
  * Editor-owned chrome for a single substation: its name plus the
  * Resize / Export / Edit / Delete commands. Rendered by `SldEditor` and slotted
@@ -20,6 +21,8 @@ export class SldSubstationHeader extends ScopedElementsMixin(LitElement) {
     constructor() {
         super(...arguments);
         this.disabled = false;
+        /** Nothing in the substation has been placed yet. */
+        this.needsLayout = false;
     }
     render() {
         return html `<h2 class="${classMap({ disabled: this.disabled })}">
@@ -61,10 +64,19 @@ export class SldSubstationHeader extends ScopedElementsMixin(LitElement) {
       >
         <oscd-icon>delete</oscd-icon>
       </oscd-icon-button>
-    </h2>`;
+    </h2>${this.needsLayout && !this.disabled
+            ? html `<div class="layout">
+          <span>Nothing in this substation has been placed yet.</span>
+          <oscd-filled-button
+            @click=${() => this.dispatchEvent(newSubstationAutoLayoutEvent(this.substation))}
+            >Lay out automatically</oscd-filled-button
+          >
+        </div>`
+            : nothing}`;
     }
 }
 SldSubstationHeader.scopedElements = {
+    'oscd-filled-button': OscdFilledButton,
     'oscd-icon': OscdIcon,
     'oscd-icon-button': OscdIconButton,
 };
@@ -80,6 +92,15 @@ SldSubstationHeader.styles = [
         --md-icon-button-state-layer-height: 28px;
         --md-icon-button-state-layer-width: 28px;
         --md-icon-button-icon-size: 24px;
+      }
+
+      .layout {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+        font-family: Roboto;
+        color: var(--md-sys-color-on-surface, var(--oscd-base00));
       }
 
       h2.disabled {
@@ -98,4 +119,7 @@ __decorate([
 __decorate([
     property({ type: Boolean })
 ], SldSubstationHeader.prototype, "disabled", void 0);
+__decorate([
+    property({ type: Boolean })
+], SldSubstationHeader.prototype, "needsLayout", void 0);
 //# sourceMappingURL=sld-substation-header.js.map
