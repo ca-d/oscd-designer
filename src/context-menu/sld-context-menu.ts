@@ -32,6 +32,32 @@ function renderDivider(): TemplateResult {
   return html`<oscd-divider></oscd-divider>`;
 }
 
+/** Resolves on the next `type` event of `target`, or after a second at the latest. */
+function nextEvent(target: EventTarget, type: string): Promise<void> {
+  return new Promise((resolve) => {
+    const done = () => {
+      clearTimeout(timer);
+      target.removeEventListener(type, done);
+      resolve();
+    };
+    const timer = setTimeout(done, 1000);
+    target.addEventListener(type, done);
+  });
+}
+
+/** The innermost element at a point, looking into shadow roots. */
+function deepElementFromPoint(x: number, y: number): Element | null {
+  let element = document.elementFromPoint(x, y);
+  while (element?.shadowRoot) {
+    const inner = element.shadowRoot.elementFromPoint(x, y);
+    if (!inner || inner === element) {
+      break;
+    }
+    element = inner;
+  }
+  return element;
+}
+
 function renderHeader({ element }: ContextMenuHeader): TemplateResult {
   let name = element.getAttribute('name') || element.tagName;
   let detail: string | null | TemplateResult<1> =
@@ -162,18 +188,91 @@ export class SldContextMenu extends ScopedElementsMixin(LitElement) {
   @query('oscd-menu')
   menu!: OscdMenu;
 
-  open(context: MenuContext): void {
+  /** The context of the latest request to open, which wins over earlier ones still opening. */
+  private requested?: MenuContext;
+
+  async open(context: MenuContext): Promise<void> {
     this.context = context;
-    this.updateComplete.then(() => {
-      this.anchor.style.left = `${context.x}px`;
-      this.anchor.style.top = `${context.y - menuHeaderHeight(context.element)}px`;
-      this.menu.anchorElement = this.anchor;
-      this.menu.show();
-    });
+    this.requested = context;
+    await this.updateComplete;
+    if (this.requested !== context) {
+      return;
+    }
+    const { anchor, menu } = this;
+    anchor.style.left = `${context.x}px`;
+    anchor.style.top = `${context.y - menuHeaderHeight(context.element)}px`;
+    menu.anchorElement = anchor;
+    // Laid out unseen first, so that it can be placed by its full height.
+    menu.style.visibility = 'hidden';
+    const wasOpen = menu.open;
+    const opened = nextEvent(menu, 'opened');
+    menu.show();
+    if (!wasOpen) {
+      await opened;
+    }
+    if (this.context === context) {
+      await this.place(context.y);
+    }
+    menu.style.visibility = '';
+  }
+
+  /**
+   * Puts the first action at the cursor height `y`. A menu that does not fit
+   * below that ends at the cursor instead, and one that does not fit above it
+   * either starts at the top of the window and only scrolls once it is as high
+   * as the window.
+   */
+  private async place(y: number): Promise<void> {
+    const { anchor, menu } = this;
+    const surface = menu.shadowRoot?.querySelector<HTMLElement>('.menu');
+    const list = menu.shadowRoot?.querySelector<HTMLElement>('.items');
+    if (!surface || !list) {
+      return;
+    }
+    const rect = surface.getBoundingClientRect();
+    const height = rect.height + list.scrollHeight - list.clientHeight;
+    const firstAction = this.renderRoot.querySelector('oscd-menu-item');
+    const lead = firstAction
+      ? firstAction.getBoundingClientRect().top - rect.top
+      : 0;
+    const below = y - lead;
+    const top =
+      below + height <= window.innerHeight
+        ? Math.max(0, below)
+        : Math.max(0, y - height);
+    anchor.style.top = `${top}px`;
+    menu.reposition();
+    await new Promise(requestAnimationFrame);
+    await menu.updateComplete;
   }
 
   private handleClosed(): void {
     this.context = undefined;
+  }
+
+  /** Right-clicking outside the menu opens the menu of what is under the cursor instead. */
+  private handleScrimContextMenu(event: MouseEvent): void {
+    event.preventDefault();
+    const scrim = event.currentTarget as HTMLElement;
+    scrim.style.pointerEvents = 'none';
+    const target = deepElementFromPoint(event.clientX, event.clientY);
+    scrim.style.pointerEvents = '';
+    const requested = this.requested;
+    target?.dispatchEvent(
+      new MouseEvent('contextmenu', {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        button: 2,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        screenX: event.screenX,
+        screenY: event.screenY,
+      }),
+    );
+    if (this.requested === requested) {
+      this.menu.close();
+    }
   }
 
   private buildItems(): ContextMenuItem[] {
@@ -216,16 +315,31 @@ export class SldContextMenu extends ScopedElementsMixin(LitElement) {
   protected override render(): TemplateResult {
     const items = this.context ? this.buildItems() : [];
 
+    // The menu itself takes the keyboard; the scrim is only there for the mouse.
+    /* eslint-disable lit-a11y/click-events-have-key-events */
     return html`
       <div id="ctx-anchor"></div>
+      ${this.context
+        ? html`<div
+            id="scrim"
+            @mousedown=${(event: MouseEvent) => event.preventDefault()}
+            @click=${() => this.menu.close()}
+            @wheel=${() => this.menu.close()}
+            @contextmenu=${this.handleScrimContextMenu}
+          ></div>`
+        : nothing}
       <oscd-menu
         positioning="fixed"
         quick
+        anchor-corner="start-start"
+        no-vertical-flip
+        stay-open-on-focusout
         @closed=${this.handleClosed}
       >
           ${items.map(item => this.renderMenuItem(item))}
       </oscd-menu>
     `;
+    /* eslint-enable lit-a11y/click-events-have-key-events */
   }
 
   static styles = [
@@ -241,6 +355,13 @@ export class SldContextMenu extends ScopedElementsMixin(LitElement) {
         width: 0;
         height: 0;
         pointer-events: none;
+      }
+
+      /* Catches the click that closes the menu, just below the menu itself. */
+      #scrim {
+        position: fixed;
+        inset: 0;
+        z-index: 19;
       }
     `,
   ];
