@@ -277,6 +277,99 @@ describe('busBarResizeEdits', () => {
     });
   });
 
+  describe('with feeders on both sides', () => {
+    /** Q4 hangs above the bus bar at x = 4.5, Q2 below it joins beyond its new end. */
+    function opposite() {
+      return sldFixture({
+        bay: { x: 2, y: 3, w: 7, h: 1 },
+        bayName: 'BB1',
+        children: `
+          <ConductingEquipment name="Q4" type="CBR">
+            <Private type="OpenSCD-SLD-Layout"><smth:SLDAttributes smth:x="4" smth:y="0"/></Private>
+            <Terminal name="T2" connectivityNode="S1/V1/BB1/L1">
+              <Private type="OpenSCD-SLD-Layout"><smth:SLDAttributes smth:uuid="u4"/></Private>
+            </Terminal>
+          </ConductingEquipment>
+          <ConductingEquipment name="Q2" type="CBR">
+            <Private type="OpenSCD-SLD-Layout"><smth:SLDAttributes smth:x="4" smth:y="6"/></Private>
+            <Terminal name="T1" connectivityNode="S1/V1/BB1/L1">
+              <Private type="OpenSCD-SLD-Layout"><smth:SLDAttributes smth:uuid="u2"/></Private>
+            </Terminal>
+          </ConductingEquipment>
+          <ConnectivityNode name="L1" pathName="S1/V1/BB1/L1">
+            <Private type="OpenSCD-SLD-Layout">
+              ${bus([2.5, 3.5], [4.5, 3.5])}
+              ${bus([4.5, 3.5], [8.5, 3.5])}
+              ${wire([4.5, 0.84, 'u4'], [4.5, 3.5])}
+              ${wire([4.5, 6.16, 'u2'], [4.5, 5], [8.5, 5], [8.5, 3.5])}
+            </Private>
+          </ConnectivityNode>`,
+      });
+    }
+
+    it('joins a feeder right opposite one on the other side', () => {
+      const doc = opposite();
+      resize(doc, [2, 3, 5, 1]);
+
+      expectOrthogonal(doc);
+      expect(joins(doc, 'u4', 'u2')).to.deep.equal([
+        [4.5, 3.5],
+        [4.5, 3.5],
+      ]);
+      expect(wires(doc)).to.deep.include([[4.5, 6.16], [4.5, 3.5]]);
+    });
+
+    it('joins two feeders it moves right opposite each other', () => {
+      const doc = opposite();
+      const [, , above] = sectionsOf(doc);
+      above.replaceWith(
+        new DOMParser().parseFromString(
+          `<smth:Section xmlns:smth="${sldNs}">${[
+            [4.5, 0.84, 'u4'],
+            [4.5, 2],
+            [8.5, 2],
+            [8.5, 3.5],
+          ]
+            .map(([x, y, uuid]) => vertex(x as number, y as number, uuid as string))
+            .join('')}</smth:Section>`,
+          'application/xml',
+        ).documentElement,
+      );
+      resize(doc, [2, 3, 5, 1]);
+
+      expectOrthogonal(doc);
+      expect(joins(doc, 'u4', 'u2')).to.deep.equal([
+        [4.5, 3.5],
+        [4.5, 3.5],
+      ]);
+    });
+
+    it('does not join two feeders from the same side at one place', () => {
+      const doc = opposite();
+      // Q5 joins from below at x = 4.5 instead of Q4 from above.
+      doc.querySelector('ConductingEquipment[name="Q4"] SLDAttributes')!
+        .setAttributeNS(sldNs, 'smth:x', '3');
+      const q4 = doc.querySelector('ConductingEquipment[name="Q4"] SLDAttributes')!;
+      q4.setAttributeNS(sldNs, 'smth:y', '4');
+      q4.setAttributeNS(sldNs, 'smth:rot', '1');
+      const [, , above] = sectionsOf(doc);
+      const vertices = Array.from(above.getElementsByTagNameNS(sldNs, 'Vertex'));
+      vertices[0].setAttributeNS(sldNs, 'smth:x', '3.84');
+      vertices[0].setAttributeNS(sldNs, 'smth:y', '4.5');
+      const corner = vertices[1].cloneNode() as Element;
+      corner.setAttributeNS(sldNs, 'smth:x', '4.5');
+      corner.setAttributeNS(sldNs, 'smth:y', '4.5');
+      above.insertBefore(corner, vertices[1]);
+      (q4.closest('ConductingEquipment')!.querySelector('Terminal')!).setAttribute('name', 'T1');
+      resize(doc, [2, 3, 5, 1]);
+
+      expectOrthogonal(doc);
+      const [[q4x], [q2x]] = joins(doc, 'u4', 'u2');
+      expect(q4x).to.equal(4.5);
+      expect(q2x).to.not.equal(4.5);
+    });
+  });
+
   describe('turning', () => {
     it('routes all the feeders to the new line', () => {
       const doc = wired();

@@ -661,6 +661,43 @@ function busFeeders(
 }
 
 /**
+ * Where the sections in `wires` of the net of a bus bar meet the inside of its
+ * new line, and which sides of it (-1 or 1) they come from.
+ */
+function busJoins({ net, line }: BusPlan, wires: Wire[]): Map<number, Set<number>> {
+  const [start, end] = line;
+  const axis = start[1] === end[1] ? 0 : 1;
+  const across = 1 - axis;
+  const joins = new Map<number, Set<number>>();
+  wires
+    .filter(
+      wire =>
+        wire.cNode === net && !xmlBoolean(getSLDAttributes(wire.section, 'bus')),
+    )
+    .forEach(({ vertices }) => {
+      const points = vertices.map(vertex => attributes(vertex).pos);
+      points.forEach((point, i) => {
+        if (
+          !alongSegment(point, line) ||
+          point[axis] <= start[axis] + EPSILON ||
+          point[axis] >= end[axis] - EPSILON
+        ) {
+          return;
+        }
+        const from = joins.get(point[axis]) ?? new Set<number>();
+        [points[i - 1], points[i + 1]]
+          .filter(next => next)
+          .forEach((next) => {
+            const side = Math.sign(next[across] - point[across]);
+            (side ? [side] : [-1, 1]).forEach(s => from.add(s));
+          });
+        joins.set(point[axis], from);
+      });
+    });
+  return joins;
+}
+
+/**
  * Routes each section of `bus.moving` from its far end to the bus bar,
  * arriving straight on. A section joins where its far end lies along the bus
  * bar when it can, and otherwise at the nearest place not already joined, so
@@ -690,23 +727,22 @@ function planBus({
   const pointAt = (t: number): Point =>
     axis === 0 ? [t, start[1]] : [start[0], t];
 
-  const taken = new Set(
-    kept
-      .filter(wire => wire.cNode === net)
-      .flatMap(wire => wire.vertices.map(vertex => attributes(vertex).pos))
-      .filter(point => alongSegment(point, [start, end]))
-      .map(point => Math.round(point[axis] / STEP)),
-  );
-  const free: number[] = [];
+  const across = 1 - axis;
+  const sideOf = (point: Point) => Math.sign(point[across] - start[across]);
+
+  // Joining where another feeder joins from the other side is as good as anywhere.
+  const sides = busJoins(bus, kept);
+  const cuts = new Set(sides.keys());
+  const slots: number[] = [];
   for (
     let i = Math.round(start[axis] / STEP) + 1;
     i < Math.round(end[axis] / STEP);
     i += 1
   ) {
-    if (!taken.has(i)) {
-      free.push(i * STEP);
-    }
+    slots.push(i * STEP);
   }
+  const open = (t: number, side: number) =>
+    !sides.get(t)?.has(side) && !(side === 0 && sides.has(t));
   const centred = (t: number) =>
     Math.abs(t - start[axis] - Math.round(t - start[axis])) < EPSILON;
 
@@ -723,7 +759,8 @@ function planBus({
     const far = wire.ends![1 - join];
     const port = far.port!;
     const target = projection(feeder);
-    const nearest = free
+    const nearest = slots
+      .filter(t => open(t, sideOf(port.point)))
       .map(t => ({
         t,
         cost: Math.abs(t - target) + (centred(t) ? 0 : 0.3),
@@ -731,17 +768,18 @@ function planBus({
       .sort((a, b) => a.cost - b.cost)
       .map(({ t }) => t);
     const origin = clear(far, port.approach, port.outward);
+    const routeTo = (router: ConnectionRouter, slot: number) =>
+      cuts.has(slot)
+        ? router.routeToVertex(origin, port.outward, net, pointAt(slot))
+        : router.routeToBus(origin, port.outward, net, pointAt(slot));
+    const arrivalSide = (route: Point[]) =>
+      sideOf(route.length > 1 ? route[route.length - 2] : origin);
 
     // The simplest of the clean routes to the best few places wins.
     const routesVia = (router: ConnectionRouter) =>
       nearest.slice(0, 6).flatMap((candidate) => {
-        const route = router.routeToBus(
-          origin,
-          port.outward,
-          net,
-          pointAt(candidate),
-        );
-        return route
+        const route = routeTo(router, candidate);
+        return route && open(candidate, arrivalSide(route))
           ? [
             {
               route,
@@ -770,9 +808,7 @@ function planBus({
     const at = slot === undefined ? end : pointAt(slot);
     const routed =
       found?.route ??
-      (slot === undefined
-        ? undefined
-        : soft().routeToBus(origin, port.outward, net, at));
+      (slot === undefined ? undefined : routeTo(soft(), slot));
     const corner: Point =
       port.outward[0] !== 0
         ? [at[0], port.approach[1]]
@@ -781,10 +817,15 @@ function planBus({
       ? [port.point, ...routed]
       : [port.point, port.approach, corner, at];
     cleanPath(points);
+    const [before] = points.slice(-2);
+    const side = sideOf(before);
     if (slot !== undefined) {
-      free.splice(free.indexOf(slot), 1);
+      sides.set(slot, (sides.get(slot) ?? new Set<number>()).add(side));
     }
-    reserve(points);
+    // The bus bar itself stays free, so that another feeder can join right opposite.
+    const last: Point = [...at];
+    last[across] += side * STEP;
+    reserve([...points.slice(0, -1), last]);
 
     return {
       section: wire.section,
@@ -885,12 +926,22 @@ export function planReroutes(
     };
   });
   if (bus) {
-    existing.push({
-      net: bus.net,
-      bus: true,
-      points: [...bus.line],
-      terminals: [],
-    });
+    // Cut where feeders join, so that others can join right opposite them.
+    const [start, end] = bus.line;
+    const axis = start[1] === end[1] ? 0 : 1;
+    const stops = [
+      start[axis],
+      ...[...busJoins(bus, unchanged).keys()].sort((a, b) => a - b),
+      end[axis],
+    ].map((t): Point => (axis === 0 ? [t, start[1]] : [start[0], t]));
+    stops.slice(1).forEach((stop, i) =>
+      existing.push({
+        net: bus.net,
+        bus: true,
+        points: [stops[i], stop],
+        terminals: [],
+      }),
+    );
   }
   const router = new ConnectionRouter(width, height, obstacles, existing);
   const tightRouter = new ConnectionRouter(
