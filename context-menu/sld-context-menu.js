@@ -65,6 +65,9 @@ function renderHeader({ element }) {
     else if (element.tagName === 'VoltageLevel') {
         footerGraphic = renderSldStartIcon('sld_voltage_level');
     }
+    else if (element.tagName === 'Substation') {
+        footerGraphic = html `<oscd-icon slot="start">location_city</oscd-icon>`;
+    }
     else if (isIedReferenceElement(element)) {
         name = 'IED';
         footerGraphic = html `<oscd-icon slot="start">developer_board</oscd-icon>`;
@@ -72,6 +75,9 @@ function renderHeader({ element }) {
     else if (element.tagName === 'Text') {
         footerGraphic = html `<oscd-icon slot="start">title</oscd-icon>`;
         detail = element.textContent;
+    }
+    else if (element.tagName === 'ConnectivityNode') {
+        footerGraphic = html `<oscd-icon slot="start">cable</oscd-icon>`;
     }
     return html `<oscd-list-item type="text">
       <div slot="headline">${name}</div>
@@ -96,12 +102,49 @@ function menuHeaderHeight(element) {
 export class SldContextMenu extends ScopedElementsMixin(LitElement) {
     open(context) {
         this.context = context;
-        this.updateComplete.then(() => {
-            this.anchor.style.left = `${context.x}px`;
-            this.anchor.style.top = `${context.y - menuHeaderHeight(context.element)}px`;
-            this.menu.anchorElement = this.anchor;
-            this.menu.show();
+        this.updateComplete.then(async () => {
+            const { anchor, menu } = this;
+            anchor.style.left = `${context.x}px`;
+            anchor.style.top = `${context.y - menuHeaderHeight(context.element)}px`;
+            menu.anchorElement = anchor;
+            // Laid out unseen first, so that it can be placed by its full height.
+            menu.style.visibility = 'hidden';
+            const opened = new Promise(resolve => menu.addEventListener('opened', resolve, { once: true }));
+            menu.show();
+            await opened;
+            if (this.context === context) {
+                await this.place(context.y);
+            }
+            menu.style.visibility = '';
         });
+    }
+    /**
+     * Puts the first action at the cursor height `y`. A menu that does not fit
+     * below that ends at the cursor instead, and one that does not fit above it
+     * either starts at the top of the window and only scrolls once it is as high
+     * as the window.
+     */
+    async place(y) {
+        const { anchor, menu } = this;
+        const surface = menu.shadowRoot?.querySelector('.menu');
+        const list = menu.shadowRoot?.querySelector('.items');
+        if (!surface || !list) {
+            return;
+        }
+        const rect = surface.getBoundingClientRect();
+        const height = rect.height + list.scrollHeight - list.clientHeight;
+        const firstAction = this.renderRoot.querySelector('oscd-menu-item');
+        const lead = firstAction
+            ? firstAction.getBoundingClientRect().top - rect.top
+            : 0;
+        const below = y - lead;
+        const top = below + height <= window.innerHeight
+            ? Math.max(0, below)
+            : Math.max(0, y - height);
+        anchor.style.top = `${top}px`;
+        menu.reposition();
+        await new Promise(requestAnimationFrame);
+        await menu.updateComplete;
     }
     handleClosed() {
         this.context = undefined;
@@ -146,6 +189,8 @@ export class SldContextMenu extends ScopedElementsMixin(LitElement) {
       <oscd-menu
         positioning="fixed"
         quick
+        anchor-corner="start-start"
+        no-vertical-flip
         @closed=${this.handleClosed}
       >
           ${items.map(item => this.renderMenuItem(item))}

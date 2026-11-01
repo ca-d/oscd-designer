@@ -14,7 +14,8 @@ import { attributes, getSLDAttributes } from './foundations/sld-attributes.js';
 import { createConnectEdits, createGroundTerminalEdits, createPlaceLabelEdit, createResizeEdits, createResizeTLEdits, createFlipElementEdits, createRotateEdits, disconnectExternalEdits, leavesSubstation, rewireTerminalEdits, shiftDescendantEdits, shiftElementEdits, shiftTextEdits, wrapIedReferenceEdits, } from './foundations/edits.js';
 import { removeTerminal } from './foundations/connectivity-edits.js';
 import { pointsSignature, rerouteEdits, sectionEnds, sectionSignature, } from './foundations/rerouting.js';
-import { busBarVertexEdits } from './foundations/bus-bar-edits.js';
+import { busBarLineEdits, busBarResizeEdits, } from './foundations/bus-bar-edits.js';
+import { isBusBar } from './foundations/connectivity.js';
 import { iedReferences, isIedReferenceElement, resolveIed, } from './foundations/ied.js';
 import { reparentElement, sldNs, sldPrefix } from './foundations.js';
 import { downloadSvg } from './foundations/export.js';
@@ -118,6 +119,7 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
         const i = this.interaction;
         if (i.mode === 'connectingFrom' ||
             (i.mode === 'resizingBR' && !i.element.parentElement) ||
+            (i.mode === 'resizingTL' && !i.element.parentElement) ||
             (i.mode === 'placingLabel' && !i.element.parentElement)) {
             this.interaction = interactions.idle();
         }
@@ -202,16 +204,6 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
         const isNew = this.isNewBayOrVL(element);
         const sized = isNew && w !== undefined && h !== undefined;
         const edits = [];
-        // Resizing a bus bar moves its end, not the section vertex it was grabbed by.
-        const resize = busBarVertexEdits(element, x, y, this.nsp);
-        if (resize.length) {
-            this.dispatchEvent(newEditEventV2(resize));
-            const resolve = this._resolvePlacement;
-            this._resolvePlacement = undefined;
-            this.interaction = interactions.idle();
-            resolve?.({ element, parent, x, y });
-            return;
-        }
         if (element.parentElement !== parent && !isIedReferenceElement(element)) {
             edits.push(...reparentElement(element, parent));
         }
@@ -229,6 +221,13 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
         edits.push(...wrapIedReferenceEdits(element, parent, this.doc));
         if (sized) {
             edits.push(createResizeEdits(element, this.nsp, w, h));
+            if (isBusBar(element)) {
+                edits.push(...busBarLineEdits(element, [x, y, w, h], this.nsp));
+            }
+        }
+        else if (isNew && isBusBar(element)) {
+            // Sized right away, so that giving up on resizing leaves a proper bus bar.
+            edits.push(createResizeEdits(element, this.nsp, 2, 1));
         }
         this.dispatchEvent(newEditEventV2(edits));
         this.warnAbout(fallbacks);
@@ -247,11 +246,26 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
         this.interaction = interactions.idle();
     }
     handleResize(element, w, h) {
+        if (isBusBar(element)) {
+            const { pos: [x, y], } = attributes(element);
+            this.resizeBusBar(element, [x, y, w, h]);
+            return;
+        }
         this.dispatchEvent(newEditEventV2(createResizeEdits(element, this.nsp, w, h)));
         this.interaction = interactions.idle();
     }
     handleResizeTL(element, x, y, w, h) {
+        if (isBusBar(element)) {
+            this.resizeBusBar(element, [x, y, w, h]);
+            return;
+        }
         this.dispatchEvent(newEditEventV2(createResizeTLEdits(element, this.nsp, x, y, w, h)));
+        this.interaction = interactions.idle();
+    }
+    resizeBusBar(busBar, rect) {
+        const fallbacks = [];
+        this.dispatchEvent(newEditEventV2(busBarResizeEdits(this.doc, busBar, rect, this.nsp, fallbacks)));
+        this.warnAbout(fallbacks);
         this.interaction = interactions.idle();
     }
     handleFlip(element) {
@@ -342,8 +356,12 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
     handleSubstationDelete(substation) {
         this.dispatchEvent(newEditEventV2({ node: substation }));
     }
-    handleSubstationExport(event) {
-        downloadSvg(event.currentTarget.exportableSvg(), `${event.detail.getAttribute('name')}.svg`);
+    handleSubstationExport(substation) {
+        const viewer = Array.from(this.renderRoot.querySelectorAll('sld-substation-viewer')).find(candidate => candidate.substation === substation);
+        if (!viewer) {
+            return;
+        }
+        downloadSvg(viewer.exportableSvg(), `${substation.getAttribute('name')}.svg`);
     }
     /**
      * Begin placing `element`, returning a promise that resolves with the
@@ -398,7 +416,7 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
             .highlight=${this.highlight}
             .routingWarnings=${this.activeRoutingWarnings(substation)}
             @oscd-sld-dismiss-routing-warning=${this.handleDismissRoutingWarning}
-            @oscd-sld-substation-export=${(event) => this.handleSubstationExport(event)}
+            @oscd-sld-substation-export=${({ detail }) => this.handleSubstationExport(detail)}
             @oscd-sld-start-interaction=${({ detail, }) => this.handleStartInteraction(detail)}
             @oscd-sld-ground-terminal=${(event) => {
             this.handleGroundTerminal(event);
@@ -451,6 +469,9 @@ export class SldEditor extends ScopedElementsMixin(LitElement) {
       @oscd-sld-ground-hint=${() => {
             this.handleGroundHint();
         }}
+      @oscd-sld-substation-resize=${({ detail }) => this.handleSubstationResize(detail)}
+      @oscd-sld-substation-delete=${({ detail }) => this.handleSubstationDelete(detail)}
+      @oscd-sld-substation-export=${({ detail }) => this.handleSubstationExport(detail)}
     ></sld-context-menu>
     <oscd-snackbar></oscd-snackbar>
     <oscd-scl-dialogs></oscd-scl-dialogs>`;

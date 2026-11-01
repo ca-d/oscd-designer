@@ -48,6 +48,13 @@ export declare class SldContextMenu extends SldContextMenu_base {
     private anchor;
     menu: OscdMenu;
     open(context: MenuContext): void;
+    /**
+     * Puts the first action at the cursor height `y`. A menu that does not fit
+     * below that ends at the cursor instead, and one that does not fit above it
+     * either starts at the top of the window and only scrolls once it is as high
+     * as the window.
+     */
+    private place;
     private handleClosed;
     private buildItems;
     private renderAction;

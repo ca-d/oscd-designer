@@ -12,7 +12,11 @@
  */
 import type { EditV2 } from '@openscd/oscd-api';
 import type { Point } from './geometry.js';
-/** What the user is changing: moving an element (and all it contains), turning equipment a quarter, mirroring a transformer or routing a wire through a point. */
+/**
+ * What the user is changing: moving an element (and all it contains), turning
+ * equipment a quarter, mirroring a transformer, routing a wire through a point
+ * or running a bus bar (the `element`) along a new line from `start` to `end`.
+ */
 export type LayoutChange = {
     kind: 'move';
     element: Element;
@@ -28,6 +32,11 @@ export type LayoutChange = {
     kind: 'section';
     element: Element;
     via: Point;
+} | {
+    kind: 'bus';
+    element: Element;
+    start: Point;
+    end: Point;
 };
 /** Where a section meets its end: the point, the first point of a route there and the direction leaving it. */
 export type Port = {
@@ -76,3 +85,5 @@ export declare function planReroutes(doc: XMLDocument, change: LayoutChange): Pl
  * equipment, are added to `fallbacks`.
  */
 export declare function rerouteEdits(doc: XMLDocument, change: LayoutChange, nsp: string, fallbacks?: FlaggedSection[]): EditV2[];
+/** Edits that give the sections of `routes` their planned geometry; the fallbacks among them are added to `fallbacks`. */
+export declare function routeEdits(doc: XMLDocument, routes: PlannedRoute[], nsp: string, fallbacks?: FlaggedSection[]): EditV2[];

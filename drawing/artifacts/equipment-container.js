@@ -106,9 +106,10 @@ function renderPlacingTargetLayer(context, kind, handleClick, x, y, w, h) {
 }
 function renderResizingTargetLayer(element, context, handleClick, x, y, w, h) {
     const resizingBRTarget = targetInMode(context.interaction, 'resizingBR');
+    const resizingTLTarget = targetInMode(context.interaction, 'resizingTL');
     if (resizingBRTarget !== element &&
-        targetInMode(context.interaction, 'resizingTL') !== element &&
-        !(resizingBRTarget?.parentElement === element && isBusBar(resizingBRTarget))) {
+        resizingTLTarget !== element &&
+        ![resizingBRTarget, resizingTLTarget].some(target => target?.parentElement === element && isBusBar(target))) {
         return nothing;
     }
     return svg `<rect x="${x}" y="${y}" width="${w}" height="${h}"

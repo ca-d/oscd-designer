@@ -1,6 +1,7 @@
 import { expect } from '@open-wc/testing';
 import { createContextMenuItems } from './sld-context-menu-factory.js';
 import { createSCLDoc, sldFixture } from '../test-helpers.js';
+import { attributes } from '../foundations/sld-attributes.js';
 import { sldNs } from '../foundations.js';
 function actions(items) {
     return items.filter((i) => !('type' in i) || i.type === 'action');
@@ -473,6 +474,73 @@ describe('sld-context-menu-factory', () => {
             expect(insert.node.tagName).to.equal('TapChanger');
         });
     });
+    describe('plain wire', () => {
+        const terminal = (name, uuid) => `<Terminal name="${name}" connectivityNode="S1/V1/B1/L1" cNodeName="L1">
+        <Private type="OpenSCD-SLD-Layout"><smth:SLDAttributes smth:uuid="${uuid}"/></Private>
+      </Terminal>`;
+        function wiredDoc() {
+            return bayDoc(`
+        <ConductingEquipment name="Q1" type="CBR">${terminal('T2', 'u1')}</ConductingEquipment>
+        <ConductingEquipment name="Q2" type="DIS">${terminal('T1', 'u2')}</ConductingEquipment>
+        <ConnectivityNode name="L1" pathName="S1/V1/B1/L1">
+          <Private type="OpenSCD-SLD-Layout">
+            <smth:Section>
+              <smth:Vertex smth:x="3.5" smth:y="3.84" smth:uuid="u1"/>
+              <smth:Vertex smth:x="3.5" smth:y="5.16" smth:uuid="u2"/>
+            </smth:Section>
+          </Private>
+        </ConnectivityNode>
+      `);
+        }
+        it('offers to disconnect each piece of equipment and to re-route the wire', () => {
+            const doc = wiredDoc();
+            const section = doc.getElementsByTagNameNS(sldNs, 'Section')[0];
+            const items = createContextMenuItems(makeContext(section));
+            expect(items[0]).to.deep.equal({
+                type: 'header',
+                element: doc.querySelector('ConnectivityNode'),
+            });
+            expect(headlines(items)).to.deep.equal([
+                'Disconnect Q1',
+                'Disconnect Q2',
+                'Re-route',
+            ]);
+        });
+        it('dispatches the correct event from every action handler', () => {
+            const section = wiredDoc().getElementsByTagNameNS(sldNs, 'Section')[0];
+            expectHandlerSignatures(section, {}, {
+                'Disconnect Q1': 'oscd-edit-v2',
+                'Disconnect Q2': 'oscd-edit-v2',
+                'Re-route': 'oscd-sld-start-interaction/reroutingSection',
+            });
+        });
+        it('disconnects the equipment by removing its terminal', () => {
+            const doc = wiredDoc();
+            const section = doc.getElementsByTagNameNS(sldNs, 'Section')[0];
+            const [event] = invoke(section, 'Disconnect Q2');
+            const edits = [event.detail.edit].flat(Infinity);
+            expect(edits.some(edit => edit.node === doc.querySelector('[name="Q2"] > Terminal'))).to.be.true;
+        });
+        it('tells the terminals of one piece of equipment apart', () => {
+            const doc = bayDoc(`
+        <ConductingEquipment name="Q1" type="CBR">${terminal('T1', 'u1')}${terminal('T2', 'u2')}</ConductingEquipment>
+        <ConnectivityNode name="L1" pathName="S1/V1/B1/L1">
+          <Private type="OpenSCD-SLD-Layout">
+            <smth:Section>
+              <smth:Vertex smth:x="3.5" smth:y="3.16" smth:uuid="u1"/>
+              <smth:Vertex smth:x="3.5" smth:y="3.84" smth:uuid="u2"/>
+            </smth:Section>
+          </Private>
+        </ConnectivityNode>
+      `);
+            const section = doc.getElementsByTagNameNS(sldNs, 'Section')[0];
+            expect(headlines(createContextMenuItems(makeContext(section)))).to.deep.equal([
+                'Disconnect Q1 (T1)',
+                'Disconnect Q1 (T2)',
+                'Re-route',
+            ]);
+        });
+    });
     describe('Bay (busbar)', () => {
         it('returns busbar menu items', () => {
             const doc = bayDoc(`
@@ -508,7 +576,42 @@ describe('sld-context-menu-factory', () => {
           </ConnectivityNode>
         `, 'BB1');
             const bay = doc.querySelector('Bay');
-            expectHandlerSignatures(bay);
+            expectHandlerSignatures(bay, { gridX: 50, gridY: 50 });
+        });
+        it('resizes the end of the bus bar nearest to where the menu was opened', () => {
+            const doc = bayDoc(`
+          <ConnectivityNode name="L1" pathName="S1/V1/BB1/L1">
+            <Private type="OpenSCD-SLD-Layout">
+              <smth:Section smth:bus="true">
+                <smth:Vertex smth:x="1.5" smth:y="1.5"/>
+                <smth:Vertex smth:x="5.5" smth:y="1.5"/>
+              </smth:Section>
+            </Private>
+          </ConnectivityNode>
+        `, 'BB1');
+            const bay = doc.querySelector('Bay');
+            const { pos: [x, y], } = attributes(bay);
+            const modeAt = (gridX, gridY) => signature(invoke(bay, 'Resize', { gridX, gridY })[0]);
+            expect(modeAt(x, y)).to.equal('oscd-sld-start-interaction/resizingTL');
+            expect(modeAt(x + 40, y)).to.equal('oscd-sld-start-interaction/resizingBR');
+        });
+    });
+    describe('Substation', () => {
+        const substation = () => createSCLDoc(`<Substation name="S1"/>`).querySelector('Substation');
+        it('returns the commands of the substation header', () => {
+            expect(headlines(createContextMenuItems(makeContext(substation())))).to.deep.equal([
+                'Edit',
+                'Resize',
+                'Download SVG',
+                'Delete',
+            ]);
+        });
+        it('dispatches the correct event from every action handler', () => {
+            expectHandlerSignatures(substation(), {}, {
+                Resize: 'oscd-sld-substation-resize',
+                'Download SVG': 'oscd-sld-substation-export',
+                Delete: 'oscd-sld-substation-delete',
+            });
         });
     });
     describe('Bay / VoltageLevel (container)', () => {

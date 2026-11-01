@@ -28,6 +28,10 @@ export declare class SldSubstationViewer extends SldSubstationViewer_base {
     get placingOffset(): Point;
     get placingLabel(): Element | undefined;
     get resizingTL(): Element | undefined;
+    /** The bus bar being resized, and the end of it that follows the cursor. */
+    private get resizingBusBar();
+    /** The cells the bus bar being resized would cover with its end at the cursor. */
+    private busBarResizeRect;
     get connecting(): StartConnectDetail | undefined;
     showLabels?: boolean;
     showIeds?: boolean;
@@ -116,6 +120,14 @@ export declare class SldSubstationViewer extends SldSubstationViewer_base {
      */
     private renderPlacingTargetsLayer;
     private renderPlacingPreview;
+    /** A thick line for a bus bar over `rect`; its cells can be clicked to commit. */
+    private renderBusBarLine;
+    /** A new bus bar being dragged out from the cell `anchor` to the cursor. */
+    private renderDraggedBusBar;
+    /** The bus bar as it would run with its end at the cursor, and its junctions. */
+    private renderBusBarResizePreview;
+    /** Catches the click that sizes the bus bar being resized. */
+    private renderBusBarResizeTarget;
     private renderVoltageLevelLayer;
     /**
      * What the connection being drawn would end on at the current cursor: the
@@ -164,7 +176,7 @@ export declare class SldSubstationViewer extends SldSubstationViewer_base {
     private plannedReroutes;
     /** The sections drawn as previews; kept the same set while they are the same sections. */
     private hiddenSections;
-    /** The wire whose connection a new connection from its terminal replaces. */
+    /** The wire whose connection a new connection from its terminal replaces, or the bus bar being resized. */
     private replacedSections;
     private hideSections;
     private renderReroutePreviewLayer;

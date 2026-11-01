@@ -313,7 +313,7 @@ export class ConnectionRouter {
         return this.plan(from, heading, { kind: 'net', ids: goals.ids, boxes: goals.boxes }, own);
     }
     /** Routes to the bus bar of `net` at `at`, arriving straight on, or returns `undefined`. */
-    routeToBus(from, heading, net, at, own) {
+    routeToBus(from, heading, net, at, own = []) {
         const [ix, iy] = [Math.round(at[0] / STEP), Math.round(at[1] / STEP)];
         const id = this.netGoals.get(net)?.bus.get(iy * this.cols + ix);
         return id === undefined

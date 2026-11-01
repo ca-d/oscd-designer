@@ -87,7 +87,7 @@ export declare class ConnectionRouter {
      */
     routeToNet(from: Point, heading: Point, net: unknown, own?: Point[], at?: Point): Point[] | undefined;
     /** Routes to the bus bar of `net` at `at`, arriving straight on, or returns `undefined`. */
-    private routeToBus;
+    routeToBus(from: Point, heading: Point, net: unknown, at: Point, own?: Point[]): Point[] | undefined;
     /**
      * Routes to a bend or free end of `net` and ends exactly there (free ends
      * straight on), or returns `undefined`.

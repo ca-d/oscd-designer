@@ -8,7 +8,7 @@ import { isIedReferenceElement, resolveIed, } from '../foundations/ied.js';
 import { createRemoveIedReferenceEdit } from '../foundations/ied-edits.js';
 import { attributes, DEFAULT_LABEL_COLOR, getSLDAttributes, } from '../foundations/sld-attributes.js';
 import { updateSLDAttributes } from '../foundations/sld-attribute-edits.js';
-import { newEditIedEvent, newGroundHintEvent, newFlipEvent, newRotateEvent, newSclEditDialogEvent, newStartInteractionEvent, } from '../foundations/events.js';
+import { newEditIedEvent, newGroundHintEvent, newFlipEvent, newRotateEvent, newSclEditDialogEvent, newStartInteractionEvent, newSubstationDeleteEvent, newSubstationExportEvent, newSubstationResizeEvent, } from '../foundations/events.js';
 /**
  * These colours are used in three places:
  * - the show/hide guard,
@@ -313,13 +313,19 @@ function iedMenuItems(referencedIed, context) {
 }
 function busBarMenuItems(busBar, context) {
     const text = busBar.querySelector(':scope > Text');
-    const { pos: [x, y], } = attributes(busBar);
+    const { pos: [x, y], dim: [w, h], } = attributes(busBar);
     const offset = [context.gridX - x, context.gridY - y];
+    // The end of the bus bar nearer to where the menu was opened is the one that is resized.
+    const nearStart = Math.hypot(context.gridX - x, context.gridY - y) <
+        Math.hypot(context.gridX - (x + w - 1), context.gridY - (y + h - 1));
     return [
         {
             headline: 'Resize',
             icon: 'sld_resize',
-            handler: () => context.dispatch(newStartInteractionEvent({ mode: 'resizingBR', element: busBar })),
+            handler: () => context.dispatch(newStartInteractionEvent({
+                mode: nearStart ? 'resizingTL' : 'resizingBR',
+                element: busBar,
+            })),
         },
         {
             headline: 'Move',
@@ -495,8 +501,74 @@ function textMenuItems(text, context) {
     }
     return items;
 }
+/** The commands also offered next to the name of the substation. */
+function substationMenuItems(substation, context) {
+    return [
+        {
+            headline: 'Edit',
+            icon: 'edit',
+            handler: () => context.dispatch(newSclEditDialogEvent(substation)),
+        },
+        {
+            headline: 'Resize',
+            icon: 'sld_resize',
+            handler: () => context.dispatch(newSubstationResizeEvent(substation)),
+        },
+        {
+            headline: 'Download SVG',
+            icon: 'file_download',
+            handler: () => context.dispatch(newSubstationExportEvent(substation)),
+        },
+        {
+            headline: 'Delete',
+            icon: 'delete',
+            handler: () => context.dispatch(newSubstationDeleteEvent(substation)),
+        },
+    ];
+}
+/** The menu of a plain wire, a section of the connectivity node it belongs to. */
+function wireMenuItems(section, context) {
+    const cNode = section.closest('ConnectivityNode');
+    const pathName = cNode?.getAttribute('pathName');
+    const terminals = pathName
+        ? Array.from(context.doc.querySelectorAll('Terminal, NeutralPoint')).filter(terminal => terminal.getAttribute('connectivityNode') === pathName)
+        : [];
+    const nameOf = (terminal) => {
+        const owner = terminal.closest('ConductingEquipment, PowerTransformer');
+        const winding = terminal.closest('TransformerWinding');
+        return [owner, winding]
+            .filter(element => element)
+            .map(element => element.getAttribute('name'))
+            .join(' ');
+    };
+    const names = terminals.map(nameOf);
+    return [
+        ...terminals.map((terminal, i) => ({
+            headline: `Disconnect ${names[i]}${names.indexOf(names[i]) !== names.lastIndexOf(names[i])
+                ? ` (${terminal.getAttribute('name')})`
+                : ''}`,
+            icon: 'cancel',
+            handler: () => context.dispatch(newEditEventV2(removeTerminal(terminal))),
+        })),
+        {
+            headline: 'Re-route',
+            icon: 'route',
+            handler: () => context.dispatch(newStartInteractionEvent({
+                mode: 'reroutingSection',
+                element: section,
+            })),
+        },
+    ];
+}
 export function createContextMenuItems(context) {
     const { element } = context;
+    if (element.localName === 'Section' && element.closest('ConnectivityNode')) {
+        return [
+            { type: 'header', element: element.closest('ConnectivityNode') },
+            { type: 'divider' },
+            ...wireMenuItems(element, context),
+        ];
+    }
     const items = [{ type: 'header', element: context.element }, { type: 'divider' }];
     if (element.tagName === 'ConductingEquipment') {
         items.push(...equipmentMenuItems(element, context));
@@ -507,8 +579,11 @@ export function createContextMenuItems(context) {
     else if (element.tagName === 'Bay' && isBusBar(element)) {
         items.push(...busBarMenuItems(element, context));
     }
-    else if (element.tagName === 'Bay' || element.tagName === 'VoltageLevel') {
+    else if (element.tagName === 'VoltageLevel' || element.tagName === 'Bay') {
         items.push(...containerMenuItems(element, context));
+    }
+    else if (element.tagName === 'Substation') {
+        items.push(...substationMenuItems(element, context));
     }
     else if (element.tagName === 'TransformerWinding') {
         items.push(...transformerWindingMenuItems(element, context));

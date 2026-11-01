@@ -40,6 +40,9 @@ export function interactionReadout({ substation, interaction, mouseX, mouseY, })
         }
         case 'resizingTL': {
             const resizingTL = interaction.element;
+            if (isBusBar(resizingTL)) {
+                return hidden;
+            }
             const { pos: [x, y], dim: [resW, resH], } = attributes(resizingTL);
             const newW = Math.max(1, x + resW - mouseX);
             const newH = Math.max(1, y + resH - mouseY);

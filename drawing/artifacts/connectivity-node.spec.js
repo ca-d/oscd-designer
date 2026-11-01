@@ -70,12 +70,29 @@ describe('renderConnectivityNode', () => {
             interactiveLine().dispatchEvent(event);
             expect(event.defaultPrevented).to.be.true;
         });
-        it('starts a bottom-right resize on middle-button auxclick', () => {
+        it('starts a bottom-right resize on middle-button auxclick near the end', () => {
             const context = makeArtifactContext({ substation });
-            interactiveLine(context).dispatchEvent(new MouseEvent('auxclick', { button: 1, bubbles: true }));
+            interactiveLine(context).dispatchEvent(new MouseEvent('auxclick', {
+                button: 1,
+                bubbles: true,
+                clientX: 5,
+                clientY: 2,
+            }));
             const event = context.dispatched.find(e => e.type === 'oscd-sld-start-interaction');
             expect(event).to.not.be.undefined;
             expect(event.detail.mode).to.equal('resizingBR');
+            expect(event.detail.element).to.equal(bay);
+        });
+        it('starts a top-left resize on middle-button auxclick near the start', () => {
+            const context = makeArtifactContext({ substation });
+            interactiveLine(context).dispatchEvent(new MouseEvent('auxclick', {
+                button: 1,
+                bubbles: true,
+                clientX: 2,
+                clientY: 2,
+            }));
+            const event = context.dispatched.find(e => e.type === 'oscd-sld-start-interaction');
+            expect(event.detail.mode).to.equal('resizingTL');
             expect(event.detail.element).to.equal(bay);
         });
         it('opens the context menu for the bay when idle', () => {

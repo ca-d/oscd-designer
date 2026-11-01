@@ -15,15 +15,16 @@ import { leaveRects, obstacleRects } from './foundations/obstacles.js';
 import { overlappedSections, planReroutes } from './foundations/rerouting.js';
 import { ConnectionRouter, connectAnchor, connectHeading, backtrackPath, extendRoute, finishRoute, snapApproachPoint, } from './foundations/routing.js';
 import { containsRect } from './foundations/element-geometry.js';
-import { canPlaceAt, isUnsizedContainer } from './foundations/sld-placement.js';
-import { canConnectToWinding, connectionStartPoints, isBusBar, } from './foundations/connectivity.js';
+import { canPlaceAt, isUnsizedBusBar, isUnsizedContainer } from './foundations/sld-placement.js';
+import { busBarJunctions, busBarLine, draggedBusBarRect, resizedBusBarRect, } from './foundations/bus-bar-edits.js';
+import { busSections, canConnectToWinding, connectionStartPoints, isBusBar, } from './foundations/connectivity.js';
 import { nearestWindingTerminalTarget, windingTerminalTargets, } from './foundations/transformer.js';
 import { attributes, getSLDAttributes, xmlBoolean, } from './foundations/sld-attributes.js';
 import { sldThemeStyles } from './theme.js';
 import { DragToClickController } from './drag-to-click.js';
 import { singleTerminal } from './foundations/equipment.js';
 import { iedReferences, isIedReferenceElement, resolveIed as resolveReferencedIed, } from './foundations/ied.js';
-import { newConnectEvent, newDismissRoutingWarningEvent, newExtendConnectPointEvent, newRerouteSectionEvent, newGroundTerminalEvent, newOpenContextMenuEvent, newPlaceEvent, newPlaceLabelEvent, } from './foundations/events.js';
+import { newConnectEvent, newDismissRoutingWarningEvent, newExtendConnectPointEvent, newRerouteSectionEvent, newGroundTerminalEvent, newOpenContextMenuEvent, newPlaceEvent, newPlaceLabelEvent, newResizeEvent, newResizeTLEvent, } from './foundations/events.js';
 import { serializeForExport } from './foundations/export.js';
 import { sldNs, sldPrefix, svgNs, xlinkNs } from './foundations.js';
 import { connectDetail, isMode } from './foundations/interaction-mode.js';
@@ -62,11 +63,11 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
                 event.composedPath().includes(this.sld),
             isActive: () => !isMode(this.interaction, 'idle', 'locked'),
         });
-        // Dragging out a new VoltageLevel or Bay between any two corners.
+        // Dragging out a new VoltageLevel, Bay or bus bar between any two corners.
         this.dragOut = new DragToClickController(this, {
             canStart: event => !this.disabled &&
                 !!this.placing &&
-                isUnsizedContainer(this.placing) &&
+                (isUnsizedContainer(this.placing) || isUnsizedBusBar(this.placing)) &&
                 event.composedPath().includes(this.sld),
             isActive: () => !!this.placing,
             begin: (press) => {
@@ -127,6 +128,25 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
         return this.interaction.mode === 'resizingTL'
             ? this.interaction.element
             : undefined;
+    }
+    /** The bus bar being resized, and the end of it that follows the cursor. */
+    get resizingBusBar() {
+        const { interaction } = this;
+        if ((interaction.mode === 'resizingBR' || interaction.mode === 'resizingTL') &&
+            isBusBar(interaction.element) &&
+            interaction.element.closest('Substation') === this.substation) {
+            return {
+                bay: interaction.element,
+                handle: interaction.mode === 'resizingBR' ? 'BR' : 'TL',
+            };
+        }
+        return undefined;
+    }
+    /** The cells the bus bar being resized would cover with its end at the cursor. */
+    busBarResizeRect() {
+        const resizing = this.resizingBusBar;
+        return (resizing &&
+            resizedBusBarRect(resizing.bay, resizing.handle, [this.mouseX, this.mouseY]));
     }
     get connecting() {
         return connectDetail(this.interaction);
@@ -210,8 +230,12 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
         if (this.resizingTL === element) {
             const { pos: [resX, resY], dim: [resW, resH], } = attributes(element);
             if (resX === x && resY === y) {
-                x += Math.min(this.mouseX, resX + resW - 1) - resX;
-                y += Math.min(this.mouseY, resY + resH - 1) - resY;
+                const [newX, newY] = this.busBarResizeRect() ?? [
+                    Math.min(this.mouseX, resX + resW - 1),
+                    Math.min(this.mouseY, resY + resH - 1),
+                ];
+                x += newX - resX;
+                y += newY - resY;
             }
         }
         return [x, y];
@@ -405,7 +429,13 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
           }
         </style>
         ${symbols}
-        <rect width="100%" height="100%" style="fill: var(--md-sys-color-surface, var(--oscd-base3))" />
+        <rect width="100%" height="100%" style="fill: var(--md-sys-color-surface, var(--oscd-base3))"
+          @contextmenu=${(event) => {
+            event.preventDefault();
+            if (!this.disabled && isMode(this.interaction, 'idle')) {
+                this.requestContextMenu(this.substation, event);
+            }
+        }} />
         ${this.renderVoltageLevelPlacingTarget()}
         ${guard(baseLayerKey, () => this.renderVoltageLevelLayer())}
         ${this.renderConnectionPreviewLayer()}
@@ -417,10 +447,12 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
             this.renderLabelLayer(),
         ])}
         ${this.renderReroutePreviewLayer(reroutes)}
+        ${this.renderBusBarResizePreview()}
         ${this.renderPlacingTargetsLayer()}
         ${this.renderPlacingPreview()}
         ${this.renderRoutingWarnings()}
         ${this.renderRerouteTarget()}
+        ${this.renderBusBarResizeTarget()}
       </svg>
     </section>`;
     }
@@ -498,9 +530,53 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
             return this.renderPowerTransformer(this.placing, { preview: true });
         }
         if (isBusBar(this.placing)) {
-            return this.renderBusBar(this.placing);
+            return this.dragAnchor
+                ? this.renderDraggedBusBar(this.placing, this.dragAnchor)
+                : this.renderBusBar(this.placing);
         }
         return svg ``;
+    }
+    /** A thick line for a bus bar over `rect`; its cells can be clicked to commit. */
+    renderBusBarLine(rect, invalid = false) {
+        const [[x1, y1], [x2, y2]] = busBarLine(rect);
+        return svg `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
+      stroke-width="0.12" stroke-linecap="round" pointer-events="none"
+      stroke="${invalid ? 'var(--oscd-sld-invalid-placement-color)' : 'currentColor'}" />`;
+    }
+    /** A new bus bar being dragged out from the cell `anchor` to the cursor. */
+    renderDraggedBusBar(busBar, anchor) {
+        const rect = draggedBusBarRect(anchor, [this.mouseX, this.mouseY]);
+        const [x, y, w, h] = rect;
+        const parent = Array.from(this.substation.querySelectorAll(':root > Substation > VoltageLevel')).find(vl => containsRect(vl, x, y, w, h));
+        return svg `<g class="bus preview">
+      ${this.renderBusBarLine(rect, !parent)}
+      <rect width="100%" height="100%" fill="none" pointer-events="all"
+        @click=${() => parent &&
+            this.dispatchEvent(newPlaceEvent({ x, y, element: busBar, parent, w, h }))} />
+    </g>`;
+    }
+    /** The bus bar as it would run with its end at the cursor, and its junctions. */
+    renderBusBarResizePreview() {
+        const rect = this.busBarResizeRect();
+        const resizing = this.resizingBusBar;
+        if (!rect || !resizing) {
+            return nothing;
+        }
+        const line = busBarLine(rect);
+        return svg `${this.renderBusBarLine(rect)}${busBarJunctions(resizing.bay, this.plannedReroutes().flatMap(({ ends, ...route }) => ends ? [{ ...route, ends }] : []), line).map(([x, y]) => svg `<circle fill="currentColor" cx="${x}" cy="${y}" r="0.15" pointer-events="none" />`)}`;
+    }
+    /** Catches the click that sizes the bus bar being resized. */
+    renderBusBarResizeTarget() {
+        const resizing = this.resizingBusBar;
+        if (this.disabled || !resizing) {
+            return nothing;
+        }
+        const { bay, handle } = resizing;
+        const [x, y, w, h] = this.busBarResizeRect();
+        return svg `<rect width="100%" height="100%" fill="none" pointer-events="all"
+      @click=${() => this.dispatchEvent(handle === 'BR'
+            ? newResizeEvent({ element: bay, w, h })
+            : newResizeTLEvent({ element: bay, x, y, w, h }))} />`;
     }
     renderVoltageLevelLayer() {
         return Array.from(this.substation.children)
@@ -746,6 +822,24 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
      * dropped where it is now.
      */
     plannedReroutes() {
+        const resizing = this.resizingBusBar;
+        if (resizing) {
+            const rect = this.busBarResizeRect();
+            const key = [resizing.bay, this.docVersion, ...rect];
+            if (key.some((k, i) => k !== this.reroutePreview.key[i])) {
+                const [start, end] = busBarLine(rect);
+                this.reroutePreview = {
+                    key,
+                    routes: planReroutes(this.doc, {
+                        kind: 'bus',
+                        element: resizing.bay,
+                        start,
+                        end,
+                    }),
+                };
+            }
+            return this.reroutePreview.routes;
+        }
         if (this.interaction.mode === 'reroutingSection') {
             const section = this.interaction.element;
             const via = [this.mouseX2, this.mouseY2];
@@ -787,8 +881,12 @@ export class SldSubstationViewer extends ScopedElementsMixin(LitElement) {
         }
         return this.reroutePreview.routes;
     }
-    /** The wire whose connection a new connection from its terminal replaces. */
+    /** The wire whose connection a new connection from its terminal replaces, or the bus bar being resized. */
     replacedSections() {
+        const resizing = this.resizingBusBar;
+        if (resizing) {
+            return busSections(resizing.bay);
+        }
         if (this.interaction.mode !== 'connectingFrom') {
             return [];
         }

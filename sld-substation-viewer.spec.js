@@ -891,6 +891,19 @@ describe('SldSubstationViewer live reroute preview', () => {
             .dispatchEvent(new MouseEvent('click', { bubbles: true }));
         expect(intents).to.deep.equal([{ mode: 'reroutingSection', element: section }]);
     });
+    it('opens the context menu of a plain wire on right click while idle', async () => {
+        const { el, section } = await wiredViewer();
+        el.interaction = interactions.idle();
+        await el.updateComplete;
+        const requests = [];
+        el.addEventListener('oscd-sld-open-context-menu', e => requests.push(e.detail));
+        const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+        el.sld
+            .querySelector('.node line[pointer-events="all"]:not([stroke])')
+            .dispatchEvent(event);
+        expect(requests.map(request => request.element)).to.deep.equal([section]);
+        expect(event.defaultPrevented).to.be.true;
+    });
     it('lets clicks through plain wires while something else is going on', async () => {
         const { el } = await wiredViewer();
         el.interaction = interactions.placing(el.substation.querySelector('ConductingEquipment'), [0, 0]);
@@ -938,5 +951,124 @@ describe('SldSubstationViewer connecting from transformer terminals', () => {
             }
         }
     })));
+});
+describe('SldSubstationViewer bus bar sizing', () => {
+    const attrs = (values) => `<Private type="OpenSCD-SLD-Layout"><sld:SLDAttributes ${values}/></Private>`;
+    const vertex = (x, y, uuid = '') => `<sld:Vertex sld:x="${x}" sld:y="${y}"${uuid ? ` sld:uuid="${uuid}"` : ''}/>`;
+    /** A bus bar from (2.5,3.5) to (6.5,3.5), with the feeder of a circuit breaker joining it at 3.5. */
+    async function busViewer() {
+        const doc = new DOMParser().parseFromString(`<SCL xmlns="http://www.iec.ch/61850/2003/SCL" xmlns:sld="${SLD_NS}" version="2007" revision="B">
+        <Substation name="S1">
+          ${attrs('sld:w="30" sld:h="20"')}
+          <VoltageLevel name="V1">
+            ${attrs('sld:x="1" sld:y="1" sld:w="20" sld:h="15"')}
+            <Bay name="BB1">
+              ${attrs('sld:x="2" sld:y="3" sld:w="5" sld:h="1"')}
+              <ConductingEquipment name="Q1" type="CBR">
+                ${attrs('sld:x="3" sld:y="6"')}
+                <Terminal name="T1" connectivityNode="S1/V1/BB1/L1">${attrs('sld:uuid="u1"')}</Terminal>
+              </ConductingEquipment>
+              <ConnectivityNode name="L1" pathName="S1/V1/BB1/L1">
+                <Private type="OpenSCD-SLD-Layout">
+                  <sld:Section sld:bus="true">${vertex(2.5, 3.5)}${vertex(3.5, 3.5)}</sld:Section>
+                  <sld:Section sld:bus="true">${vertex(3.5, 3.5)}${vertex(6.5, 3.5)}</sld:Section>
+                  <sld:Section>${vertex(3.5, 3.5)}${vertex(3.5, 6.16, 'u1')}</sld:Section>
+                </Private>
+              </ConnectivityNode>
+            </Bay>
+          </VoltageLevel>
+        </Substation>
+      </SCL>`, 'application/xml');
+        const el = await mountViewer(doc);
+        return { el, doc, bay: doc.querySelector('Bay') };
+    }
+    const thick = (el) => Array.from(el.sld.querySelectorAll('line[stroke-width="0.12"]')).filter(line => line.getAttribute('pointer-events') === 'none');
+    const details = (el, type) => {
+        const found = [];
+        el.addEventListener(type, e => found.push(e.detail));
+        return found;
+    };
+    const click = (el) => el.sld
+        .querySelector('rect[width="100%"][pointer-events="all"]')
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    it('previews the bus bar with its end at the cursor, and sizes it on click', async () => {
+        const { el, bay } = await busViewer();
+        el.interaction = interactions.resizingBR(bay);
+        [el.mouseX, el.mouseY] = [9, 3];
+        await el.updateComplete;
+        const [line] = thick(el);
+        expect(['x1', 'y1', 'x2', 'y2'].map(name => line.getAttribute(name))).to.deep.equal(['2.5', '3.5', '9.5', '3.5']);
+        const sized = details(el, 'oscd-sld-resize');
+        click(el);
+        expect(sized).to.deep.equal([{ element: bay, w: 8, h: 1 }]);
+    });
+    it('previews the bus bar with its start at the cursor, and sizes it on click', async () => {
+        const { el, bay } = await busViewer();
+        el.interaction = interactions.resizingTL(bay);
+        [el.mouseX, el.mouseY] = [4, 3];
+        await el.updateComplete;
+        const [line] = thick(el);
+        expect(['x1', 'y1', 'x2', 'y2'].map(name => line.getAttribute(name))).to.deep.equal(['4.5', '3.5', '6.5', '3.5']);
+        const sized = details(el, 'oscd-sld-resize-tl');
+        click(el);
+        expect(sized).to.deep.equal([{ element: bay, x: 4, y: 3, w: 3, h: 1 }]);
+    });
+    it('draws the feeders it leaves behind as they would be routed', async () => {
+        const { el, doc, bay } = await busViewer();
+        el.interaction = interactions.resizingTL(bay);
+        [el.mouseX, el.mouseY] = [4, 3];
+        await el.updateComplete;
+        const feeder = doc.querySelectorAll('Section')[2];
+        const hidden = el
+            .hiddenSections;
+        expect(hidden.has(feeder)).to.be.true;
+        expect(hidden.size).to.equal(3);
+        const [wire] = Array.from(el.sld.querySelectorAll('polyline'));
+        const points = wire.getAttribute('points').split(' ');
+        expect(points[0].split(',')[1]).to.equal('3.5');
+        expect(points[points.length - 1]).to.equal('3.5,6.16');
+    });
+    it('moves the junction dots along with the feeders it previews', async () => {
+        const { el, bay } = await busViewer();
+        const dots = () => Array.from(el.sld.querySelectorAll('g.node > circle, svg#sld > circle')).map(circle => [circle.getAttribute('cx'), circle.getAttribute('cy')].join(','));
+        el.interaction = interactions.idle();
+        await el.updateComplete;
+        expect(dots()).to.deep.equal(['3.5,3.5']);
+        el.interaction = interactions.resizingTL(bay);
+        [el.mouseX, el.mouseY] = [4, 3];
+        await el.updateComplete;
+        const [dot, ...others] = dots();
+        expect(others).to.have.lengthOf(0);
+        expect(dot).to.not.equal('3.5,3.5');
+        const [x, y] = dot.split(',').map(Number);
+        expect(y).to.equal(3.5);
+        expect(x).to.be.greaterThan(4.5);
+        expect(x).to.be.lessThan(6.5);
+        const [wire] = Array.from(el.sld.querySelectorAll('polyline'));
+        expect(wire.getAttribute('points')).to.contain(dot);
+    });
+    it('previews nothing for a bus bar that is not being resized', async () => {
+        const { el } = await busViewer();
+        el.interaction = interactions.idle();
+        await el.updateComplete;
+        expect(thick(el)).to.have.lengthOf(0);
+    });
+    it('draws a new bus bar between the corner it was dragged out from and the cursor', async () => {
+        const { el, doc } = await busViewer();
+        const nsp = 'sld';
+        const busBar = doc.createElementNS(doc.documentElement.namespaceURI, 'Bay');
+        busBar.setAttribute('name', 'BB2');
+        busBar.innerHTML = `<ConnectivityNode name="L" xmlns="http://www.iec.ch/61850/2003/SCL"><Private type="OpenSCD-SLD-Layout"><${nsp}:Section xmlns:${nsp}="${SLD_NS}" ${nsp}:bus="true"/></Private></ConnectivityNode>`;
+        el.interaction = interactions.placing(busBar, [0, 0]);
+        el.dragAnchor = [8, 9];
+        [el.mouseX, el.mouseY] = [12, 10];
+        await el.updateComplete;
+        const line = thick(el).pop();
+        expect(['x1', 'y1', 'x2', 'y2'].map(name => line.getAttribute(name))).to.deep.equal(['8.5', '9.5', '12.5', '9.5']);
+        const placed = details(el, 'oscd-sld-place');
+        click(el);
+        expect(placed).to.have.lengthOf(1);
+        expect(placed[0]).to.deep.include({ x: 8, y: 9, w: 5, h: 1, element: busBar });
+    });
 });
 //# sourceMappingURL=sld-substation-viewer.spec.js.map

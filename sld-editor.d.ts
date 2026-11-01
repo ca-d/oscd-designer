@@ -6,7 +6,7 @@ import { SldSubstationHeader } from './sld-substation-header.js';
 import { SldResizeSubstationDialog } from './sld-resize-substation-dialog.js';
 import { SldContextMenu } from './context-menu/sld-context-menu.js';
 import { SldCoordinateTooltip } from './sld-coordinate-tooltip.js';
-import type { ConnectDetail, RerouteSectionDetail, SubstationCommandEvent, InteractionIntent } from './foundations/events.js';
+import type { ConnectDetail, RerouteSectionDetail, InteractionIntent } from './foundations/events.js';
 import type { Point } from './foundations/geometry.js';
 import type { InteractionState } from './foundations/interaction-mode.js';
 import type { Style } from './foundations/sld-attributes.js';
@@ -73,6 +73,7 @@ export declare class SldEditor extends SldEditor_base {
     handlePlaceLabel(element: Element, x: number, y: number): void;
     handleResize(element: Element, w: number, h: number): void;
     handleResizeTL(element: Element, x: number, y: number, w: number, h: number): void;
+    private resizeBusBar;
     handleFlip(element: Element): void;
     handleRotate(element: Element): void;
     /**
@@ -103,7 +104,7 @@ export declare class SldEditor extends SldEditor_base {
     private handleGroundHint;
     handleSubstationResize(substation: Element): void;
     handleSubstationDelete(substation: Element): void;
-    handleSubstationExport(event: SubstationCommandEvent): void;
+    handleSubstationExport(substation: Element): void;
     private handleOpenContextMenu;
     private handleEditScl;
     private handleEditIed;

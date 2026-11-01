@@ -24,6 +24,10 @@ export function isUnsizedContainer(element) {
         !isBusBar(element) &&
         (!getSLDAttributes(element, 'w') || !getSLDAttributes(element, 'h')));
 }
+/** A new bus bar that has not been sized yet, so it can be dragged out. */
+export function isUnsizedBusBar(element) {
+    return isBusBar(element) && !getSLDAttributes(element, 'h');
+}
 export function canPlaceAt(root, element, x, y, w, h) {
     if (element.tagName === 'Substation') {
         return true;

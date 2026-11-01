@@ -3,7 +3,9 @@ export const snapshots = {};
 
 snapshots["SLD Editor given a voltage level opens a menu on voltage level right click"] = 
 `<oscd-menu
+  anchor-corner="start-start"
   aria-hidden="true"
+  no-vertical-flip=""
   positioning="fixed"
   quick=""
 >
@@ -433,7 +435,9 @@ snapshots["SLD Editor given conducting equipment copies equipment on shift click
 
 snapshots["SLD Editor given conducting equipment opens a menu on equipment right click"] = 
 `<oscd-menu
+  anchor-corner="start-start"
   aria-hidden="true"
+  no-vertical-flip=""
   positioning="fixed"
   quick=""
 >
@@ -6300,19 +6304,19 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               </Vertex>
               <Vertex
                 esldoscd:x="12.5"
-                esldoscd:y="4.5"
+                esldoscd:y="4"
               >
               </Vertex>
             </Section>
-            <Section>
+            <Section esldoscd:bus="true">
               <Vertex
                 esldoscd:x="12.5"
-                esldoscd:y="3.5"
+                esldoscd:y="4"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="13"
-                esldoscd:y="3.5"
+                esldoscd:x="12.5"
+                esldoscd:y="4.5"
               >
               </Vertex>
             </Section>
@@ -6323,23 +6327,18 @@ snapshots["SLD Editor given conducting equipment with established connectivity b
               >
               </Vertex>
               <Vertex
-                esldoscd:x="14"
+                esldoscd:x="13"
                 esldoscd:y="3.5"
-              >
-              </Vertex>
-              <Vertex
-                esldoscd:x="14"
-                esldoscd:y="3"
               >
               </Vertex>
               <Vertex
                 esldoscd:x="13"
-                esldoscd:y="3"
+                esldoscd:y="4"
               >
               </Vertex>
               <Vertex
-                esldoscd:x="13"
-                esldoscd:y="3.5"
+                esldoscd:x="12.5"
+                esldoscd:y="4"
               >
               </Vertex>
             </Section>
