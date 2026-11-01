@@ -86,7 +86,7 @@ export function renderConnectivityNode(
   const lines = [] as TemplateResult<2>[];
   const sections = Array.from(priv.getElementsByTagNameNS(sldNs, 'Section'));
   const bay = cNode.closest('Bay');
-  const targetSize = 0.5;
+  const targetSize = 0.6;
   const wirePointerEvents =
     !isMode(context.interaction, 'placing', 'locked') &&
     (!isMode(context.interaction, 'resizingBR') ||

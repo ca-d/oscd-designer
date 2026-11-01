@@ -415,9 +415,10 @@ function connectThroughVia(
     outward[0] !== 0 ? [to[0], from[1]] : [from[0], to[1]],
     to,
   ];
-  const first =
-    soft.route(start.point, start.outward, via) ??
-    elbow(start.point, start.outward, via);
+  const routed = soft.route(start.point, start.outward, via);
+  const first = routed
+    ? [start.point, ...routed]
+    : elbow(start.point, start.outward, via);
   const turned = arrival(first, start.outward);
   const last =
     soft.route(via, turned, stubOf(end)) ?? elbow(via, turned, stubOf(end));

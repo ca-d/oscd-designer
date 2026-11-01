@@ -320,6 +320,17 @@ describe('rerouteEdits', () => {
       ).to.deep.equal([true]);
     });
 
+    it('keeps the stub at a terminal when it has to go through whatever is in the way', () => {
+      const doc = substation({ wires: straightWire });
+      const [section] = sections(doc);
+      handleEdit(
+        rerouteEdits(doc, { kind: 'section', element: section, via: [3.5, 3.5] }, 'smth'),
+      );
+
+      expectAttached(doc);
+      expect(polyline(section).slice(0, 2)).to.deep.equal([[3.5, 3.84], [3.5, 4]]);
+    });
+
     it('ends on the junction at its other end', () => {
       const doc = substation({
         wires: `<smth:Section>${vertex(3.5, 3.84, 'u1')}${vertex(3.5, 6)}</smth:Section>
