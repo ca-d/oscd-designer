@@ -485,6 +485,17 @@ export class SldToolbar extends ScopedElementsMixin(LitElement) {
       --md-fab-container-color: var(--oscd-base2);
       --md-fab-icon-color: var(--md-sys-color-on-surface, var(--oscd-base00));
     }
+
+    #about table {
+      border-collapse: collapse;
+    }
+    #about th,
+    #about td {
+      text-align: start;
+      vertical-align: top;
+      padding: 4px 8px;
+      border-bottom: 1px solid var(--oscd-base1);
+    }
   `,
   ];
 }
