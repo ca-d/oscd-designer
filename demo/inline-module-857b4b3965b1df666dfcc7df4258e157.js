@@ -79438,13 +79438,13 @@ const SOFT_COST = 20;
  * Extra cost, in half-grid steps, of each step onto a bus. A bus is treated
  * like elongated equipment: routes cross it only when going round costs more.
  */
-const BUS_COST = 25;
+const BUS_COST = 5;
 /**
  * Extra cost, in half-grid steps, of each step onto a wire. A crossing pays it
  * on the way in and out, so routes cross a wire only when going round costs
  * more, but much more readily than they cross equipment or a bus.
  */
-const WIRE_COST = 30;
+const WIRE_COST = 10;
 /** Extra cost, in half-grid steps, of running along an equipment border in a tight router. */
 const BORDER_COST = 3;
 const FREE = 0;
